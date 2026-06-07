@@ -18,10 +18,36 @@ export default function VendorRegisterPage() {
             <option>Santo Domingo</option>
             <option>Santiago</option>
             <option>La Vega</option>
-            <option>Puerto Plata</option>
             <option>San Pedro de Macorís</option>
+            <option>Puerto Plata</option>
             <option>La Romana</option>
             <option>Barahona</option>
+            <option>Higüey</option>
+            <option>Moca</option>
+            <option>San Francisco de Macorís</option>
+            <option>Azua</option>
+            <option>Baoruco</option>
+            <option>Dajabón</option>
+            <option>Duarte</option>
+            <option>Elías Piña</option>
+            <option>El Seibo</option>
+            <option>Espaillat</option>
+            <option>Hato Mayor</option>
+            <option>Independencia</option>
+            <option>La Altagracia</option>
+            <option>La Estrelleta</option>
+            <option>María Trinidad Sánchez</option>
+            <option>Monseñor Nouel</option>
+            <option>Monte Cristi</option>
+            <option>Monte Plata</option>
+            <option>Pedernales</option>
+            <option>Peravia</option>
+            <option>Samaná</option>
+            <option>Sánchez Ramírez</option>
+            <option>San Cristóbal</option>
+            <option>San José de Ocoa</option>
+            <option>Santiago Rodríguez</option>
+            <option>Valverde (Mao)</option>
           </select>
           <select style={{border:'1px solid #ddd',borderRadius:4,padding:'11px 13px',fontSize:14,outline:'none',background:'#fff'}}>
             <option>Selecciona tu categoría...</option>
