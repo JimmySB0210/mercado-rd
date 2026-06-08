@@ -1,80 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  :root {
-    --font-barlow-condensed: 'Barlow Condensed', sans-serif;
-    --font-barlow:           'Barlow', sans-serif;
-    --font-jetbrains-mono:   'JetBrains Mono', monospace;
-  }
-
-  * {
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  html {
-    scroll-behavior: smooth;
-  }
-
-  /* Scrollbar sutil */
-  ::-webkit-scrollbar        { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track  { background: transparent; }
-  ::-webkit-scrollbar-thumb  { background: #d5d5d5; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #aaa; }
+•⁠  ⁠{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-@layer components {
-  /* Botones base MercadoRD */
-  .btn-primary {
-    @apply bg-ink text-white font-display font-bold text-sm
-           uppercase tracking-wide px-5 py-2.5 rounded
-           transition-colors duration-150 hover:bg-ink/80
-           disabled:opacity-40 disabled:cursor-not-allowed;
-  }
-
-  .btn-secondary {
-    @apply border border-surface-off2 bg-white text-ink font-display
-           font-bold text-sm uppercase tracking-wide px-5 py-2.5 rounded
-           transition-colors hover:border-ink;
-  }
-
-  .btn-rd-red {
-    @apply bg-rd-red text-white font-display font-bold text-sm
-           uppercase tracking-wide px-5 py-2.5 rounded
-           transition-colors hover:bg-rd-red/90;
-  }
-
-  .btn-rd-blue {
-    @apply bg-rd-blue text-white font-display font-bold text-sm
-           uppercase tracking-wide px-5 py-2.5 rounded
-           transition-colors hover:bg-rd-blue/90;
-  }
-
-  /* Cards */
-  .card {
-    @apply bg-white border border-surface-off2 rounded-md;
-  }
-
-  /* Input base */
-  .input {
-    @apply border border-surface-off2 rounded bg-white px-3 py-2.5
-           text-sm font-body outline-none transition-colors
-           focus:border-ink placeholder:text-ink-3;
-  }
-
-  /* Precio en pesos RD */
-  .price {
-    @apply font-display font-bold text-ink;
-  }
-
-  .price-sale {
-    @apply font-display font-bold text-rd-red;
-  }
-
-  /* Status badges */
-  .badge-delivered { @apply bg-green-100 text-green-800 text-xs font-bold px-2 py-0.5 rounded-full; }
-  .badge-shipped   { @apply bg-blue-100  text-blue-800  text-xs font-bold px-2 py-0.5 rounded-full; }
-  .badge-pending   { @apply bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-0.5 rounded-full; }
-  .badge-cancelled { @apply bg-red-100   text-red-800   text-xs font-bold px-2 py-0.5 rounded-full; }
+body {
+  background: linear-gradient(180deg, #e8f0fe 0%, #eef4ff 30%, #f4f7ff 60%, #f8f9ff 100%);
+  min-height: 100vh;
+  font-family: sans-serif;
 }
