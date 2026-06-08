@@ -80,8 +80,5 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Hero gradient strip */}
-      <div style={{background:'linear-gradient(180deg,#0038A8 0%,#1a6fd4 40%,#4a9eff 75%,#f0f8ff 100%)',height:6}}></div>
-    </div>
-  );
-}
+    {/* Gradient fade */}
+<div style={{background:'linear-gradient(180deg,#1a6fd4 0%,#4a9eff 30%,#c8deff 65%,#eef4ff 85%,#ffffff 100%)',height:32}}></div>
