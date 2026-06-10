@@ -29,7 +29,7 @@ export function Navbar() {
         </div>
         <div style={{display:"flex",overflow:"hidden",maxWidth:1400,margin:"0 auto",borderTop:"1px solid rgba(255,255,255,0.1)"}}>
           {["Todos","Calzado","Ropa","Electrónica","Alimentos","Belleza","Hogar","Ferretería","Autos","Agropecuario","Ofertas 🔥"].map((cat,i) => (
-            <a key={i} href={cat==="Todos"?"/":⁠ /?cat=${cat.toLowerCase().replace(" 🔥","")} ⁠} style={{flexShrink:0,padding:"10px 16px",color:i===0?"#fff":"rgba(255,255,255,0.75)",textDecoration:"none",fontSize:13,fontWeight:i===0?700:400,borderBottom:i===0?"2px solid #F5A200":"2px solid transparent",whiteSpace:"nowrap"}}>
+            <a key={i} href={cat==="Todos"?"/":`/?cat=${cat.toLowerCase().replace(" 🔥","")}`} style={{flexShrink:0,padding:"10px 16px",color:i===0?"#fff":"rgba(255,255,255,0.75)",textDecoration:"none",fontSize:13,fontWeight:i===0?700:400,borderBottom:i===0?"2px solid #F5A200":"2px solid transparent",whiteSpace:"nowrap"}}>
               {cat}
             </a>
           ))}
