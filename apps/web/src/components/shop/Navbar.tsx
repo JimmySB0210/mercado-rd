@@ -1,73 +1,65 @@
+import { Search, ChevronDown, ShoppingCart } from 'lucide-react';
+import { BRAND } from '@/lib/colors';
+
+const CATEGORIES = ['Electrónica', 'Moda', 'Hogar', 'Belleza', 'Deportes', 'Autos', 'Más'];
+
 export function Navbar() {
   return (
-    <header>
-      {/* ── Top bar: white, like Alibaba ── */}
-      <div style={{background:'#fff',borderBottom:'1px solid #e8e8e8'}}>
-        <div style={{display:'flex',alignItems:'center',gap:16,height:72,maxWidth:1400,margin:'0 auto',padding:'0 24px'}}>
+    <header style={{background:'#fff',borderBottom:'1px solid #EAEAEA'}}>
+      <div style={{display:'flex',alignItems:'center',gap:20,maxWidth:1400,margin:'0 auto',padding:'16px 24px'}}>
 
-          {/* Logo */}
-          <a href='/' style={{textDecoration:'none',flexShrink:0,marginRight:8}}>
-            <span style={{fontWeight:900,fontSize:26,color:'#4A7FD6',letterSpacing:-1}}>Mercado</span>
-            <span style={{fontWeight:900,fontSize:26,color:'#E31837',letterSpacing:-1}}>RD</span>
-          </a>
+        {/* Logo */}
+        <a href='/' style={{textDecoration:'none',flexShrink:0}}>
+          <span style={{fontWeight:700,fontSize:24,color:BRAND.blue}}>Mercado</span>
+          <span style={{fontWeight:700,fontSize:24,color:BRAND.red}}>RD</span>
+        </a>
 
-          {/* Search bar */}
-          <div style={{flex:1,maxWidth:680}}>
-            <div style={{display:'flex',borderRadius:4,overflow:'hidden',border:'2px solid #4A7FD6'}}>
-              <input
-                type='text'
-                placeholder='Buscar productos, tiendas dominicanas...'
-                style={{flex:1,border:'none',padding:'13px 16px',fontSize:14,outline:'none',color:'#333'}}
-              />
-              <button style={{background:'#4A7FD6',border:'none',padding:'13px 24px',cursor:'pointer',fontWeight:700,fontSize:14,color:'#fff',whiteSpace:'nowrap'}}>
-                🔍 Buscar
-              </button>
+        {/* Search */}
+        <div style={{flex:1,maxWidth:560,position:'relative'}}>
+          <input
+            type='text'
+            placeholder='Buscar productos, tiendas...'
+            style={{width:'100%',border:'1px solid #E0E0E0',background:BRAND.bg,borderRadius:24,padding:'11px 50px 11px 18px',fontSize:14,outline:'none',color:BRAND.dark,boxSizing:'border-box'}}
+          />
+          <button style={{position:'absolute',right:4,top:4,bottom:4,width:38,border:'none',borderRadius:'50%',background:BRAND.blue,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}>
+            <Search size={16} />
+          </button>
+        </div>
+
+        {/* Enviar a */}
+        <div style={{display:'flex',alignItems:'center',gap:6,cursor:'pointer',flexShrink:0}}>
+          <div style={{lineHeight:1.3}}>
+            <div style={{fontSize:11,color:BRAND.gray}}>Enviar a</div>
+            <div style={{display:'flex',alignItems:'center',gap:2}}>
+              <span style={{fontSize:13,fontWeight:600,color:BRAND.dark}}>Rep. Dom.</span>
+              <ChevronDown size={14} color={BRAND.gray} />
             </div>
-          </div>
-
-          {/* Right controls */}
-          <div style={{display:'flex',alignItems:'center',gap:4,marginLeft:'auto',flexShrink:0}}>
-
-            {/* Location */}
-            <div style={{padding:'0 10px',cursor:'pointer',textAlign:'center'}}>
-              <div style={{fontSize:11,color:'#888',lineHeight:'1.4'}}>🇩🇴 Entregar en</div>
-              <div style={{fontSize:13,fontWeight:700,color:'#111',lineHeight:'1.4'}}>Rep. Dom.</div>
-            </div>
-
-            {/* Cart */}
-            <a href='/cart' style={{position:'relative',padding:'6px 12px',color:'#333',textDecoration:'none',textAlign:'center'}}>
-              <div style={{fontSize:22}}>🛒</div>
-              <div style={{fontSize:11,color:'#888'}}>Carrito</div>
-              <span style={{position:'absolute',top:2,right:6,background:'#E31837',color:'#fff',borderRadius:'50%',width:16,height:16,display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700}}>3</span>
-            </a>
-
-            {/* Login */}
-            <a href='/login' style={{padding:'6px 12px',color:'#333',textDecoration:'none',textAlign:'center'}}>
-              <div style={{fontSize:22}}>👤</div>
-              <div style={{fontSize:11,color:'#888'}}>Iniciar sesión</div>
-            </a>
-
-            {/* Register */}
-            <a href='/register' style={{border:'2px solid #4A7FD6',color:'#4A7FD6',textDecoration:'none',padding:'9px 16px',borderRadius:4,fontWeight:700,fontSize:13,whiteSpace:'nowrap'}}>
-              Registrarse
-            </a>
-
-            {/* Sell CTA */}
-            <a href='/vendor/register' style={{background:'#F5A200',color:'#111',textDecoration:'none',padding:'10px 16px',borderRadius:4,fontWeight:800,fontSize:13,whiteSpace:'nowrap',marginLeft:4}}>
-              Vender en RD
-            </a>
           </div>
         </div>
+
+        {/* Cart */}
+        <a href='/cart' style={{position:'relative',color:BRAND.dark,flexShrink:0,display:'flex'}}>
+          <ShoppingCart size={22} />
+          <span style={{position:'absolute',top:-6,right:-8,background:BRAND.red,color:'#fff',borderRadius:'50%',width:17,height:17,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700}}>3</span>
+        </a>
+
+        {/* Login */}
+        <a href='/login' style={{color:BRAND.dark,textDecoration:'none',fontSize:14,flexShrink:0,whiteSpace:'nowrap'}}>Iniciar sesión</a>
+
+        {/* Sell CTA */}
+        <a href='/vendor/register' style={{background:BRAND.blue,color:'#fff',textDecoration:'none',padding:'10px 20px',borderRadius:8,fontWeight:600,fontSize:14,flexShrink:0,whiteSpace:'nowrap'}}>
+          Vender en RD
+        </a>
       </div>
 
-      {/* ── Category bar: blue ── */}
-      <div style={{background:'#4A7FD6'}}>
+      {/* Category bar */}
+      <div style={{background:BRAND.blue}}>
         <div style={{display:'flex',alignItems:'center',maxWidth:1400,margin:'0 auto',padding:'0 24px',overflow:'hidden'}}>
-          <a href='/' style={{display:'flex',alignItems:'center',gap:8,padding:'10px 16px',color:'#fff',textDecoration:'none',fontSize:13,fontWeight:700,background:'rgba(0,0,0,0.18)',flexShrink:0,whiteSpace:'nowrap'}}>
+          <a href='/' style={{display:'flex',alignItems:'center',gap:8,padding:'11px 16px',color:'#fff',textDecoration:'none',fontSize:13,fontWeight:600,background:'rgba(255,255,255,0.14)',flexShrink:0,whiteSpace:'nowrap'}}>
             ☰ Todas las categorías
           </a>
-          {['Calzado','Ropa','Electrónica','Alimentos','Belleza','Hogar','Ferretería','Autos','Agropecuario'].map((cat,i) => (
-            <a key={i} href={'/?cat='+cat.toLowerCase()} style={{padding:'10px 14px',color:'rgba(255,255,255,0.88)',textDecoration:'none',fontSize:13,whiteSpace:'nowrap',flexShrink:0}}>
+          {CATEGORIES.map((cat,i) => (
+            <a key={i} href={'/?cat='+cat.toLowerCase()} style={{padding:'11px 16px',color:'rgba(255,255,255,0.85)',textDecoration:'none',fontSize:13,whiteSpace:'nowrap',flexShrink:0}}>
               {cat}
             </a>
           ))}

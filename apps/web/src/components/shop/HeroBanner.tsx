@@ -1,57 +1,80 @@
+import { ShieldCheck, Truck, Store, Headset } from 'lucide-react';
+import { BRAND } from '@/lib/colors';
+
+const PERKS = [
+  { icon: ShieldCheck, title: 'Pago seguro', sub: 'Protegemos tu compra' },
+  { icon: Truck, title: 'Envíos a todo el país', sub: 'Rápido y confiable' },
+  { icon: Store, title: 'Miles de tiendas', sub: 'Apoya lo local' },
+  { icon: Headset, title: 'Soporte 24/7', sub: 'Estamos para ayudarte' },
+];
+
+const CATEGORIES = [
+  { e: '💻', label: 'Electrónica' },
+  { e: '👗', label: 'Moda' },
+  { e: '🏠', label: 'Hogar' },
+  { e: '💄', label: 'Belleza' },
+  { e: '⚽', label: 'Deportes' },
+  { e: '🚗', label: 'Autos' },
+  { e: '🧸', label: 'Juguetes' },
+  { e: '⋯', label: 'Más' },
+];
+
 export function HeroBanner() {
-  const tabs = ['Todos los productos', 'Tiendas verificadas', 'Ofertas del día'];
-
   return (
-    <div style={{background:'#f0f4ff',borderBottom:'1px solid #dde8ff',padding:'40px 24px 36px'}}>
-      <div style={{maxWidth:1400,margin:'0 auto'}}>
+    <div style={{maxWidth:1400,margin:'0 auto',padding:'24px 24px 0'}}>
 
-        {/* Tabs — like Alibaba's mode tabs */}
-        <div style={{display:'flex',justifyContent:'center',marginBottom:28}}>
-          <div style={{display:'flex',background:'#fff',borderRadius:6,border:'1px solid #dde8ff',overflow:'hidden',boxShadow:'0 2px 8px rgba(0,56,168,0.08)'}}>
-            {tabs.map((tab,i) => (
-              <button key={i} style={{
-                padding:'11px 28px',
-                border:'none',
-                borderRight: i < tabs.length - 1 ? '1px solid #dde8ff' : 'none',
-                background: i === 0 ? '#4A7FD6' : '#fff',
-                color: i === 0 ? '#fff' : '#555',
-                fontWeight: i === 0 ? 700 : 400,
-                fontSize:14,
-                cursor:'pointer',
-              }}>
-                {tab}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Hero text */}
-        <div style={{textAlign:'center',marginBottom:28}}>
-          <div style={{fontSize:12,fontWeight:700,color:'#4A7FD6',textTransform:'uppercase',letterSpacing:2,marginBottom:10}}>
-            🇩🇴 El marketplace dominicano
-          </div>
-          <h1 style={{fontSize:38,fontWeight:900,color:'#111',lineHeight:1.15,margin:'0 0 12px'}}>
-            Compra y vende en toda la República
+      {/* Hero card */}
+      <div style={{
+        background:`linear-gradient(135deg, ${BRAND.blue} 0%, #082f6e 100%)`,
+        borderRadius:16,
+        padding:'40px',
+        display:'flex',
+        alignItems:'center',
+        justifyContent:'space-between',
+        gap:32,
+        color:'#fff',
+        flexWrap:'wrap',
+      }}>
+        <div style={{flex:'1 1 320px',minWidth:280}}>
+          <h1 style={{fontSize:32,fontWeight:700,lineHeight:1.25,margin:'0 0 14px'}}>
+            Compra y vende<br/>en toda República<br/>Dominicana
           </h1>
-          <p style={{color:'#666',fontSize:15,margin:0}}>
-            Miles de negocios locales · 32 provincias · Pagos seguros
+          <p style={{color:'rgba(255,255,255,0.75)',fontSize:14,margin:'0 0 22px',maxWidth:320}}>
+            Miles de productos, tiendas y personas conectados contigo.
           </p>
+          <a href='/' style={{display:'inline-block',background:BRAND.red,color:'#fff',textDecoration:'none',padding:'13px 26px',borderRadius:8,fontWeight:600,fontSize:14}}>
+            Explorar productos
+          </a>
         </div>
 
-        {/* Value badges */}
-        <div style={{display:'flex',justifyContent:'center',gap:36}}>
-          {[
-            'Miles de tiendas locales',
-            '32 provincias cubiertas',
-            'Compra 100% protegida',
-          ].map((label,i) => (
-            <div key={i} style={{display:'flex',alignItems:'center',gap:7,fontSize:13,color:'#444'}}>
-              <span style={{color:'#4A7FD6',fontWeight:900,fontSize:16}}>✓</span>
-              {label}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'20px 36px',flex:'1 1 320px'}}>
+          {PERKS.map((p,i) => {
+            const Icon = p.icon;
+            return (
+              <div key={i} style={{display:'flex',alignItems:'center',gap:12}}>
+                <div style={{width:38,height:38,borderRadius:10,background:'rgba(255,255,255,0.15)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <Icon size={18} color='#fff' />
+                </div>
+                <div>
+                  <div style={{fontWeight:600,fontSize:13}}>{p.title}</div>
+                  <div style={{fontSize:11,color:'rgba(255,255,255,0.65)'}}>{p.sub}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Category icons row */}
+      <div style={{display:'flex',justifyContent:'space-between',gap:8,margin:'28px 0',flexWrap:'wrap'}}>
+        {CATEGORIES.map((c,i) => (
+          <a key={i} href={'/?cat='+c.label.toLowerCase()} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,textDecoration:'none',color:BRAND.dark,minWidth:72}}>
+            <div style={{width:56,height:56,borderRadius:'50%',background:'#fff',border:'1px solid #EAEAEA',display:'flex',alignItems:'center',justifyContent:'center',fontSize:24}}>
+              {c.e}
             </div>
-          ))}
-        </div>
-
+            <span style={{fontSize:12,fontWeight:500}}>{c.label}</span>
+          </a>
+        ))}
       </div>
     </div>
   );
