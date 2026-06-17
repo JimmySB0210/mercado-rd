@@ -1,3 +1,5 @@
+import './globals.css';
+
 export const metadata = {
   title: 'MercadoRD — El marketplace dominicano',
   description: 'Compra y vende en República Dominicana',

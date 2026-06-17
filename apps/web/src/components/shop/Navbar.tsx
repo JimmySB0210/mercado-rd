@@ -1,41 +1,78 @@
 export function Navbar() {
   return (
-    <div>
-      <div style={{background:"linear-gradient(135deg,#0038A8 0%,#0055CC 50%,#1a6fd4 100%)",padding:"0 24px"}}>
-        <div style={{display:"flex",alignItems:"center",gap:16,height:64,maxWidth:1400,margin:"0 auto"}}>
-          <a href="/" style={{textDecoration:"none",flexShrink:0,marginRight:16}}>
-            <span style={{fontWeight:900,fontSize:26,color:"#fff",letterSpacing:-1}}>Mercado</span>
-            <span style={{fontWeight:900,fontSize:26,letterSpacing:-1}}>
-              <span style={{color:"#ff4444"}}>R</span>
-              <span style={{color:"#60aaff"}}>D</span>
-            </span>
+    <header>
+      {/* ── Top bar: white, like Alibaba ── */}
+      <div style={{background:'#fff',borderBottom:'1px solid #e8e8e8'}}>
+        <div style={{display:'flex',alignItems:'center',gap:16,height:72,maxWidth:1400,margin:'0 auto',padding:'0 24px'}}>
+
+          {/* Logo */}
+          <a href='/' style={{textDecoration:'none',flexShrink:0,marginRight:8}}>
+            <span style={{fontWeight:900,fontSize:26,color:'#0038A8',letterSpacing:-1}}>Mercado</span>
+            <span style={{fontWeight:900,fontSize:26,color:'#E31837',letterSpacing:-1}}>RD</span>
           </a>
-          <div style={{flex:1,maxWidth:580}}>
-            <div style={{display:"flex",borderRadius:6,overflow:"hidden",border:"2px solid #F5A200",background:"#fff"}}>
-              <input type="text" placeholder="Buscar productos, tiendas dominicanas..." style={{flex:1,border:"none",padding:"11px 16px",fontSize:14,outline:"none"}}/>
-              <button style={{background:"#F5A200",border:"none",padding:"11px 20px",cursor:"pointer",fontWeight:700,fontSize:15,color:"#111"}}>🔍</button>
+
+          {/* Search bar */}
+          <div style={{flex:1,maxWidth:680}}>
+            <div style={{display:'flex',borderRadius:4,overflow:'hidden',border:'2px solid #0038A8'}}>
+              <input
+                type='text'
+                placeholder='Buscar productos, tiendas dominicanas...'
+                style={{flex:1,border:'none',padding:'13px 16px',fontSize:14,outline:'none',color:'#333'}}
+              />
+              <button style={{background:'#0038A8',border:'none',padding:'13px 24px',cursor:'pointer',fontWeight:700,fontSize:14,color:'#fff',whiteSpace:'nowrap'}}>
+                🔍 Buscar
+              </button>
             </div>
           </div>
-          <div style={{marginLeft:"auto",display:"flex",gap:8,alignItems:"center",flexShrink:0}}>
-            <a href="/login" style={{color:"rgba(255,255,255,0.85)",textDecoration:"none",fontSize:13,padding:"8px 14px",border:"1px solid rgba(255,255,255,0.3)",borderRadius:4}}>Iniciar sesión</a>
-            <a href="/register" style={{color:"rgba(255,255,255,0.85)",textDecoration:"none",fontSize:13,padding:"8px 14px",border:"1px solid rgba(255,255,255,0.3)",borderRadius:4}}>Registrarse</a>
-            <a href="/cart" style={{color:"#fff",textDecoration:"none",fontSize:13,padding:"8px 14px",border:"1px solid rgba(255,255,255,0.3)",borderRadius:4,position:"relative"}}>
-              🛒 Carrito
-              <span style={{position:"absolute",top:-6,right:-6,background:"#E31837",color:"#fff",borderRadius:"50%",width:17,height:17,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700}}>3</span>
+
+          {/* Right controls */}
+          <div style={{display:'flex',alignItems:'center',gap:4,marginLeft:'auto',flexShrink:0}}>
+
+            {/* Location */}
+            <div style={{padding:'0 10px',cursor:'pointer',textAlign:'center'}}>
+              <div style={{fontSize:11,color:'#888',lineHeight:'1.4'}}>🇩🇴 Entregar en</div>
+              <div style={{fontSize:13,fontWeight:700,color:'#111',lineHeight:'1.4'}}>Rep. Dom.</div>
+            </div>
+
+            {/* Cart */}
+            <a href='/cart' style={{position:'relative',padding:'6px 12px',color:'#333',textDecoration:'none',textAlign:'center'}}>
+              <div style={{fontSize:22}}>🛒</div>
+              <div style={{fontSize:11,color:'#888'}}>Carrito</div>
+              <span style={{position:'absolute',top:2,right:6,background:'#E31837',color:'#fff',borderRadius:'50%',width:16,height:16,display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700}}>3</span>
             </a>
-            <a href="/dashboard" style={{color:"rgba(255,255,255,0.85)",textDecoration:"none",fontSize:13,padding:"8px 14px",border:"1px solid rgba(255,255,255,0.3)",borderRadius:4}}>Mi Panel</a>
-            <a href="/vendor/register" style={{background:"#F5A200",color:"#111",textDecoration:"none",padding:"9px 16px",borderRadius:6,fontWeight:800,fontSize:13,marginLeft:4}}>Vender en RD</a>
+
+            {/* Login */}
+            <a href='/login' style={{padding:'6px 12px',color:'#333',textDecoration:'none',textAlign:'center'}}>
+              <div style={{fontSize:22}}>👤</div>
+              <div style={{fontSize:11,color:'#888'}}>Iniciar sesión</div>
+            </a>
+
+            {/* Register */}
+            <a href='/register' style={{border:'2px solid #0038A8',color:'#0038A8',textDecoration:'none',padding:'9px 16px',borderRadius:4,fontWeight:700,fontSize:13,whiteSpace:'nowrap'}}>
+              Registrarse
+            </a>
+
+            {/* Sell CTA */}
+            <a href='/vendor/register' style={{background:'#F5A200',color:'#111',textDecoration:'none',padding:'10px 16px',borderRadius:4,fontWeight:800,fontSize:13,whiteSpace:'nowrap',marginLeft:4}}>
+              Vender en RD
+            </a>
           </div>
         </div>
-        <div style={{display:"flex",overflow:"hidden",maxWidth:1400,margin:"0 auto",borderTop:"1px solid rgba(255,255,255,0.1)"}}>
-          {["Todos","Calzado","Ropa","Electrónica","Alimentos","Belleza","Hogar","Ferretería","Autos","Agropecuario","Ofertas 🔥"].map((cat,i) => (
-            <a key={i} href={cat==="Todos"?"/":`/?cat=${cat.toLowerCase().replace(" 🔥","")}`} style={{flexShrink:0,padding:"10px 16px",color:i===0?"#fff":"rgba(255,255,255,0.75)",textDecoration:"none",fontSize:13,fontWeight:i===0?700:400,borderBottom:i===0?"2px solid #F5A200":"2px solid transparent",whiteSpace:"nowrap"}}>
+      </div>
+
+      {/* ── Category bar: blue ── */}
+      <div style={{background:'#0038A8'}}>
+        <div style={{display:'flex',alignItems:'center',maxWidth:1400,margin:'0 auto',padding:'0 24px',overflow:'hidden'}}>
+          <a href='/' style={{display:'flex',alignItems:'center',gap:8,padding:'10px 16px',color:'#fff',textDecoration:'none',fontSize:13,fontWeight:700,background:'rgba(0,0,0,0.18)',flexShrink:0,whiteSpace:'nowrap'}}>
+            ☰ Todas las categorías
+          </a>
+          {['Calzado','Ropa','Electrónica','Alimentos','Belleza','Hogar','Ferretería','Autos','Agropecuario'].map((cat,i) => (
+            <a key={i} href={'/?cat='+cat.toLowerCase()} style={{padding:'10px 14px',color:'rgba(255,255,255,0.88)',textDecoration:'none',fontSize:13,whiteSpace:'nowrap',flexShrink:0}}>
               {cat}
             </a>
           ))}
         </div>
       </div>
-      <div style={{background:"linear-gradient(180deg,#1a6fd4 0%,#4a9eff 20%,#c8deff 50%,#eef4ff 75%,#f4f7ff 100%)",height:28}}></div>
-    </div>
+    </header>
   );
 }

@@ -26,9 +26,10 @@ export default function CheckoutPage() {
         <div style={{background:'#fff',borderRadius:8,padding:20,border:'1px solid #eee',height:'fit-content'}}>
           <h2 style={{fontSize:16,fontWeight:800,marginBottom:16}}>Tu pedido</h2>
           <div style={{display:'flex',justifyContent:'space-between',marginBottom:8,fontSize:14}}><span>Subtotal</span><span>RD$5,750</span></div>
-          <div style={{display:'flex',justifyContent:'space-between',marginBottom:8,fontSize:14}}><span>Envío</span><span>RD$350</span></div>
-          <div style={{display:'flex',justifyContent:'space-between',marginBottom:8,fontSize:14}}><span>ITBIS</span><span>RD$861</span></div>
-          <div style={{display:'flex',justifyContent:'space-between',fontWeight:900,fontSize:16,borderTop:'1px solid #eee',paddingTop:12,marginTop:8}}><span>Total</span><span>RD$6,961</span></div>
+          <div style={{display:'flex',justifyContent:'space-between',marginBottom:8,fontSize:14,color:'#00873D',fontWeight:600}}><span>Descuentos</span><span>−RD$1,300</span></div>
+          <div style={{display:'flex',justifyContent:'space-between',marginBottom:8,fontSize:14}}><span>Envío Express</span><span>RD$350</span></div>
+          <div style={{display:'flex',justifyContent:'space-between',marginBottom:8,fontSize:14}}><span>ITBIS (18%)</span><span>RD$861</span></div>
+          <div style={{display:'flex',justifyContent:'space-between',fontWeight:900,fontSize:16,borderTop:'1px solid #eee',paddingTop:12,marginTop:8}}><span>Total</span><span>RD$5,661</span></div>
           <a href="/confirm" style={{display:'block',background:'#E31837',color:'#fff',textDecoration:'none',textAlign:'center',padding:14,borderRadius:6,fontWeight:900,marginTop:16}}>
             Confirmar y pagar
           </a>

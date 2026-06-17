@@ -65,7 +65,7 @@ export default function VendorRegisterPage() {
           </button>
         </div>
         <p style={{textAlign:'center',marginTop:16,fontSize:13,color:'#999'}}>
-          ¿Ya tienes cuenta? <a href="/" style={{color:'#111',fontWeight:600}}>Iniciar sesión</a>
+          ¿Ya tienes cuenta? <a href="/login" style={{color:'#111',fontWeight:600}}>Iniciar sesión</a>
         </p>
       </div>
     </div>
