@@ -38,7 +38,7 @@ export function ProductGrid({ products }: { products?: any[] }) {
         <a href='/' style={{color:BRAND.blue,fontSize:13,fontWeight:600,textDecoration:'none'}}>Ver todas →</a>
       </div>
 
-      <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:16}}>
+      <div className="grid-products">
         {items.map((p: any) => (
           <div key={p.id} style={{background:'#fff',border:'1px solid #EEE',borderRadius:10,overflow:'hidden',cursor:'pointer'}}>
             <div style={{aspectRatio:'1',background:BRAND.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:48,position:'relative'}}>
@@ -70,7 +70,7 @@ export function ProductGrid({ products }: { products?: any[] }) {
         <a href='/' style={{color:BRAND.blue,fontSize:13,fontWeight:600,textDecoration:'none'}}>Ver todas →</a>
       </div>
 
-      <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:16,marginBottom:36}}>
+      <div className="grid-stores" style={{marginBottom:36}}>
         {STORES.map((s,i) => (
           <div key={i} style={{background:'#fff',border:'1px solid #EEE',borderRadius:10,padding:18,display:'flex',flexDirection:'column',alignItems:'center',textAlign:'center',gap:10}}>
             <div style={{width:48,height:48,borderRadius:10,background:s.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22}}>
@@ -89,7 +89,7 @@ export function ProductGrid({ products }: { products?: any[] }) {
       </div>
 
       {/* Trust bar */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,background:'#fff',border:'1px solid #EEE',borderRadius:10,padding:'22px 0'}}>
+      <div className="grid-trust" style={{background:'#fff',border:'1px solid #EEE',borderRadius:10,padding:'22px 0'}}>
         {TRUST.map((t,i) => {
           const Icon = t.icon;
           return (

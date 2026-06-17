@@ -19,7 +19,7 @@ export default function CartPage() {
         </span>
       </div>
 
-      <div style={{maxWidth:1000,margin:'0 auto',padding:28,display:'grid',gridTemplateColumns:'1fr 340px',gap:24}}>
+      <div className="cart-layout" style={{maxWidth:1000,margin:'0 auto',padding:28}}>
 
         <div>
           <h1 style={{fontSize:22,fontWeight:700,marginBottom:20,color:BRAND.dark}}>Tu carrito (3)</h1>

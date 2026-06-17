@@ -47,7 +47,7 @@ export function HeroBanner() {
           </a>
         </div>
 
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'20px 36px',flex:'1 1 320px'}}>
+        <div className="hero-perks" style={{flex:'1 1 320px'}}>
           {PERKS.map((p,i) => {
             const Icon = p.icon;
             return (
@@ -65,16 +65,18 @@ export function HeroBanner() {
         </div>
       </div>
 
-      {/* Category icons row */}
-      <div style={{display:'flex',justifyContent:'space-between',gap:8,margin:'28px 0',flexWrap:'wrap'}}>
-        {CATEGORIES.map((c,i) => (
-          <a key={i} href={'/?cat='+c.label.toLowerCase()} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,textDecoration:'none',color:BRAND.dark,minWidth:72}}>
-            <div style={{width:56,height:56,borderRadius:'50%',background:'#fff',border:'1px solid #EAEAEA',display:'flex',alignItems:'center',justifyContent:'center',fontSize:24}}>
-              {c.e}
-            </div>
-            <span style={{fontSize:12,fontWeight:500}}>{c.label}</span>
-          </a>
-        ))}
+      {/* Category icons row — blue bar */}
+      <div style={{background:BRAND.blue,borderRadius:16,padding:'20px 16px',margin:'28px 0'}}>
+        <div style={{display:'flex',justifyContent:'space-between',gap:8,flexWrap:'wrap'}}>
+          {CATEGORIES.map((c,i) => (
+            <a key={i} href={'/?cat='+c.label.toLowerCase()} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,textDecoration:'none',color:'#fff',minWidth:72}}>
+              <div style={{width:56,height:56,borderRadius:'50%',background:'rgba(255,255,255,0.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:24}}>
+                {c.e}
+              </div>
+              <span style={{fontSize:12,fontWeight:500}}>{c.label}</span>
+            </a>
+          ))}
+        </div>
       </div>
     </div>
   );

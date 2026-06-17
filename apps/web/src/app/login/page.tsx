@@ -9,7 +9,7 @@ export default function LoginPage() {
 
   return (
     <div style={{minHeight:'100vh',background:BRAND.bg,display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
-      <div style={{background:'#fff',borderRadius:12,padding:48,maxWidth:420,width:'100%',boxShadow:'0 2px 20px rgba(0,0,0,0.08)'}}>
+      <div className="auth-card" style={{background:'#fff',borderRadius:12,maxWidth:420,width:'100%',boxShadow:'0 2px 20px rgba(0,0,0,0.08)'}}>
         <div style={{fontWeight:700,fontSize:24,marginBottom:24}}>
           <span style={{color:BRAND.blue}}>Mercado</span><span style={{color:BRAND.red}}>RD</span>
         </div>
