@@ -39,7 +39,7 @@ export default function ConfirmPage() {
             <div style={{fontSize:13,color:'#444',lineHeight:1.7}}>
               Express SDQ<br/>
               Hoy antes de las 6:00 PM<br/>
-              Tracking: <span style={{fontFamily:'monospace',fontWeight:700,color:'#0038A8'}}>RDX-482-2024</span>
+              Tracking: <span style={{fontFamily:'monospace',fontWeight:700,color:'#4A7FD6'}}>RDX-482-2024</span>
             </div>
           </div>
         </div>

@@ -25,7 +25,7 @@ export default function CartPage() {
               <div style={{flex:1}}>
                 <div style={{fontWeight:700,fontSize:15,marginBottom:2}}>{item.name}</div>
                 <div style={{fontSize:12,color:'#999',marginBottom:2}}>{item.variant}</div>
-                <div style={{fontSize:12,color:'#0038A8',fontWeight:600}}>{item.vendor}</div>
+                <div style={{fontSize:12,color:'#4A7FD6',fontWeight:600}}>{item.vendor}</div>
               </div>
               <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:8}}>
                 <div style={{fontWeight:900,fontSize:16,color:'#E31837'}}>RD${item.price.toLocaleString()}</div>

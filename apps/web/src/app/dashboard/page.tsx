@@ -38,7 +38,7 @@ export default function DashboardPage() {
         <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:24}}>
           {[
             {label:'Ingresos — Jun',val:'RD$148,320',delta:'▲ 18.4%',color:'#00873D'},
-            {label:'Pedidos — Jun',val:'284',delta:'▲ 32 esta semana',color:'#0038A8'},
+            {label:'Pedidos — Jun',val:'284',delta:'▲ 32 esta semana',color:'#4A7FD6'},
             {label:'Ticket promedio',val:'RD$521',delta:'▲ RD$32',color:'#F5A200'},
             {label:'Calificación',val:'4.9 ⭐',delta:'Top 5%',color:'#E31837'},
           ].map((s,i) => (
@@ -53,7 +53,7 @@ export default function DashboardPage() {
         <div style={{background:'#fff',borderRadius:8,overflow:'hidden',boxShadow:'0 1px 8px rgba(0,0,0,0.06)'}}>
           <div style={{padding:'14px 18px',borderBottom:'1px solid #f0f0f0',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
             <div style={{fontWeight:800,fontSize:15}}>Pedidos recientes</div>
-            <a href="#" style={{fontSize:13,color:'#0038A8',textDecoration:'none'}}>Ver todos →</a>
+            <a href="#" style={{fontSize:13,color:'#4A7FD6',textDecoration:'none'}}>Ver todos →</a>
           </div>
           <table style={{width:'100%',borderCollapse:'collapse'}}>
             <thead>
@@ -72,7 +72,7 @@ export default function DashboardPage() {
                 {id:'#RD-8820',cliente:'Rosa G.',prod:'Tenis mujer',prov:'Barahona',monto:'RD$2,400',status:'✗ Cancelado',sc:'#FEE2E2',tc:'#991B1B'},
               ].map((o,i) => (
                 <tr key={i} style={{borderBottom:'1px solid #f8f8f8'}}>
-                  <td style={{padding:'12px 14px',color:'#0038A8',fontWeight:700,fontSize:13}}>{o.id}</td>
+                  <td style={{padding:'12px 14px',color:'#4A7FD6',fontWeight:700,fontSize:13}}>{o.id}</td>
                   <td style={{padding:'12px 14px',fontSize:13}}>{o.cliente}</td>
                   <td style={{padding:'12px 14px',fontSize:13}}>{o.prod}</td>
                   <td style={{padding:'12px 14px',fontSize:13}}>{o.prov}</td>

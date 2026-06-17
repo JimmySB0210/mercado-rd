@@ -13,7 +13,7 @@ export function HeroBanner() {
                 padding:'11px 28px',
                 border:'none',
                 borderRight: i < tabs.length - 1 ? '1px solid #dde8ff' : 'none',
-                background: i === 0 ? '#0038A8' : '#fff',
+                background: i === 0 ? '#4A7FD6' : '#fff',
                 color: i === 0 ? '#fff' : '#555',
                 fontWeight: i === 0 ? 700 : 400,
                 fontSize:14,
@@ -27,7 +27,7 @@ export function HeroBanner() {
 
         {/* Hero text */}
         <div style={{textAlign:'center',marginBottom:28}}>
-          <div style={{fontSize:12,fontWeight:700,color:'#0038A8',textTransform:'uppercase',letterSpacing:2,marginBottom:10}}>
+          <div style={{fontSize:12,fontWeight:700,color:'#4A7FD6',textTransform:'uppercase',letterSpacing:2,marginBottom:10}}>
             🇩🇴 El marketplace dominicano
           </div>
           <h1 style={{fontSize:38,fontWeight:900,color:'#111',lineHeight:1.15,margin:'0 0 12px'}}>
@@ -46,7 +46,7 @@ export function HeroBanner() {
             'Compra 100% protegida',
           ].map((label,i) => (
             <div key={i} style={{display:'flex',alignItems:'center',gap:7,fontSize:13,color:'#444'}}>
-              <span style={{color:'#0038A8',fontWeight:900,fontSize:16}}>✓</span>
+              <span style={{color:'#4A7FD6',fontWeight:900,fontSize:16}}>✓</span>
               {label}
             </div>
           ))}

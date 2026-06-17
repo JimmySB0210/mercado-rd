@@ -17,7 +17,7 @@ export default function LoginPage() {
             <input style={{width:'100%',border:'1px solid #ddd',borderRadius:4,padding:'11px 13px',fontSize:14,outline:'none',boxSizing:'border-box' as const}} placeholder="Tu contraseña" type="password"/>
           </div>
           <div style={{display:'flex',justifyContent:'flex-end'}}>
-            <a href="#" style={{fontSize:13,color:'#0038A8',textDecoration:'none'}}>¿Olvidaste tu contraseña?</a>
+            <a href="#" style={{fontSize:13,color:'#4A7FD6',textDecoration:'none'}}>¿Olvidaste tu contraseña?</a>
           </div>
           <button style={{background:'#111',color:'#fff',border:'none',padding:14,borderRadius:4,fontWeight:700,fontSize:15,cursor:'pointer'}}>
             Entrar →

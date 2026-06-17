@@ -7,19 +7,19 @@ export function Navbar() {
 
           {/* Logo */}
           <a href='/' style={{textDecoration:'none',flexShrink:0,marginRight:8}}>
-            <span style={{fontWeight:900,fontSize:26,color:'#0038A8',letterSpacing:-1}}>Mercado</span>
+            <span style={{fontWeight:900,fontSize:26,color:'#4A7FD6',letterSpacing:-1}}>Mercado</span>
             <span style={{fontWeight:900,fontSize:26,color:'#E31837',letterSpacing:-1}}>RD</span>
           </a>
 
           {/* Search bar */}
           <div style={{flex:1,maxWidth:680}}>
-            <div style={{display:'flex',borderRadius:4,overflow:'hidden',border:'2px solid #0038A8'}}>
+            <div style={{display:'flex',borderRadius:4,overflow:'hidden',border:'2px solid #4A7FD6'}}>
               <input
                 type='text'
                 placeholder='Buscar productos, tiendas dominicanas...'
                 style={{flex:1,border:'none',padding:'13px 16px',fontSize:14,outline:'none',color:'#333'}}
               />
-              <button style={{background:'#0038A8',border:'none',padding:'13px 24px',cursor:'pointer',fontWeight:700,fontSize:14,color:'#fff',whiteSpace:'nowrap'}}>
+              <button style={{background:'#4A7FD6',border:'none',padding:'13px 24px',cursor:'pointer',fontWeight:700,fontSize:14,color:'#fff',whiteSpace:'nowrap'}}>
                 🔍 Buscar
               </button>
             </div>
@@ -48,7 +48,7 @@ export function Navbar() {
             </a>
 
             {/* Register */}
-            <a href='/register' style={{border:'2px solid #0038A8',color:'#0038A8',textDecoration:'none',padding:'9px 16px',borderRadius:4,fontWeight:700,fontSize:13,whiteSpace:'nowrap'}}>
+            <a href='/register' style={{border:'2px solid #4A7FD6',color:'#4A7FD6',textDecoration:'none',padding:'9px 16px',borderRadius:4,fontWeight:700,fontSize:13,whiteSpace:'nowrap'}}>
               Registrarse
             </a>
 
@@ -61,7 +61,7 @@ export function Navbar() {
       </div>
 
       {/* ── Category bar: blue ── */}
-      <div style={{background:'#0038A8'}}>
+      <div style={{background:'#4A7FD6'}}>
         <div style={{display:'flex',alignItems:'center',maxWidth:1400,margin:'0 auto',padding:'0 24px',overflow:'hidden'}}>
           <a href='/' style={{display:'flex',alignItems:'center',gap:8,padding:'10px 16px',color:'#fff',textDecoration:'none',fontSize:13,fontWeight:700,background:'rgba(0,0,0,0.18)',flexShrink:0,whiteSpace:'nowrap'}}>
             ☰ Todas las categorías
