@@ -12,14 +12,14 @@
 
 import { Search, ChevronDown, ShoppingCart, User, LogOut, LayoutDashboard } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
-import { useCartStore } from '@/lib/store/cart'
+import { useCartStore, useCartItemCount } from '@/lib/store/cart'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { useState } from 'react'
 
 const CATEGORIES = ['Electrónica', 'Moda', 'Hogar', 'Belleza', 'Deportes', 'Autos', 'Más']
 
 export function Navbar() {
-  const itemCount       = useCartStore(s => s.itemCount)
+  const itemCount       = useCartItemCount()
   const { user, profile, signOut } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
 

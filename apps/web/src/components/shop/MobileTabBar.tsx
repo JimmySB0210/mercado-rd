@@ -6,7 +6,7 @@
 
 import { Home, LayoutGrid, User, MessageCircle, ShoppingCart } from 'lucide-react'
 import { usePathname } from 'next/navigation'
-import { useCartStore } from '@/lib/store/cart'
+import { useCartStore, useCartItemCount } from '@/lib/store/cart'
 import { BRAND } from '@/lib/colors'
 
 const TABS = [
@@ -19,7 +19,7 @@ const TABS = [
 
 export function MobileTabBar() {
   const pathname  = usePathname()
-  const itemCount = useCartStore(s => s.itemCount)
+  const itemCount = useCartItemCount()
 
   return (
     <nav

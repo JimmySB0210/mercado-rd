@@ -6,12 +6,15 @@
 
 import { ShoppingCart, Trash2, Minus, Plus, ShieldCheck } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
-import { useCartStore } from '@/lib/store/cart'
+import { useCartStore, useCartSubtotal, useCartItbis, useCartTotal } from '@/lib/store/cart'
 import { Navbar } from '@/components/shop/Navbar'
 import Image from 'next/image'
 
 export default function CartPage() {
-  const { items, updateQty, removeItem, subtotal, itbis, total } = useCartStore()
+  const { items, updateQty, removeItem } = useCartStore()
+  const subtotal = useCartSubtotal()
+  const itbis = useCartItbis()
+  const total = useCartTotal()
   const ENVIO = items.length > 0 ? 18000 : 0 // RD$180 en centavos
 
   return (

@@ -8,7 +8,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ShieldCheck, ChevronDown } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
-import { useCartStore } from '@/lib/store/cart'
+import { useCartStore, useCartSubtotal, useCartItbis, useCartTotal } from '@/lib/store/cart'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { Navbar } from '@/components/shop/Navbar'
 import Image from 'next/image'
@@ -33,7 +33,10 @@ const PAYMENT_METHODS = [
 export default function CheckoutPage() {
   const router = useRouter()
   const { user, profile } = useAuth()
-  const { items, subtotal, itbis, total, clearCart } = useCartStore()
+  const { items, clearCart } = useCartStore()
+  const subtotal = useCartSubtotal()
+  const itbis = useCartItbis()
+  const total = useCartTotal()
   const ENVIO = items.length > 0 ? 18000 : 0
 
   const [form, setForm] = useState({
