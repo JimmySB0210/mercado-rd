@@ -1,6 +1,10 @@
 // ============================================================
-// MercadoRD — ProductCard
-// Archivo: components/product/ProductCard.tsx
+// MercadoRD — ProductCard (corregido: sin colores hardcodeados)
+// Ruta: src/components/product/ProductCard.tsx
+// ============================================================
+// Cambios respecto a la versión anterior:
+//   bg-[#E31837] (badge descuento)  → style={{ background: 'var(--brand-red)' }}
+//   text-[#0038A8] (ícono verified) → style={{ color: 'var(--brand-blue)' }}
 // ============================================================
 
 import Image from 'next/image'
@@ -33,7 +37,10 @@ export function ProductCard({ product }: Props) {
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
         />
         {discount && (
-          <span className="absolute top-2 left-2 bg-[#E31837] text-white text-xs font-bold px-2 py-0.5 rounded-full">
+          <span
+            className="absolute top-2 left-2 text-white text-xs font-bold px-2 py-0.5 rounded-full"
+            style={{ background: 'var(--brand-red)' }}
+          >
             -{discount}%
           </span>
         )}
@@ -50,7 +57,12 @@ export function ProductCard({ product }: Props) {
         <div className="flex items-center gap-1 mb-1">
           <span className="text-xs text-gray-400 truncate">{product.vendor?.business_name}</span>
           {product.vendor?.is_verified && (
-            <svg className="w-3 h-3 text-[#0038A8] flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <svg
+              className="w-3 h-3 flex-shrink-0"
+              style={{ color: 'var(--brand-blue)' }}
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
           )}
@@ -80,7 +92,7 @@ export function ProductCard({ product }: Props) {
               {[1, 2, 3, 4, 5].map(star => (
                 <svg
                   key={star}
-                  className={`w-3 h-3 ${star <= Math.round(product.rating_avg) ? 'text-[#F5A200]' : 'text-gray-200'}`}
+                  className={`w-3 h-3 ${star <= Math.round(product.rating_avg) ? 'text-amber-400' : 'text-gray-200'}`}
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
