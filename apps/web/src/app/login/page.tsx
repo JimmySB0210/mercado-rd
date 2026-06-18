@@ -8,6 +8,7 @@ import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/hooks/useAuth'
+import { BRAND } from '@/lib/colors'
 
 export default function LoginPage() {
   return (
@@ -50,15 +51,18 @@ function LoginForm() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <main
+      className="min-h-screen flex items-center justify-center bg-gray-50 px-4"
+      style={{ '--brand-blue': BRAND.blue, '--brand-red': BRAND.red } as React.CSSProperties}
+    >
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
             <span className="text-3xl font-bold">
-              <span className="text-white bg-[#0038A8] px-2 py-1 rounded">Mercado</span>
-              <span className="text-[#E31837]">R</span>
-              <span className="text-[#0038A8]">D</span>
+              <span className="text-white bg-[var(--brand-blue)] px-2 py-1 rounded">Mercado</span>
+              <span className="text-[var(--brand-red)]">R</span>
+              <span className="text-[var(--brand-blue)]">D</span>
             </span>
           </Link>
           <p className="mt-2 text-gray-500 text-sm">Inicia sesión en tu cuenta</p>
@@ -77,7 +81,7 @@ function LoginForm() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="tucorreo@ejemplo.com"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0038A8] focus:border-transparent"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)] focus:border-transparent"
               />
             </div>
 
@@ -91,7 +95,7 @@ function LoginForm() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0038A8] focus:border-transparent"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)] focus:border-transparent"
               />
             </div>
 
@@ -104,7 +108,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#E31837] hover:bg-[#c41530] disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition-colors"
+              className="w-full bg-[var(--brand-red)] hover:brightness-90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition-colors"
             >
               {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
             </button>
@@ -112,7 +116,7 @@ function LoginForm() {
 
           <p className="mt-6 text-center text-sm text-gray-500">
             ¿No tienes cuenta?{' '}
-            <Link href="/register" className="text-[#0038A8] font-medium hover:underline">
+            <Link href="/register" className="text-[var(--brand-blue)] font-medium hover:underline">
               Regístrate gratis
             </Link>
           </p>

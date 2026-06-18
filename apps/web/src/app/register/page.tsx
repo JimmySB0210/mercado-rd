@@ -8,6 +8,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/hooks/useAuth'
+import { BRAND } from '@/lib/colors'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -68,7 +69,10 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <main
+        className="min-h-screen flex items-center justify-center bg-gray-50 px-4"
+        style={{ '--brand-blue': BRAND.blue, '--brand-red': BRAND.red } as React.CSSProperties}
+      >
         <div className="w-full max-w-md text-center">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
             <div className="text-5xl mb-4">✅</div>
@@ -78,7 +82,7 @@ export default function RegisterPage() {
             </p>
             <Link
               href="/login"
-              className="block w-full bg-[#E31837] text-white font-medium py-3 rounded-lg text-center hover:bg-[#c41530] transition-colors"
+              className="block w-full bg-[var(--brand-red)] text-white font-medium py-3 rounded-lg text-center hover:brightness-90 transition-colors"
             >
               Ir a iniciar sesión
             </Link>
@@ -89,15 +93,18 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <main
+      className="min-h-screen flex items-center justify-center bg-gray-50 px-4"
+      style={{ '--brand-blue': BRAND.blue, '--brand-red': BRAND.red } as React.CSSProperties}
+    >
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
             <span className="text-3xl font-bold">
-              <span className="text-white bg-[#0038A8] px-2 py-1 rounded">Mercado</span>
-              <span className="text-[#E31837]">R</span>
-              <span className="text-[#0038A8]">D</span>
+              <span className="text-white bg-[var(--brand-blue)] px-2 py-1 rounded">Mercado</span>
+              <span className="text-[var(--brand-red)]">R</span>
+              <span className="text-[var(--brand-blue)]">D</span>
             </span>
           </Link>
           <p className="mt-2 text-gray-500 text-sm">Crea tu cuenta gratis</p>
@@ -116,7 +123,7 @@ export default function RegisterPage() {
                 value={form.fullName}
                 onChange={handleChange}
                 placeholder="Tu nombre y apellido"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0038A8]"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
               />
             </div>
 
@@ -131,7 +138,7 @@ export default function RegisterPage() {
                 value={form.email}
                 onChange={handleChange}
                 placeholder="tucorreo@ejemplo.com"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0038A8]"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
               />
             </div>
 
@@ -145,7 +152,7 @@ export default function RegisterPage() {
                 value={form.phone}
                 onChange={handleChange}
                 placeholder="809-555-0000"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0038A8]"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
               />
             </div>
 
@@ -160,7 +167,7 @@ export default function RegisterPage() {
                 value={form.password}
                 onChange={handleChange}
                 placeholder="Mínimo 6 caracteres"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0038A8]"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
               />
             </div>
 
@@ -175,7 +182,7 @@ export default function RegisterPage() {
                 value={form.confirmPassword}
                 onChange={handleChange}
                 placeholder="Repite tu contraseña"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0038A8]"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
               />
             </div>
 
@@ -188,7 +195,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#E31837] hover:bg-[#c41530] disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition-colors mt-2"
+              className="w-full bg-[var(--brand-red)] hover:brightness-90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition-colors mt-2"
             >
               {loading ? 'Creando cuenta...' : 'Crear cuenta'}
             </button>
@@ -196,7 +203,7 @@ export default function RegisterPage() {
 
           <p className="mt-6 text-center text-sm text-gray-500">
             ¿Ya tienes cuenta?{' '}
-            <Link href="/login" className="text-[#0038A8] font-medium hover:underline">
+            <Link href="/login" className="text-[var(--brand-blue)] font-medium hover:underline">
               Inicia sesión
             </Link>
           </p>
