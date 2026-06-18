@@ -23,8 +23,7 @@ export function MobileTabBar() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50
-                 flex md:hidden"
+      className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 flex md-860:hidden"
     >
       <div className="flex justify-around w-full pt-2 pb-safe">
         {TABS.map((tab) => {
