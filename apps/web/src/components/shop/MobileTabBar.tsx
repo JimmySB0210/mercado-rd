@@ -1,49 +1,71 @@
-'use client';
+'use client'
+// ============================================================
+// MercadoRD — MobileTabBar
+// Ruta: src/components/shop/MobileTabBar.tsx
+// ============================================================
 
-import { Home, LayoutGrid, User, MessageCircle, ShoppingCart } from 'lucide-react';
-import { usePathname } from 'next/navigation';
-import { BRAND } from '@/lib/colors';
+import { Home, LayoutGrid, User, MessageCircle, ShoppingCart } from 'lucide-react'
+import { usePathname } from 'next/navigation'
+import { useCartStore } from '@/lib/store/cart'
+import { BRAND } from '@/lib/colors'
 
 const TABS = [
-  { href: '/', label: 'Inicio', icon: Home },
-  { href: '/#categorias', label: 'Categorías', icon: LayoutGrid },
-  { href: '/login', label: 'Cuenta', icon: User },
-  { href: '/coming-soon', label: 'Mensajes', icon: MessageCircle },
-  { href: '/cart', label: 'Carrito', icon: ShoppingCart, badge: 3 },
-];
+  { href: '/',           label: 'Inicio',     icon: Home          },
+  { href: '/#categorias',label: 'Categorías', icon: LayoutGrid    },
+  { href: '/login',      label: 'Cuenta',     icon: User          },
+  { href: '/coming-soon',label: 'Mensajes',   icon: MessageCircle },
+  { href: '/cart',       label: 'Carrito',    icon: ShoppingCart  },
+]
 
 export function MobileTabBar() {
-  const pathname = usePathname();
+  const pathname  = usePathname()
+  const itemCount = useCartStore(s => s.itemCount)
 
   return (
-    <nav className="mrd-tabbar" style={{position:'fixed',bottom:0,left:0,right:0,background:'#fff',borderTop:'1px solid #EAEAEA',zIndex:50}}>
-      <div style={{display:'flex',justifyContent:'space-around',paddingTop:8,paddingBottom:'calc(8px + env(safe-area-inset-bottom))'}}>
+    <nav
+      className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50
+                 flex md:hidden"
+    >
+      <div className="flex justify-around w-full pt-2 pb-safe">
         {TABS.map((tab) => {
-          const Icon = tab.icon;
-          const active = pathname === tab.href;
-          const color = active ? BRAND.blue : BRAND.gray;
+          const Icon   = tab.icon
+          const active = pathname === tab.href
+          const color  = active ? BRAND.blue : BRAND.gray
+
           return (
-            <a key={tab.label} href={tab.href} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,textDecoration:'none',fontSize:11,fontWeight:active?700:500,color,padding:'0 6px'}}>
-              <span style={{position:'relative',display:'flex'}}>
+            <a
+              key={tab.label}
+              href={tab.href}
+              className="flex flex-col items-center gap-0.5 px-2 no-underline"
+              style={{
+                fontSize: 11,
+                fontWeight: active ? 700 : 500,
+                color,
+              }}
+            >
+              <span className="relative flex">
                 <Icon size={22} color={color} />
-                {tab.badge && (
-                  <span style={{position:'absolute',top:-5,right:-7,background:BRAND.red,color:'#fff',borderRadius:'50%',width:15,height:15,display:'flex',alignItems:'center',justifyContent:'center',fontSize:8,fontWeight:700}}>
-                    {tab.badge}
+                {tab.label === 'Carrito' && itemCount > 0 && (
+                  <span
+                    className="absolute -top-1 -right-1.5 text-white rounded-full
+                               flex items-center justify-center"
+                    style={{
+                      background: BRAND.red,
+                      width: 15,
+                      height: 15,
+                      fontSize: 8,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {itemCount > 9 ? '9+' : itemCount}
                   </span>
                 )}
               </span>
               {tab.label}
             </a>
-          );
+          )
         })}
       </div>
-
-      <style jsx>{`
-        .mrd-tabbar { display: none; }
-        @media (max-width: 860px) {
-          .mrd-tabbar { display: block; }
-        }
-      `}</style>
     </nav>
-  );
+  )
 }
