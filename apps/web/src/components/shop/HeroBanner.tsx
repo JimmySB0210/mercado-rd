@@ -66,8 +66,8 @@ export function HeroBanner() {
       </div>
 
       {/* Category icons row — blue bar */}
-      <div style={{background:BRAND.blue,borderRadius:16,padding:'20px 16px',margin:'28px 0'}}>
-        <div style={{display:'flex',justifyContent:'space-between',gap:8,flexWrap:'wrap'}}>
+      <div id="categorias" style={{background:BRAND.blue,borderRadius:16,padding:'20px 16px',margin:'28px 0'}}>
+        <div className="hero-categories">
           {CATEGORIES.map((c,i) => (
             <a key={i} href={'/?cat='+c.label.toLowerCase()} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,textDecoration:'none',color:'#fff',minWidth:72}}>
               <div style={{width:56,height:56,borderRadius:'50%',background:'rgba(255,255,255,0.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:24}}>

@@ -39,6 +39,12 @@ body {
   gap: 20px 36px;
 }
 
+.hero-categories {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .auth-card {
   padding: 48px;
 }
@@ -73,11 +79,23 @@ body {
   .cart-layout {
     grid-template-columns: 1fr;
   }
-  .hero-perks {
-    grid-template-columns: 1fr;
-  }
+  /* Beneficios del hero se mantienen lado a lado, igual que en escritorio */
   .auth-card {
     padding: 28px 20px;
+  }
+  /* Categorías del hero: una sola fila que se desliza, en vez de envolver */
+  .hero-categories {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .hero-categories::-webkit-scrollbar {
+    display: none;
+  }
+  .hero-categories > * {
+    flex-shrink: 0;
   }
 }
 

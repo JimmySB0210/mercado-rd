@@ -1,5 +1,6 @@
 import './globals.css';
 import { Poppins } from 'next/font/google';
+import { MobileTabBar } from '../components/shop/MobileTabBar';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -22,6 +23,7 @@ export default function RootLayout({
     <html lang="es" className={poppins.variable}>
       <body style={{margin:0,padding:0,fontFamily:'var(--font-poppins), sans-serif',background:'#F5F7FA'}}>
         {children}
+        <MobileTabBar />
       </body>
     </html>
   );
