@@ -11,7 +11,7 @@ export default function CartPage() {
   return (
     <div style={{minHeight:'100vh',background:BRAND.bg}}>
       <div style={{background:'#fff',borderBottom:'1px solid #EAEAEA'}}>
-        <div style={{maxWidth:1000,margin:'0 auto',padding:'16px 28px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div className="page-row" style={{display:'flex',alignItems:'center',justifyContent:'space-between',paddingTop:16,paddingBottom:16}}>
           <a href="/" style={{fontWeight:700,fontSize:20,textDecoration:'none'}}>
             <span style={{color:BRAND.blue}}>Mercado</span><span style={{color:BRAND.red}}>RD</span>
           </a>
@@ -21,7 +21,7 @@ export default function CartPage() {
         </div>
       </div>
 
-      <div className="cart-layout" style={{maxWidth:1000,margin:'0 auto',padding:28}}>
+      <div className="page-row cart-layout" style={{paddingTop:28,paddingBottom:28}}>
 
         <div>
           <h1 style={{fontSize:22,fontWeight:700,marginBottom:20,color:BRAND.dark}}>Tu carrito (3)</h1>
@@ -31,12 +31,12 @@ export default function CartPage() {
               <div style={{width:64,height:64,borderRadius:8,background:item.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,flexShrink:0}}>
                 {item.e}
               </div>
-              <div style={{flex:1}}>
-                <div style={{fontWeight:600,fontSize:14,marginBottom:2,color:BRAND.dark}}>{item.name}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontWeight:600,fontSize:14,marginBottom:2,color:BRAND.dark,overflowWrap:'break-word'}}>{item.name}</div>
                 <div style={{fontSize:12,color:BRAND.gray,marginBottom:2}}>{item.variant}</div>
                 <div style={{fontSize:12,color:BRAND.blue,fontWeight:600}}>{item.vendor}</div>
               </div>
-              <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:8}}>
+              <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:8,flexShrink:0}}>
                 <div style={{fontWeight:700,fontSize:15,color:BRAND.dark}}>RD${item.price.toLocaleString()}</div>
                 <div style={{display:'flex',border:'1px solid #E0E0E0',borderRadius:6,overflow:'hidden'}}>
                   <button style={{width:26,height:26,border:'none',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:BRAND.dark}}><Minus size={13}/></button>
