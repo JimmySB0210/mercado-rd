@@ -27,7 +27,7 @@ export default function CartPage() {
           <h1 style={{fontSize:22,fontWeight:700,marginBottom:20,color:BRAND.dark}}>Tu carrito (3)</h1>
 
           {ITEMS.map((item,i) => (
-            <div key={i} style={{background:'#fff',borderRadius:10,padding:16,marginBottom:12,display:'flex',gap:14,alignItems:'center',border:'1px solid #EEE'}}>
+            <div key={i} className="cart-item" style={{background:'#fff',borderRadius:10,padding:16,marginBottom:12,display:'flex',gap:14,alignItems:'center',border:'1px solid #EEE'}}>
               <div style={{width:64,height:64,borderRadius:8,background:item.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,flexShrink:0}}>
                 {item.e}
               </div>
@@ -36,7 +36,7 @@ export default function CartPage() {
                 <div style={{fontSize:12,color:BRAND.gray,marginBottom:2}}>{item.variant}</div>
                 <div style={{fontSize:12,color:BRAND.blue,fontWeight:600}}>{item.vendor}</div>
               </div>
-              <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:8,flexShrink:0}}>
+              <div className="cart-item-actions" style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:8,flexShrink:0}}>
                 <div style={{fontWeight:700,fontSize:15,color:BRAND.dark}}>RD${item.price.toLocaleString()}</div>
                 <div style={{display:'flex',border:'1px solid #E0E0E0',borderRadius:6,overflow:'hidden'}}>
                   <button style={{width:26,height:26,border:'none',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:BRAND.dark}}><Minus size={13}/></button>

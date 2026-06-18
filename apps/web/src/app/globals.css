@@ -8,6 +8,14 @@
   box-sizing: border-box;
 }
 
+html {
+  /* Evita que Chrome en Android agrande el texto automáticamente ("font boosting")
+     dentro de columnas angostas, lo cual empuja el layout más ancho que la
+     pantalla sin que se note en ningún emulador de escritorio. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 html, body {
   background: #F5F7FA;
   min-height: 100vh;
@@ -97,6 +105,21 @@ html, body {
   }
   .cart-layout {
     grid-template-columns: 1fr;
+  }
+  /* Tarjeta de producto del carrito: precio/cantidad/eliminar pasan a su
+     propia fila debajo en vez de competir por ancho junto a la imagen y el
+     nombre — así nunca dependen de que el texto entre justo en un ancho fijo. */
+  .cart-item {
+    flex-wrap: wrap;
+  }
+  .cart-item-actions {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100%;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #F0F0F0;
   }
   /* Beneficios del hero se mantienen lado a lado, igual que en escritorio */
   .auth-card {
