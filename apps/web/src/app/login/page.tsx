@@ -40,7 +40,7 @@ function LoginForm() {
       setError(
         error.message === 'Invalid login credentials'
           ? 'Email o contraseña incorrectos'
-          : error.message
+          : (typeof error.message === 'string' ? error.message : 'Error al iniciar sesión')
       )
       setLoading(false)
       return
