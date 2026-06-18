@@ -205,7 +205,11 @@ export default async function ProductPage(
             </div>
 
             {/* Selector de talla/color + carrito — Client Component */}
-            <ProductActions product={product as unknown as Product} />
+            <ProductActions product={{
+              ...product,
+              sizes: (product as any).sizes ?? [],
+              colors: (product as any).colors ?? [],
+            } as unknown as Product} />
 
             {/* WhatsApp */}
             {vendor?.whatsapp && (

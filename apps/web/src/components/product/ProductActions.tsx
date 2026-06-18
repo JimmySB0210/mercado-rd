@@ -134,7 +134,7 @@ export function ProductActions({ product }: ProductActionProps) {
             ? 'bg-green-500'
             : canAdd
             ? 'bg-[var(--brand-red)] hover:brightness-90 active:scale-[0.98]'
-            : 'bg-gray-300 cursor-not-allowed'
+            : 'bg-gray-300 cursor-not-allowed text-white'
         }`}
       >
         {product.stock === 0
