@@ -1,114 +1,207 @@
-import { BRAND } from '@/lib/colors';
+'use client'
+// ============================================================
+// MercadoRD — Página de Registro
+// Archivo: app/register/page.tsx
+// ============================================================
 
-const inputStyle = {
-  width:'100%',
-  border:'1px solid #E0E0E0',
-  borderRadius:8,
-  padding:'11px 13px',
-  fontSize:14,
-  outline:'none',
-  boxSizing:'border-box' as const,
-};
-
-const labelStyle = {
-  fontSize:13,
-  fontWeight:500,
-  color:BRAND.dark,
-  marginBottom:6,
-};
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { useAuth } from '@/lib/hooks/useAuth'
 
 export default function RegisterPage() {
-  return (
-    <div style={{minHeight:'100vh',background:BRAND.bg,display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
-      <div className="auth-card" style={{background:'#fff',borderRadius:12,maxWidth:420,width:'100%',boxShadow:'0 2px 20px rgba(0,0,0,0.08)'}}>
-        <div style={{fontWeight:700,fontSize:24,marginBottom:8}}>
-          <span style={{color:BRAND.blue}}>Mercado</span><span style={{color:BRAND.red}}>RD</span>
+  const router = useRouter()
+  const { signUpWithEmail } = useAuth()
+
+  const [form, setForm] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+  })
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+
+    if (form.password !== form.confirmPassword) {
+      setError('Las contraseñas no coinciden')
+      return
+    }
+
+    if (form.password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres')
+      return
+    }
+
+    setLoading(true)
+
+    const { error } = await signUpWithEmail(
+      form.email,
+      form.password,
+      form.fullName,
+      form.phone || undefined
+    )
+
+    if (error) {
+      setError(
+        error.message.includes('already registered')
+          ? 'Este correo ya está registrado'
+          : error.message
+      )
+      setLoading(false)
+      return
+    }
+
+    // El trigger en Supabase crea automáticamente public.users
+    setSuccess(true)
+    setLoading(false)
+  }
+
+  if (success) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="w-full max-w-md text-center">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <div className="text-5xl mb-4">✅</div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">¡Cuenta creada!</h2>
+            <p className="text-gray-500 text-sm mb-6">
+              Revisa tu correo <strong>{form.email}</strong> para confirmar tu cuenta, luego inicia sesión.
+            </p>
+            <Link
+              href="/login"
+              className="block w-full bg-[#E31837] text-white font-medium py-3 rounded-lg text-center hover:bg-[#c41530] transition-colors"
+            >
+              Ir a iniciar sesión
+            </Link>
+          </div>
         </div>
-        <h1 style={{fontSize:26,fontWeight:700,marginBottom:6,color:BRAND.dark}}>Crear cuenta</h1>
-        <p style={{color:BRAND.gray,marginBottom:28,fontSize:14}}>Empieza a comprar en RD hoy</p>
+      </main>
+    )
+  }
 
-        <div style={{display:'flex',flexDirection:'column',gap:14}}>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+  return (
+    <main className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-block">
+            <span className="text-3xl font-bold">
+              <span className="text-white bg-[#0038A8] px-2 py-1 rounded">Mercado</span>
+              <span className="text-[#E31837]">R</span>
+              <span className="text-[#0038A8]">D</span>
+            </span>
+          </Link>
+          <p className="mt-2 text-gray-500 text-sm">Crea tu cuenta gratis</p>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <div style={labelStyle}>Nombre</div>
-              <input style={inputStyle} placeholder="Tu nombre"/>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nombre completo
+              </label>
+              <input
+                name="fullName"
+                type="text"
+                required
+                value={form.fullName}
+                onChange={handleChange}
+                placeholder="Tu nombre y apellido"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0038A8]"
+              />
             </div>
+
             <div>
-              <div style={labelStyle}>Apellido</div>
-              <input style={inputStyle} placeholder="Tu apellido"/>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Correo electrónico
+              </label>
+              <input
+                name="email"
+                type="email"
+                required
+                value={form.email}
+                onChange={handleChange}
+                placeholder="tucorreo@ejemplo.com"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0038A8]"
+              />
             </div>
-          </div>
 
-          <div>
-            <div style={labelStyle}>Correo electrónico</div>
-            <input style={inputStyle} placeholder="tu@correo.com" type="email"/>
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Teléfono <span className="text-gray-400">(opcional)</span>
+              </label>
+              <input
+                name="phone"
+                type="tel"
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="809-555-0000"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0038A8]"
+              />
+            </div>
 
-          <div>
-            <div style={labelStyle}>WhatsApp</div>
-            <input style={inputStyle} placeholder="809-000-0000" type="tel"/>
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Contraseña
+              </label>
+              <input
+                name="password"
+                type="password"
+                required
+                value={form.password}
+                onChange={handleChange}
+                placeholder="Mínimo 6 caracteres"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0038A8]"
+              />
+            </div>
 
-          <div>
-            <div style={labelStyle}>Provincia</div>
-            <select style={{...inputStyle,background:'#fff'}}>
-              <option>Selecciona tu provincia...</option>
-              <option>Distrito Nacional</option>
-              <option>Santo Domingo</option>
-              <option>Santiago</option>
-              <option>La Vega</option>
-              <option>San Pedro de Macorís</option>
-              <option>Puerto Plata</option>
-              <option>La Romana</option>
-              <option>Barahona</option>
-              <option>Higüey</option>
-              <option>Moca</option>
-              <option>San Francisco de Macorís</option>
-              <option>Azua</option>
-              <option>Baoruco</option>
-              <option>Dajabón</option>
-              <option>Duarte</option>
-              <option>Elías Piña</option>
-              <option>El Seibo</option>
-              <option>Espaillat</option>
-              <option>Hato Mayor</option>
-              <option>Independencia</option>
-              <option>La Altagracia</option>
-              <option>La Estrelleta</option>
-              <option>María Trinidad Sánchez</option>
-              <option>Monseñor Nouel</option>
-              <option>Monte Cristi</option>
-              <option>Monte Plata</option>
-              <option>Pedernales</option>
-              <option>Peravia</option>
-              <option>Samaná</option>
-              <option>Sánchez Ramírez</option>
-              <option>San Cristóbal</option>
-              <option>San José de Ocoa</option>
-              <option>Santiago Rodríguez</option>
-              <option>Valverde (Mao)</option>
-            </select>
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Confirmar contraseña
+              </label>
+              <input
+                name="confirmPassword"
+                type="password"
+                required
+                value={form.confirmPassword}
+                onChange={handleChange}
+                placeholder="Repite tu contraseña"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0038A8]"
+              />
+            </div>
 
-          <div>
-            <div style={labelStyle}>Contraseña</div>
-            <input style={inputStyle} placeholder="Mínimo 8 caracteres" type="password"/>
-          </div>
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+                {error}
+              </div>
+            )}
 
-          <label style={{display:'flex',gap:8,fontSize:13,cursor:'pointer',alignItems:'flex-start'}}>
-            <input type="checkbox" style={{marginTop:2}}/>
-            <span style={{color:BRAND.gray}}>Acepto los <a href="#" style={{color:BRAND.blue,fontWeight:600}}>Términos</a> y la <a href="#" style={{color:BRAND.blue,fontWeight:600}}>Política de Privacidad</a></span>
-          </label>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#E31837] hover:bg-[#c41530] disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition-colors mt-2"
+            >
+              {loading ? 'Creando cuenta...' : 'Crear cuenta'}
+            </button>
+          </form>
 
-          <button style={{background:BRAND.red,color:'#fff',border:'none',padding:14,borderRadius:8,fontWeight:600,fontSize:15,cursor:'pointer'}}>
-            Crear mi cuenta gratis
-          </button>
-
-          <div style={{textAlign:'center',fontSize:13,color:BRAND.gray}}>
-            ¿Ya tienes cuenta? <a href="/login" style={{color:BRAND.blue,fontWeight:600,textDecoration:'none'}}>Iniciar sesión</a>
-          </div>
+          <p className="mt-6 text-center text-sm text-gray-500">
+            ¿Ya tienes cuenta?{' '}
+            <Link href="/login" className="text-[#0038A8] font-medium hover:underline">
+              Inicia sesión
+            </Link>
+          </p>
         </div>
       </div>
-    </div>
-  );
+    </main>
+  )
 }

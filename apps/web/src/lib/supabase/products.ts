@@ -1,4 +1,4 @@
-import { createServerSupabase } from './client';
+import { createServerClient } from './server';
 import type { Product } from '@/types';
 
 interface GetProductsOptions {
@@ -12,7 +12,7 @@ interface GetProductsOptions {
 
 // ─── Obtener lista de productos ───────────────────────────────────────────────
 export async function getProducts(opts: GetProductsOptions = {}): Promise<Product[]> {
-  const supabase = createServerSupabase();
+  const supabase = await createServerClient();
   const {
     category, search, province,
     limit = 24, offset = 0,
@@ -48,7 +48,7 @@ export async function getProducts(opts: GetProductsOptions = {}): Promise<Produc
 
 // ─── Obtener un producto por ID ───────────────────────────────────────────────
 export async function getProductById(id: string): Promise<Product | null> {
-  const supabase = createServerSupabase();
+  const supabase = await createServerClient();
   const { data, error } = await supabase
     .from('products')
     .select(`
@@ -66,6 +66,6 @@ export async function getProductById(id: string): Promise<Product | null> {
 
 // ─── Incrementar contador de visitas ─────────────────────────────────────────
 export async function incrementProductView(id: string) {
-  const supabase = createServerSupabase();
+  const supabase = await createServerClient();
   await supabase.rpc('increment_product_views', { product_id: id });
 }
