@@ -26,6 +26,9 @@ const TRUST = [
   { icon: Truck, title:'+32 provincias', sub:'Envíos a todo el país' },
 ];
 
+// Variación de alto por tarjeta para lograr el efecto escalonado tipo Alibaba
+const IMAGE_RATIOS = ['1/1', '4/5', '5/4', '1/1', '5/6'];
+
 export function ProductGrid({ products }: { products?: any[] }) {
   const items = products?.length ? products : PRODUCTS;
 
@@ -39,9 +42,9 @@ export function ProductGrid({ products }: { products?: any[] }) {
       </div>
 
       <div className="grid-products">
-        {items.map((p: any) => (
+        {items.map((p: any, idx: number) => (
           <div key={p.id} style={{background:'#fff',border:'1px solid #EEE',borderRadius:10,overflow:'hidden',cursor:'pointer'}}>
-            <div style={{aspectRatio:'1',background:BRAND.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:48,position:'relative'}}>
+            <div style={{aspectRatio:IMAGE_RATIOS[idx % IMAGE_RATIOS.length],background:BRAND.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:48,position:'relative'}}>
               {p.e || '📦'}
               {p.badge && (
                 <span style={{position:'absolute',top:8,left:8,background: p.badge === 'Nuevo' ? BRAND.dark : BRAND.red,color:'#fff',fontSize:10,fontWeight:700,padding:'3px 8px',borderRadius:4}}>

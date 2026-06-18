@@ -10,13 +10,15 @@ const ITEMS = [
 export default function CartPage() {
   return (
     <div style={{minHeight:'100vh',background:BRAND.bg}}>
-      <div style={{background:'#fff',borderBottom:'1px solid #EAEAEA',padding:'16px 24px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-        <a href="/" style={{fontWeight:700,fontSize:20,textDecoration:'none'}}>
-          <span style={{color:BRAND.blue}}>Mercado</span><span style={{color:BRAND.red}}>RD</span>
-        </a>
-        <span style={{color:BRAND.dark,fontSize:14,display:'flex',alignItems:'center',gap:6}}>
-          <ShoppingCart size={18} /> Mi Carrito
-        </span>
+      <div style={{background:'#fff',borderBottom:'1px solid #EAEAEA'}}>
+        <div style={{maxWidth:1000,margin:'0 auto',padding:'16px 28px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <a href="/" style={{fontWeight:700,fontSize:20,textDecoration:'none'}}>
+            <span style={{color:BRAND.blue}}>Mercado</span><span style={{color:BRAND.red}}>RD</span>
+          </a>
+          <span style={{color:BRAND.dark,fontSize:14,display:'flex',alignItems:'center',gap:6}}>
+            <ShoppingCart size={18} /> Mi Carrito
+          </span>
+        </div>
       </div>
 
       <div className="cart-layout" style={{maxWidth:1000,margin:'0 auto',padding:28}}>
