@@ -38,7 +38,7 @@ export default async function ConfirmPage(
       items:order_items(
         *,
         product:products(name, images),
-        vendor:vendors(business_name)
+        vendor:vendors(business_name, whatsapp)
       )
     `)
     .eq('id', orderId)
@@ -47,6 +47,15 @@ export default async function ConfirmPage(
   if (error || !order) notFound()
 
   const shortId = order.id.split('-')[0].toUpperCase()
+
+  // Vendors únicos con WhatsApp en esta orden (puede haber más de uno)
+  const vendorsWithWhatsapp = Array.from(
+    new Map(
+      (order.items as any[])
+        .filter(item => item.vendor?.whatsapp)
+        .map(item => [item.vendor.business_name, item.vendor as { business_name: string; whatsapp: string }])
+    ).values()
+  )
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -135,6 +144,28 @@ export default async function ConfirmPage(
           </div>
         </div>
 
+        {/* Contactar vendedor(es) */}
+        {vendorsWithWhatsapp.length > 0 && (
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-4">
+            <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+              📲 CONTACTAR VENDEDOR{vendorsWithWhatsapp.length > 1 ? 'ES' : ''}
+            </h2>
+            <div className="flex flex-col gap-2">
+              {vendorsWithWhatsapp.map(vendor => (
+                <a
+                  key={vendor.business_name}
+                  href={`https://wa.me/${vendor.whatsapp}?text=${encodeURIComponent(`Hola, tengo una pregunta sobre mi pedido #RD-${shortId}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-1.5 w-full border border-green-500 text-green-600 text-sm font-medium py-2.5 rounded-lg hover:bg-green-50 transition-colors no-underline"
+                >
+                  Contactar a {vendor.business_name}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Acciones */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
           <a
@@ -144,7 +175,7 @@ export default async function ConfirmPage(
             Seguir comprando →
           </a>
           <a
-            href="/dashboard"
+            href="/perfil/pedidos"
             className="block text-center bg-white border border-gray-200 text-gray-900 py-3 rounded-xl font-medium no-underline hover:bg-gray-50 transition-colors"
           >
             Ver mis pedidos

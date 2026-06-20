@@ -14,6 +14,7 @@ import { Navbar } from '@/components/shop/Navbar'
 import { createClient } from '@/lib/supabase/client'
 import { useLocationStore } from '@/lib/store/location'
 import type { Province } from '@/types/database.types'
+import { notifyOrderConfirmed } from '@/lib/whatsapp/notifications'
 import Image from 'next/image'
 
 const PAYMENT_METHODS = [
@@ -113,6 +114,17 @@ export default function CheckoutPage() {
         console.error('[RPC ERROR DETALLE]', JSON.stringify(rpcError, null, 2))
         throw rpcError
       }
+
+      // Notificar al comprador por WhatsApp — fire and forget: no bloquea la UI
+      // ni muestra error si falla (ej. credenciales de Meta sin configurar todavía)
+      supabase
+        .from('orders')
+        .select('id, total_rdp, delivery_type, user:users(full_name, phone)')
+        .eq('id', orderId)
+        .single()
+        .then(({ data }) => {
+          if (data) notifyOrderConfirmed(data as any)
+        }, () => {})
 
       clearCart()
       router.push(`/confirm?order=${orderId}`)

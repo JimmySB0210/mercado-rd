@@ -1,0 +1,175 @@
+// ============================================================
+// MercadoRD — Panel de administración
+// Ruta: src/app/admin/page.tsx
+// ============================================================
+
+import { redirect } from 'next/navigation'
+import { createServerClient } from '@/lib/supabase/server'
+import { isCurrentUserAdmin, getMarketplaceKPIs, getAllVendors, getRecentOrders } from '@/lib/queries/admin'
+import { VerifyVendorButton } from '@/components/admin/VerifyVendorButton'
+import { formatPrice } from '@/types/database.types'
+import { BRAND } from '@/lib/colors'
+
+const STATUS_LABELS: Record<string, { label: string; bg: string; text: string }> = {
+  pending:   { label: '⏳ Pendiente',  bg: '#FEF9C3', text: '#713f12' },
+  confirmed: { label: '✅ Confirmado',  bg: '#DBEAFE', text: '#1e3a8a' },
+  preparing: { label: '📦 Preparando', bg: '#E0E7FF', text: '#3730a3' },
+  shipped:   { label: '🚚 Enviado',    bg: '#DBEAFE', text: '#1e3a8a' },
+  delivered: { label: '✔️ Entregado',   bg: '#DCFCE7', text: '#166534' },
+  cancelled: { label: '❌ Cancelado',   bg: '#FEE2E2', text: '#991B1B' },
+}
+
+export default async function AdminPage() {
+  const supabase = await createServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) redirect('/login?redirect=/admin')
+
+  const isAdmin = await isCurrentUserAdmin()
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="text-center max-w-md">
+          <div className="text-5xl mb-4">🔒</div>
+          <h1 className="text-xl font-bold text-gray-900 mb-2">Acceso restringido</h1>
+          <p className="text-gray-500 text-sm mb-6">
+            Esta sección es solo para administradores de MercadoRD.
+          </p>
+          <a href="/" className="text-blue-600 underline text-sm">Volver al inicio</a>
+        </div>
+      </div>
+    )
+  }
+
+  const [kpis, vendors, orders] = await Promise.all([
+    getMarketplaceKPIs(),
+    getAllVendors(),
+    getRecentOrders(15),
+  ])
+
+  const KPI_CARDS = [
+    { label: 'Ingresos totales', val: formatPrice(kpis.totalRevenue), sub: `${formatPrice(kpis.revenueThisMonth)} este mes`, color: BRAND.green },
+    { label: 'Pedidos totales', val: String(kpis.totalOrders), sub: `${kpis.ordersThisMonth} este mes`, color: BRAND.blue },
+    { label: 'Vendors activos', val: String(kpis.totalVendors), sub: `${kpis.verifiedVendors} verificados`, color: '#F5A200' },
+    { label: 'Productos', val: String(kpis.totalProducts), sub: `${kpis.activeProducts} activos`, color: BRAND.red },
+    { label: 'Usuarios registrados', val: String(kpis.totalUsers), sub: 'compradores + vendors', color: '#7C3AED' },
+  ]
+
+  return (
+    <div style={{ minHeight: '100vh', fontFamily: 'inherit', display: 'grid', gridTemplateColumns: '220px 1fr' }}>
+
+      {/* Sidebar admin */}
+      <div style={{ background: '#0a0a0a', padding: '24px 0', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '0 20px 24px', borderBottom: '1px solid #222', marginBottom: 16 }}>
+          <a href="/" style={{ textDecoration: 'none' }}>
+            <div style={{ fontWeight: 900, fontSize: 18, color: '#fff', marginBottom: 4 }}>
+              Mercado<span style={{ color: BRAND.red }}>RD</span>
+            </div>
+          </a>
+          <div style={{ fontSize: 12, color: '#888' }}>🛡️ Panel de administración</div>
+        </div>
+        <div style={{ padding: '10px 20px', color: '#fff', fontSize: 14, fontWeight: 600, background: 'rgba(255,255,255,0.08)', borderLeft: '2px solid #fff' }}>
+          📊 Resumen
+        </div>
+        <a href="/dashboard" style={{ padding: '10px 20px', color: '#666', fontSize: 14, textDecoration: 'none' }}>
+          ← Mi panel de vendedor
+        </a>
+      </div>
+
+      {/* Contenido */}
+      <div style={{ padding: 28, background: '#f5f5f5' }}>
+        <div style={{ marginBottom: 24 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 4 }}>Vista general del marketplace</h1>
+          <p style={{ color: '#666', fontSize: 14 }}>Métricas globales de MercadoRD</p>
+        </div>
+
+        {/* KPIs */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 28 }}>
+          {KPI_CARDS.map((s, i) => (
+            <div key={i} style={{ background: '#fff', borderRadius: 12, padding: 18, boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+              <div style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{s.label}</div>
+              <div style={{ fontWeight: 900, fontSize: 22, marginBottom: 6, color: '#111' }}>{s.val}</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: s.color }}>{s.sub}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 20 }} className="admin-grid">
+
+          {/* Vendors */}
+          <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 800, fontSize: 15 }}>
+              Vendors ({vendors.length})
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: '#f8f8f8' }}>
+                    {['Tienda', 'Provincia', 'Productos', 'Plan', 'Ventas', 'Verificado'].map(h => (
+                      <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 10, color: '#999', textTransform: 'uppercase', fontWeight: 600, borderBottom: '1px solid #f0f0f0', whiteSpace: 'nowrap' }}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {vendors.map(v => (
+                    <tr key={v.id} style={{ borderBottom: '1px solid #f8f8f8' }}>
+                      <td style={{ padding: '10px 12px', fontSize: 13, fontWeight: 600, color: '#111' }}>{v.business_name}</td>
+                      <td style={{ padding: '10px 12px', fontSize: 12, color: '#666', whiteSpace: 'nowrap' }}>{v.province_name ?? '—'}</td>
+                      <td style={{ padding: '10px 12px', fontSize: 12, color: '#666' }}>{v.product_count}</td>
+                      <td style={{ padding: '10px 12px', fontSize: 11 }}>
+                        <span style={{ background: v.plan === 'pro' ? '#E0E7FF' : '#F3F4F6', color: v.plan === 'pro' ? '#3730a3' : '#666', padding: '2px 8px', borderRadius: 10, fontWeight: 700, textTransform: 'capitalize' }}>
+                          {v.plan}
+                        </span>
+                      </td>
+                      <td style={{ padding: '10px 12px', fontSize: 12, color: '#666', whiteSpace: 'nowrap' }}>{v.total_sales}</td>
+                      <td style={{ padding: '10px 12px' }}>
+                        <VerifyVendorButton vendorId={v.id} isVerified={v.is_verified} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Órdenes recientes */}
+          <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 800, fontSize: 15 }}>
+              Órdenes recientes
+            </div>
+            <div style={{ maxHeight: 480, overflowY: 'auto' }}>
+              {orders.map(o => {
+                const shortId = o.id.split('-')[0].toUpperCase()
+                const status = STATUS_LABELS[o.status] ?? STATUS_LABELS.pending
+                const date = new Date(o.created_at).toLocaleDateString('es-DO', { day: 'numeric', month: 'short' })
+                return (
+                  <div key={o.id} style={{ padding: '12px 18px', borderBottom: '1px solid #f8f8f8', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: BRAND.blue }}>#RD-{shortId}</div>
+                      <div style={{ fontSize: 11, color: '#999' }}>{o.buyer_name} · {date} · {o.item_count} items</div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{formatPrice(o.total_rdp)}</div>
+                      <span style={{ background: status.bg, color: status.text, fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 8 }}>
+                        {status.label}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+        </div>
+
+        <style>{`
+          @media (max-width: 900px) {
+            .admin-grid { grid-template-columns: 1fr !important; }
+          }
+        `}</style>
+      </div>
+    </div>
+  )
+}

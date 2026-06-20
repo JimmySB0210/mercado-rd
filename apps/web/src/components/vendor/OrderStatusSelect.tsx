@@ -8,6 +8,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { BRAND } from '@/lib/colors'
+import { notifyOrderShipped, notifyOrderDelivered } from '@/lib/whatsapp/notifications'
 
 const STATUS_OPTIONS = [
   { value: 'pending',   label: '⏳ Pendiente',  bg: '#FEF9C3', text: '#713f12' },
@@ -42,6 +43,24 @@ export function OrderStatusSelect({ orderId, currentStatus }: Props) {
     if (!error) {
       setStatus(newStatus)
       router.refresh()
+
+      // Notificar al comprador por WhatsApp — fire and forget: no bloquea la UI
+      // ni muestra error si falla (ej. credenciales de Meta sin configurar todavía)
+      if (newStatus === 'shipped' || newStatus === 'delivered') {
+        supabase
+          .from('orders')
+          .select('id, total_rdp, delivery_type, tracking_code, user:users(full_name, phone)')
+          .eq('id', orderId)
+          .single()
+          .then(({ data }) => {
+            if (!data) return
+            if (newStatus === 'shipped') {
+              notifyOrderShipped(data as any, data.tracking_code ?? 'Pendiente')
+            } else {
+              notifyOrderDelivered(data as any)
+            }
+          }, () => {})
+      }
     } else {
       console.error('[OrderStatusSelect]', error)
     }

@@ -13,7 +13,7 @@ const TABS = [
   { href: '/',           label: 'Inicio',     icon: Home          },
   { href: '/#categorias',label: 'Categorías', icon: LayoutGrid    },
   { href: '/login',      label: 'Cuenta',     icon: User          },
-  { href: '/coming-soon',label: 'Mensajes',   icon: MessageCircle },
+  { href: '/mensajes',   label: 'Mensajes',   icon: MessageCircle },
   { href: '/cart',       label: 'Carrito',    icon: ShoppingCart  },
 ]
 

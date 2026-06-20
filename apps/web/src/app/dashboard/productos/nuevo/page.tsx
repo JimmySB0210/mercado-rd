@@ -30,6 +30,7 @@ export default function NewProductPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [planLimitReached, setPlanLimitReached] = useState(false)
 
   const [form, setForm] = useState({
     name: '',
@@ -131,6 +132,7 @@ export default function NewProductPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setPlanLimitReached(false)
 
     if (!vendorId) return
     if (!form.name || !form.price || !form.categoryId) {
@@ -170,9 +172,16 @@ export default function NewProductPage() {
 
       router.push('/dashboard')
       router.refresh()
-    } catch (err) {
+    } catch (err: any) {
       console.error('[handleSubmit]', err)
-      setError('Ocurrió un error al guardar el producto. Intenta de nuevo.')
+
+      const message: string = err?.message ?? ''
+      if (message.startsWith('PLAN_LIMIT_REACHED:')) {
+        setError(message.replace('PLAN_LIMIT_REACHED:', '').trim())
+        setPlanLimitReached(true)
+      } else {
+        setError('Ocurrió un error al guardar el producto. Intenta de nuevo.')
+      }
       setSaving(false)
     }
   }
@@ -348,7 +357,20 @@ export default function NewProductPage() {
             </div>
           </div>
 
-          {error && (
+          {error && planLimitReached && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
+              <p className="mb-2">🔒 {error}</p>
+              <a
+                href="/dashboard/configuracion"
+                className="inline-block font-semibold underline"
+                style={{ color: BRAND.blue }}
+              >
+                Actualizar a Pro →
+              </a>
+            </div>
+          )}
+
+          {error && !planLimitReached && (
             <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
               {error}
             </div>
