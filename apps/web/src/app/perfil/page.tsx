@@ -107,7 +107,7 @@ export default function PerfilPage() {
         {/* Acciones rápidas */}
         <div className="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50 mb-4">
           <a
-            href="/dashboard"
+            href="/perfil/pedidos"
             className="flex items-center justify-between px-6 py-4 no-underline hover:bg-gray-50 transition-colors"
           >
             <div className="flex items-center gap-3">

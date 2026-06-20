@@ -1,94 +1,167 @@
-export default function ConfirmPage() {
-  return (
-    <div style={{minHeight:'100vh',fontFamily:'sans-serif',background:'#f5f5f5'}}>
-      <div style={{background:'#111',padding:'16px 24px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-        <a href="/" style={{fontWeight:900,fontSize:20,color:'#fff',textDecoration:'none'}}>
-          Mercado<span style={{color:'#E31837'}}>RD</span>
-        </a>
-        <span style={{color:'#00873D',fontSize:13,fontWeight:700}}>✓ Pedido confirmado</span>
+// ============================================================
+// MercadoRD — Confirmación de pedido
+// Ruta: src/app/confirm/page.tsx
+// ============================================================
+// Server Component — lee la orden real de Supabase usando
+// el ?order=ID que viene del checkout
+// ============================================================
+
+import { createServerClient } from '@/lib/supabase/server'
+import { notFound } from 'next/navigation'
+import { Navbar } from '@/components/shop/Navbar'
+import { formatPrice } from '@/types/database.types'
+
+export default async function ConfirmPage(
+  { searchParams }: { searchParams: Promise<{ order?: string }> }
+) {
+  const { order: orderId } = await searchParams
+
+  if (!orderId) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="max-w-xl mx-auto px-4 py-20 text-center">
+          <p className="text-gray-500">No se encontró el número de pedido.</p>
+          <a href="/" className="text-blue-600 underline mt-4 inline-block">Volver al inicio</a>
+        </div>
       </div>
+    )
+  }
 
-      <div style={{maxWidth:680,margin:'0 auto',padding:28}}>
+  const supabase = await createServerClient()
 
-        <div style={{background:'#fff',borderRadius:8,padding:36,textAlign:'center',marginBottom:20,boxShadow:'0 1px 8px rgba(0,0,0,0.06)'}}>
-          <div style={{width:72,height:72,borderRadius:'50%',background:'#00873D',color:'#fff',fontSize:32,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px'}}>
-            ✓
+  const { data: order, error } = await supabase
+    .from('orders')
+    .select(`
+      *,
+      province:provinces_rd(name),
+      items:order_items(
+        *,
+        product:products(name, images),
+        vendor:vendors(business_name)
+      )
+    `)
+    .eq('id', orderId)
+    .single()
+
+  if (error || !order) notFound()
+
+  const shortId = order.id.split('-')[0].toUpperCase()
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+
+      <main className="max-w-2xl mx-auto px-4 py-8">
+
+        {/* Confirmación */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center mb-4">
+          <div className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
           </div>
-          <h1 style={{fontSize:28,fontWeight:900,marginBottom:8}}>¡Pedido confirmado!</h1>
-          <p style={{color:'#666',marginBottom:16,lineHeight:1.6}}>
-            Gracias por comprar en MercadoRD 🇩🇴<br/>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">¡Pedido confirmado!</h1>
+          <p className="text-gray-500 text-sm mb-6">
+            Gracias por comprar en MercadoRD 🇩🇴<br />
             Recibirás confirmación por WhatsApp en los próximos minutos.
           </p>
-          <div style={{background:'#f5f5f5',borderRadius:6,padding:'10px 24px',display:'inline-block',fontFamily:'monospace',fontWeight:800,fontSize:16,letterSpacing:1}}>
-            # RD-8824
+          <div className="inline-block bg-gray-50 rounded-xl px-6 py-3 font-mono font-bold text-gray-900">
+            # RD-{shortId}
           </div>
         </div>
 
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
-          <div style={{background:'#fff',borderRadius:8,padding:18,boxShadow:'0 1px 8px rgba(0,0,0,0.06)'}}>
-            <div style={{fontWeight:800,fontSize:13,marginBottom:12,textTransform:'uppercase',letterSpacing:0.5}}>📍 Entrega</div>
-            <div style={{fontSize:13,color:'#444',lineHeight:1.7}}>
-              María Rodríguez<br/>
-              Calle El Conde #24, Naco<br/>
-              Santo Domingo Este<br/>
-              📱 809-555-0192
-            </div>
-          </div>
-          <div style={{background:'#fff',borderRadius:8,padding:18,boxShadow:'0 1px 8px rgba(0,0,0,0.06)'}}>
-            <div style={{fontWeight:800,fontSize:13,marginBottom:12,textTransform:'uppercase',letterSpacing:0.5}}>🚚 Envío</div>
-            <div style={{fontSize:13,color:'#444',lineHeight:1.7}}>
-              Express SDQ<br/>
-              Hoy antes de las 6:00 PM<br/>
-              Tracking: <span style={{fontFamily:'monospace',fontWeight:700,color:'#4A7FD6'}}>RDX-482-2024</span>
-            </div>
-          </div>
+        {/* Entrega */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-4">
+          <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            📍 ENTREGA
+          </h2>
+          <p className="text-sm text-gray-900">{order.delivery_address}</p>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {(order.province as { name: string } | null)?.name}
+          </p>
+          {order.notes && (
+            <p className="text-xs text-gray-400 mt-2">📝 {order.notes}</p>
+          )}
         </div>
 
-        <div style={{background:'#fff',borderRadius:8,overflow:'hidden',marginBottom:20,boxShadow:'0 1px 8px rgba(0,0,0,0.06)'}}>
-          <div style={{padding:'12px 18px',background:'#f5f5f5',fontWeight:800,fontSize:13,textTransform:'uppercase',letterSpacing:0.5}}>
-            📦 Productos
-          </div>
-          {[
-            {e:'👟',name:'Tenis Nike Air Premium',meta:'Azul · Talla 40 · x1',vendor:'SportStore Santiago',price:3200},
-            {e:'🌿',name:'Especias dominicanas Pack x3',meta:'Cant. 2',vendor:'AgroVerde · La Vega',price:900},
-            {e:'👗',name:'Vestido floral verano 2026',meta:'Rosa · Talla M · x1',vendor:'ModaCapital · SDQ',price:1650},
-          ].map((p,i) => (
-            <div key={i} style={{display:'flex',gap:12,padding:'14px 18px',borderTop:'1px solid #f0f0f0',alignItems:'center'}}>
-              <div style={{width:48,height:48,borderRadius:6,background:'#f5f5f5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>{p.e}</div>
-              <div style={{flex:1}}>
-                <div style={{fontWeight:700,fontSize:13,marginBottom:2}}>{p.name}</div>
-                <div style={{fontSize:11,color:'#999'}}>{p.meta} · {p.vendor}</div>
+        {/* Productos */}
+        <div className="bg-white rounded-2xl border border-gray-100 mb-4 overflow-hidden">
+          <h2 className="text-sm font-semibold text-gray-700 px-6 pt-6 pb-3 flex items-center gap-2">
+            📦 PRODUCTOS
+          </h2>
+          <div className="divide-y divide-gray-50">
+            {(order.items as any[]).map((item) => (
+              <div key={item.id} className="flex items-center gap-3 px-6 py-4">
+                <div className="w-12 h-12 rounded-lg bg-gray-50 flex-shrink-0 overflow-hidden flex items-center justify-center text-xl">
+                  {item.product?.images?.[0] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover" />
+                  ) : '📦'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900">{item.product?.name}</p>
+                  <p className="text-xs text-gray-400">
+                    {[item.size, item.color].filter(Boolean).join(' · ')}
+                    {(item.size || item.color) && ' · '}
+                    x{item.quantity} · {item.vendor?.business_name}
+                  </p>
+                </div>
+                <span className="text-sm font-bold text-gray-900 flex-shrink-0">
+                  {formatPrice(item.price_rdp * item.quantity)}
+                </span>
               </div>
-              <div style={{fontWeight:800,fontSize:13}}>RD${p.price.toLocaleString()}</div>
+            ))}
+          </div>
+
+          {/* Totales */}
+          <div className="border-t border-gray-100 px-6 py-4 space-y-2">
+            <div className="flex justify-between text-sm text-gray-600">
+              <span>Subtotal</span>
+              <span>{formatPrice(order.subtotal_rdp)}</span>
             </div>
-          ))}
-          <div style={{padding:'12px 18px',borderTop:'1px solid #eee',display:'flex',flexDirection:'column',gap:6}}>
-            <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#666'}}><span>Subtotal</span><span>RD$5,750</span></div>
-            <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#00873D',fontWeight:600}}><span>Descuentos</span><span>−RD$1,300</span></div>
-            <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#666'}}><span>Envío Express</span><span>RD$350</span></div>
-            <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#666'}}><span>ITBIS (18%)</span><span>RD$861</span></div>
-            <div style={{display:'flex',justifyContent:'space-between',fontWeight:900,fontSize:16,paddingTop:8,borderTop:'1px solid #eee',marginTop:4}}><span>Total pagado</span><span>RD$5,661</span></div>
+            <div className="flex justify-between text-sm text-gray-600">
+              <span>Envío</span>
+              <span>{formatPrice(order.delivery_rdp)}</span>
+            </div>
+            <div className="flex justify-between text-sm text-gray-600">
+              <span>ITBIS (18%)</span>
+              <span>{formatPrice(order.itbis_rdp)}</span>
+            </div>
+            <div className="flex justify-between font-bold text-base text-gray-900 pt-2 border-t border-gray-100">
+              <span>Total pagado</span>
+              <span>{formatPrice(order.total_rdp)}</span>
+            </div>
           </div>
         </div>
 
-        <div style={{display:'flex',gap:10,flexWrap:'wrap',marginBottom:20}}>
-          <a href="/" style={{flex:1,minWidth:140,background:'#111',color:'#fff',textDecoration:'none',textAlign:'center',padding:13,borderRadius:6,fontWeight:700,fontSize:13}}>
+        {/* Acciones */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+          <a
+            href="/"
+            className="block text-center bg-gray-900 text-white py-3 rounded-xl font-medium no-underline hover:bg-gray-800 transition-colors"
+          >
             Seguir comprando →
           </a>
-          <button style={{flex:1,minWidth:140,background:'#fff',border:'1px solid #ddd',padding:13,borderRadius:6,fontWeight:700,fontSize:13,cursor:'pointer'}}>
-            📱 Contactar vendedor
-          </button>
-          <button style={{flex:1,minWidth:140,background:'#fff',border:'1px solid #ddd',padding:13,borderRadius:6,fontWeight:700,fontSize:13,cursor:'pointer'}}>
-            📄 Descargar factura
-          </button>
+          <a
+            href="/dashboard"
+            className="block text-center bg-white border border-gray-200 text-gray-900 py-3 rounded-xl font-medium no-underline hover:bg-gray-50 transition-colors"
+          >
+            Ver mis pedidos
+          </a>
         </div>
 
-        <div style={{background:'#F0FDF4',border:'1px solid #86EFAC',borderRadius:8,padding:16,textAlign:'center'}}>
-          <div style={{fontWeight:700,color:'#166534',marginBottom:4}}>🛡 Compra protegida por MercadoRD</div>
-          <div style={{fontSize:12,color:'#166534'}}>Si el producto no llega o no es como se describe, te devolvemos tu dinero completo.</div>
+        {/* Garantía */}
+        <div className="bg-green-50 border border-green-200 rounded-xl p-5 text-center">
+          <p className="font-semibold text-green-800 text-sm mb-1">
+            🛡️ Compra protegida por MercadoRD
+          </p>
+          <p className="text-xs text-green-700">
+            Si el producto no llega o no es como se describe, te devolvemos tu dinero completo.
+          </p>
         </div>
 
-      </div>
+      </main>
     </div>
-  );
+  )
 }

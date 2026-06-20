@@ -4,24 +4,17 @@
 // Ruta: src/app/checkout/page.tsx
 // ============================================================
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ShieldCheck, ChevronDown } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
 import { useCartStore, useCartSubtotal, useCartItbis, useCartTotal } from '@/lib/store/cart'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { Navbar } from '@/components/shop/Navbar'
+import { createClient } from '@/lib/supabase/client'
+import { useLocationStore } from '@/lib/store/location'
+import type { Province } from '@/types/database.types'
 import Image from 'next/image'
-
-const PROVINCES = [
-  'Azua','Bahoruco','Barahona','Dajabón','Distrito Nacional','Duarte',
-  'Elías Piña','El Seibo','Espaillat','Hato Mayor','Hermanas Mirabal',
-  'Independencia','La Altagracia','La Romana','La Vega','María Trinidad Sánchez',
-  'Monseñor Nouel','Monte Cristi','Monte Plata','Pedernales','Peravia',
-  'Puerto Plata','Samaná','San Cristóbal','San José de Ocoa','San Juan',
-  'San Pedro de Macorís','Sánchez Ramírez','Santiago','Santiago Rodríguez',
-  'Santo Domingo','Valverde',
-]
 
 const PAYMENT_METHODS = [
   { id: 'azul',     label: 'Tarjeta (Azul)',    emoji: '💳' },
@@ -49,6 +42,25 @@ export default function CheckoutPage() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError]   = useState<string | null>(null)
+  const [provinces, setProvinces] = useState<Province[]>([])
+  const { province: selectedProvince } = useLocationStore()
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase
+      .from('provinces_rd')
+      .select('id, name, code')
+      .order('name')
+      .then(({ data }) => setProvinces(data ?? []))
+  }, [])
+
+  // Usa la provincia ya elegida en el Navbar como valor inicial del checkout
+  useEffect(() => {
+    if (selectedProvince && !form.province) {
+      setForm(f => ({ ...f, province: selectedProvince.name }))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProvince])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
@@ -66,12 +78,46 @@ export default function CheckoutPage() {
     setError(null)
 
     try {
-      // Por ahora guardamos la orden en Supabase vía API route (a implementar)
-      // De momento simulamos éxito y limpiamos el carrito
-      await new Promise(r => setTimeout(r, 1200)) // simular latencia
+      const supabase = createClient()
+
+      // Buscar el id de la provincia seleccionada
+      const { data: provinceRow, error: provinceError } = await supabase
+        .from('provinces_rd')
+        .select('id')
+        .eq('name', form.province)
+        .single()
+
+      if (provinceError || !provinceRow) {
+        throw new Error('Provincia inválida')
+      }
+
+      // Armar el payload de items para la función RPC
+      const itemsPayload = items.map(item => ({
+        product_id: item.product.id,
+        vendor_id: item.product.vendor_id,
+        quantity: item.quantity,
+        price_rdp: item.product.price_rdp,
+        size: item.selected_size ?? null,
+        color: item.selected_color ?? null,
+      }))
+
+      const { data: orderId, error: rpcError } = await supabase.rpc('create_order_from_cart', {
+        p_delivery_address: form.address,
+        p_province_id: provinceRow.id,
+        p_payment_method: form.payMethod,
+        p_notes: form.notes || null,
+        p_items: itemsPayload,
+      })
+
+      if (rpcError) {
+        console.error('[RPC ERROR DETALLE]', JSON.stringify(rpcError, null, 2))
+        throw rpcError
+      }
+
       clearCart()
-      router.push('/confirm')
-    } catch {
+      router.push(`/confirm?order=${orderId}`)
+    } catch (err) {
+      console.error('[checkout]', err)
       setError('Ocurrió un error al procesar tu pedido. Intenta de nuevo.')
       setLoading(false)
     }
@@ -135,7 +181,7 @@ export default function CheckoutPage() {
                   style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box', appearance: 'none', background: '#fff', color: form.province ? BRAND.dark : BRAND.gray }}
                 >
                   <option value="">Selecciona tu provincia *</option>
-                  {PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
+                  {provinces.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
                 </select>
                 <ChevronDown size={16} color={BRAND.gray} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
               </div>
