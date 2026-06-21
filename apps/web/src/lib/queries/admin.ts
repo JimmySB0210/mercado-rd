@@ -120,6 +120,56 @@ export async function getAllVendors(): Promise<AdminVendorRow[]> {
   }))
 }
 
+export interface PaymentBreakdown {
+  count: number
+  amount: number
+}
+
+export interface PaymentMetrics {
+  byMethod: Record<string, PaymentBreakdown>
+  byStatus: Record<string, PaymentBreakdown>
+  totalCount: number
+  totalAmount: number
+}
+
+export async function getPaymentMetrics(): Promise<PaymentMetrics> {
+  const supabase = await createServerClient()
+
+  const { data: payments, error } = await supabase
+    .from('payments')
+    .select('method, status, amount_rdp')
+
+  if (error || !payments) {
+    console.error('[getPaymentMetrics]', error)
+    return { byMethod: {}, byStatus: {}, totalCount: 0, totalAmount: 0 }
+  }
+
+  const byMethod: Record<string, PaymentBreakdown> = {}
+  const byStatus: Record<string, PaymentBreakdown> = {}
+  let totalAmount = 0
+
+  for (const p of payments) {
+    const method = byMethod[p.method] ?? { count: 0, amount: 0 }
+    method.count += 1
+    method.amount += p.amount_rdp
+    byMethod[p.method] = method
+
+    const status = byStatus[p.status] ?? { count: 0, amount: 0 }
+    status.count += 1
+    status.amount += p.amount_rdp
+    byStatus[p.status] = status
+
+    totalAmount += p.amount_rdp
+  }
+
+  return {
+    byMethod,
+    byStatus,
+    totalCount: payments.length,
+    totalAmount,
+  }
+}
+
 export interface AdminOrderRow {
   id: string
   status: string

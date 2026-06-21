@@ -5,7 +5,7 @@
 
 import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
-import { isCurrentUserAdmin, getMarketplaceKPIs, getAllVendors, getRecentOrders } from '@/lib/queries/admin'
+import { isCurrentUserAdmin, getMarketplaceKPIs, getAllVendors, getRecentOrders, getPaymentMetrics } from '@/lib/queries/admin'
 import { VerifyVendorButton } from '@/components/admin/VerifyVendorButton'
 import { formatPrice } from '@/types/database.types'
 import { BRAND } from '@/lib/colors'
@@ -17,6 +17,20 @@ const STATUS_LABELS: Record<string, { label: string; bg: string; text: string }>
   shipped:   { label: '🚚 Enviado',    bg: '#DBEAFE', text: '#1e3a8a' },
   delivered: { label: '✔️ Entregado',   bg: '#DCFCE7', text: '#166534' },
   cancelled: { label: '❌ Cancelado',   bg: '#FEE2E2', text: '#991B1B' },
+}
+
+const PAYMENT_METHOD_LABELS: Record<string, { label: string; emoji: string }> = {
+  azul:     { label: 'Azul',          emoji: '💳' },
+  cardnet:  { label: 'CardNet',       emoji: '🏦' },
+  transfer: { label: 'Transferencia', emoji: '🏧' },
+  cash:     { label: 'Efectivo',      emoji: '💵' },
+}
+
+const PAYMENT_STATUS_LABELS: Record<string, { label: string; bg: string; text: string }> = {
+  pending:  { label: 'Pendiente', bg: '#FEF9C3', text: '#713f12' },
+  approved: { label: 'Aprobado',  bg: '#DCFCE7', text: '#166534' },
+  declined: { label: 'Rechazado', bg: '#FEE2E2', text: '#991B1B' },
+  refunded: { label: 'Reembolsado', bg: '#E0E7FF', text: '#3730a3' },
 }
 
 export default async function AdminPage() {
@@ -41,10 +55,11 @@ export default async function AdminPage() {
     )
   }
 
-  const [kpis, vendors, orders] = await Promise.all([
+  const [kpis, vendors, orders, paymentMetrics] = await Promise.all([
     getMarketplaceKPIs(),
     getAllVendors(),
     getRecentOrders(15),
+    getPaymentMetrics(),
   ])
 
   const KPI_CARDS = [
@@ -92,6 +107,73 @@ export default async function AdminPage() {
               <div style={{ fontSize: 12, fontWeight: 600, color: s.color }}>{s.sub}</div>
             </div>
           ))}
+        </div>
+
+        {/* Métricas de pagos */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }} className="admin-grid">
+
+          {/* Por método */}
+          <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 800, fontSize: 15 }}>
+              Pagos por método ({paymentMetrics.totalCount})
+            </div>
+            {paymentMetrics.totalCount === 0 ? (
+              <div style={{ padding: 24, textAlign: 'center', fontSize: 13, color: '#999' }}>
+                Aún no hay pagos registrados.
+              </div>
+            ) : (
+              <div>
+                {Object.entries(paymentMetrics.byMethod).map(([method, data], i, arr) => {
+                  const info = PAYMENT_METHOD_LABELS[method] ?? { label: method, emoji: '💰' }
+                  const pct = paymentMetrics.totalAmount > 0 ? (data.amount / paymentMetrics.totalAmount) * 100 : 0
+                  return (
+                    <div key={method} style={{ padding: '12px 18px', borderBottom: i < arr.length - 1 ? '1px solid #f8f8f8' : 'none' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <span style={{ fontSize: 13, color: '#333' }}>{info.emoji} {info.label}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{formatPrice(data.amount)}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ flex: 1, height: 6, background: '#f0f0f0', borderRadius: 3, overflow: 'hidden' }}>
+                          <div style={{ width: `${pct}%`, height: '100%', background: BRAND.blue }} />
+                        </div>
+                        <span style={{ fontSize: 11, color: '#999', flexShrink: 0 }}>{data.count} pago{data.count === 1 ? '' : 's'}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Por estado */}
+          <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 800, fontSize: 15 }}>
+              Pagos por estado
+            </div>
+            {paymentMetrics.totalCount === 0 ? (
+              <div style={{ padding: 24, textAlign: 'center', fontSize: 13, color: '#999' }}>
+                Aún no hay pagos registrados.
+              </div>
+            ) : (
+              <div>
+                {Object.entries(paymentMetrics.byStatus).map(([status, data], i, arr) => {
+                  const info = PAYMENT_STATUS_LABELS[status] ?? { label: status, bg: '#F3F4F6', text: '#666' }
+                  return (
+                    <div key={status} style={{ padding: '12px 18px', borderBottom: i < arr.length - 1 ? '1px solid #f8f8f8' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ background: info.bg, color: info.text, fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 10 }}>
+                        {info.label}
+                      </span>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{formatPrice(data.amount)}</div>
+                        <div style={{ fontSize: 11, color: '#999' }}>{data.count} pago{data.count === 1 ? '' : 's'}</div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 20 }} className="admin-grid">
