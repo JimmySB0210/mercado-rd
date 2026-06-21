@@ -24,6 +24,7 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -40,6 +41,11 @@ export default function RegisterPage() {
 
     if (form.password.length < 6) {
       setError('La contraseña debe tener al menos 6 caracteres')
+      return
+    }
+
+    if (!acceptedTerms) {
+      setError('Debes aceptar los Términos de Servicio y la Política de Privacidad')
       return
     }
 
@@ -185,6 +191,25 @@ export default function RegisterPage() {
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
               />
             </div>
+
+            <label className="flex items-start gap-2 text-sm text-gray-600 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-0.5"
+              />
+              <span>
+                Acepto los{' '}
+                <Link href="/terminos" target="_blank" className="text-[var(--brand-blue)] hover:underline">
+                  Términos de Servicio
+                </Link>
+                {' '}y la{' '}
+                <Link href="/privacidad" target="_blank" className="text-[var(--brand-blue)] hover:underline">
+                  Política de Privacidad
+                </Link>
+              </span>
+            </label>
 
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">

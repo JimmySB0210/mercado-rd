@@ -457,6 +457,17 @@ export default function CheckoutPage() {
             </div>
           )}
 
+          <p style={{ fontSize: 11, color: BRAND.gray, textAlign: 'center', marginBottom: 10 }}>
+            Al confirmar, aceptas nuestros{' '}
+            <a href="/terminos" target="_blank" style={{ color: BRAND.blue, textDecoration: 'underline' }}>
+              Términos de Servicio
+            </a>
+            {' '}y{' '}
+            <a href="/privacidad" target="_blank" style={{ color: BRAND.blue, textDecoration: 'underline' }}>
+              Política de Privacidad
+            </a>
+          </p>
+
           <button
             onClick={handleSubmit}
             disabled={loading || shippingLoading}
