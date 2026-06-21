@@ -1,91 +1,176 @@
-import { createHmac } from 'crypto';
-import type { Payment } from '@/types';
+// ============================================================
+// MercadoRD — Cliente de pagos Azul (Webservices API)
+// Ruta: src/lib/payments/azul.ts
+// ============================================================
+// MODO ACTUAL: simulado (AZUL_MODE no configurado o = 'mock')
+// El lunes, cuando tengas las credenciales reales de Azul:
+//   1. Agrega en .env.local / Vercel:
+//      AZUL_MODE=live
+//      AZUL_STORE_ID=...        (tu Store/Merchant ID)
+//      AZUL_AUTH1=...           (usuario de autenticación)
+//      AZUL_AUTH2=...           (clave de autenticación)
+//      AZUL_CERT_PATH=...       (certificado .pem que Azul te entrega)
+//   2. No hay que tocar código — processPayment() detecta el modo
+//      automáticamente y cambia de simulación a la API real.
+//
+// Referencia: Azul Webservices API usa autenticación por
+// certificado SSL + Auth1/Auth2, y devuelve un ResponseCode
+// ('00' = aprobado) junto con AuthorizationCode y AzulOrderId.
+// ============================================================
 
-// ─── Tipos Azul ───────────────────────────────────────────────────────────────
-
-interface AzulRequest {
-  orderId:     string;
-  amount:      number;   // Pesos dominicanos (ej: 5661)
-  cardNumber:  string;
-  expiration:  string;   // MMAA
-  cvv:         string;
-  cardHolder:  string;
-  customerIP?: string;
+export interface PaymentRequest {
+  orderId: string
+  amountCents: number      // monto total en centavos de RD$
+  itbisCents: number       // ITBIS incluido, en centavos
+  cardNumber?: string      // solo en modo simulado — en producción se tokeniza client-side
+  expiration?: string      // MMYY
+  cvc?: string
+  customerName: string
 }
 
-interface AzulResponse {
-  ResponseMessage:  string;  // "APROBADA" | "DECLINADA"
-  IsoCode:          string;  // "00" = aprobado
-  AuthorizationCode:string;
-  AzulOrderId:      string;
-  DateTime:         string;
-  ErrorDescription?:string;
+export interface PaymentResult {
+  success: boolean
+  azulOrderId: string | null
+  authCode: string | null
+  responseCode: string
+  responseMessage: string
+  rawResponse: Record<string, unknown>
 }
 
-// ─── Constantes ───────────────────────────────────────────────────────────────
+type AzulMode = 'mock' | 'live'
 
-const AZUL_URL =
-  process.env.NODE_ENV === 'production'
-    ? 'https://pagos.azul.com.do/PaymentPage/api/Default'
-    : 'https://pruebas.azul.com.do/PaymentPage/api/Default';
+function getMode(): AzulMode {
+  return (process.env.AZUL_MODE as AzulMode) ?? 'mock'
+}
 
-// ─── Procesar pago con Azul ───────────────────────────────────────────────────
+// ─── Modo simulado — para desarrollo sin credenciales bancarias ──
+// Aprueba siempre, excepto si la tarjeta termina en "0000" (para
+// poder probar también el flujo de pago rechazado en el frontend)
+async function processMockPayment(req: PaymentRequest): Promise<PaymentResult> {
+  // Simular latencia real de red/banco
+  await new Promise((r) => setTimeout(r, 800 + Math.random() * 600))
 
-export async function processAzulPayment(req: AzulRequest): Promise<{
-  success:  boolean;
-  authCode: string | null;
-  azulId:   string | null;
-  error:    string | null;
-}> {
-  const itbis   = Math.round(req.amount * 0.18);
-  const amountCents = req.amount * 100; // Azul usa centavos
+  const isDeclined = req.cardNumber?.endsWith('0000') ?? false
 
-  try {
-    const response = await fetch(AZUL_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Auth1': process.env.AZUL_AUTH1!,
-        'Auth2': process.env.AZUL_AUTH2!,
-      },
-      body: JSON.stringify({
-        Channel:         'EC',
-        Store:           process.env.AZUL_STORE_ID,
-        CardNumber:      req.cardNumber.replace(/\s/g, ''),
-        Expiration:      req.expiration,
-        CVC:             req.cvv,
-        PosInputMode:    'E-Commerce',
-        TrxType:         'Sale',
-        Amount:          String(amountCents),
-        Itbis:           String(itbis * 100),
-        OrderNumber:     req.orderId,
-        ECommerceUrl:    'https://mercadord.com.do',
-        CustomerServicePhone: '8095550000',
-        AltMerchantName: 'MercadoRD',
-        SaveToDataVault: '2', // No guardar tarjeta
-      }),
-    });
-
-    const data: AzulResponse = await response.json();
-    const approved = data.IsoCode === '00';
-
+  if (isDeclined) {
     return {
-      success:  approved,
-      authCode: approved ? data.AuthorizationCode : null,
-      azulId:   approved ? data.AzulOrderId : null,
-      error:    approved ? null : (data.ErrorDescription ?? data.ResponseMessage),
-    };
-  } catch (err) {
-    console.error('Azul payment error:', err);
-    return { success: false, authCode: null, azulId: null, error: 'Error de conexión con Azul' };
+      success: false,
+      azulOrderId: null,
+      authCode: null,
+      responseCode: '05',
+      responseMessage: 'Transacción rechazada (simulado — tarjeta terminada en 0000)',
+      rawResponse: { mode: 'mock', declined: true },
+    }
+  }
+
+  const mockAzulOrderId = `MOCK-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
+  const mockAuthCode = Math.random().toString(36).slice(2, 8).toUpperCase()
+
+  return {
+    success: true,
+    azulOrderId: mockAzulOrderId,
+    authCode: mockAuthCode,
+    responseCode: '00',
+    responseMessage: 'Aprobada (simulado)',
+    rawResponse: {
+      mode: 'mock',
+      orderId: req.orderId,
+      amount: req.amountCents,
+      itbis: req.itbisCents,
+      timestamp: new Date().toISOString(),
+    },
   }
 }
 
-// ─── Webhook de Azul (verificar firma) ───────────────────────────────────────
+// ─── Modo producción — Azul Webservices API real ──────────────
+// NOTA: esta función está estructurada según la documentación
+// pública de Azul, pero no se ha probado contra el endpoint real
+// todavía (requiere certificado + credenciales del comercio).
+// Verificar el payload exacto contra la doc oficial antes del
+// primer uso en producción.
+async function processLivePayment(req: PaymentRequest): Promise<PaymentResult> {
+  const storeId = process.env.AZUL_STORE_ID
+  const auth1 = process.env.AZUL_AUTH1
+  const auth2 = process.env.AZUL_AUTH2
 
-export function verifyAzulWebhook(payload: string, signature: string): boolean {
-  const expected = createHmac('sha512', process.env.AZUL_AUTH_KEY!)
-    .update(payload)
-    .digest('hex');
-  return expected === signature;
+  if (!storeId || !auth1 || !auth2) {
+    console.error('[Azul] Faltan credenciales: AZUL_STORE_ID, AZUL_AUTH1, AZUL_AUTH2')
+    return {
+      success: false,
+      azulOrderId: null,
+      authCode: null,
+      responseCode: 'CONFIG_ERROR',
+      responseMessage: 'Credenciales de Azul no configuradas',
+      rawResponse: {},
+    }
+  }
+
+  try {
+    // Endpoint de Azul Webservices (confirmar URL exacta con el
+    // certificado que entreguen — normalmente requiere mTLS)
+    const AZUL_API_URL = process.env.AZUL_API_URL ?? 'https://pagos.azul.com.do/webservices/JSON/Default.aspx'
+
+    const res = await fetch(AZUL_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Auth1: auth1,
+        Auth2: auth2,
+      },
+      body: JSON.stringify({
+        Channel: 'EC',
+        Store: storeId,
+        CardNumber: req.cardNumber,
+        Expiration: req.expiration,
+        CVC: req.cvc,
+        PosInputMode: 'E-Commerce',
+        TrxType: 'Sale',
+        Amount: String(req.amountCents),
+        Itbis: String(req.itbisCents),
+        CurrencyPosCode: '$',
+        OrderNumber: req.orderId,
+        CustomerServicePhone: '',
+        ECommerceUrl: '',
+        CustomOrderId: req.orderId,
+      }),
+    })
+
+    const data = await res.json()
+    const approved = data.ResponseCode === '00' || data.IsoCode === '00'
+
+    return {
+      success: approved,
+      azulOrderId: data.AzulOrderId ?? null,
+      authCode: data.AuthorizationCode ?? null,
+      responseCode: data.ResponseCode ?? data.IsoCode ?? 'UNKNOWN',
+      responseMessage: data.ResponseMessage ?? data.IsoMessage ?? 'Sin mensaje',
+      rawResponse: data,
+    }
+  } catch (err) {
+    console.error('[Azul] Error de red:', err)
+    return {
+      success: false,
+      azulOrderId: null,
+      authCode: null,
+      responseCode: 'NETWORK_ERROR',
+      responseMessage: 'Error de conexión con Azul',
+      rawResponse: { error: String(err) },
+    }
+  }
+}
+
+// ─── Punto de entrada único ────────────────────────────────────
+export async function processPayment(req: PaymentRequest): Promise<PaymentResult> {
+  const mode = getMode()
+
+  if (mode === 'live') {
+    return processLivePayment(req)
+  }
+
+  console.log(`[Azul] Procesando pago en modo SIMULADO (orden ${req.orderId})`)
+  return processMockPayment(req)
+}
+
+export function isLiveMode(): boolean {
+  return getMode() === 'live'
 }

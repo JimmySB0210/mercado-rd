@@ -1,5 +1,10 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import { ShieldCheck, Truck, Store, Headset } from 'lucide-react';
 import { BRAND } from '@/lib/colors';
+import { createClient } from '@/lib/supabase/client'
+import type { Category } from '@/types/database.types'
 
 const PERKS = [
   { icon: ShieldCheck, title: 'Pago seguro', sub: 'Protegemos tu compra' },
@@ -8,18 +13,18 @@ const PERKS = [
   { icon: Headset, title: 'Soporte 24/7', sub: 'Estamos para ayudarte' },
 ];
 
-const CATEGORIES = [
-  { e: '💻', label: 'Electrónica' },
-  { e: '👗', label: 'Moda' },
-  { e: '🏠', label: 'Hogar' },
-  { e: '💄', label: 'Belleza' },
-  { e: '⚽', label: 'Deportes' },
-  { e: '🚗', label: 'Autos' },
-  { e: '🧸', label: 'Juguetes' },
-  { e: '⋯', label: 'Más' },
-];
-
 export function HeroBanner() {
+  const [categories, setCategories] = useState<Category[]>([])
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase
+      .from('categories')
+      .select('id, name, slug, emoji, sort_order')
+      .order('sort_order')
+      .then(({ data }) => setCategories(data ?? []))
+  }, [])
+
   return (
     <div style={{maxWidth:1400,margin:'0 auto',padding:'24px 24px 0'}}>
 
@@ -42,7 +47,7 @@ export function HeroBanner() {
           <p style={{color:'rgba(255,255,255,0.75)',fontSize:14,margin:'0 0 22px',maxWidth:320}}>
             Miles de productos, tiendas y personas conectados contigo.
           </p>
-          <a href='/' style={{display:'inline-block',background:BRAND.red,color:'#fff',textDecoration:'none',padding:'13px 26px',borderRadius:8,fontWeight:600,fontSize:14}}>
+          <a href='#productos' style={{display:'inline-block',background:BRAND.red,color:'#fff',textDecoration:'none',padding:'13px 26px',borderRadius:8,fontWeight:600,fontSize:14}}>
             Explorar productos
           </a>
         </div>
@@ -68,12 +73,12 @@ export function HeroBanner() {
       {/* Category icons row — blue bar */}
       <div id="categorias" style={{background:BRAND.blue,borderRadius:16,padding:'20px 16px',margin:'28px 0'}}>
         <div className="hero-categories">
-          {CATEGORIES.map((c,i) => (
-            <a key={i} href={'/?cat='+c.label.toLowerCase()} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,textDecoration:'none',color:'#fff',minWidth:72}}>
+          {categories.map((c) => (
+            <a key={c.id} href={`/categoria/${c.slug}`} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,textDecoration:'none',color:'#fff',minWidth:72}}>
               <div style={{width:56,height:56,borderRadius:'50%',background:'rgba(255,255,255,0.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:24}}>
-                {c.e}
+                {c.emoji}
               </div>
-              <span style={{fontSize:12,fontWeight:500}}>{c.label}</span>
+              <span style={{fontSize:12,fontWeight:500}}>{c.name}</span>
             </a>
           ))}
         </div>

@@ -48,7 +48,7 @@ export function ProductGrid({ products }: Props) {
   const hasReal = products && products.length > 0
 
   return (
-    <div style={{maxWidth:1400, margin:'0 auto', padding:'8px 24px 40px'}}>
+    <div id="productos" style={{maxWidth:1400, margin:'0 auto', padding:'8px 24px 40px'}}>
 
       {/* Ofertas destacadas */}
       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', margin:'20px 0 16px'}}>

@@ -15,6 +15,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useLocationStore } from '@/lib/store/location'
 import type { Province } from '@/types/database.types'
 import { notifyOrderConfirmed } from '@/lib/whatsapp/notifications'
+import { processPayment, type PaymentResult } from '@/lib/payments/azul'
 import Image from 'next/image'
 
 const PAYMENT_METHODS = [
@@ -31,7 +32,6 @@ export default function CheckoutPage() {
   const subtotal = useCartSubtotal()
   const itbis = useCartItbis()
   const total = useCartTotal()
-  const ENVIO = items.length > 0 ? 18000 : 0
 
   const [form, setForm] = useState({
     fullName:   profile?.full_name || '',
@@ -40,11 +40,30 @@ export default function CheckoutPage() {
     province:   '',
     notes:      '',
     payMethod:  'azul',
+    cardNumber:     '',
+    cardExpiration: '',
+    cardCvc:        '',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError]   = useState<string | null>(null)
   const [provinces, setProvinces] = useState<Province[]>([])
   const { province: selectedProvince } = useLocationStore()
+
+  const [shippingRate, setShippingRate] = useState<{
+    price_rdp: number
+    estimated_days_min: number
+    estimated_days_max: number
+    zone: string
+  } | null>(null)
+  const [shippingLoading, setShippingLoading] = useState(false)
+
+  // Fallback de seguridad — mismo valor que usa el RPC create_order_from_cart
+  // si alguna provincia no tuviera tarifa cargada en shipping_rates
+  const SHIPPING_FALLBACK_RDP = 25000
+
+  const ENVIO = items.length === 0
+    ? 0
+    : shippingRate?.price_rdp ?? (form.province && !shippingLoading ? SHIPPING_FALLBACK_RDP : 0)
 
   useEffect(() => {
     const supabase = createClient()
@@ -63,6 +82,37 @@ export default function CheckoutPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProvince])
 
+  // Calcula el envío real según la provincia elegida — misma tabla
+  // shipping_rates que usa internamente create_order_from_cart, así que
+  // lo que se cobra en el cliente coincide con lo que el RPC persiste.
+  useEffect(() => {
+    if (!form.province || provinces.length === 0) {
+      setShippingRate(null)
+      return
+    }
+
+    const provinceRow = provinces.find(p => p.name === form.province)
+    if (!provinceRow) {
+      setShippingRate(null)
+      return
+    }
+
+    setShippingLoading(true)
+    const supabase = createClient()
+    supabase
+      .from('shipping_rates')
+      .select('price_rdp, estimated_days_min, estimated_days_max, zone')
+      .eq('province_id', provinceRow.id)
+      .single()
+      .then(({ data }) => {
+        setShippingRate(data ?? null)
+        setShippingLoading(false)
+      }, () => {
+        setShippingRate(null)
+        setShippingLoading(false)
+      })
+  }, [form.province, provinces])
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
   }
@@ -73,6 +123,14 @@ export default function CheckoutPage() {
       setError('Por favor completa todos los campos obligatorios')
       return
     }
+    if (form.payMethod === 'azul' && (!form.cardNumber || !form.cardExpiration || !form.cardCvc)) {
+      setError('Completa los datos de la tarjeta')
+      return
+    }
+    if (shippingLoading) {
+      setError('Espera un momento, estamos calculando el costo de envío')
+      return
+    }
     if (items.length === 0) { router.push('/'); return }
 
     setLoading(true)
@@ -80,6 +138,28 @@ export default function CheckoutPage() {
 
     try {
       const supabase = createClient()
+      const totalCents = total + ENVIO
+
+      // Cobrar primero — solo creamos la orden si el pago es aprobado.
+      // Así evitamos órdenes "pending" huérfanas por pagos rechazados.
+      let paymentResult: PaymentResult | null = null
+      if (form.payMethod === 'azul') {
+        paymentResult = await processPayment({
+          orderId: crypto.randomUUID(), // referencia temporal, no es el id real de la orden
+          amountCents: totalCents,
+          itbisCents: itbis,
+          cardNumber: form.cardNumber,
+          expiration: form.cardExpiration,
+          cvc: form.cardCvc,
+          customerName: form.fullName,
+        })
+
+        if (!paymentResult.success) {
+          setError(paymentResult.responseMessage)
+          setLoading(false)
+          return
+        }
+      }
 
       // Buscar el id de la provincia seleccionada
       const { data: provinceRow, error: provinceError } = await supabase
@@ -115,6 +195,20 @@ export default function CheckoutPage() {
         throw rpcError
       }
 
+      // Registrar el pago ya aprobado, vinculado a la orden real recién creada
+      if (paymentResult) {
+        const { error: paymentError } = await supabase.from('payments').insert({
+          order_id: orderId,
+          method: form.payMethod,
+          amount_rdp: totalCents,
+          status: 'approved',
+          azul_order_id: paymentResult.azulOrderId,
+          auth_code: paymentResult.authCode,
+          raw_response: paymentResult.rawResponse,
+        })
+        if (paymentError) console.error('[checkout] Error guardando registro de pago:', paymentError)
+      }
+
       // Notificar al comprador por WhatsApp — fire and forget: no bloquea la UI
       // ni muestra error si falla (ej. credenciales de Meta sin configurar todavía)
       supabase
@@ -123,7 +217,15 @@ export default function CheckoutPage() {
         .eq('id', orderId)
         .single()
         .then(({ data }) => {
-          if (data) notifyOrderConfirmed(data as any)
+          if (!data) return
+          // Verificación defensiva: lo cobrado vía Azul debe coincidir con lo
+          // que el RPC persistió usando su propio cálculo de shipping_rates
+          if (paymentResult && data.total_rdp !== totalCents) {
+            console.error(
+              `[checkout] Descuadre de monto: se cobró ${totalCents} pero la orden ${orderId} quedó con total_rdp ${data.total_rdp}`
+            )
+          }
+          notifyOrderConfirmed(data as any)
         }, () => {})
 
       clearCart()
@@ -237,9 +339,45 @@ export default function CheckoutPage() {
               ))}
             </div>
 
-            {(form.payMethod === 'azul' || form.payMethod === 'cardnet') && (
+            {form.payMethod === 'azul' && (
+              <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
+                <input
+                  name="cardNumber"
+                  value={form.cardNumber}
+                  onChange={handleChange}
+                  placeholder="Número de tarjeta *"
+                  inputMode="numeric"
+                  style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <input
+                    name="cardExpiration"
+                    value={form.cardExpiration}
+                    onChange={handleChange}
+                    placeholder="MMAA *"
+                    maxLength={4}
+                    inputMode="numeric"
+                    style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                  />
+                  <input
+                    name="cardCvc"
+                    value={form.cardCvc}
+                    onChange={handleChange}
+                    placeholder="CVC *"
+                    maxLength={4}
+                    inputMode="numeric"
+                    style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <p style={{ fontSize: 11, color: BRAND.gray, margin: 0 }}>
+                  💡 Modo simulado activo — cualquier tarjeta aprueba, excepto una que termine en 0000.
+                </p>
+              </div>
+            )}
+
+            {form.payMethod === 'cardnet' && (
               <div style={{ marginTop: 14, padding: 12, background: '#FFF8E1', borderRadius: 8, border: '1px solid #FFE082', fontSize: 12, color: '#5D4037' }}>
-                💡 Serás redirigido al portal seguro de {form.payMethod === 'azul' ? 'Azul' : 'CardNet'} para completar el pago.
+                💡 Serás redirigido al portal seguro de CardNet para completar el pago.
               </div>
             )}
           </div>
@@ -285,7 +423,23 @@ export default function CheckoutPage() {
                 <span>Subtotal</span><span>RD${(subtotal / 100).toLocaleString('es-DO')}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: BRAND.dark }}>
-                <span>Envío</span><span>RD${(ENVIO / 100).toLocaleString('es-DO')}</span>
+                <span>
+                  Envío
+                  {shippingRate && (
+                    <span style={{ display: 'block', fontSize: 11, color: BRAND.gray }}>
+                      {shippingRate.estimated_days_min === shippingRate.estimated_days_max
+                        ? `${shippingRate.estimated_days_min} día${shippingRate.estimated_days_min === 1 ? '' : 's'}`
+                        : `${shippingRate.estimated_days_min}-${shippingRate.estimated_days_max} días`}
+                    </span>
+                  )}
+                </span>
+                <span>
+                  {!form.province
+                    ? 'Selecciona provincia'
+                    : shippingLoading
+                      ? 'Calculando...'
+                      : `RD$${(ENVIO / 100).toLocaleString('es-DO')}`}
+                </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: BRAND.dark }}>
                 <span>ITBIS (18%)</span><span>RD${(itbis / 100).toLocaleString('es-DO')}</span>
@@ -305,15 +459,15 @@ export default function CheckoutPage() {
 
           <button
             onClick={handleSubmit}
-            disabled={loading}
+            disabled={loading || shippingLoading}
             style={{
-              display: 'block', width: '100%', background: loading ? '#ccc' : BRAND.red,
+              display: 'block', width: '100%', background: (loading || shippingLoading) ? '#ccc' : BRAND.red,
               color: '#fff', border: 'none', padding: 14, borderRadius: 8,
-              fontWeight: 700, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer',
+              fontWeight: 700, fontSize: 15, cursor: (loading || shippingLoading) ? 'not-allowed' : 'pointer',
               marginBottom: 10,
             }}
           >
-            {loading ? 'Procesando...' : 'Confirmar y pagar'}
+            {loading ? 'Procesando...' : shippingLoading ? 'Calculando envío...' : 'Confirmar y pagar'}
           </button>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 12, background: '#F0FDF4', borderRadius: 8, border: '1px solid #C8E6C9' }}>
