@@ -9,7 +9,9 @@
 import { createServerClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { Navbar } from '@/components/shop/Navbar'
+import { DownloadInvoiceButton } from '@/components/order/DownloadInvoiceButton'
 import { formatPrice } from '@/types/database.types'
+import type { InvoiceData } from '@/lib/invoice/generateInvoice'
 
 export default async function ConfirmPage(
   { searchParams }: { searchParams: Promise<{ order?: string }> }
@@ -47,6 +49,43 @@ export default async function ConfirmPage(
   if (error || !order) notFound()
 
   const shortId = order.id.split('-')[0].toUpperCase()
+
+  // Nombre del comprador — consulta aparte (no embebida) para evitar que
+  // RLS sobre la tabla users vacíe la fila completa de orders cuando
+  // quien ve esta página no es ni el comprador ni un admin.
+  const { data: buyer } = await supabase
+    .from('users')
+    .select('full_name')
+    .eq('id', order.user_id)
+    .maybeSingle()
+
+  // Email del usuario actualmente logueado (la tabla pública users no
+  // tiene email — vive solo en auth.users). Asume que quien ve esta
+  // página es el comprador, igual que el resto de la página no verifica
+  // dueño de la orden todavía.
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+
+  const invoiceData: InvoiceData = {
+    orderId: order.id,
+    createdAt: order.created_at,
+    buyerName: buyer?.full_name ?? 'Cliente',
+    buyerEmail: authUser?.email ?? '',
+    deliveryAddress: order.delivery_address,
+    provinceName: (order.province as { name: string } | null)?.name ?? '',
+    paymentMethod: order.payment_method,
+    items: (order.items as any[]).map(item => ({
+      productName: item.product?.name ?? 'Producto',
+      vendorName: item.vendor?.business_name ?? 'Vendedor',
+      quantity: item.quantity,
+      priceRdp: item.price_rdp,
+      size: item.size,
+      color: item.color,
+    })),
+    subtotalRdp: order.subtotal_rdp,
+    itbisRdp: order.itbis_rdp,
+    deliveryRdp: order.delivery_rdp,
+    totalRdp: order.total_rdp,
+  }
 
   // Vendors únicos con WhatsApp en esta orden (puede haber más de uno)
   const vendorsWithWhatsapp = Array.from(
@@ -167,7 +206,7 @@ export default async function ConfirmPage(
         )}
 
         {/* Acciones */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
           <a
             href="/"
             className="block text-center bg-gray-900 text-white py-3 rounded-xl font-medium no-underline hover:bg-gray-800 transition-colors"
@@ -180,6 +219,7 @@ export default async function ConfirmPage(
           >
             Ver mis pedidos
           </a>
+          <DownloadInvoiceButton data={invoiceData} />
         </div>
 
         {/* Garantía */}
