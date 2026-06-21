@@ -361,7 +361,7 @@ export default function NewProductPage() {
             <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
               <p className="mb-2">🔒 {error}</p>
               <a
-                href="/dashboard/configuracion"
+                href="/dashboard/plan"
                 className="inline-block font-semibold underline"
                 style={{ color: BRAND.blue }}
               >
