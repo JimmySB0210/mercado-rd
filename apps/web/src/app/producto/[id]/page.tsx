@@ -20,13 +20,28 @@ export async function generateMetadata(
   const product = await getProductById(id)
   if (!product) return { title: 'Producto no encontrado — MercadoRD' }
 
+  const title = `${product.name} — MercadoRD`
+  const description = product.description ?? `Compra ${product.name} en MercadoRD`
+  const image = product.images?.[0]
+
   return {
-    title: `${product.name} — MercadoRD`,
-    description: product.description ?? `Compra ${product.name} en MercadoRD`,
+    title,
+    description,
+    alternates: { canonical: `/producto/${id}` },
     openGraph: {
+      type: 'website',
+      siteName: 'MercadoRD',
+      locale: 'es_DO',
+      url: `/producto/${id}`,
       title: product.name,
-      description: product.description ?? '',
-      images: product.images?.[0] ? [product.images[0]] : [],
+      description,
+      images: image ? [{ url: image, width: 1200, height: 1200, alt: product.name }] : undefined,
+    },
+    twitter: {
+      card: image ? 'summary_large_image' : 'summary',
+      title: product.name,
+      description,
+      images: image ? [image] : undefined,
     },
   }
 }

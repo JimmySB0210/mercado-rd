@@ -1,4 +1,5 @@
 import './globals.css'
+import type { Metadata } from 'next'
 import { Poppins } from 'next/font/google'
 import { MobileTabBar } from '../components/shop/MobileTabBar'
 import { BRAND } from '@/lib/colors'
@@ -10,9 +11,28 @@ const poppins = Poppins({
   display: 'swap',
 })
 
-export const metadata = {
-  title: 'MercadoRD — El marketplace dominicano',
-  description: 'Compra y vende en República Dominicana',
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+const SITE_TITLE = 'MercadoRD — El marketplace dominicano'
+const SITE_DESCRIPTION = 'Compra y vende en República Dominicana. Miles de productos, tiendas y vendedores verificados en todo el país.'
+
+export const metadata: Metadata = {
+  metadataBase: new URL(APP_URL),
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    type: 'website',
+    siteName: 'MercadoRD',
+    locale: 'es_DO',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [{ url: '/og-image.jpg', width: 1200, height: 630, alt: 'MercadoRD' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: ['/og-image.jpg'],
+  },
 }
 
 export default function RootLayout({
