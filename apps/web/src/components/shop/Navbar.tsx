@@ -10,7 +10,7 @@
 //   - Breakpoint unificado: md = 860px en tailwind.config.js
 // ============================================================
 
-import { Search, ChevronDown, ShoppingCart, User, LogOut, LayoutDashboard, ShieldCheck } from 'lucide-react'
+import { Search, ChevronDown, ShoppingCart, User, LogOut, LayoutDashboard, ShieldCheck, Heart, MessageCircle } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
 import { useCartStore, useCartItemCount } from '@/lib/store/cart'
 import { useAuth } from '@/lib/hooks/useAuth'
@@ -180,6 +180,24 @@ export function Navbar() {
                   >
                     <LayoutDashboard size={15} color={BRAND.gray} />
                     Mi dashboard
+                  </a>
+                  <a
+                    href='/perfil/favoritos'
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm no-underline hover:bg-gray-50 transition-colors"
+                    style={{ color: BRAND.dark }}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <Heart size={15} color={BRAND.gray} />
+                    Mis favoritos ♡
+                  </a>
+                  <a
+                    href='/mensajes'
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm no-underline hover:bg-gray-50 transition-colors"
+                    style={{ color: BRAND.dark }}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <MessageCircle size={15} color={BRAND.gray} />
+                    Mensajes
                   </a>
                   <a
                     href='/perfil'

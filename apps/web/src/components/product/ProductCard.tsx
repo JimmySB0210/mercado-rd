@@ -13,6 +13,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { formatPrice, discountPercent, type ProductWithVendor } from '@/types/database.types'
+import { WishlistButton } from '@/components/shop/WishlistButton'
 
 interface Props {
   product: ProductWithVendor
@@ -26,7 +27,10 @@ export function ProductCard({ product }: Props) {
     : null
 
   return (
-    <div className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-md hover:border-gray-200 transition-all duration-200">
+    <div className="relative group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-md hover:border-gray-200 transition-all duration-200">
+      {/* Hermano del Link, no anidado dentro — mismo motivo que el CTA de WhatsApp */}
+      <WishlistButton productId={product.id} />
+
       <Link href={`/producto/${product.id}`} className="block">
         {/* Imagen */}
         <div className="relative aspect-square overflow-hidden bg-gray-50">

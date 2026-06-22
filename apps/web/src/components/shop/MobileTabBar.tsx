@@ -4,17 +4,17 @@
 // Ruta: src/components/shop/MobileTabBar.tsx
 // ============================================================
 
-import { Home, LayoutGrid, User, MessageCircle, ShoppingCart } from 'lucide-react'
+import { Home, LayoutGrid, User, Heart, ShoppingCart } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useCartStore, useCartItemCount } from '@/lib/store/cart'
 import { BRAND } from '@/lib/colors'
 
 const TABS = [
-  { href: '/',           label: 'Inicio',     icon: Home          },
-  { href: '/#categorias',label: 'Categorías', icon: LayoutGrid    },
-  { href: '/login',      label: 'Cuenta',     icon: User          },
-  { href: '/mensajes',   label: 'Mensajes',   icon: MessageCircle },
-  { href: '/cart',       label: 'Carrito',    icon: ShoppingCart  },
+  { href: '/',                label: 'Inicio',      icon: Home    },
+  { href: '/#categorias',     label: 'Categorías',  icon: LayoutGrid },
+  { href: '/login',           label: 'Cuenta',      icon: User    },
+  { href: '/perfil/favoritos',label: 'Favoritos ♡', icon: Heart   },
+  { href: '/cart',            label: 'Carrito',     icon: ShoppingCart },
 ]
 
 export function MobileTabBar() {
