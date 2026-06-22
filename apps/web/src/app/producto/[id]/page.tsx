@@ -121,7 +121,7 @@ export default async function ProductPage(
             {/* Vendor */}
             <div className="flex items-center gap-2">
               <a
-                href={`/vendor/${vendor?.id}`}
+                href={`/tienda/${vendor?.id}`}
                 className="text-sm font-medium hover:underline"
                 style={{ color: 'var(--brand-blue)' }}
               >
@@ -265,7 +265,7 @@ export default async function ProductPage(
                     )}
                   </div>
                   <a
-                    href={`/vendor/${vendor.id}`}
+                    href={`/tienda/${vendor.id}`}
                     className="text-xs font-medium hover:underline"
                     style={{ color: 'var(--brand-blue)' }}
                   >

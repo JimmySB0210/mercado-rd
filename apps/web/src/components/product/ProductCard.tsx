@@ -107,9 +107,18 @@ export function ProductCard({ product }: Props) {
         </div>
       </Link>
 
-      {/* WhatsApp CTA — fuera del Link, como hermano, para evitar <a> dentro de <a> */}
-      {product.vendor?.whatsapp && (
-        <div className="px-3 pb-3">
+      {/* Ver tienda + WhatsApp CTA — fuera del Link, como hermanos, para evitar <a> dentro de <a> */}
+      <div className="px-3 pb-3">
+        {product.vendor?.id && (
+          <Link
+            href={`/tienda/${product.vendor.id}`}
+            className="block text-xs font-medium mb-2 hover:underline"
+            style={{ color: 'var(--brand-blue)' }}
+          >
+            Ver tienda →
+          </Link>
+        )}
+        {product.vendor?.whatsapp && (
           <a
             href={`https://wa.me/${product.vendor.whatsapp}?text=Hola, me interesa: ${encodeURIComponent(product.name)}`}
             target="_blank"
@@ -121,8 +130,8 @@ export function ProductCard({ product }: Props) {
             </svg>
             Preguntar
           </a>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
