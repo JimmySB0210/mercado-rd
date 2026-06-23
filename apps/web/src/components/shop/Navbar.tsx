@@ -18,6 +18,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Category, Province } from '@/types/database.types'
 import { useLocationStore } from '@/lib/store/location'
+import { NotificationBell } from '@/components/shop/NotificationBell'
 
 export function Navbar() {
   const itemCount       = useCartItemCount()
@@ -142,6 +143,8 @@ export function Navbar() {
           </div>
 
           <LocationSelector />
+
+          <NotificationBell />
 
           <CartBadge size={22} />
         </div>
