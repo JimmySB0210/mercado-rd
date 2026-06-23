@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Navbar } from '@/components/shop/Navbar'
 import { ReviewModal } from '@/components/product/ReviewModal'
+import { DisputeModal } from '@/components/order/DisputeModal'
 import { formatPrice } from '@/types/database.types'
 import { BRAND } from '@/lib/colors'
 
@@ -32,6 +33,7 @@ interface Order {
   created_at: string
   total_rdp: number
   items: OrderItem[]
+  disputeId: string | null
 }
 
 const STATUS_LABELS: Record<string, { label: string; bg: string; text: string }> = {
@@ -50,6 +52,7 @@ export default function MyOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [reviewTarget, setReviewTarget] = useState<{ orderId: string; item: OrderItem } | null>(null)
+  const [disputeTarget, setDisputeTarget] = useState<{ orderId: string; vendorId: string } | null>(null)
 
   const loadOrders = async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -87,11 +90,20 @@ export default function MyOrdersPage() {
       (existingReviews ?? []).map(r => reviewKey(r.order_id, r.product_id))
     )
 
+    const { data: existingDisputes } = await supabase
+      .from('disputes')
+      .select('id, order_id')
+      .eq('buyer_id', user.id)
+      .in('order_id', orderIds)
+
+    const disputeMap = new Map((existingDisputes ?? []).map(d => [d.order_id, d.id]))
+
     const combined: Order[] = ordersData.map(order => ({
       id: order.id,
       status: order.status,
       created_at: order.created_at,
       total_rdp: order.total_rdp,
+      disputeId: disputeMap.get(order.id) ?? null,
       items: (items ?? [])
         .filter((i: any) => i.order_id === order.id)
         .map((i: any) => ({
@@ -206,9 +218,30 @@ export default function MyOrdersPage() {
                     ))}
                   </div>
 
-                  <div className="px-5 py-3 bg-gray-50 flex justify-between items-center">
+                  <div className="px-5 py-3 bg-gray-50 flex justify-between items-center flex-wrap gap-2">
                     <span className="text-xs text-gray-500">Total del pedido</span>
-                    <span className="text-sm font-bold text-gray-900">{formatPrice(order.total_rdp)}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-bold text-gray-900">{formatPrice(order.total_rdp)}</span>
+                      {(order.status === 'delivered' || order.status === 'shipped') && (
+                        order.disputeId ? (
+                          <a
+                            href={`/perfil/disputas/${order.disputeId}`}
+                            className="text-xs font-semibold underline"
+                            style={{ color: BRAND.gray }}
+                          >
+                            Ver disputa →
+                          </a>
+                        ) : (
+                          <button
+                            onClick={() => setDisputeTarget({ orderId: order.id, vendorId: order.items[0]?.vendor_id })}
+                            style={{ color: BRAND.red }}
+                            className="text-xs font-semibold underline bg-transparent border-none cursor-pointer"
+                          >
+                            Abrir disputa
+                          </button>
+                        )
+                      )}
+                    </div>
                   </div>
                 </div>
               )
@@ -226,6 +259,18 @@ export default function MyOrdersPage() {
           onClose={() => setReviewTarget(null)}
           onSuccess={() => {
             setReviewTarget(null)
+            loadOrders()
+          }}
+        />
+      )}
+
+      {disputeTarget && (
+        <DisputeModal
+          orderId={disputeTarget.orderId}
+          vendorId={disputeTarget.vendorId}
+          onClose={() => setDisputeTarget(null)}
+          onSuccess={() => {
+            setDisputeTarget(null)
             loadOrders()
           }}
         />

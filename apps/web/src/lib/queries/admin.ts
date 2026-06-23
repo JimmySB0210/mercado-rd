@@ -170,6 +170,54 @@ export async function getPaymentMetrics(): Promise<PaymentMetrics> {
   }
 }
 
+export interface AdminDisputeRow {
+  id: string
+  order_id: string
+  reason: string
+  description: string
+  status: string
+  created_at: string
+  buyer_name: string
+  vendor_name: string
+}
+
+export async function getOpenDisputes(): Promise<AdminDisputeRow[]> {
+  const supabase = await createServerClient()
+
+  const { data: disputes, error } = await supabase
+    .from('disputes')
+    .select('id, order_id, buyer_id, reason, description, status, created_at, vendor:vendors(business_name)')
+    .in('status', ['open', 'reviewing'])
+    .order('created_at', { ascending: false })
+
+  if (error || !disputes) {
+    console.error('[getOpenDisputes]', error)
+    return []
+  }
+
+  // Nombres de compradores — consulta separada (no embebida), users
+  // tiene RLS restrictivo y el admin sí puede leer todo, pero seguimos
+  // el mismo patrón seguro que el resto del panel.
+  const buyerIds = [...new Set(disputes.map((d: any) => d.buyer_id))]
+  const { data: buyers } = await supabase
+    .from('users')
+    .select('id, full_name')
+    .in('id', buyerIds)
+
+  const buyerMap = new Map((buyers ?? []).map((b: any) => [b.id, b.full_name]))
+
+  return disputes.map((d: any) => ({
+    id: d.id,
+    order_id: d.order_id,
+    reason: d.reason,
+    description: d.description,
+    status: d.status,
+    created_at: d.created_at,
+    buyer_name: buyerMap.get(d.buyer_id) ?? 'Cliente',
+    vendor_name: d.vendor?.business_name ?? 'Vendedor',
+  }))
+}
+
 export interface AdminOrderRow {
   id: string
   status: string

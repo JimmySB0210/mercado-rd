@@ -5,8 +5,9 @@
 
 import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
-import { isCurrentUserAdmin, getMarketplaceKPIs, getAllVendors, getRecentOrders, getPaymentMetrics } from '@/lib/queries/admin'
+import { isCurrentUserAdmin, getMarketplaceKPIs, getAllVendors, getRecentOrders, getPaymentMetrics, getOpenDisputes } from '@/lib/queries/admin'
 import { VerifyVendorButton } from '@/components/admin/VerifyVendorButton'
+import { DisputeAdminRow } from '@/components/admin/DisputeAdminRow'
 import { formatPrice } from '@/types/database.types'
 import { BRAND } from '@/lib/colors'
 
@@ -55,11 +56,12 @@ export default async function AdminPage() {
     )
   }
 
-  const [kpis, vendors, orders, paymentMetrics] = await Promise.all([
+  const [kpis, vendors, orders, paymentMetrics, openDisputes] = await Promise.all([
     getMarketplaceKPIs(),
     getAllVendors(),
     getRecentOrders(15),
     getPaymentMetrics(),
+    getOpenDisputes(),
   ])
 
   const KPI_CARDS = [
@@ -174,6 +176,34 @@ export default async function AdminPage() {
             )}
           </div>
 
+        </div>
+
+        {/* Disputas abiertas */}
+        <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)', marginBottom: 20 }}>
+          <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 800, fontSize: 15 }}>
+            Disputas abiertas ({openDisputes.length})
+          </div>
+          {openDisputes.length === 0 ? (
+            <div style={{ padding: 24, textAlign: 'center', fontSize: 13, color: '#999' }}>
+              No hay disputas abiertas ni en revisión. 🎉
+            </div>
+          ) : (
+            <div style={{ maxHeight: 480, overflowY: 'auto' }}>
+              {openDisputes.map(d => (
+                <DisputeAdminRow
+                  key={d.id}
+                  disputeId={d.id}
+                  orderId={d.order_id}
+                  reason={d.reason}
+                  description={d.description}
+                  status={d.status}
+                  buyerName={d.buyer_name}
+                  vendorName={d.vendor_name}
+                  createdAt={d.created_at}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 20 }} className="admin-grid">
