@@ -5,9 +5,10 @@
 
 import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
-import { getCurrentVendor, getVendorOrders, getVendorKPIs } from '@/lib/queries/vendor-dashboard'
+import { getCurrentVendor, getVendorOrders, getVendorKPIs, getVendorMonthlyRevenue } from '@/lib/queries/vendor-dashboard'
 import { OrderStatusSelect } from '@/components/vendor/OrderStatusSelect'
 import { DashboardSidebar } from '@/components/vendor/DashboardSidebar'
+import { RevenueChartLoader } from '@/components/vendor/RevenueChartLoader'
 import { formatPrice } from '@/types/database.types'
 import { BRAND } from '@/lib/colors'
 
@@ -40,9 +41,10 @@ export default async function DashboardPage() {
     )
   }
 
-  const [allOrders, kpis] = await Promise.all([
+  const [allOrders, kpis, monthlyRevenue] = await Promise.all([
     getVendorOrders(vendor.id),
     getVendorKPIs(vendor.id),
+    getVendorMonthlyRevenue(vendor.id),
   ])
 
   // Solo los 5 más recientes en el resumen — el resto vive en /dashboard/pedidos
@@ -86,6 +88,13 @@ export default async function DashboardPage() {
               </div>
             </div>
           ))}
+        </div>
+
+        <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)', marginBottom: 24 }}>
+          <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 800, fontSize: 15 }}>
+            Ingresos últimos 6 meses
+          </div>
+          <RevenueChartLoader data={monthlyRevenue} />
         </div>
 
         <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>

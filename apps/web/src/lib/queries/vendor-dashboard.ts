@@ -161,6 +161,63 @@ export async function getVendorKPIs(vendorId: string) {
   }
 }
 
+// ─── Ingresos de los últimos 6 meses (incluye el mes actual) ───
+export interface MonthlyRevenuePoint {
+  month: string
+  revenue: number
+}
+
+const MONTH_ABBR = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+
+function buildMonths(reference: Date, revenueByMonth: Map<string, number>): MonthlyRevenuePoint[] {
+  const points: MonthlyRevenuePoint[] = []
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(reference.getFullYear(), reference.getMonth() - i, 1)
+    const key = `${d.getFullYear()}-${d.getMonth()}`
+    points.push({
+      month: MONTH_ABBR[d.getMonth()],
+      revenue: revenueByMonth.get(key) ?? 0,
+    })
+  }
+  return points
+}
+
+export async function getVendorMonthlyRevenue(vendorId: string): Promise<MonthlyRevenuePoint[]> {
+  const supabase = await createServerClient()
+  const now = new Date()
+  const startDate = new Date(now.getFullYear(), now.getMonth() - 5, 1)
+
+  const { data: items, error: itemsError } = await supabase
+    .from('order_items')
+    .select('price_rdp, quantity, created_at, order_id')
+    .eq('vendor_id', vendorId)
+    .gte('created_at', startDate.toISOString())
+
+  if (itemsError) console.error('[getVendorMonthlyRevenue items]', itemsError)
+  if (itemsError || !items || items.length === 0) {
+    return buildMonths(now, new Map())
+  }
+
+  // Excluir órdenes canceladas — order_items no tiene status propio
+  const orderIds = [...new Set(items.map(i => i.order_id))]
+  const { data: orders } = await supabase
+    .from('orders')
+    .select('id, status')
+    .in('id', orderIds)
+
+  const statusMap = new Map((orders ?? []).map(o => [o.id, o.status]))
+
+  const revenueByMonth = new Map<string, number>()
+  for (const item of items) {
+    if (statusMap.get(item.order_id) === 'cancelled') continue
+    const date = new Date(item.created_at)
+    const key = `${date.getFullYear()}-${date.getMonth()}`
+    revenueByMonth.set(key, (revenueByMonth.get(key) ?? 0) + item.price_rdp * item.quantity)
+  }
+
+  return buildMonths(now, revenueByMonth)
+}
+
 // ─── Productos del vendor (para el tab "Mis Productos") ────────
 export async function getVendorProducts(vendorId: string) {
   const supabase = await createServerClient()
