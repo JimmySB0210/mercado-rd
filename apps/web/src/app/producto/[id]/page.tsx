@@ -9,6 +9,7 @@ import { getProductById, getProducts } from '@/lib/supabase/products'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { ProductActions } from '@/components/product/ProductActions'
 import { ProductCard } from '@/components/product/ProductCard'
+import { ContactVendorButton } from '@/components/product/ContactVendorButton'
 import { formatPrice, discountPercent } from '@/types/database.types'
 import type { Product } from '@/types'
 
@@ -225,6 +226,11 @@ export default async function ProductPage(
               sizes: (product as any).sizes ?? [],
               colors: (product as any).colors ?? [],
             } as unknown as Product} />
+
+            {/* Chat interno */}
+            {vendor?.id && (
+              <ContactVendorButton vendorId={vendor.id} productId={product.id} productName={product.name} />
+            )}
 
             {/* WhatsApp */}
             {vendor?.whatsapp && (

@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { icon: '📊', label: 'Resumen', href: '/dashboard' },
   { icon: '📦', label: 'Mis Productos', href: '/dashboard/productos' },
   { icon: '🛒', label: 'Pedidos', href: '/dashboard/pedidos' },
+  { icon: '💬', label: 'Mensajes', href: '/dashboard/mensajes' },
   { icon: '💰', label: 'Ingresos', href: '/dashboard/ingresos' },
   { icon: '⭐', label: 'Reseñas', href: '/dashboard/resenas' },
   { icon: '👑', label: 'Mi Plan', href: '/dashboard/plan' },
