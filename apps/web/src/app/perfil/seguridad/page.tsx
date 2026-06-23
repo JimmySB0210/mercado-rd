@@ -84,6 +84,20 @@ export default function SecurityPage() {
     setPasswordNew('')
     setPasswordConfirm('')
     setTimeout(() => setPasswordSuccess(false), 3000)
+
+    // Alerta de seguridad — fire and forget
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      supabase.rpc('create_notification', {
+        p_user_id: user.id,
+        p_type: 'security_alert',
+        p_title: 'Contraseña cambiada 🔒',
+        p_body: 'Tu contraseña fue cambiada. Si no fuiste tú, contacta soporte inmediatamente.',
+        p_link: '/perfil/seguridad',
+      }).then(({ error: notifyError }) => {
+        if (notifyError) console.error('[SecurityPage] No se pudo crear la alerta de seguridad:', notifyError)
+      })
+    }
   }
 
   const handleEnrollStart = async () => {

@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { validateImageFile, getImageDimensions, MIN_PRODUCT_IMAGE_DIMENSION, LOW_RESOLUTION_WARNING } from '@/lib/storage/upload'
+import { validateText, validatePrice } from '@/lib/validation'
 import { BRAND } from '@/lib/colors'
 
 interface Category {
@@ -32,6 +33,10 @@ export default function NewProductPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [planLimitReached, setPlanLimitReached] = useState(false)
+  const [nameError, setNameError] = useState<string | null>(null)
+  const [descriptionError, setDescriptionError] = useState<string | null>(null)
+  const [priceError, setPriceError] = useState<string | null>(null)
+  const [stockError, setStockError] = useState<string | null>(null)
 
   const [form, setForm] = useState({
     name: '',
@@ -161,6 +166,10 @@ export default function NewProductPage() {
     e.preventDefault()
     setError(null)
     setPlanLimitReached(false)
+    setNameError(null)
+    setDescriptionError(null)
+    setPriceError(null)
+    setStockError(null)
 
     if (!vendorId) return
     if (!form.name || !form.price || !form.categoryId) {
@@ -168,9 +177,27 @@ export default function NewProductPage() {
       return
     }
 
+    const nameErr = validateText(form.name, 'El nombre', 3, 100)
+    if (nameErr) { setNameError(nameErr); return }
+
+    if (form.description.trim().length > 0) {
+      const descriptionErr = validateText(form.description, 'La descripción', 10, 1000)
+      if (descriptionErr) { setDescriptionError(descriptionErr); return }
+    }
+
     const priceNum = parseFloat(form.price)
     if (isNaN(priceNum) || priceNum <= 0) {
       setError('El precio debe ser un número válido mayor a 0')
+      return
+    }
+
+    const priceCents = Math.round(priceNum * 100) // pesos → centavos
+    const priceErr = validatePrice(priceCents)
+    if (priceErr) { setPriceError(priceErr); return }
+
+    const stockNum = form.stock ? parseInt(form.stock) : 0
+    if (isNaN(stockNum) || stockNum < 0 || stockNum > 9999) {
+      setStockError('El stock debe estar entre 0 y 9999')
       return
     }
 
@@ -187,9 +214,9 @@ export default function NewProductPage() {
           province_id: form.provinceId ? parseInt(form.provinceId) : null,
           name: form.name,
           description: form.description || null,
-          price_rdp: Math.round(priceNum * 100), // pesos → centavos
+          price_rdp: priceCents,
           compare_rdp: form.comparePrice ? Math.round(parseFloat(form.comparePrice) * 100) : null,
-          stock: form.stock ? parseInt(form.stock) : 0,
+          stock: stockNum,
           images: imageUrls,
           sizes: form.sizes ? form.sizes.split(',').map(s => s.trim()).filter(Boolean) : [],
           colors: form.colors ? form.colors.split(',').map(c => c.trim()).filter(Boolean) : [],
@@ -271,22 +298,28 @@ export default function NewProductPage() {
           <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
             <h2 className="text-sm font-semibold text-gray-700 mb-1">Información básica</h2>
 
-            <input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="Nombre del producto *"
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
-            />
+            <div>
+              <input
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="Nombre del producto *"
+                className={`w-full border rounded-lg px-4 py-2.5 text-sm outline-none ${nameError ? 'border-red-400' : 'border-gray-200'}`}
+              />
+              {nameError && <p className="text-xs text-red-600 mt-1">{nameError}</p>}
+            </div>
 
-            <textarea
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-              placeholder="Descripción"
-              rows={3}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none resize-none"
-            />
+            <div>
+              <textarea
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                placeholder="Descripción"
+                rows={3}
+                className={`w-full border rounded-lg px-4 py-2.5 text-sm outline-none resize-none ${descriptionError ? 'border-red-400' : 'border-gray-200'}`}
+              />
+              {descriptionError && <p className="text-xs text-red-600 mt-1">{descriptionError}</p>}
+            </div>
 
             <select
               name="categoryId"
@@ -328,8 +361,9 @@ export default function NewProductPage() {
                   value={form.price}
                   onChange={handleChange}
                   placeholder="0.00"
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
+                  className={`w-full border rounded-lg px-4 py-2.5 text-sm outline-none ${priceError ? 'border-red-400' : 'border-gray-200'}`}
                 />
+                {priceError && <p className="text-xs text-red-600 mt-1">{priceError}</p>}
               </div>
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">Precio anterior (opcional)</label>
@@ -355,8 +389,9 @@ export default function NewProductPage() {
                 value={form.stock}
                 onChange={handleChange}
                 placeholder="0"
-                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
+                className={`w-full border rounded-lg px-4 py-2.5 text-sm outline-none ${stockError ? 'border-red-400' : 'border-gray-200'}`}
               />
+              {stockError && <p className="text-xs text-red-600 mt-1">{stockError}</p>}
             </div>
           </div>
 

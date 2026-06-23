@@ -22,6 +22,7 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirect = searchParams.get('redirect') ?? '/'
+  const reason = searchParams.get('reason')
   const { signInWithEmail } = useAuth()
 
   const [email, setEmail] = useState('')
@@ -67,6 +68,12 @@ function LoginForm() {
           </Link>
           <p className="mt-2 text-gray-500 text-sm">Inicia sesión en tu cuenta</p>
         </div>
+
+        {reason === 'inactivity' && (
+          <div className="mb-4 bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-lg px-4 py-3">
+            Tu sesión cerró automáticamente por inactividad. Inicia sesión de nuevo para continuar.
+          </div>
+        )}
 
         {/* Formulario */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">

@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { validateImageFile } from '@/lib/storage/upload'
+import { validateText, validatePhone } from '@/lib/validation'
 import { DashboardSidebar } from '@/components/vendor/DashboardSidebar'
 import { BRAND } from '@/lib/colors'
 
@@ -42,6 +43,9 @@ export default function VendorSettingsPage() {
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [logoError, setLogoError] = useState<string | null>(null)
   const [hasMfa, setHasMfa] = useState(true)
+  const [businessNameError, setBusinessNameError] = useState<string | null>(null)
+  const [whatsappError, setWhatsappError] = useState<string | null>(null)
+  const [descriptionError, setDescriptionError] = useState<string | null>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -114,12 +118,26 @@ export default function VendorSettingsPage() {
     e.preventDefault()
     setError(null)
     setSuccess(false)
+    setBusinessNameError(null)
+    setWhatsappError(null)
+    setDescriptionError(null)
 
     if (!vendorId || !userId) return
     if (!form.businessName) {
       setError('El nombre de la tienda es obligatorio')
       return
     }
+
+    const businessNameErr = validateText(form.businessName, 'El nombre de la tienda', 3, 80)
+    if (businessNameErr) { setBusinessNameError(businessNameErr); return }
+
+    if (form.whatsapp.trim().length > 0) {
+      const whatsappErr = validatePhone(form.whatsapp)
+      if (whatsappErr) { setWhatsappError(whatsappErr); return }
+    }
+
+    const descriptionErr = validateText(form.description, 'La descripción', 0, 500)
+    if (descriptionErr) { setDescriptionError(descriptionErr); return }
 
     setSaving(true)
 
@@ -234,8 +252,9 @@ export default function VendorSettingsPage() {
                 name="businessName"
                 value={form.businessName}
                 onChange={handleChange}
-                style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box' }}
+                style={{ width: '100%', border: `1px solid ${businessNameError ? '#c00' : '#ddd'}`, borderRadius: 8, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box' }}
               />
+              {businessNameError && <p style={{ fontSize: 12, color: '#c00', marginTop: 6 }}>{businessNameError}</p>}
             </div>
 
             <div style={{ marginBottom: 12 }}>
@@ -245,8 +264,9 @@ export default function VendorSettingsPage() {
                 value={form.description}
                 onChange={handleChange}
                 rows={3}
-                style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }}
+                style={{ width: '100%', border: `1px solid ${descriptionError ? '#c00' : '#ddd'}`, borderRadius: 8, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }}
               />
+              {descriptionError && <p style={{ fontSize: 12, color: '#c00', marginTop: 6 }}>{descriptionError}</p>}
             </div>
 
             <div>
@@ -276,8 +296,9 @@ export default function VendorSettingsPage() {
                 value={form.whatsapp}
                 onChange={handleChange}
                 placeholder="18095550000"
-                style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box' }}
+                style={{ width: '100%', border: `1px solid ${whatsappError ? '#c00' : '#ddd'}`, borderRadius: 8, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box' }}
               />
+              {whatsappError && <p style={{ fontSize: 12, color: '#c00', marginTop: 6 }}>{whatsappError}</p>}
             </div>
 
             <div>

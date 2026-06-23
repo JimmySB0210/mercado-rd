@@ -2,6 +2,7 @@ import './globals.css'
 import type { Metadata } from 'next'
 import { Poppins } from 'next/font/google'
 import { MobileTabBar } from '../components/shop/MobileTabBar'
+import { InactivityWarning } from '../components/shop/InactivityWarning'
 import { BRAND } from '@/lib/colors'
 
 const poppins = Poppins({
@@ -55,6 +56,7 @@ export default function RootLayout({
       >
         {children}
         <MobileTabBar />
+        <InactivityWarning />
       </body>
     </html>
   )

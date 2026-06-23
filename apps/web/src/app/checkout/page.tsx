@@ -16,6 +16,7 @@ import { useLocationStore } from '@/lib/store/location'
 import type { Province } from '@/types/database.types'
 import { notifyOrderConfirmed } from '@/lib/whatsapp/notifications'
 import { processPayment, type PaymentResult } from '@/lib/payments/azul'
+import { validateText } from '@/lib/validation'
 import Image from 'next/image'
 
 const PAYMENT_METHODS = [
@@ -46,6 +47,9 @@ export default function CheckoutPage() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError]   = useState<string | null>(null)
+  const [rateLimited, setRateLimited] = useState(false)
+  const [addressError, setAddressError] = useState<string | null>(null)
+  const [notesError, setNotesError] = useState<string | null>(null)
   const [provinces, setProvinces] = useState<Province[]>([])
   const { province: selectedProvince } = useLocationStore()
 
@@ -133,12 +137,37 @@ export default function CheckoutPage() {
     }
     if (items.length === 0) { router.push('/'); return }
 
+    setAddressError(null)
+    setNotesError(null)
+
+    const addressErr = validateText(form.address, 'La dirección', 10, 200)
+    if (addressErr) { setAddressError(addressErr); return }
+
+    const notesErr = validateText(form.notes, 'Las notas', 0, 500)
+    if (notesErr) { setNotesError(notesErr); return }
+
     setLoading(true)
     setError(null)
 
     try {
       const supabase = createClient()
       const totalCents = total + ENVIO
+
+      // Protección contra card testing — máx. 5 intentos por IP y 3
+      // fallos consecutivos por usuario cada 15 minutos.
+      const rateCheckRes = await fetch('/api/checkout/rate-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user.id, action: 'check' }),
+      })
+
+      if (rateCheckRes.status === 429) {
+        const { error: rateError } = await rateCheckRes.json().catch(() => ({ error: null }))
+        setError(rateError ?? 'Demasiados intentos. Espera 15 minutos antes de intentar de nuevo.')
+        setRateLimited(true)
+        setLoading(false)
+        return
+      }
 
       // Cobrar primero — solo creamos la orden si el pago es aprobado.
       // Así evitamos órdenes "pending" huérfanas por pagos rechazados.
@@ -157,6 +186,11 @@ export default function CheckoutPage() {
         if (!paymentResult.success) {
           setError(paymentResult.responseMessage)
           setLoading(false)
+          fetch('/api/checkout/rate-check', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: user.id, action: 'fail' }),
+          }).catch(() => {})
           return
         }
       }
@@ -280,13 +314,16 @@ export default function CheckoutPage() {
                 placeholder="Teléfono *"
                 style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
               />
-              <input
-                name="address"
-                value={form.address}
-                onChange={handleChange}
-                placeholder="Dirección completa *"
-                style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
-              />
+              <div>
+                <input
+                  name="address"
+                  value={form.address}
+                  onChange={handleChange}
+                  placeholder="Dirección completa *"
+                  style={{ width: '100%', border: `1px solid ${addressError ? '#E53935' : '#E0E0E0'}`, borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                />
+                {addressError && <p style={{ fontSize: 12, color: '#E53935', margin: '4px 0 0' }}>{addressError}</p>}
+              </div>
               <div style={{ position: 'relative' }}>
                 <select
                   name="province"
@@ -299,14 +336,17 @@ export default function CheckoutPage() {
                 </select>
                 <ChevronDown size={16} color={BRAND.gray} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
               </div>
-              <textarea
-                name="notes"
-                value={form.notes}
-                onChange={handleChange}
-                placeholder="Instrucciones de entrega (opcional)"
-                rows={2}
-                style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }}
-              />
+              <div>
+                <textarea
+                  name="notes"
+                  value={form.notes}
+                  onChange={handleChange}
+                  placeholder="Instrucciones de entrega (opcional)"
+                  rows={2}
+                  style={{ width: '100%', border: `1px solid ${notesError ? '#E53935' : '#E0E0E0'}`, borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }}
+                />
+                {notesError && <p style={{ fontSize: 12, color: '#E53935', margin: '4px 0 0' }}>{notesError}</p>}
+              </div>
             </div>
           </div>
 
@@ -470,15 +510,15 @@ export default function CheckoutPage() {
 
           <button
             onClick={handleSubmit}
-            disabled={loading || shippingLoading}
+            disabled={loading || shippingLoading || rateLimited}
             style={{
-              display: 'block', width: '100%', background: (loading || shippingLoading) ? '#ccc' : BRAND.red,
+              display: 'block', width: '100%', background: (loading || shippingLoading || rateLimited) ? '#ccc' : BRAND.red,
               color: '#fff', border: 'none', padding: 14, borderRadius: 8,
-              fontWeight: 700, fontSize: 15, cursor: (loading || shippingLoading) ? 'not-allowed' : 'pointer',
+              fontWeight: 700, fontSize: 15, cursor: (loading || shippingLoading || rateLimited) ? 'not-allowed' : 'pointer',
               marginBottom: 10,
             }}
           >
-            {loading ? 'Procesando...' : shippingLoading ? 'Calculando envío...' : 'Confirmar y pagar'}
+            {loading ? 'Procesando...' : shippingLoading ? 'Calculando envío...' : rateLimited ? 'Bloqueado temporalmente' : 'Confirmar y pagar'}
           </button>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 12, background: '#F0FDF4', borderRadius: 8, border: '1px solid #C8E6C9' }}>

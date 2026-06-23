@@ -62,6 +62,20 @@ export function useAuth() {
 
   const signInWithEmail = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+    // Alerta de seguridad — fire and forget, no bloquea el login
+    if (data.user && !error) {
+      supabase.rpc('create_notification', {
+        p_user_id: data.user.id,
+        p_type: 'security_alert',
+        p_title: 'Nuevo inicio de sesión 🔐',
+        p_body: 'Iniciaste sesión en MercadoRD. Si no fuiste tú, cambia tu contraseña inmediatamente.',
+        p_link: '/perfil/seguridad',
+      }).then(({ error: notifyError }) => {
+        if (notifyError) console.error('[useAuth] No se pudo crear la alerta de seguridad:', notifyError)
+      })
+    }
+
     return { data, error }
   }
 
