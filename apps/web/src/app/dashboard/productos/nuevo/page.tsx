@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { validateImageFile, getImageDimensions, MIN_PRODUCT_IMAGE_DIMENSION, LOW_RESOLUTION_WARNING } from '@/lib/storage/upload'
 import { BRAND } from '@/lib/colors'
 
 interface Category {
@@ -46,6 +47,8 @@ export default function NewProductPage() {
 
   const [imageFiles, setImageFiles] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [imageError, setImageError] = useState<string | null>(null)
+  const [imageWarning, setImageWarning] = useState<string | null>(null)
 
   // Cargar vendor, categorías y provincias al montar
   useEffect(() => {
@@ -85,13 +88,38 @@ export default function NewProductPage() {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
   }
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []).slice(0, 5 - imageFiles.length)
     if (files.length === 0) return
 
-    setImageFiles(prev => [...prev, ...files])
+    setImageError(null)
+    setImageWarning(null)
 
-    files.forEach(file => {
+    const validFiles: File[] = []
+
+    for (const file of files) {
+      const typeOrSizeError = validateImageFile(file)
+      if (typeOrSizeError) {
+        setImageError(typeOrSizeError)
+        continue
+      }
+      validFiles.push(file)
+
+      try {
+        const { width, height } = await getImageDimensions(file)
+        if (width < MIN_PRODUCT_IMAGE_DIMENSION || height < MIN_PRODUCT_IMAGE_DIMENSION) {
+          setImageWarning(LOW_RESOLUTION_WARNING)
+        }
+      } catch {
+        // si no se pueden leer las dimensiones, no bloqueamos la imagen
+      }
+    }
+
+    if (validFiles.length === 0) return
+
+    setImageFiles(prev => [...prev, ...validFiles])
+
+    validFiles.forEach(file => {
       const reader = new FileReader()
       reader.onload = (ev) => {
         setImagePreviews(prev => [...prev, ev.target?.result as string])
@@ -235,6 +263,8 @@ export default function NewProductPage() {
               )}
             </div>
             <p className="text-xs text-gray-400">Hasta 5 fotos. La primera será la principal.</p>
+            {imageError && <p className="text-xs text-red-600 mt-2">{imageError}</p>}
+            {imageWarning && <p className="text-xs text-amber-600 mt-2">{imageWarning}</p>}
           </div>
 
           {/* Info básica */}

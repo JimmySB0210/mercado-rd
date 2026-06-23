@@ -10,7 +10,7 @@
 //   - Breakpoint unificado: md = 860px en tailwind.config.js
 // ============================================================
 
-import { Search, ChevronDown, ShoppingCart, User, LogOut, LayoutDashboard, ShieldCheck, Heart, MessageCircle } from 'lucide-react'
+import { Search, ChevronDown, ShoppingCart, User, LogOut, LayoutDashboard, ShieldCheck, Heart, MessageCircle, Lock } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
 import { useCartStore, useCartItemCount } from '@/lib/store/cart'
 import { useAuth } from '@/lib/hooks/useAuth'
@@ -222,6 +222,15 @@ export function Navbar() {
                       Panel admin
                     </a>
                   )}
+                  <a
+                    href='/perfil/seguridad'
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm no-underline hover:bg-gray-50 transition-colors"
+                    style={{ color: BRAND.dark }}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <Lock size={15} color={BRAND.gray} />
+                    Seguridad 🔒
+                  </a>
                   <hr className="my-1 border-gray-100" />
                   <button
                     onClick={() => { signOut(); setMenuOpen(false) }}

@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { validateImageFile } from '@/lib/storage/upload'
 import { DashboardSidebar } from '@/components/vendor/DashboardSidebar'
 import { BRAND } from '@/lib/colors'
 
@@ -39,6 +40,8 @@ export default function VendorSettingsPage() {
 
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
+  const [logoError, setLogoError] = useState<string | null>(null)
+  const [hasMfa, setHasMfa] = useState(true)
 
   useEffect(() => {
     const load = async () => {
@@ -48,6 +51,9 @@ export default function VendorSettingsPage() {
         return
       }
       setUserId(user.id)
+
+      const { data: factorsData } = await supabase.auth.mfa.listFactors()
+      setHasMfa(!!factorsData?.totp.some(f => f.status === 'verified'))
 
       const { data: vendor } = await supabase
         .from('vendors')
@@ -90,6 +96,14 @@ export default function VendorSettingsPage() {
   const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    const validationError = validateImageFile(file)
+    if (validationError) {
+      setLogoError(validationError)
+      return
+    }
+    setLogoError(null)
+
     setLogoFile(file)
     const reader = new FileReader()
     reader.onload = (ev) => setLogoPreview(ev.target?.result as string)
@@ -173,6 +187,19 @@ export default function VendorSettingsPage() {
           <p style={{ color: '#666', fontSize: 14 }}>Edita la información de tu tienda</p>
         </div>
 
+        {!hasMfa && (
+          <a
+            href="/perfil/seguridad"
+            style={{
+              display: 'block', background: '#FEF9C3', color: '#713f12', borderRadius: 10,
+              padding: '12px 16px', fontSize: 13, fontWeight: 600, marginBottom: 20,
+              textDecoration: 'none', maxWidth: 560,
+            }}
+          >
+            🔒 Activa la verificación en dos pasos para proteger tu tienda →
+          </a>
+        )}
+
         <form onSubmit={handleSubmit} style={{ maxWidth: 560 }}>
 
           {/* Logo */}
@@ -194,6 +221,7 @@ export default function VendorSettingsPage() {
                 <input type="file" accept="image/*" onChange={handleLogoSelect} className="hidden" style={{ display: 'none' }} />
               </label>
             </div>
+            {logoError && <p style={{ fontSize: 12, color: '#c00', marginTop: 10 }}>{logoError}</p>}
           </div>
 
           {/* Info básica */}

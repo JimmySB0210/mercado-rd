@@ -10,6 +10,38 @@ import { createClient } from '@/lib/supabase/client'
 
 type UploadResult = { url: string; error: null } | { url: null; error: string }
 
+// ─── Validación de imágenes (correr ANTES de subir a Storage) ─────────────────
+export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
+export const MIN_PRODUCT_IMAGE_DIMENSION = 400
+export const LOW_RESOLUTION_WARNING = 'Recomendamos imágenes de al menos 400×400px para mejor calidad'
+
+export function validateImageFile(file: File): string | null {
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    return 'Solo se permiten imágenes JPG, PNG o WebP'
+  }
+  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+    return 'La imagen no puede superar 5MB'
+  }
+  return null
+}
+
+export function getImageDimensions(file: File): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      resolve({ width: img.naturalWidth, height: img.naturalHeight })
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('No se pudo leer la imagen'))
+    }
+    img.src = url
+  })
+}
+
 // ─── Imagen de producto ───────────────────────────────────────────────────────
 export async function uploadProductImage(
   file: File,
