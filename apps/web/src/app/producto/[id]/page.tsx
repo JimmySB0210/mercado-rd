@@ -5,11 +5,11 @@
 
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
-import { getProductById, getProducts } from '@/lib/supabase/products'
+import { getProductById } from '@/lib/supabase/products'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { ProductActions } from '@/components/product/ProductActions'
-import { ProductCard } from '@/components/product/ProductCard'
 import { ContactVendorButton } from '@/components/product/ContactVendorButton'
+import { RelatedProducts } from '@/components/shop/RelatedProducts'
 import { formatPrice, discountPercent } from '@/types/database.types'
 import type { Product } from '@/types'
 
@@ -58,14 +58,6 @@ export default async function ProductPage(
   // Incrementar vistas (fire-and-forget)
   const { incrementProductView } = await import('@/lib/supabase/products')
   incrementProductView(id)
-
-  // Productos relacionados del mismo vendor
-  const related = await getProducts({
-    limit: 4,
-    sort: 'popular',
-  }).then(all =>
-    all.filter(p => p.vendor_id === product.vendor_id && p.id !== product.id).slice(0, 4)
-  )
 
   const vendor = product.vendor as Product['vendor'] & {
     business_name: string
@@ -284,19 +276,12 @@ export default async function ProductPage(
           </div>
         </div>
 
-        {/* Productos relacionados */}
-        {related.length > 0 && (
-          <section className="mt-16">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">
-              Más de {vendor?.business_name}
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {related.map(p => (
-                <ProductCard key={p.id} product={p as any} />
-              ))}
-            </div>
-          </section>
-        )}
+        {/* También te puede interesar */}
+        <RelatedProducts
+          categoryId={product.category_id}
+          vendorId={product.vendor_id}
+          currentProductId={product.id}
+        />
 
       </div>
     </main>
