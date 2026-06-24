@@ -61,6 +61,33 @@ export function NotificationBell() {
     load()
   }, [supabase])
 
+  // Realtime — nuevas notificaciones llegan vía Supabase Realtime
+  useEffect(() => {
+    if (!userId) return
+
+    const channel = supabase
+      .channel(`notifications-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          const newNotification = payload.new as NotificationRow
+          setNotifications(prev => [newNotification, ...prev])
+          setUnreadCount(c => c + 1)
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [userId, supabase])
+
   // Cerrar al hacer clic afuera
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {

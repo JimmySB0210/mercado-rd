@@ -30,8 +30,6 @@ interface MessageRow {
   created_at: string
 }
 
-const POLL_MS = 5000
-
 export default function ChatPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
@@ -100,10 +98,29 @@ export default function ChatPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id])
 
-  // Polling simple — sin Realtime por ahora
+  // Realtime — nuevos mensajes llegan vía Supabase Realtime en vez de polling
   useEffect(() => {
-    const interval = setInterval(fetchMessages, POLL_MS)
-    return () => clearInterval(interval)
+    const channel = supabase
+      .channel(`chat-${params.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_messages',
+          filter: `conversation_id=eq.${params.id}`,
+        },
+        (payload) => {
+          const newMessage = payload.new as MessageRow
+          // Evita duplicados si fetchMessages() ya trajo este mensaje
+          setMessages(prev => (prev.some(m => m.id === newMessage.id) ? prev : [...prev, newMessage]))
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id])
 
@@ -119,6 +136,7 @@ export default function ChatPage() {
       p_vendor_id: conversation.vendor_id,
       p_product_id: conversation.product_id,
       p_message: newMessage.trim(),
+      p_conversation_id: conversation.id,
     })
 
     if (error) console.error('[ChatPage send]', error)
