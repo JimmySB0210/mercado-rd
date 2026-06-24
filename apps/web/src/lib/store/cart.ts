@@ -85,6 +85,10 @@ export function useCartItemCount(): number {
   return useCartStore((s) => s.items.reduce((acc, i) => acc + i.quantity, 0))
 }
 
+export function useCartItems(): CartItem[] {
+  return useCartStore((s) => s.items)
+}
+
 export function useCartSubtotal(): number {
   return useCartStore((s) =>
     s.items.reduce((acc, i) => acc + (i.variant_price_rdp ?? i.product.price_rdp) * i.quantity, 0)

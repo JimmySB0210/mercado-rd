@@ -48,6 +48,11 @@ export default async function ConfirmPage(
 
   if (error || !order) notFound()
 
+  // Marcar el carrito abandonado como recuperado — fire-and-forget,
+  // pero awaited para que no se corte a medias en un entorno serverless
+  const { error: recoverError } = await supabase.rpc('recover_abandoned_cart')
+  if (recoverError) console.error('[ConfirmPage] No se pudo marcar el carrito como recuperado:', recoverError)
+
   const shortId = order.id.split('-')[0].toUpperCase()
 
   // Nombre del comprador — consulta aparte (no embebida) para evitar que

@@ -5,7 +5,7 @@
 
 import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
-import { isCurrentUserAdmin, getMarketplaceKPIs, getAllVendors, getRecentOrders, getPaymentMetrics, getOpenDisputes } from '@/lib/queries/admin'
+import { isCurrentUserAdmin, getMarketplaceKPIs, getAllVendors, getRecentOrders, getPaymentMetrics, getOpenDisputes, getAbandonedCarts } from '@/lib/queries/admin'
 import { VerifyVendorButton } from '@/components/admin/VerifyVendorButton'
 import { DisputeAdminRow } from '@/components/admin/DisputeAdminRow'
 import { formatPrice } from '@/types/database.types'
@@ -56,12 +56,13 @@ export default async function AdminPage() {
     )
   }
 
-  const [kpis, vendors, orders, paymentMetrics, openDisputes] = await Promise.all([
+  const [kpis, vendors, orders, paymentMetrics, openDisputes, abandonedCarts] = await Promise.all([
     getMarketplaceKPIs(),
     getAllVendors(),
     getRecentOrders(15),
     getPaymentMetrics(),
     getOpenDisputes(),
+    getAbandonedCarts(),
   ])
 
   const KPI_CARDS = [
@@ -201,6 +202,44 @@ export default async function AdminPage() {
                   vendorName={d.vendor_name}
                   createdAt={d.created_at}
                 />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Carritos abandonados */}
+        <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)', marginBottom: 20 }}>
+          <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 800, fontSize: 15 }}>
+            Carritos abandonados 🛒
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, padding: 18 }}>
+            <div>
+              <div style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>Sin recuperar</div>
+              <div style={{ fontWeight: 900, fontSize: 22, color: '#111' }}>{abandonedCarts.totalUnrecovered}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>Valor potencial perdido</div>
+              <div style={{ fontWeight: 900, fontSize: 22, color: BRAND.red }}>{formatPrice(abandonedCarts.totalPotentialValueRdp)}</div>
+            </div>
+          </div>
+
+          {abandonedCarts.recent.length === 0 ? (
+            <div style={{ padding: '0 18px 18px', fontSize: 13, color: '#999' }}>
+              No hay carritos abandonados sin recuperar. 🎉
+            </div>
+          ) : (
+            <div style={{ borderTop: '1px solid #f0f0f0' }}>
+              {abandonedCarts.recent.map((c, i, arr) => (
+                <div
+                  key={c.id}
+                  style={{
+                    padding: '12px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    borderBottom: i < arr.length - 1 ? '1px solid #f8f8f8' : 'none',
+                  }}
+                >
+                  <span style={{ fontSize: 13, color: '#333' }}>{c.buyer_name}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{formatPrice(c.total_rdp)}</span>
+                </div>
               ))}
             </div>
           )}

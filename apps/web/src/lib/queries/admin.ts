@@ -271,3 +271,55 @@ export async function getRecentOrders(limit = 20): Promise<AdminOrderRow[]> {
     item_count: itemCountMap.get(o.id) ?? 0,
   }))
 }
+
+export interface AbandonedCartRow {
+  id: string
+  user_id: string
+  buyer_name: string
+  total_rdp: number
+  updated_at: string
+}
+
+export interface AbandonedCartsSummary {
+  totalUnrecovered: number
+  totalPotentialValueRdp: number
+  recent: AbandonedCartRow[]
+}
+
+export async function getAbandonedCarts(): Promise<AbandonedCartsSummary> {
+  const supabase = await createServerClient()
+
+  const { data: carts, error } = await supabase
+    .from('abandoned_carts')
+    .select('id, user_id, total_rdp, updated_at')
+    .is('recovered_at', null)
+    .order('updated_at', { ascending: false })
+
+  if (error || !carts) {
+    console.error('[getAbandonedCarts]', error)
+    return { totalUnrecovered: 0, totalPotentialValueRdp: 0, recent: [] }
+  }
+
+  const totalUnrecovered = carts.length
+  const totalPotentialValueRdp = carts.reduce((acc, c) => acc + c.total_rdp, 0)
+  const recentRaw = carts.slice(0, 5)
+
+  // Nombre del comprador — consulta separada (no embebida), mismo
+  // patrón seguro usado en el resto del panel admin
+  const buyerIds = [...new Set(recentRaw.map(c => c.user_id))]
+  const { data: buyers } = buyerIds.length > 0
+    ? await supabase.from('users').select('id, full_name').in('id', buyerIds)
+    : { data: [] as { id: string; full_name: string }[] }
+
+  const buyerMap = new Map((buyers ?? []).map(b => [b.id, b.full_name]))
+
+  const recent: AbandonedCartRow[] = recentRaw.map(c => ({
+    id: c.id,
+    user_id: c.user_id,
+    buyer_name: buyerMap.get(c.user_id) ?? 'Cliente',
+    total_rdp: c.total_rdp,
+    updated_at: c.updated_at,
+  }))
+
+  return { totalUnrecovered, totalPotentialValueRdp, recent }
+}
