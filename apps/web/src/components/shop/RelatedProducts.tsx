@@ -6,7 +6,7 @@
 // mismo vendor), deduplicadas por id, máximo 4 productos.
 // ============================================================
 
-import { createServerClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 import { ProductCard } from '@/components/product/ProductCard'
 
 interface Props {
@@ -23,7 +23,7 @@ const SELECT = `
 `
 
 export async function RelatedProducts({ categoryId, vendorId, currentProductId }: Props) {
-  const supabase = await createServerClient()
+  const supabase = createPublicClient()
 
   const [byCategory, byVendor] = await Promise.all([
     categoryId

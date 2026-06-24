@@ -5,21 +5,31 @@
 
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
-import { getProductById } from '@/lib/supabase/products'
-import { createServerClient } from '@/lib/supabase/server'
+import { getProductByIdPublic } from '@/lib/supabase/products'
+import { createPublicClient } from '@/lib/supabase/public'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { ProductActions } from '@/components/product/ProductActions'
 import { ContactVendorButton } from '@/components/product/ContactVendorButton'
+import { ProductViewTracker } from '@/components/product/ProductViewTracker'
 import { RelatedProducts } from '@/components/shop/RelatedProducts'
 import { formatPrice, discountPercent } from '@/types/database.types'
 import type { Product } from '@/types'
+
+export const revalidate = 600
+
+// Sin paths pre-construidos (el catálogo es muy grande para el build) —
+// cada producto se renderiza on-demand en su primera visita y queda
+// cacheado por `revalidate` a partir de ahí.
+export async function generateStaticParams() {
+  return []
+}
 
 // ─── Metadata dinámica para SEO ───────────────────────────────
 export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> }
 ): Promise<Metadata> {
   const { id } = await params
-  const product = await getProductById(id)
+  const product = await getProductByIdPublic(id)
   if (!product) return { title: 'Producto no encontrado — MercadoRD' }
 
   const title = `${product.name} — MercadoRD`
@@ -53,16 +63,12 @@ export default async function ProductPage(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const product = await getProductById(id)
+  const product = await getProductByIdPublic(id)
   if (!product) notFound()
-
-  // Incrementar vistas (fire-and-forget)
-  const { incrementProductView } = await import('@/lib/supabase/products')
-  incrementProductView(id)
 
   // Variantes activas del producto — si no hay, ProductActions se
   // comporta exactamente igual que con product.sizes/colors planos
-  const supabase = await createServerClient()
+  const supabase = createPublicClient()
   const { data: variants } = await supabase
     .from('product_variants')
     .select('*')
@@ -91,6 +97,7 @@ export default async function ProductPage(
 
   return (
     <main className="min-h-screen bg-gray-50">
+      <ProductViewTracker productId={product.id} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {/* Breadcrumb */}

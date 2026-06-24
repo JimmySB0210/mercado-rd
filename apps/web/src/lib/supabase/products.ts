@@ -1,4 +1,5 @@
 import { createServerClient } from './server';
+import { createPublicClient } from './public';
 import type { Product } from '@/types';
 
 interface GetProductsOptions {
@@ -46,6 +47,42 @@ export async function getProducts(opts: GetProductsOptions = {}): Promise<Produc
   return (data ?? []) as Product[];
 }
 
+// ─── Obtener lista de productos (cliente público, sin cookies — para ISR) ─────
+export async function getProductsPublic(opts: GetProductsOptions = {}): Promise<Product[]> {
+  const supabase = createPublicClient();
+  const {
+    category, search, province,
+    limit = 24, offset = 0,
+    sort = 'popular',
+  } = opts;
+
+  let query = supabase
+    .from('products')
+    .select(`
+      *,
+      vendor:vendors(id, business_name, is_verified, province_id),
+      category:categories(id, name, slug, emoji),
+      province:provinces_rd(id, name)
+    `)
+    .eq('is_active', true)
+    .range(offset, offset + limit - 1);
+
+  if (category)  query = query.eq('category.slug', category);
+  if (search)    query = query.ilike('name', `%${search}%`);
+  if (province)  query = query.eq('province_id', province);
+
+  switch (sort) {
+    case 'price_asc':  query = query.order('price_rdp', { ascending: true });  break;
+    case 'price_desc': query = query.order('price_rdp', { ascending: false }); break;
+    case 'newest':     query = query.order('created_at', { ascending: false }); break;
+    default:           query = query.order('sold_count', { ascending: false }); break;
+  }
+
+  const { data, error } = await query;
+  if (error) { console.error('getProductsPublic error:', error); return []; }
+  return (data ?? []) as Product[];
+}
+
 // ─── Obtener un producto por ID ───────────────────────────────────────────────
 export async function getProductById(id: string): Promise<Product | null> {
   const supabase = await createServerClient();
@@ -61,6 +98,24 @@ export async function getProductById(id: string): Promise<Product | null> {
     .single();
 
   if (error) { console.error('getProductById error:', error); return null; }
+  return data as Product;
+}
+
+// ─── Obtener un producto por ID (cliente público, sin cookies — para ISR) ─────
+export async function getProductByIdPublic(id: string): Promise<Product | null> {
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from('products')
+    .select(`
+      *,
+      vendor:vendors(*),
+      category:categories(*),
+      province:provinces_rd(*)
+    `)
+    .eq('id', id)
+    .single();
+
+  if (error) { console.error('getProductByIdPublic error:', error); return null; }
   return data as Product;
 }
 

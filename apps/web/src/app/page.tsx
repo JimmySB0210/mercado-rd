@@ -10,10 +10,12 @@ import { Navbar } from '../components/shop/Navbar'
 import { HeroBanner } from '../components/shop/HeroBanner'
 import { ProductGrid } from '../components/shop/ProductGrid'
 import { FeaturedProducts } from '../components/shop/FeaturedProducts'
-import { getProducts } from '@/lib/supabase/products'
+import { getProductsPublic } from '@/lib/supabase/products'
+
+export const revalidate = 300
 
 export default async function HomePage() {
-  const products = await getProducts({ limit: 12, sort: 'popular' })
+  const products = await getProductsPublic({ limit: 12, sort: 'popular' })
 
   return (
     <div>

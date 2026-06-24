@@ -3,12 +3,12 @@
 // Ruta: src/components/shop/FeaturedProducts.tsx
 // ============================================================
 
-import { createServerClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 import { ProductCard } from '@/components/product/ProductCard'
 import { BRAND } from '@/lib/colors'
 
 export async function FeaturedProducts() {
-  const supabase = await createServerClient()
+  const supabase = createPublicClient()
 
   const { data, error } = await supabase
     .from('products')

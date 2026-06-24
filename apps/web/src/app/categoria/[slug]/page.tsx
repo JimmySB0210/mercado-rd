@@ -4,9 +4,20 @@
 // ============================================================
 
 import { notFound } from 'next/navigation'
-import { createServerClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 import { ProductCard } from '@/components/product/ProductCard'
 import { Navbar } from '@/components/shop/Navbar'
+
+export const revalidate = 300
+
+// Pre-construye las categorías conocidas en build time; cualquier slug
+// fuera de esta lista (incluyendo los de CATEGORY_LABELS) se renderiza
+// on-demand en la primera visita y queda cacheado por `revalidate`.
+export async function generateStaticParams() {
+  const supabase = createPublicClient()
+  const { data } = await supabase.from('categories').select('slug')
+  return (data ?? []).filter(c => c.slug).map(c => ({ slug: c.slug as string }))
+}
 
 const CATEGORY_LABELS: Record<string, string> = {
   electronica: 'Electrónica',
@@ -22,7 +33,7 @@ export default async function CategoryPage(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params
-  const supabase = await createServerClient()
+  const supabase = createPublicClient()
 
   // Buscar la categoría por slug (case-insensitive, tolera acentos simples)
   const { data: categories } = await supabase
