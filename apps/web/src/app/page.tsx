@@ -9,6 +9,7 @@
 import { Navbar } from '../components/shop/Navbar'
 import { HeroBanner } from '../components/shop/HeroBanner'
 import { ProductGrid } from '../components/shop/ProductGrid'
+import { FeaturedProducts } from '../components/shop/FeaturedProducts'
 import { getProducts } from '@/lib/supabase/products'
 
 export default async function HomePage() {
@@ -18,6 +19,7 @@ export default async function HomePage() {
     <div>
       <Navbar />
       <HeroBanner />
+      <FeaturedProducts />
       <ProductGrid products={products} />
     </div>
   )

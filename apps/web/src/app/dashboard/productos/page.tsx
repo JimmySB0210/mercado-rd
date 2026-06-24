@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
 import { getCurrentVendor, getVendorProducts } from '@/lib/queries/vendor-dashboard'
 import { DashboardSidebar } from '@/components/vendor/DashboardSidebar'
+import { FeatureToggleButton } from '@/components/vendor/FeatureToggleButton'
 import { formatPrice } from '@/types/database.types'
 import { BRAND } from '@/lib/colors'
 
@@ -82,10 +83,15 @@ export default async function VendorProductsPage() {
                   <div style={{ fontWeight: 700, fontSize: 15, color: '#111', marginBottom: 4 }}>
                     {formatPrice(p.price_rdp)}
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#999' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#999', marginBottom: 10 }}>
                     <span>Stock: {p.stock}</span>
                     <span>{p.sold_count} vendidos</span>
                   </div>
+                  <FeatureToggleButton
+                    productId={p.id}
+                    initialFeatured={p.is_featured ?? false}
+                    isPro={vendor.plan === 'pro'}
+                  />
                 </div>
               </div>
             ))}
