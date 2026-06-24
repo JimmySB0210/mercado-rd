@@ -6,6 +6,7 @@
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 import { getProductById } from '@/lib/supabase/products'
+import { createServerClient } from '@/lib/supabase/server'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { ProductActions } from '@/components/product/ProductActions'
 import { ContactVendorButton } from '@/components/product/ContactVendorButton'
@@ -58,6 +59,15 @@ export default async function ProductPage(
   // Incrementar vistas (fire-and-forget)
   const { incrementProductView } = await import('@/lib/supabase/products')
   incrementProductView(id)
+
+  // Variantes activas del producto — si no hay, ProductActions se
+  // comporta exactamente igual que con product.sizes/colors planos
+  const supabase = await createServerClient()
+  const { data: variants } = await supabase
+    .from('product_variants')
+    .select('*')
+    .eq('product_id', product.id)
+    .eq('is_active', true)
 
   const vendor = product.vendor as Product['vendor'] & {
     business_name: string
@@ -213,11 +223,14 @@ export default async function ProductPage(
             </div>
 
             {/* Selector de talla/color + carrito — Client Component */}
-            <ProductActions product={{
-              ...product,
-              sizes: (product as any).sizes ?? [],
-              colors: (product as any).colors ?? [],
-            } as unknown as Product} />
+            <ProductActions
+              product={{
+                ...product,
+                sizes: (product as any).sizes ?? [],
+                colors: (product as any).colors ?? [],
+              } as unknown as Product}
+              variants={variants ?? []}
+            />
 
             {/* Chat interno */}
             {vendor?.id && (

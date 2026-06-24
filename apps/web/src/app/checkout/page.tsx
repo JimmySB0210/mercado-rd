@@ -254,7 +254,7 @@ export default function CheckoutPage() {
         product_id: item.product.id,
         vendor_id: item.product.vendor_id,
         quantity: item.quantity,
-        price_rdp: item.product.price_rdp,
+        price_rdp: item.variant_price_rdp ?? item.product.price_rdp,
         size: item.selected_size ?? null,
         color: item.selected_color ?? null,
       }))
@@ -505,7 +505,7 @@ export default function CheckoutPage() {
                     </p>
                   </div>
                   <span style={{ fontSize: 12, fontWeight: 700, color: BRAND.dark, flexShrink: 0 }}>
-                    RD${((item.product.price_rdp * item.quantity) / 100).toLocaleString('es-DO')}
+                    RD${(((item.variant_price_rdp ?? item.product.price_rdp) * item.quantity) / 100).toLocaleString('es-DO')}
                   </span>
                 </div>
               ))}

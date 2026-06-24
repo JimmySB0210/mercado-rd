@@ -54,6 +54,8 @@ export interface CartItem {
   quantity: number
   selected_size?: string
   selected_color?: string
+  variant_id?: string
+  variant_price_rdp?: number
 }
 
 export interface Cart {

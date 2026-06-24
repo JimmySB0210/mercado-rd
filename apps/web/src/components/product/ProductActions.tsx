@@ -6,19 +6,30 @@
 
 import { useState } from 'react'
 import { useCartStore } from '@/lib/store/cart'
+import { formatPrice } from '@/types/database.types'
+import type { ProductVariant } from '@/types/database.types'
 import type { Product } from '@/types'
 
 interface ProductActionProps {
   // Recibe el producto completo para pasarlo íntegro al store
   product: Product
+  variants?: ProductVariant[]
 }
 
-export function ProductActions({ product }: ProductActionProps) {
+export function ProductActions({ product, variants = [] }: ProductActionProps) {
   const addItem = useCartStore(s => s.addItem)
+  const hasVariants = variants.length > 0
 
-  // Normalizar arrays opcionales — Product.sizes y .colors son optativos en el tipo
-  const sizes = product.sizes ?? []
-  const colors = product.colors ?? []
+  // Sin variantes: usa los arrays planos del producto (comportamiento de siempre)
+  const legacySizes = product.sizes ?? []
+  const legacyColors = product.colors ?? []
+
+  // Con variantes: valores únicos derivados de las filas de product_variants
+  const variantSizes = [...new Set(variants.map(v => v.size).filter((s): s is string => !!s))]
+  const variantColors = [...new Set(variants.map(v => v.color).filter((c): c is string => !!c))]
+
+  const sizes = hasVariants ? variantSizes : legacySizes
+  const colors = hasVariants ? variantColors : legacyColors
 
   const [selectedSize, setSelectedSize] = useState<string | null>(
     sizes.length === 1 ? sizes[0] : null
@@ -31,10 +42,18 @@ export function ProductActions({ product }: ProductActionProps) {
 
   const needsSize = sizes.length > 0
   const needsColor = colors.length > 0
-  const canAdd =
-    product.stock > 0 &&
-    (!needsSize || selectedSize) &&
-    (!needsColor || selectedColor)
+  const selectionComplete = (!needsSize || selectedSize) && (!needsColor || selectedColor)
+
+  const matchedVariant = hasVariants && selectionComplete
+    ? variants.find(v => (v.size ?? null) === selectedSize && (v.color ?? null) === selectedColor) ?? null
+    : null
+
+  const effectiveStock = hasVariants ? (matchedVariant?.stock ?? 0) : product.stock
+  const isOutOfStock = hasVariants ? (matchedVariant !== null && matchedVariant.stock === 0) : product.stock === 0
+
+  const canAdd = hasVariants
+    ? !!matchedVariant && matchedVariant.stock > 0
+    : product.stock > 0 && selectionComplete
 
   const handleAdd = () => {
     if (!canAdd) return
@@ -44,6 +63,8 @@ export function ProductActions({ product }: ProductActionProps) {
       quantity,
       selectedSize ?? undefined,
       selectedColor ?? undefined,
+      matchedVariant?.id,
+      matchedVariant?.price_rdp ?? undefined,
     )
 
     setAdded(true)
@@ -103,6 +124,22 @@ export function ProductActions({ product }: ProductActionProps) {
         </div>
       )}
 
+      {/* Info de la variante seleccionada */}
+      {hasVariants && matchedVariant && (
+        <div className="text-sm">
+          {matchedVariant.price_rdp !== null && (
+            <p className="font-semibold text-gray-900">
+              Precio con esta variante: {formatPrice(matchedVariant.price_rdp)}
+            </p>
+          )}
+          {matchedVariant.stock === 0 ? (
+            <p className="font-medium text-red-500 mt-1">Agotado</p>
+          ) : (
+            <p className="text-gray-400 mt-1">{matchedVariant.stock} disponibles</p>
+          )}
+        </div>
+      )}
+
       {/* Cantidad */}
       <div>
         <p className="text-sm font-medium text-gray-700 mb-2">Cantidad</p>
@@ -116,9 +153,9 @@ export function ProductActions({ product }: ProductActionProps) {
           </button>
           <span className="w-8 text-center font-medium text-gray-900">{quantity}</span>
           <button
-            onClick={() => setQuantity(q => Math.min(product.stock, q + 1))}
+            onClick={() => setQuantity(q => Math.min(effectiveStock, q + 1))}
             className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40"
-            disabled={quantity >= product.stock}
+            disabled={quantity >= effectiveStock}
           >
             +
           </button>
@@ -137,8 +174,8 @@ export function ProductActions({ product }: ProductActionProps) {
             : 'bg-gray-300 cursor-not-allowed text-white'
         }`}
       >
-        {product.stock === 0
-          ? 'Sin stock'
+        {isOutOfStock
+          ? (hasVariants ? 'Agotado' : 'Sin stock')
           : !canAdd
           ? `Selecciona ${needsSize && !selectedSize ? 'talla' : 'color'}`
           : added

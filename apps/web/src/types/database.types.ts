@@ -75,6 +75,18 @@ export interface Product {
   created_at: string
 }
 
+export interface ProductVariant {
+  id: string
+  product_id: string
+  size: string | null
+  color: string | null
+  stock: number
+  price_rdp: number | null // null = usa el precio base del producto
+  sku: string | null
+  is_active: boolean
+  created_at: string
+}
+
 export interface Order {
   id: string
   user_id: string

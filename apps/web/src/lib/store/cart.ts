@@ -9,7 +9,7 @@ interface CartState {
 }
 
 interface CartActions {
-  addItem: (product: Product, qty?: number, size?: string, color?: string) => void
+  addItem: (product: Product, qty?: number, size?: string, color?: string, variantId?: string, variantPriceRdp?: number) => void
   removeItem: (productId: string) => void
   updateQty: (productId: string, qty: number) => void
   clearCart: () => void
@@ -22,7 +22,7 @@ export const useCartStore = create<CartStore>()(
     (set) => ({
       items: [],
 
-      addItem: (product, qty = 1, size, color) => {
+      addItem: (product, qty = 1, size, color, variantId, variantPriceRdp) => {
         set((state) => {
           const exists = state.items.find(
             (i) =>
@@ -44,7 +44,7 @@ export const useCartStore = create<CartStore>()(
           return {
             items: [
               ...state.items,
-              { product, quantity: qty, selected_size: size, selected_color: color },
+              { product, quantity: qty, selected_size: size, selected_color: color, variant_id: variantId, variant_price_rdp: variantPriceRdp },
             ],
           }
         })
@@ -87,7 +87,7 @@ export function useCartItemCount(): number {
 
 export function useCartSubtotal(): number {
   return useCartStore((s) =>
-    s.items.reduce((acc, i) => acc + i.product.price_rdp * i.quantity, 0)
+    s.items.reduce((acc, i) => acc + (i.variant_price_rdp ?? i.product.price_rdp) * i.quantity, 0)
   )
 }
 

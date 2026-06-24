@@ -46,9 +46,27 @@ export default function NewProductPage() {
     price: '',
     comparePrice: '',
     stock: '',
-    sizes: '',
-    colors: '',
   })
+
+  interface VariantRow {
+    size: string
+    color: string
+    stock: string
+    price: string
+  }
+  const [variantRows, setVariantRows] = useState<VariantRow[]>([])
+
+  const addVariantRow = () => {
+    setVariantRows(prev => [...prev, { size: '', color: '', stock: '', price: '' }])
+  }
+
+  const updateVariantRow = (index: number, field: keyof VariantRow, value: string) => {
+    setVariantRows(prev => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)))
+  }
+
+  const removeVariantRow = (index: number) => {
+    setVariantRows(prev => prev.filter((_, i) => i !== index))
+  }
 
   const [imageFiles, setImageFiles] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
@@ -206,7 +224,7 @@ export default function NewProductPage() {
     try {
       const imageUrls = await uploadImages()
 
-      const { error: insertError } = await supabase
+      const { data: newProduct, error: insertError } = await supabase
         .from('products')
         .insert({
           vendor_id: vendorId,
@@ -218,12 +236,29 @@ export default function NewProductPage() {
           compare_rdp: form.comparePrice ? Math.round(parseFloat(form.comparePrice) * 100) : null,
           stock: stockNum,
           images: imageUrls,
-          sizes: form.sizes ? form.sizes.split(',').map(s => s.trim()).filter(Boolean) : [],
-          colors: form.colors ? form.colors.split(',').map(c => c.trim()).filter(Boolean) : [],
           is_active: true,
         })
+        .select('id')
+        .single()
 
       if (insertError) throw insertError
+
+      // Variantes (opcional) — filas sin talla ni color se descartan
+      const variantsPayload = variantRows
+        .filter(row => row.size.trim() || row.color.trim())
+        .map(row => ({
+          product_id: newProduct.id,
+          size: row.size.trim() || null,
+          color: row.color.trim() || null,
+          stock: row.stock ? parseInt(row.stock) : 0,
+          price_rdp: row.price ? Math.round(parseFloat(row.price) * 100) : null,
+          is_active: true,
+        }))
+
+      if (variantsPayload.length > 0) {
+        const { error: variantsError } = await supabase.from('product_variants').insert(variantsPayload)
+        if (variantsError) console.error('[handleSubmit variants]', variantsError)
+      }
 
       router.push('/dashboard')
       router.refresh()
@@ -397,29 +432,75 @@ export default function NewProductPage() {
 
           {/* Variantes */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
-            <h2 className="text-sm font-semibold text-gray-700 mb-1">Variantes (opcional)</h2>
-
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">Tallas (separadas por coma)</label>
-              <input
-                name="sizes"
-                value={form.sizes}
-                onChange={handleChange}
-                placeholder="S, M, L, XL"
-                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
-              />
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-sm font-semibold text-gray-700">Variantes (opcional)</h2>
+              <button
+                type="button"
+                onClick={addVariantRow}
+                style={{ color: BRAND.blue }}
+                className="text-xs font-semibold bg-transparent border-none cursor-pointer"
+              >
+                + Agregar variante
+              </button>
             </div>
+            <p className="text-xs text-gray-400">
+              Si no agregas ninguna, el producto usa el stock y precio generales de arriba.
+            </p>
 
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">Colores (separados por coma)</label>
-              <input
-                name="colors"
-                value={form.colors}
-                onChange={handleChange}
-                placeholder="Rojo, Azul, Negro"
-                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
-              />
-            </div>
+            {variantRows.map((row, i) => (
+              <div key={i} className="grid grid-cols-12 gap-2 items-end">
+                <div className="col-span-3">
+                  {i === 0 && <label className="text-xs text-gray-500 mb-1 block">Talla</label>}
+                  <input
+                    value={row.size}
+                    onChange={e => updateVariantRow(i, 'size', e.target.value)}
+                    placeholder="M"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
+                  />
+                </div>
+                <div className="col-span-3">
+                  {i === 0 && <label className="text-xs text-gray-500 mb-1 block">Color</label>}
+                  <input
+                    value={row.color}
+                    onChange={e => updateVariantRow(i, 'color', e.target.value)}
+                    placeholder="Azul"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
+                  />
+                </div>
+                <div className="col-span-2">
+                  {i === 0 && <label className="text-xs text-gray-500 mb-1 block">Stock</label>}
+                  <input
+                    type="number"
+                    min="0"
+                    value={row.stock}
+                    onChange={e => updateVariantRow(i, 'stock', e.target.value)}
+                    placeholder="0"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
+                  />
+                </div>
+                <div className="col-span-3">
+                  {i === 0 && <label className="text-xs text-gray-500 mb-1 block">Precio (RD$, opcional)</label>}
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={row.price}
+                    onChange={e => updateVariantRow(i, 'price', e.target.value)}
+                    placeholder="Igual al general"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
+                  />
+                </div>
+                <div className="col-span-1">
+                  <button
+                    type="button"
+                    onClick={() => removeVariantRow(i)}
+                    className="w-full h-9 rounded-lg border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-300 transition-colors"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
 
           {error && planLimitReached && (

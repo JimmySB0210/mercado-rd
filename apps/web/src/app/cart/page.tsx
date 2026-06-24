@@ -72,14 +72,14 @@ export default function CartPage() {
                       </div>
                     )}
                     <div style={{ fontSize: 12, color: BRAND.blue, fontWeight: 600 }}>
-                      RD${(item.product.price_rdp / 100).toLocaleString('es-DO')}
+                      RD${((item.variant_price_rdp ?? item.product.price_rdp) / 100).toLocaleString('es-DO')}
                     </div>
                   </div>
 
                   {/* Acciones */}
                   <div className="cart-item-actions" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, flexShrink: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 15, color: BRAND.dark }}>
-                      RD${((item.product.price_rdp * item.quantity) / 100).toLocaleString('es-DO')}
+                      RD${(((item.variant_price_rdp ?? item.product.price_rdp) * item.quantity) / 100).toLocaleString('es-DO')}
                     </div>
                     <div style={{ display: 'flex', border: '1px solid #E0E0E0', borderRadius: 6, overflow: 'hidden' }}>
                       <button
