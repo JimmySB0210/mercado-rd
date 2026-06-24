@@ -51,6 +51,19 @@ export default function CheckoutPage() {
   const [addressError, setAddressError] = useState<string | null>(null)
   const [notesError, setNotesError] = useState<string | null>(null)
   const [provinces, setProvinces] = useState<Province[]>([])
+
+  const [couponCode, setCouponCode] = useState('')
+  const [couponApplying, setCouponApplying] = useState(false)
+  const [couponError, setCouponError] = useState<string | null>(null)
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    valid: boolean
+    coupon_id: string
+    code: string
+    type: string
+    value: number
+    discount_rdp: number
+    vendor_id: string
+  } | null>(null)
   const { province: selectedProvince } = useLocationStore()
 
   const [shippingRate, setShippingRate] = useState<{
@@ -68,6 +81,8 @@ export default function CheckoutPage() {
   const ENVIO = items.length === 0
     ? 0
     : shippingRate?.price_rdp ?? (form.province && !shippingLoading ? SHIPPING_FALLBACK_RDP : 0)
+
+  const discountRdp = appliedCoupon?.discount_rdp ?? 0
 
   useEffect(() => {
     const supabase = createClient()
@@ -121,6 +136,34 @@ export default function CheckoutPage() {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
   }
 
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return
+    setCouponApplying(true)
+    setCouponError(null)
+
+    const supabase = createClient()
+    const { data, error } = await supabase.rpc('validate_coupon', {
+      p_code: couponCode.trim().toUpperCase(),
+      p_order_total_rdp: subtotal,
+    })
+
+    setCouponApplying(false)
+
+    if (error || !data?.valid) {
+      setCouponError(data?.error ?? 'No se pudo validar el cupón')
+      setAppliedCoupon(null)
+      return
+    }
+
+    setAppliedCoupon(data)
+  }
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null)
+    setCouponCode('')
+    setCouponError(null)
+  }
+
   const handleSubmit = async () => {
     if (!user) { router.push('/login?redirect=/checkout'); return }
     if (!form.fullName || !form.phone || !form.address || !form.province) {
@@ -151,7 +194,7 @@ export default function CheckoutPage() {
 
     try {
       const supabase = createClient()
-      const totalCents = total + ENVIO
+      const totalCents = Math.max(0, total + ENVIO - discountRdp)
 
       // Protección contra card testing — máx. 5 intentos por IP y 3
       // fallos consecutivos por usuario cada 15 minutos.
@@ -222,11 +265,21 @@ export default function CheckoutPage() {
         p_payment_method: form.payMethod,
         p_notes: form.notes || null,
         p_items: itemsPayload,
+        p_discount_rdp: discountRdp,
+        p_coupon_id: appliedCoupon?.coupon_id ?? null,
       })
 
       if (rpcError) {
         console.error('[RPC ERROR DETALLE]', JSON.stringify(rpcError, null, 2))
         throw rpcError
+      }
+
+      // Incrementar el contador de usos del cupón aplicado
+      if (appliedCoupon) {
+        const { error: couponUseError } = await supabase.rpc('apply_coupon_use', {
+          p_coupon_id: appliedCoupon.coupon_id,
+        })
+        if (couponUseError) console.error('[checkout] Error incrementando uso de cupón:', couponUseError)
       }
 
       // Registrar el pago ya aprobado, vinculado a la orden real recién creada
@@ -458,6 +511,55 @@ export default function CheckoutPage() {
               ))}
             </div>
 
+            {/* Cupón */}
+            <div style={{ borderTop: '1px solid #EEE', paddingTop: 12, marginBottom: 12 }}>
+              <label style={{ fontSize: 12, color: BRAND.gray, display: 'block', marginBottom: 6 }}>
+                ¿Tienes un cupón?
+              </label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  value={couponCode}
+                  onChange={e => setCouponCode(e.target.value)}
+                  placeholder="CÓDIGO"
+                  disabled={!!appliedCoupon}
+                  style={{
+                    flex: 1, border: '1px solid #E0E0E0', borderRadius: 8, padding: '9px 12px',
+                    fontSize: 13, outline: 'none', boxSizing: 'border-box', textTransform: 'uppercase',
+                    background: appliedCoupon ? '#F5F5F5' : '#fff',
+                  }}
+                />
+                {appliedCoupon ? (
+                  <button
+                    type="button"
+                    onClick={handleRemoveCoupon}
+                    style={{ border: '1px solid #E0E0E0', background: '#fff', color: BRAND.gray, borderRadius: 8, padding: '9px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                  >
+                    Quitar
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleApplyCoupon}
+                    disabled={couponApplying || !couponCode.trim()}
+                    style={{
+                      border: 'none', borderRadius: 8, padding: '9px 14px', fontSize: 13, fontWeight: 600,
+                      color: '#fff', whiteSpace: 'nowrap',
+                      background: couponApplying || !couponCode.trim() ? '#ccc' : BRAND.dark,
+                      cursor: couponApplying || !couponCode.trim() ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {couponApplying ? '...' : 'Aplicar'}
+                  </button>
+                )}
+              </div>
+              {couponError && <p style={{ fontSize: 12, color: '#E53935', margin: '6px 0 0' }}>{couponError}</p>}
+              {appliedCoupon && (
+                <p style={{ fontSize: 12, color: '#2E7D32', margin: '6px 0 0', fontWeight: 600 }}>
+                  ✓ Cupón {appliedCoupon.code} aplicado
+                </p>
+              )}
+            </div>
+
             <div style={{ borderTop: '1px solid #EEE', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: BRAND.dark }}>
                 <span>Subtotal</span><span>RD${(subtotal / 100).toLocaleString('es-DO')}</span>
@@ -484,9 +586,15 @@ export default function CheckoutPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: BRAND.dark }}>
                 <span>ITBIS (18%)</span><span>RD${(itbis / 100).toLocaleString('es-DO')}</span>
               </div>
+              {appliedCoupon && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#2E7D32', fontWeight: 600 }}>
+                  <span>Descuento ({appliedCoupon.code})</span>
+                  <span>-RD${(discountRdp / 100).toLocaleString('es-DO')}</span>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 16, borderTop: '1px solid #EEE', paddingTop: 10, marginTop: 4, color: BRAND.dark }}>
                 <span>Total</span>
-                <span>RD${((total + ENVIO) / 100).toLocaleString('es-DO')}</span>
+                <span>RD${(Math.max(0, total + ENVIO - discountRdp) / 100).toLocaleString('es-DO')}</span>
               </div>
             </div>
           </div>
