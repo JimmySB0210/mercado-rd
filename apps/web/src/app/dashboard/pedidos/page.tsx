@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { DashboardSidebar } from '@/components/vendor/DashboardSidebar'
 import { OrderStatusSelect } from '@/components/vendor/OrderStatusSelect'
+import { TrackingForm } from '@/components/vendor/TrackingForm'
 import { formatPrice } from '@/types/database.types'
 import { BRAND } from '@/lib/colors'
 
@@ -19,6 +20,8 @@ interface OrderRow {
   payment_method: string
   notes: string | null
   created_at: string
+  tracking_number: string | null
+  courier: string | null
   province_name: string | null
   buyer_name: string
   buyer_phone: string | null
@@ -89,7 +92,7 @@ export default function VendorOrdersPage() {
 
       const { data: ordersData } = await supabase
         .from('orders')
-        .select('id, status, delivery_address, payment_method, notes, created_at, user_id, province:provinces_rd(name)')
+        .select('id, status, delivery_address, payment_method, notes, created_at, tracking_number, courier, user_id, province:provinces_rd(name)')
         .in('id', orderIds)
         .order('created_at', { ascending: false })
 
@@ -129,6 +132,8 @@ export default function VendorOrdersPage() {
           payment_method: order.payment_method,
           notes: order.notes,
           created_at: order.created_at,
+          tracking_number: order.tracking_number,
+          courier: order.courier,
           province_name: order.province?.name ?? null,
           buyer_name: buyer?.full_name ?? 'Cliente',
           buyer_phone: buyer?.phone ?? null,
@@ -280,6 +285,14 @@ export default function VendorOrdersPage() {
                           </div>
                         ))}
                       </div>
+
+                      {order.status === 'confirmed' && (
+                        <TrackingForm
+                          orderId={order.order_id}
+                          initialTracking={order.tracking_number}
+                          initialCourier={order.courier}
+                        />
+                      )}
                     </div>
                   )}
                 </div>

@@ -33,6 +33,8 @@ interface Order {
   status: string
   created_at: string
   total_rdp: number
+  tracking_number: string | null
+  courier: string | null
   items: OrderItem[]
   disputeId: string | null
 }
@@ -74,7 +76,7 @@ export default function MyOrdersPage() {
 
     const { data: ordersData } = await supabase
       .from('orders')
-      .select('id, status, created_at, total_rdp')
+      .select('id, status, created_at, total_rdp, tracking_number, courier')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
@@ -114,6 +116,8 @@ export default function MyOrdersPage() {
       status: order.status,
       created_at: order.created_at,
       total_rdp: order.total_rdp,
+      tracking_number: order.tracking_number,
+      courier: order.courier,
       disputeId: disputeMap.get(order.id) ?? null,
       items: (items ?? [])
         .filter((i: any) => i.order_id === order.id)
@@ -228,6 +232,20 @@ export default function MyOrdersPage() {
                       </div>
                     ))}
                   </div>
+
+                  {(order.status === 'shipped' || order.status === 'delivered') && order.tracking_number && (
+                    <div className="px-5 py-3 bg-blue-50 border-t border-blue-100">
+                      <p className="text-sm font-semibold" style={{ color: BRAND.dark }}>
+                        📦 Número de seguimiento: {order.tracking_number}
+                      </p>
+                      {order.courier && (
+                        <p className="text-xs text-gray-500 mt-0.5">{order.courier}</p>
+                      )}
+                      <p className="text-xs text-gray-400 mt-1">
+                        Contacta a tu courier con este número para rastrear tu paquete.
+                      </p>
+                    </div>
+                  )}
 
                   <div className="px-5 border-t border-gray-50">
                     <button
