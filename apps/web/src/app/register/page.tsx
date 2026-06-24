@@ -4,11 +4,14 @@
 // Archivo: app/register/page.tsx
 // ============================================================
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Script from 'next/script'
 import Link from 'next/link'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { BRAND } from '@/lib/colors'
+
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -25,6 +28,15 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
   const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState('')
+
+  // Callbacks globales que el widget de Turnstile invoca por nombre
+  // (data-callback / data-expired-callback) cuando se renderiza vía script.
+  useEffect(() => {
+    if (!TURNSTILE_SITE_KEY) return
+    ;(window as any).onTurnstileVerify = (token: string) => setCaptchaToken(token)
+    ;(window as any).onTurnstileExpired = () => setCaptchaToken('')
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -49,7 +61,27 @@ export default function RegisterPage() {
       return
     }
 
+    if (TURNSTILE_SITE_KEY && !captchaToken) {
+      setError('Completa la verificación de seguridad')
+      return
+    }
+
     setLoading(true)
+
+    if (TURNSTILE_SITE_KEY) {
+      const captchaRes = await fetch('/api/verify-captcha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: captchaToken }),
+      })
+      const captchaData = await captchaRes.json().catch(() => ({ success: false }))
+
+      if (!captchaData.success) {
+        setError('Verificación de seguridad fallida. Intenta de nuevo.')
+        setLoading(false)
+        return
+      }
+    }
 
     const { error } = await signUpWithEmail(
       form.email,
@@ -217,9 +249,21 @@ export default function RegisterPage() {
               </div>
             )}
 
+            {TURNSTILE_SITE_KEY && (
+              <>
+                <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
+                <div
+                  className="cf-turnstile"
+                  data-sitekey={TURNSTILE_SITE_KEY}
+                  data-callback="onTurnstileVerify"
+                  data-expired-callback="onTurnstileExpired"
+                />
+              </>
+            )}
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || (!!TURNSTILE_SITE_KEY && !captchaToken)}
               className="w-full bg-[var(--brand-red)] hover:brightness-90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition-colors mt-2"
             >
               {loading ? 'Creando cuenta...' : 'Crear cuenta'}
