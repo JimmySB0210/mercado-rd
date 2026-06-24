@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Navbar } from '@/components/shop/Navbar'
 import { ReviewModal } from '@/components/product/ReviewModal'
 import { DisputeModal } from '@/components/order/DisputeModal'
+import { OrderTimeline } from '@/components/shop/OrderTimeline'
 import { formatPrice } from '@/types/database.types'
 import { BRAND } from '@/lib/colors'
 
@@ -53,6 +54,16 @@ export default function MyOrdersPage() {
   const [loading, setLoading] = useState(true)
   const [reviewTarget, setReviewTarget] = useState<{ orderId: string; item: OrderItem } | null>(null)
   const [disputeTarget, setDisputeTarget] = useState<{ orderId: string; vendorId: string } | null>(null)
+  const [expandedTimelines, setExpandedTimelines] = useState<Set<string>>(new Set())
+
+  const toggleTimeline = (orderId: string) => {
+    setExpandedTimelines(prev => {
+      const next = new Set(prev)
+      if (next.has(orderId)) next.delete(orderId)
+      else next.add(orderId)
+      return next
+    })
+  }
 
   const loadOrders = async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -216,6 +227,17 @@ export default function MyOrdersPage() {
                         </div>
                       </div>
                     ))}
+                  </div>
+
+                  <div className="px-5 border-t border-gray-50">
+                    <button
+                      onClick={() => toggleTimeline(order.id)}
+                      style={{ color: BRAND.gray }}
+                      className="text-xs font-semibold bg-transparent border-none cursor-pointer py-2.5"
+                    >
+                      {expandedTimelines.has(order.id) ? 'Ocultar seguimiento ▴' : 'Ver seguimiento ▾'}
+                    </button>
+                    {expandedTimelines.has(order.id) && <OrderTimeline orderId={order.id} />}
                   </div>
 
                   <div className="px-5 py-3 bg-gray-50 flex justify-between items-center flex-wrap gap-2">
