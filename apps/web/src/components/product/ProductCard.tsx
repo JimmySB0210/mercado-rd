@@ -10,17 +10,20 @@
 // Link, fuera de él, envueltos ambos en un <div> contenedor.
 // ============================================================
 
+import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { formatPrice, discountPercent, type ProductWithVendor } from '@/types/database.types'
 import { WishlistButton } from '@/components/shop/WishlistButton'
+
+const FALLBACK_IMAGE = '/placeholder-product.png'
 
 interface Props {
   product: ProductWithVendor
 }
 
 export function ProductCard({ product }: Props) {
-  const image = product.images?.[0] ?? '/placeholder-product.png'
+  const [imgSrc, setImgSrc] = useState(product.images?.[0] ?? FALLBACK_IMAGE)
   const hasDiscount = product.compare_rdp && product.compare_rdp > product.price_rdp
   const discount = hasDiscount
     ? discountPercent(product.price_rdp, product.compare_rdp!)
@@ -35,11 +38,12 @@ export function ProductCard({ product }: Props) {
         {/* Imagen */}
         <div className="relative aspect-square overflow-hidden bg-gray-50">
           <Image
-            src={image}
+            src={imgSrc}
             alt={product.name}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            onError={() => setImgSrc(FALLBACK_IMAGE)}
           />
           {discount && (
             <span
