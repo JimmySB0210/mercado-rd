@@ -169,7 +169,7 @@ export function HomeProductGrid() {
       {/* Tiendas destacadas */}
       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', margin:'36px 0 16px'}}>
         <h2 style={{fontSize:18, fontWeight:700, color:BRAND.dark, margin:0}}>Tiendas destacadas</h2>
-        <a href='/' style={{color:BRAND.blue, fontSize:13, fontWeight:600, textDecoration:'none'}}>Ver todas →</a>
+        <a href='/tiendas' style={{color:BRAND.blue, fontSize:13, fontWeight:600, textDecoration:'none'}}>Ver todas →</a>
       </div>
 
       <div className="grid-stores" style={{marginBottom:36}}>
