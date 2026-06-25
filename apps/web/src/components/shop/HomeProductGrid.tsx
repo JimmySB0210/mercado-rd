@@ -72,22 +72,39 @@ export function HomeProductGrid() {
 
   useEffect(() => {
     let active = true
-    fetchProductsPage(0).then(data => {
-      if (!active) return
-      setProducts(data)
-      setHasMore(data.length === PAGE_SIZE)
-      setLoadingInitial(false)
-    })
+    fetchProductsPage(0)
+      .then(data => {
+        if (!active) return
+        setProducts(data)
+        setHasMore(data.length === PAGE_SIZE)
+      })
+      .catch(error => {
+        console.error('[HomeProductGrid]', error)
+        if (!active) return
+        setHasMore(false)
+      })
+      .finally(() => {
+        if (!active) return
+        setLoadingInitial(false)
+      })
     return () => { active = false }
   }, [])
 
   const handleLoadMore = useCallback(async () => {
+    if (loadingMore) return
+
     setLoadingMore(true)
-    const next = await fetchProductsPage(products.length)
-    setProducts(prev => [...prev, ...next])
-    setHasMore(next.length === PAGE_SIZE)
-    setLoadingMore(false)
-  }, [products.length])
+    try {
+      const next = await fetchProductsPage(products.length)
+      setProducts(prev => [...prev, ...next])
+      setHasMore(next.length === PAGE_SIZE)
+    } catch (error) {
+      console.error('[HomeProductGrid]', error)
+      setHasMore(false)
+    } finally {
+      setLoadingMore(false)
+    }
+  }, [loadingMore, products.length])
 
   const hasReal = !loadingInitial && products.length > 0
   const showMock = !loadingInitial && !hasReal
