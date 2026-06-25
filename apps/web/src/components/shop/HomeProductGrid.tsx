@@ -45,7 +45,9 @@ const TRUST = [
 
 const IMAGE_RATIOS = ['1/1', '4/5', '5/4', '1/1', '5/6']
 
-async function fetchProductsPage(offset: number): Promise<Product[]> {
+type ProductsPageResult = { data: Product[]; ok: boolean }
+
+async function fetchProductsPage(offset: number): Promise<ProductsPageResult> {
   const supabase = createPublicClient()
   const { data, error } = await supabase
     .from('products')
@@ -60,8 +62,8 @@ async function fetchProductsPage(offset: number): Promise<Product[]> {
     .order('id', { ascending: true })
     .range(offset, offset + PAGE_SIZE - 1)
 
-  if (error) { console.error('[HomeProductGrid]', error); return [] }
-  return (data ?? []) as Product[]
+  if (error) { console.error('[HomeProductGrid]', error); return { data: [], ok: false } }
+  return { data: (data ?? []) as Product[], ok: true }
 }
 
 export function HomeProductGrid() {
@@ -69,18 +71,25 @@ export function HomeProductGrid() {
   const [loadingInitial, setLoadingInitial] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(true)
+  const [fetchError, setFetchError] = useState(false)
 
   useEffect(() => {
     let active = true
     fetchProductsPage(0)
-      .then(data => {
+      .then(({ data, ok }) => {
         if (!active) return
+        if (!ok) {
+          setFetchError(true)
+          setHasMore(false)
+          return
+        }
         setProducts(data)
         setHasMore(data.length === PAGE_SIZE)
       })
       .catch(error => {
         console.error('[HomeProductGrid]', error)
         if (!active) return
+        setFetchError(true)
         setHasMore(false)
       })
       .finally(() => {
@@ -95,11 +104,17 @@ export function HomeProductGrid() {
 
     setLoadingMore(true)
     try {
-      const next = await fetchProductsPage(products.length)
-      setProducts(prev => [...prev, ...next])
-      setHasMore(next.length === PAGE_SIZE)
+      const { data, ok } = await fetchProductsPage(products.length)
+      if (!ok) {
+        setFetchError(true)
+        setHasMore(false)
+        return
+      }
+      setProducts(prev => [...prev, ...data])
+      setHasMore(data.length === PAGE_SIZE)
     } catch (error) {
       console.error('[HomeProductGrid]', error)
+      setFetchError(true)
       setHasMore(false)
     } finally {
       setLoadingMore(false)
@@ -107,7 +122,8 @@ export function HomeProductGrid() {
   }, [loadingMore, products.length])
 
   const hasReal = !loadingInitial && products.length > 0
-  const showMock = !loadingInitial && !hasReal
+  const showError = !loadingInitial && !hasReal && fetchError
+  const showMock = !loadingInitial && !hasReal && !fetchError
 
   return (
     <div id="productos" style={{maxWidth:1400, margin:'0 auto', padding:'8px 24px 40px'}}>
@@ -126,6 +142,13 @@ export function HomeProductGrid() {
           {products.map(p => (
             <ProductCard key={p.id} product={p as any} />
           ))}
+        </div>
+      )}
+
+      {showError && (
+        <div style={{background:'#fff', border:'1px solid #EEE', borderRadius:10, padding:'40px 20px', textAlign:'center'}}>
+          <div style={{fontSize:40, marginBottom:12}}>⚠️</div>
+          <p style={{color:BRAND.gray, fontSize:14, margin:0}}>No pudimos cargar los productos. Intenta recargar la página.</p>
         </div>
       )}
 
