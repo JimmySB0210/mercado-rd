@@ -25,14 +25,16 @@ interface Props {
 export function SearchResultsGrid({ initialProducts, orderedIds }: Props) {
   const [products, setProducts] = useState<any[]>(initialProducts)
   const [loadingMore, setLoadingMore] = useState(false)
+  const [nextOffset, setNextOffset] = useState(Math.min(PAGE_SIZE, orderedIds.length))
 
-  const hasMore = products.length < orderedIds.length
+  const hasMore = nextOffset < orderedIds.length
 
   const handleLoadMore = useCallback(async () => {
+    if (loadingMore || !hasMore) return
+
     setLoadingMore(true)
 
-    const offset = products.length
-    const nextIds = orderedIds.slice(offset, offset + PAGE_SIZE)
+    const nextIds = orderedIds.slice(nextOffset, nextOffset + PAGE_SIZE)
 
     const supabase = createPublicClient()
     const { data, error } = await supabase
@@ -57,9 +59,13 @@ export function SearchResultsGrid({ initialProducts, orderedIds }: Props) {
       (a: any, b: any) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0)
     )
 
-    setProducts(prev => [...prev, ...sorted])
+    setProducts(prev => {
+      const seen = new Set(prev.map(p => p.id))
+      return [...prev, ...sorted.filter(p => !seen.has(p.id))]
+    })
+    setNextOffset(prev => Math.min(prev + nextIds.length, orderedIds.length))
     setLoadingMore(false)
-  }, [products.length, orderedIds])
+  }, [hasMore, loadingMore, nextOffset, orderedIds])
 
   return (
     <>
