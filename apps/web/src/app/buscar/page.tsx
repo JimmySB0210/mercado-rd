@@ -3,12 +3,15 @@
 // Ruta: src/app/buscar/page.tsx
 // ============================================================
 // Usa la función RPC search_products (tolerante a tildes/mayúsculas)
-// en vez de .or() con ilike crudo
+// en vez de .or() con ilike crudo. Solo se hidrata el primer lote
+// de 12 resultados aquí — el resto lo pagina SearchResultsGrid.
 // ============================================================
 
 import { createServerClient } from '@/lib/supabase/server'
-import { ProductCard } from '@/components/product/ProductCard'
+import { SearchResultsGrid } from '@/components/shop/SearchResultsGrid'
 import { Navbar } from '@/components/shop/Navbar'
+
+const PAGE_SIZE = 12
 
 function sanitizeSearchQuery(raw: string): string {
   return raw
@@ -25,7 +28,8 @@ export default async function SearchPage(
   const rawQuery = (q ?? '').trim()
   const query = sanitizeSearchQuery(rawQuery)
 
-  let products: any[] = []
+  let orderedIds: string[] = []
+  let initialProducts: any[] = []
 
   if (query.length >= 2) {
     const supabase = await createServerClient()
@@ -36,9 +40,12 @@ export default async function SearchPage(
     if (error) {
       console.error('[SearchPage]', error)
     } else if (rawProducts && rawProducts.length > 0) {
-      // search_products devuelve solo la tabla products — hidratamos
-      // las relaciones (vendor/category/province) en una segunda consulta
-      const ids = rawProducts.map((p: any) => p.id)
+      // search_products devuelve solo la tabla products, ya en orden de
+      // relevancia — guardamos todos los ids para paginar, pero solo
+      // hidratamos (vendor/category/province) el primer lote de 12 aquí
+      orderedIds = rawProducts.map((p: any) => p.id)
+      const firstBatchIds = orderedIds.slice(0, PAGE_SIZE)
+
       const { data: hydrated } = await supabase
         .from('products')
         .select(`
@@ -47,11 +54,11 @@ export default async function SearchPage(
           category:categories(id, name, slug, emoji),
           province:provinces_rd(id, name)
         `)
-        .in('id', ids)
+        .in('id', firstBatchIds)
 
       // Mantener el orden de relevancia que ya trajo search_products
-      const orderMap = new Map<string, number>(ids.map((id: string, i: number) => [id, i]))
-      products = (hydrated ?? []).sort(
+      const orderMap = new Map<string, number>(firstBatchIds.map((id: string, i: number) => [id, i]))
+      initialProducts = (hydrated ?? []).sort(
         (a: any, b: any) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0)
       )
     }
@@ -80,21 +87,17 @@ export default async function SearchPage(
               Resultados para &ldquo;{query}&rdquo;
             </h1>
             <p className="text-sm text-gray-400 mb-6">
-              {products.length} {products.length === 1 ? 'producto encontrado' : 'productos encontrados'}
+              {orderedIds.length} {orderedIds.length === 1 ? 'producto encontrado' : 'productos encontrados'}
             </p>
 
-            {products.length === 0 ? (
+            {orderedIds.length === 0 ? (
               <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
                 <div className="text-5xl mb-4">🔍</div>
                 <p className="text-gray-500 mb-2">No encontramos productos para &ldquo;{query}&rdquo;</p>
                 <p className="text-sm text-gray-400">Intenta con otra palabra o revisa la ortografía.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {products.map(p => (
-                  <ProductCard key={p.id} product={p as any} />
-                ))}
-              </div>
+              <SearchResultsGrid initialProducts={initialProducts} orderedIds={orderedIds} />
             )}
           </>
         )}

@@ -1,18 +1,23 @@
 'use client'
 // ============================================================
-// MercadoRD — ProductGrid
-// Ruta: src/components/shop/ProductGrid.tsx
+// MercadoRD — HomeProductGrid
+// Ruta: src/components/shop/HomeProductGrid.tsx
 // ============================================================
-// Cuando recibe `products` reales de Supabase los renderiza
-// con ProductCard (enlaza a /producto/[id]).
-// Sin productos usa el mock hardcodeado como fallback.
+// Client Component — carga los productos con createPublicClient()
+// (no createServerClient(), para no romper el ISR de la homepage)
+// y pagina con un botón "Ver más productos" que acumula resultados.
+// Cuando no hay productos reales usa el mock hardcodeado como fallback.
 // El resto del componente (tiendas, trust bar) no cambia.
 // ============================================================
 
+import { useCallback, useEffect, useState } from 'react'
 import { Star, ShieldCheck, Users, BadgeCheck, Truck } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
 import { ProductCard } from '@/components/product/ProductCard'
+import { createPublicClient } from '@/lib/supabase/public'
 import type { Product } from '@/types'
+
+const PAGE_SIZE = 12
 
 // ─── Mock fallback (solo cuando BD no tiene datos) ────────────
 const MOCK_PRODUCTS = [
@@ -40,12 +45,52 @@ const TRUST = [
 
 const IMAGE_RATIOS = ['1/1', '4/5', '5/4', '1/1', '5/6']
 
-interface Props {
-  products?: Product[]
+async function fetchProductsPage(offset: number): Promise<Product[]> {
+  const supabase = createPublicClient()
+  const { data, error } = await supabase
+    .from('products')
+    .select(`
+      *,
+      vendor:vendors(id, business_name, is_verified, province_id),
+      category:categories(id, name, slug, emoji),
+      province:provinces_rd(id, name)
+    `)
+    .eq('is_active', true)
+    .order('sold_count', { ascending: false })
+    .order('id', { ascending: true })
+    .range(offset, offset + PAGE_SIZE - 1)
+
+  if (error) { console.error('[HomeProductGrid]', error); return [] }
+  return (data ?? []) as Product[]
 }
 
-export function ProductGrid({ products }: Props) {
-  const hasReal = products && products.length > 0
+export function HomeProductGrid() {
+  const [products, setProducts] = useState<Product[]>([])
+  const [loadingInitial, setLoadingInitial] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
+
+  useEffect(() => {
+    let active = true
+    fetchProductsPage(0).then(data => {
+      if (!active) return
+      setProducts(data)
+      setHasMore(data.length === PAGE_SIZE)
+      setLoadingInitial(false)
+    })
+    return () => { active = false }
+  }, [])
+
+  const handleLoadMore = useCallback(async () => {
+    setLoadingMore(true)
+    const next = await fetchProductsPage(products.length)
+    setProducts(prev => [...prev, ...next])
+    setHasMore(next.length === PAGE_SIZE)
+    setLoadingMore(false)
+  }, [products.length])
+
+  const hasReal = !loadingInitial && products.length > 0
+  const showMock = !loadingInitial && !hasReal
 
   return (
     <div id="productos" style={{maxWidth:1400, margin:'0 auto', padding:'8px 24px 40px'}}>
@@ -59,13 +104,15 @@ export function ProductGrid({ products }: Props) {
       </div>
 
       {/* Grid de productos — real o mock */}
-      {hasReal ? (
+      {hasReal && (
         <div className="grid-products">
           {products.map(p => (
             <ProductCard key={p.id} product={p as any} />
           ))}
         </div>
-      ) : (
+      )}
+
+      {showMock && (
         <div className="grid-products">
           {MOCK_PRODUCTS.map((p, idx) => (
             <div
@@ -93,6 +140,29 @@ export function ProductGrid({ products }: Props) {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Ver más productos — solo si hay productos reales y quedan más por cargar */}
+      {hasReal && hasMore && (
+        <div style={{display:'flex', justifyContent:'center', margin:'24px 0 0'}}>
+          <button
+            onClick={handleLoadMore}
+            disabled={loadingMore}
+            style={{
+              background:BRAND.blue,
+              color:'#fff',
+              border:'none',
+              borderRadius:8,
+              padding:'12px 28px',
+              fontSize:14,
+              fontWeight:600,
+              cursor: loadingMore ? 'wait' : 'pointer',
+              opacity: loadingMore ? 0.7 : 1,
+            }}
+          >
+            {loadingMore ? 'Cargando...' : 'Ver más productos'}
+          </button>
         </div>
       )}
 
