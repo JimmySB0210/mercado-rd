@@ -72,6 +72,10 @@ html, body {
   gap: 8px;
 }
 
+.hero-model-image {
+  display: block;
+}
+
 .auth-card {
   padding: 48px;
 }
@@ -124,6 +128,10 @@ html, body {
   /* Beneficios del hero se mantienen lado a lado, igual que en escritorio */
   .auth-card {
     padding: 28px 20px;
+  }
+  /* Modelo del hero: solo desktop, en mobile no hay espacio para mostrarla bien */
+  .hero-model-image {
+    display: none;
   }
   /* Categorías del hero: una sola fila que se desliza, en vez de envolver */
   .hero-categories {
