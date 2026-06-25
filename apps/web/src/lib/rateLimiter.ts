@@ -19,6 +19,11 @@ const SWEEP_INTERVAL_MS = 5 * 60 * 1000
 
 const upstashUrl = process.env.UPSTASH_REDIS_REST_URL
 const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN
+
+if (process.env.NODE_ENV === 'production' && (!upstashUrl || !upstashToken)) {
+  throw new Error('Upstash Redis must be configured for production rate limiting')
+}
+
 const hasUpstash = !!upstashUrl && !!upstashToken
 
 const redis = hasUpstash ? new Redis({ url: upstashUrl!, token: upstashToken! }) : null
