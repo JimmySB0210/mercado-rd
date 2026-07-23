@@ -29,9 +29,6 @@ export function ProductCard({ product }: Props) {
     ? discountPercent(product.price_rdp, product.compare_rdp!)
     : null
 
-  const precioConItbis = Math.round(product.price_rdp * 1.18)
-  const compareConItbis = hasDiscount ? Math.round(product.compare_rdp! * 1.18) : null
-
   return (
     <div className="relative group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-md hover:border-gray-200 transition-all duration-200">
       {/* Hermano del Link, no anidado dentro — mismo motivo que el CTA de WhatsApp */}
@@ -95,15 +92,14 @@ export function ProductCard({ product }: Props) {
           {/* Precio */}
           <div className="flex items-baseline gap-2">
             <span className="text-base font-bold text-gray-900">
-              {formatPrice(precioConItbis)}
+              {formatPrice(product.price_rdp)}
             </span>
             {hasDiscount && (
               <span className="text-xs text-gray-400 line-through">
-                {formatPrice(compareConItbis!)}
+                {formatPrice(product.compare_rdp!)}
               </span>
             )}
           </div>
-          <p className="text-xs text-gray-400">ITBIS incluido · +envío</p>
         </div>
       </Link>
 
