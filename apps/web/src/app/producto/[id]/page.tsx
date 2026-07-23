@@ -88,8 +88,9 @@ export default async function ProductPage(
     ? discountPercent(product.price_rdp, product.compare_rdp!)
     : null
 
-  const itbis = Math.round(product.price_rdp * 0.18)
-  const totalConItbis = product.price_rdp + itbis
+  const precioConItbis = Math.round(product.price_rdp * 1.18)
+  const itbis = precioConItbis - product.price_rdp
+  const compareConItbis = hasDiscount ? Math.round(product.compare_rdp! * 1.18) : null
 
   const whatsappMsg = encodeURIComponent(
     `Hola, me interesa este producto en MercadoRD:\n*${product.name}*\nPrecio: ${formatPrice(product.price_rdp)}\n¿Está disponible?`
@@ -190,12 +191,12 @@ export default async function ProductPage(
             <div className="bg-white rounded-xl border border-gray-100 p-4">
               <div className="flex items-baseline gap-3 flex-wrap">
                 <span className="text-3xl font-bold text-gray-900">
-                  {formatPrice(product.price_rdp)}
+                  {formatPrice(precioConItbis)}
                 </span>
                 {hasDiscount && (
                   <>
                     <span className="text-lg text-gray-400 line-through">
-                      {formatPrice(product.compare_rdp!)}
+                      {formatPrice(compareConItbis!)}
                     </span>
                     <span
                       className="text-sm font-bold px-2 py-0.5 rounded-full text-white"
@@ -206,13 +207,11 @@ export default async function ProductPage(
                   </>
                 )}
               </div>
+              <p className="text-xs text-gray-400 mt-0.5">ITBIS incluido · +envío</p>
 
               {/* ITBIS */}
-              <div className="mt-2 pt-2 border-t border-gray-50 flex items-center justify-between text-xs text-gray-400">
-                <span>ITBIS incluido (18%): {formatPrice(itbis)}</span>
-                <span className="font-medium text-gray-500">
-                  Total: {formatPrice(totalConItbis)}
-                </span>
+              <div className="mt-2 pt-2 border-t border-gray-50 text-xs text-gray-400">
+                {formatPrice(product.price_rdp)} precio base + {formatPrice(itbis)} ITBIS (18%)
               </div>
 
               {/* Stock */}
