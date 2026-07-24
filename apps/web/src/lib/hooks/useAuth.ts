@@ -98,10 +98,32 @@ export function useAuth() {
     return { data, error }
   }
 
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    })
+    if (error) throw error
+  }
+
+  const signInWithFacebook = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'facebook',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    })
+    if (error) throw error
+  }
+
   return {
     ...state,
     signOut,
     signInWithEmail,
     signUpWithEmail,
+    signInWithGoogle,
+    signInWithFacebook,
   }
 }
