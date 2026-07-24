@@ -23,6 +23,7 @@ export function PushNotificationButton() {
   const [subscribed, setSubscribed] = useState(false)
   const [loading, setLoading] = useState(false)
   const [supported, setSupported] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     setSupported('Notification' in window && 'serviceWorker' in navigator)
@@ -42,12 +43,25 @@ export function PushNotificationButton() {
 
   const subscribe = async () => {
     setLoading(true)
+    setError(null)
     try {
       const reg = await navigator.serviceWorker.ready
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
-      })
+
+      // El navegador a veces nunca resuelve subscribe() (permiso
+      // bloqueado silenciosamente, push service caído, etc.) —
+      // con timeout evitamos que el botón se quede colgado en
+      // "Activando..." para siempre.
+      const subscribeWithTimeout = Promise.race([
+        reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout')), 10000)
+        ),
+      ])
+      const sub = await subscribeWithTimeout as PushSubscription
+
       await fetch('/api/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -57,6 +71,11 @@ export function PushNotificationButton() {
       setPermission('granted')
     } catch (err) {
       console.error('Push subscription error:', err)
+      setError(
+        err instanceof Error && err.message === 'Timeout'
+          ? 'No se pudo activar (tardó demasiado). Intenta de nuevo.'
+          : 'No se pudieron activar las notificaciones. Intenta de nuevo.'
+      )
     } finally {
       setLoading(false)
     }
@@ -69,15 +88,20 @@ export function PushNotificationButton() {
   )
 
   return (
-    <button
-      onClick={subscribe}
-      disabled={loading}
-      style={{
-        background: 'none', border: `1px solid ${BRAND.blue}`, borderRadius: 8,
-        padding: '6px 12px', fontSize: 12, color: BRAND.blue, cursor: loading ? 'default' : 'pointer'
-      }}
-    >
-      {loading ? 'Activando...' : '🔔 Activar notificaciones'}
-    </button>
+    <div>
+      <button
+        onClick={subscribe}
+        disabled={loading}
+        style={{
+          background: 'none', border: `1px solid ${BRAND.blue}`, borderRadius: 8,
+          padding: '6px 12px', fontSize: 12, color: BRAND.blue, cursor: loading ? 'default' : 'pointer'
+        }}
+      >
+        {loading ? 'Activando...' : '🔔 Activar notificaciones'}
+      </button>
+      {error && (
+        <p style={{ fontSize: 11, color: BRAND.red, marginTop: 4 }}>{error}</p>
+      )}
+    </div>
   )
 }

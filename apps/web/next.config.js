@@ -4,6 +4,11 @@ const withPWA = require('next-pwa')({
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
+  // El sw.js generado por workbox no trae handlers de push por
+  // defecto. next-pwa busca un archivo worker/index.js (esta
+  // opción indica la carpeta) y lo importa dentro del sw.js
+  // generado — ahí vive el addEventListener('push', ...).
+  customWorkerDir: 'worker',
   runtimeCaching: [
     {
       urlPattern: /^https:\/\/ifjzittwvoggstjlmaph\.supabase\.co/,
