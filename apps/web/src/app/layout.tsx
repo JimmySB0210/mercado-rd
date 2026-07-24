@@ -35,6 +35,12 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     images: ['/og-image.jpg'],
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'MercadoRD',
+  },
+  themeColor: '#0D47A1',
 }
 
 export default function RootLayout({
@@ -44,6 +50,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className={poppins.variable}>
+      <head>
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+      </head>
       <body
         className="pb-20 md-860:pb-0"
         style={{
