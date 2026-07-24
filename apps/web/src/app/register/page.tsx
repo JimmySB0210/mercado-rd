@@ -15,8 +15,8 @@ const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
 export default function RegisterPage() {
   const router = useRouter()
-  const { signUpWithEmail, signInWithGoogle, signInWithFacebook } = useAuth()
-  const [oauthLoading, setOauthLoading] = useState<'google' | 'facebook' | null>(null)
+  const { signUpWithEmail, signInWithGoogle } = useAuth()
+  const [oauthLoading, setOauthLoading] = useState(false)
 
   const [form, setForm] = useState({
     fullName: '',
@@ -43,14 +43,14 @@ export default function RegisterPage() {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  const handleOAuth = async (provider: 'google' | 'facebook') => {
+  const handleGoogleSignIn = async () => {
     setError(null)
-    setOauthLoading(provider)
+    setOauthLoading(true)
     try {
-      await (provider === 'google' ? signInWithGoogle() : signInWithFacebook())
+      await signInWithGoogle()
     } catch {
       setError('No se pudo continuar. Intenta de nuevo.')
-      setOauthLoading(null)
+      setOauthLoading(false)
     }
   }
 
@@ -162,11 +162,12 @@ export default function RegisterPage() {
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
           {/* Login social */}
+          {/* Facebook deshabilitado temporalmente — pendiente verificación empresarial con Meta */}
           <div className="space-y-3 mb-6">
             <button
               type="button"
-              onClick={() => handleOAuth('google')}
-              disabled={oauthLoading !== null}
+              onClick={handleGoogleSignIn}
+              disabled={oauthLoading}
               className="w-full flex items-center justify-center gap-2.5 bg-white border border-gray-300 text-gray-800 font-medium py-2.5 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -175,20 +176,7 @@ export default function RegisterPage() {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
               </svg>
-              {oauthLoading === 'google' ? 'Conectando...' : 'Continuar con Google'}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleOAuth('facebook')}
-              disabled={oauthLoading !== null}
-              className="w-full flex items-center justify-center gap-2.5 text-white font-medium py-2.5 rounded-lg hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              style={{ background: '#1877F2' }}
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z" />
-              </svg>
-              {oauthLoading === 'facebook' ? 'Conectando...' : 'Continuar con Facebook'}
+              {oauthLoading ? 'Conectando...' : 'Continuar con Google'}
             </button>
           </div>
 
