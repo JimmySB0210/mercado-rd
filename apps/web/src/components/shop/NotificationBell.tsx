@@ -79,6 +79,18 @@ export function NotificationBell() {
           const newNotification = payload.new as NotificationRow
           setNotifications(prev => [newNotification, ...prev])
           setUnreadCount(c => c + 1)
+
+          // También la mandamos como push — fire and forget, no bloquea la UI
+          fetch('/api/push/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId,
+              title: newNotification.title,
+              body: newNotification.body,
+              url: newNotification.link,
+            }),
+          }).catch(err => console.error('[NotificationBell] Push send falló:', err))
         }
       )
       .subscribe()

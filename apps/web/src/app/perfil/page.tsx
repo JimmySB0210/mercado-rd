@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { Navbar } from '@/components/shop/Navbar'
+import { PushNotificationButton } from '@/components/shop/PushNotificationButton'
 import { User, Mail, Phone, MapPin, ShoppingBag, LogOut } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
 
@@ -62,6 +63,9 @@ export default function PerfilPage() {
             >
               Comprador
             </span>
+            <div className="mt-2">
+              <PushNotificationButton />
+            </div>
           </div>
         </div>
 
