@@ -67,6 +67,7 @@ export function PushNotificationButton() {
   const [loading, setLoading] = useState(false)
   const [supported, setSupported] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [hovering, setHovering] = useState(false)
 
   useEffect(() => {
     setSupported('Notification' in window && 'serviceWorker' in navigator)
@@ -130,10 +131,57 @@ export function PushNotificationButton() {
     }
   }
 
+  const unsubscribe = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const reg = await navigator.serviceWorker.ready
+      const sub = await reg.pushManager.getSubscription()
+
+      if (sub) {
+        await sub.unsubscribe()
+
+        const res = await fetch('/api/push/subscribe', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint: sub.endpoint }),
+        })
+        if (!res.ok) {
+          const text = await res.text().catch(() => '')
+          console.error('[push] DELETE /api/push/subscribe respondió', res.status, text)
+        }
+      }
+
+      setSubscribed(false)
+    } catch (err) {
+      console.error('[push] Push unsubscribe error:', err)
+      setError('No se pudieron desactivar las notificaciones. Intenta de nuevo.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   if (!supported) return null
   if (permission === 'denied') return null
+
   if (subscribed) return (
-    <div style={{ fontSize: 12, color: BRAND.green }}>🔔 Notificaciones activadas</div>
+    <div>
+      <button
+        onClick={unsubscribe}
+        disabled={loading}
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => setHovering(false)}
+        style={{
+          background: 'none', border: 'none', padding: 0, fontSize: 12,
+          color: hovering ? BRAND.red : BRAND.green, cursor: loading ? 'default' : 'pointer'
+        }}
+      >
+        {loading ? 'Desactivando...' : hovering ? '🔕 Desactivar notificaciones' : '🔔 Notificaciones activadas'}
+      </button>
+      {error && (
+        <p style={{ fontSize: 11, color: BRAND.red, marginTop: 4 }}>{error}</p>
+      )}
+    </div>
   )
 
   return (
