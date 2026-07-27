@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
 import { Navbar } from '@/components/shop/Navbar'
 import { ProductCard } from '@/components/product/ProductCard'
+import { getMembershipDuration } from '@/lib/utils'
 
 export default async function VendorStorePage(
   { params }: { params: Promise<{ id: string }> }
@@ -180,7 +181,7 @@ export default async function VendorStorePage(
             </div>
             <div className="text-center">
               <p className="text-lg font-bold text-gray-900 capitalize">{memberSince}</p>
-              <p className="text-xs text-gray-400">Miembro desde</p>
+              <p className="text-xs text-gray-400">Miembro desde ({getMembershipDuration(vendor.created_at)})</p>
             </div>
           </div>
         </div>

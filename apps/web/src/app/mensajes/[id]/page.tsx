@@ -14,13 +14,21 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Navbar } from '@/components/shop/Navbar'
 import { BRAND } from '@/lib/colors'
+import { getMembershipDuration } from '@/lib/utils'
 
 interface ConversationInfo {
   id: string
   buyer_id: string
   vendor_id: string
   product_id: string | null
-  vendor: { id: string; business_name: string; logo_url: string | null } | null
+  vendor: {
+    id: string
+    business_name: string
+    logo_url: string | null
+    is_verified: boolean
+    created_at: string
+    province: { name: string } | null
+  } | null
 }
 
 interface MessageRow {
@@ -28,6 +36,11 @@ interface MessageRow {
   sender_id: string
   message: string
   created_at: string
+}
+
+function membershipText(createdAt: string): string {
+  const duration = getMembershipDuration(createdAt)
+  return duration === 'nuevo' ? 'Nuevo en MercadoRD' : `En MercadoRD ${duration}`
 }
 
 export default function ChatPage() {
@@ -40,6 +53,7 @@ export default function ChatPage() {
   const [conversation, setConversation] = useState<ConversationInfo | null>(null)
   const [messages, setMessages] = useState<MessageRow[]>([])
   const [buyerName, setBuyerName] = useState<string>('Comprador')
+  const [buyerCreatedAt, setBuyerCreatedAt] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
@@ -66,7 +80,7 @@ export default function ChatPage() {
 
     const { data: conv, error } = await supabase
       .from('conversations')
-      .select('id, buyer_id, vendor_id, product_id, vendor:vendors(id, business_name, logo_url)')
+      .select('id, buyer_id, vendor_id, product_id, vendor:vendors(id, business_name, logo_url, is_verified, created_at, province:provinces_rd(name))')
       .eq('id', params.id)
       .single()
 
@@ -82,10 +96,11 @@ export default function ChatPage() {
     if (conv.buyer_id !== user.id) {
       const { data: buyer } = await supabase
         .from('users')
-        .select('full_name')
+        .select('full_name, created_at')
         .eq('id', conv.buyer_id)
         .maybeSingle()
       setBuyerName(buyer?.full_name ?? 'Comprador')
+      setBuyerCreatedAt(buyer?.created_at ?? null)
     }
 
     await fetchMessages()
@@ -173,6 +188,18 @@ export default function ChatPage() {
   const otherLink = isBuyer && conversation.vendor ? `/tienda/${conversation.vendor.id}` : null
   const otherAvatarUrl = isBuyer ? (conversation.vendor?.logo_url ?? null) : null
 
+  // Señales de confianza debajo del nombre — de la tienda cuando el
+  // comprador ve al vendor, de la antigüedad cuando el vendor ve al comprador
+  const otherTrustLine = isBuyer
+    ? (conversation.vendor
+        ? [
+            conversation.vendor.is_verified ? '✓ Verificado' : null,
+            membershipText(conversation.vendor.created_at),
+            conversation.vendor.province?.name ?? null,
+          ].filter(Boolean).join(' · ')
+        : null)
+    : (buyerCreatedAt ? membershipText(buyerCreatedAt) : null)
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
@@ -186,7 +213,7 @@ export default function ChatPage() {
         <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4 mb-3 flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden"
-            style={{ background: BRAND.blue }}
+            style={{ background: otherAvatarUrl ? 'transparent' : BRAND.blue }}
           >
             {otherAvatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -195,13 +222,18 @@ export default function ChatPage() {
               otherName.charAt(0).toUpperCase()
             )}
           </div>
-          {otherLink ? (
-            <a href={otherLink} className="text-sm font-semibold no-underline" style={{ color: BRAND.dark }}>
-              {otherName}
-            </a>
-          ) : (
-            <span className="text-sm font-semibold" style={{ color: BRAND.dark }}>{otherName}</span>
-          )}
+          <div className="min-w-0">
+            {otherLink ? (
+              <a href={otherLink} className="text-sm font-semibold no-underline" style={{ color: BRAND.dark }}>
+                {otherName}
+              </a>
+            ) : (
+              <span className="text-sm font-semibold" style={{ color: BRAND.dark }}>{otherName}</span>
+            )}
+            {otherTrustLine && (
+              <p className="text-xs text-gray-400 mt-0.5">{otherTrustLine}</p>
+            )}
+          </div>
         </div>
 
         {/* Hilo de mensajes */}

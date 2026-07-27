@@ -67,7 +67,7 @@ export default function PerfilPage() {
         <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-4 flex items-center gap-4">
           <div
             className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0 overflow-hidden"
-            style={{ background: BRAND.blue }}
+            style={{ background: vendorInfo?.logo_url ? 'transparent' : BRAND.blue }}
           >
             {vendorInfo?.logo_url ? (
               // eslint-disable-next-line @next/next/no-img-element

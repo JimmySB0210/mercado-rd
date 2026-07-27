@@ -28,6 +28,7 @@ export function Navbar() {
   const [provinces, setProvinces] = useState<Province[]>([])
   const [locationOpen, setLocationOpen] = useState(false)
   const { province, setProvince } = useLocationStore()
+  const [vendorInfo, setVendorInfo] = useState<{ business_name: string; logo_url: string | null } | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -42,6 +43,19 @@ export function Navbar() {
       .order('name')
       .then(({ data }) => setProvinces(data ?? []))
   }, [])
+
+  // Si el usuario también es vendor, su identidad visible en el
+  // Navbar es la de la tienda (logo), igual que en /perfil.
+  useEffect(() => {
+    if (!user) { setVendorInfo(null); return }
+    const supabase = createClient()
+    supabase
+      .from('vendors')
+      .select('business_name, logo_url')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data }) => setVendorInfo(data ?? null))
+  }, [user])
 
   const locationLabel = province?.name ?? 'Rep. Dom.'
 
@@ -159,10 +173,15 @@ export function Navbar() {
                 style={{ color: BRAND.dark }}
               >
                 <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                  style={{ background: BRAND.blue }}
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 overflow-hidden"
+                  style={{ background: vendorInfo?.logo_url ? 'transparent' : BRAND.blue }}
                 >
-                  {displayName.charAt(0).toUpperCase()}
+                  {vendorInfo?.logo_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={vendorInfo.logo_url} alt={displayName} className="w-full h-full object-cover" />
+                  ) : (
+                    displayName.charAt(0).toUpperCase()
+                  )}
                 </div>
                 <span style={{ maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {displayName}
@@ -278,10 +297,15 @@ export function Navbar() {
             {user ? (
               <a href='/dashboard' className="flex items-center gap-1.5 no-underline" style={{ color: BRAND.dark }}>
                 <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                  style={{ background: BRAND.blue }}
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden"
+                  style={{ background: vendorInfo?.logo_url ? 'transparent' : BRAND.blue }}
                 >
-                  {displayName.charAt(0).toUpperCase()}
+                  {vendorInfo?.logo_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={vendorInfo.logo_url} alt={displayName} className="w-full h-full object-cover" />
+                  ) : (
+                    displayName.charAt(0).toUpperCase()
+                  )}
                 </div>
                 <span style={{ fontSize: 12, fontWeight: 600 }}>{displayName}</span>
               </a>
