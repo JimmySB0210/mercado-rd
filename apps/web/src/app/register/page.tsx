@@ -4,8 +4,8 @@
 // Archivo: app/register/page.tsx
 // ============================================================
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Script from 'next/script'
 import Link from 'next/link'
 import { useAuth } from '@/lib/hooks/useAuth'
@@ -14,7 +14,17 @@ import { BRAND } from '@/lib/colors'
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterForm />
+    </Suspense>
+  )
+}
+
+function RegisterForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirect = searchParams.get('redirect')
   const { signUpWithEmail, signInWithGoogle } = useAuth()
   const [oauthLoading, setOauthLoading] = useState(false)
 
@@ -131,7 +141,7 @@ export default function RegisterPage() {
               Revisa tu correo <strong>{form.email}</strong> para confirmar tu cuenta, luego inicia sesión.
             </p>
             <Link
-              href="/login"
+              href={redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : '/login'}
               className="block w-full bg-[var(--brand-red)] text-white font-medium py-3 rounded-lg text-center hover:brightness-90 transition-colors"
             >
               Ir a iniciar sesión
