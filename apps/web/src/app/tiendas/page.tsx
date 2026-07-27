@@ -45,7 +45,7 @@ export default async function TiendasPage() {
             <p className="text-gray-500">Todavía no hay tiendas para mostrar.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {vendors.map((v: any) => (
               <a
                 key={v.id}
