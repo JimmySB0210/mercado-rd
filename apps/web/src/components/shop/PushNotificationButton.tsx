@@ -18,6 +18,49 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)))
 }
 
+// navigator.serviceWorker.ready solo resuelve cuando YA hay un SW
+// activo controlando la página — si el registro está atascado en
+// "installing"/"waiting" (primera visita, SW nuevo, etc.) esa promesa
+// no resuelve nunca. Esta versión registra explícitamente y escucha
+// el statechange hasta "activated" en vez de esperar pasivamente.
+const getSWRegistration = (): Promise<ServiceWorkerRegistration> => {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error('Service Worker no disponible'))
+    }, 15000)
+
+    // Si ya hay un SW activo, úsalo directamente
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.ready.then(reg => {
+        clearTimeout(timeout)
+        resolve(reg)
+      }).catch(reject)
+      return
+    }
+
+    // Esperar a que se registre y active
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+      if (reg.active) {
+        clearTimeout(timeout)
+        resolve(reg)
+        return
+      }
+      const sw = reg.installing || reg.waiting
+      if (sw) {
+        sw.addEventListener('statechange', function () {
+          if (this.state === 'activated') {
+            clearTimeout(timeout)
+            resolve(reg)
+          }
+        })
+      }
+    }).catch(err => {
+      clearTimeout(timeout)
+      reject(err)
+    })
+  })
+}
+
 export function PushNotificationButton() {
   const [permission, setPermission] = useState<NotificationPermission>('default')
   const [subscribed, setSubscribed] = useState(false)
@@ -45,7 +88,7 @@ export function PushNotificationButton() {
     setLoading(true)
     setError(null)
     try {
-      const reg = await navigator.serviceWorker.ready
+      const reg = await getSWRegistration()
 
       // El navegador a veces nunca resuelve subscribe() (permiso
       // bloqueado silenciosamente, push service caído, etc.) —
@@ -57,22 +100,28 @@ export function PushNotificationButton() {
           applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
         }),
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Timeout')), 10000)
+          setTimeout(() => reject(new Error('Timeout esperando pushManager.subscribe()')), 10000)
         ),
       ])
       const sub = await subscribeWithTimeout as PushSubscription
 
-      await fetch('/api/push/subscribe', {
+      const res = await fetch('/api/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(sub),
       })
+      if (!res.ok) {
+        const text = await res.text().catch(() => '')
+        console.error('[push] /api/push/subscribe respondió', res.status, text)
+        throw new Error(`/api/push/subscribe falló (${res.status})`)
+      }
+
       setSubscribed(true)
       setPermission('granted')
-    } catch (err) {
-      console.error('Push subscription error:', err)
+    } catch (err: any) {
+      console.error('[push] Push subscription error:', err)
       setError(
-        err instanceof Error && err.message === 'Timeout'
+        err instanceof Error && (err.message.startsWith('Timeout') || err.message === 'Service Worker no disponible')
           ? 'No se pudo activar (tardó demasiado). Intenta de nuevo.'
           : 'No se pudieron activar las notificaciones. Intenta de nuevo.'
       )
