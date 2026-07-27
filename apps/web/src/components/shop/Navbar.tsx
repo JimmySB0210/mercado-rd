@@ -29,6 +29,7 @@ export function Navbar() {
   const [locationOpen, setLocationOpen] = useState(false)
   const { province, setProvince } = useLocationStore()
   const [vendorInfo, setVendorInfo] = useState<{ business_name: string; logo_url: string | null } | null>(null)
+  const [showCategoryMenu, setShowCategoryMenu] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -333,17 +334,41 @@ export function Navbar() {
       {/* ─── Category bar ────────────────────────────────── */}
       <div style={{ background: BRAND.blue }}>
         <div
-          className="flex items-center overflow-x-auto"
-          style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+          className="flex items-center justify-between"
+          style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px' }}
         >
-          <a href='/categorias' style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 16px', color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, background: 'rgba(255,255,255,0.14)', flexShrink: 0, whiteSpace: 'nowrap' }}>
-            ☰ Todas las categorías
-          </a>
-          {categories.map((cat) => (
-            <a key={cat.id} href={`/categoria/${cat.slug}`} style={{ padding: '11px 16px', color: 'rgba(255,255,255,0.85)', textDecoration: 'none', fontSize: 13, whiteSpace: 'nowrap', flexShrink: 0 }}>
-              {cat.emoji} {cat.name}
+          <div
+            onMouseEnter={() => setShowCategoryMenu(true)}
+            onMouseLeave={() => setShowCategoryMenu(false)}
+            style={{ position: 'relative' }}
+          >
+            <a href='/categorias' style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 16px', color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, background: 'rgba(255,255,255,0.14)', whiteSpace: 'nowrap' }}>
+              ☰ Todas las categorías
             </a>
-          ))}
+
+            {showCategoryMenu && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, background: '#fff',
+                boxShadow: '0 12px 32px rgba(0,0,0,0.18)', borderRadius: 10,
+                padding: 20, zIndex: 50, width: 760,
+                display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '2px 20px',
+                maxHeight: 480, overflowY: 'auto'
+              }}>
+                {categories.map((cat) => (
+                  <a
+                    key={cat.id}
+                    href={`/categoria/${cat.slug}`}
+                    onClick={() => setShowCategoryMenu(false)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', color: '#333', textDecoration: 'none', fontSize: 13, borderRadius: 6, whiteSpace: 'nowrap' }}
+                  >
+                    <span style={{ filter: 'brightness(0)', fontSize: 15 }}>{cat.emoji}</span>
+                    {cat.name}
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+
           <a href='/vendor/register' style={{ padding: '11px 16px', color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>
             Vender en RD
           </a>
