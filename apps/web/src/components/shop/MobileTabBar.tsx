@@ -17,7 +17,7 @@ export function MobileTabBar() {
 
   const TABS = [
     { href: '/',                          label: 'Inicio',      icon: Home    },
-    { href: '/#categorias',               label: 'Categorías',  icon: LayoutGrid },
+    { href: '/categorias',                label: 'Categorías',  icon: LayoutGrid },
     { href: user ? '/perfil' : '/login',  label: 'Perfil',      icon: User    },
     { href: '/perfil/favoritos',          label: 'Favoritos ♡', icon: Heart   },
     { href: '/cart',                      label: 'Carrito',     icon: ShoppingCart },

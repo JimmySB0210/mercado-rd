@@ -336,7 +336,7 @@ export function Navbar() {
           className="flex items-center overflow-x-auto"
           style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
         >
-          <a href='/' style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 16px', color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, background: 'rgba(255,255,255,0.14)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+          <a href='/categorias' style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 16px', color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, background: 'rgba(255,255,255,0.14)', flexShrink: 0, whiteSpace: 'nowrap' }}>
             ☰ Todas las categorías
           </a>
           {categories.map((cat) => (
