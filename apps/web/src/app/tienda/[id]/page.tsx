@@ -170,14 +170,10 @@ export default async function VendorStorePage(
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-3 mt-5 pt-5 border-t border-gray-100">
+          <div className="grid grid-cols-2 gap-3 mt-5 pt-5 border-t border-gray-100">
             <div className="text-center">
               <p className="text-lg font-bold text-gray-900">{vendor.total_sales ?? 0}</p>
               <p className="text-xs text-gray-400">Ventas totales</p>
-            </div>
-            <div className="text-center">
-              <p className="text-lg font-bold text-gray-900 capitalize">{vendor.plan}</p>
-              <p className="text-xs text-gray-400">Plan</p>
             </div>
             <div className="text-center">
               <p className="text-lg font-bold text-gray-900 capitalize">{memberSince}</p>
