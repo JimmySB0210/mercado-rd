@@ -28,13 +28,27 @@ const MOCK_PRODUCTS = [
   { id:'5', name:'Reloj Curren Elegante', price:2450, old:2900, badge:'-10%', vendor:'AccesoriosRD', rating:4.5, reviews:64, e:'⌚' },
 ]
 
-const STORES = [
-  { name:'TechStore RD',   cat:'Electrónica', rating:4.9, reviews:320, e:'📱', bg:BRAND.blue },
-  { name:'Moda Urbana',    cat:'Moda',        rating:4.8, reviews:250, e:'👕', bg:BRAND.dark },
-  { name:'Hogar Perfecto', cat:'Hogar',       rating:4.7, reviews:180, e:'🛋️', bg:'#8D6E63' },
-  { name:'Belleza Total',  cat:'Belleza',     rating:4.9, reviews:210, e:'💄', bg:BRAND.red  },
-  { name:'AutoPartes RD',  cat:'Autos',       rating:4.6, reviews:160, e:'🚗', bg:BRAND.green},
-]
+type FeaturedVendor = {
+  id: string
+  business_name: string
+  logo_url: string | null
+  is_verified: boolean
+  rating_avg: number | null
+  total_sales: number | null
+}
+
+async function fetchFeaturedVendors(): Promise<FeaturedVendor[]> {
+  const supabase = createPublicClient()
+  const { data, error } = await supabase
+    .from('vendors')
+    .select('id, business_name, logo_url, is_verified, rating_avg, total_sales')
+    .order('is_verified', { ascending: false })
+    .order('total_sales', { ascending: false })
+    .limit(5)
+
+  if (error) { console.error('[HomeProductGrid] vendors', error); return [] }
+  return (data ?? []) as FeaturedVendor[]
+}
 
 const TRUST = [
   { icon: ShieldCheck, title:'Compra 100% segura',   sub:'Protegemos tu dinero' },
@@ -72,6 +86,16 @@ export function HomeProductGrid() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [fetchError, setFetchError] = useState(false)
+
+  const [vendors, setVendors] = useState<FeaturedVendor[]>([])
+
+  useEffect(() => {
+    let active = true
+    fetchFeaturedVendors().then(data => {
+      if (active) setVendors(data)
+    })
+    return () => { active = false }
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -212,23 +236,39 @@ export function HomeProductGrid() {
         <a href='/tiendas' style={{color:BRAND.blue, fontSize:13, fontWeight:600, textDecoration:'none'}}>Ver todas →</a>
       </div>
 
-      <div className="grid-stores" style={{marginBottom:36}}>
-        {STORES.map((s,i) => (
-          <div key={i} style={{background:'#fff', border:'1px solid #EEE', borderRadius:10, padding:18, display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center', gap:10}}>
-            <div style={{width:48, height:48, borderRadius:10, background:s.bg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22}}>
-              {s.e}
-            </div>
-            <div>
-              <div style={{fontWeight:600, fontSize:13, color:BRAND.dark}}>{s.name}</div>
-              <div style={{fontSize:12, color:BRAND.gray}}>{s.cat}</div>
-            </div>
-            <div style={{display:'flex', alignItems:'center', gap:4, fontSize:12, color:BRAND.gray}}>
-              <Star size={12} fill='#F5A623' color='#F5A623' />
-              {s.rating} ({s.reviews})
-            </div>
-          </div>
-        ))}
-      </div>
+      {vendors.length > 0 && (
+        <div className="grid-stores" style={{marginBottom:36}}>
+          {vendors.map(v => (
+            <a
+              key={v.id}
+              href={`/tienda/${v.id}`}
+              className="hover:shadow-md transition-shadow"
+              style={{background:'#fff', border:'1px solid #EEE', borderRadius:10, padding:18, display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center', gap:10, textDecoration:'none', cursor:'pointer'}}
+            >
+              <div style={{width:48, height:48, borderRadius:10, background:BRAND.bg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, overflow:'hidden'}}>
+                {v.logo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={v.logo_url} alt={v.business_name} style={{width:'100%', height:'100%', objectFit:'cover'}} />
+                ) : (
+                  '🏪'
+                )}
+              </div>
+              <div>
+                <div style={{fontWeight:600, fontSize:13, color:BRAND.dark}}>{v.business_name}</div>
+                {v.is_verified && (
+                  <div style={{fontSize:11, color:BRAND.blue, fontWeight:600}}>Verificado</div>
+                )}
+              </div>
+              {Number(v.rating_avg) > 0 && (
+                <div style={{display:'flex', alignItems:'center', gap:4, fontSize:12, color:BRAND.gray}}>
+                  <Star size={12} fill='#F5A623' color='#F5A623' />
+                  {Number(v.rating_avg).toFixed(1)} · {v.total_sales ?? 0} ventas
+                </div>
+              )}
+            </a>
+          ))}
+        </div>
+      )}
 
       {/* Trust bar */}
       <div className="grid-trust" style={{background:'#fff', border:'1px solid #EEE', borderRadius:10, padding:'22px 0'}}>
