@@ -7,19 +7,21 @@
 import { Home, LayoutGrid, User, Heart, ShoppingCart } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useCartStore, useCartItemCount } from '@/lib/store/cart'
+import { useAuth } from '@/lib/hooks/useAuth'
 import { BRAND } from '@/lib/colors'
-
-const TABS = [
-  { href: '/',                label: 'Inicio',      icon: Home    },
-  { href: '/#categorias',     label: 'Categorías',  icon: LayoutGrid },
-  { href: '/login',           label: 'Cuenta',      icon: User    },
-  { href: '/perfil/favoritos',label: 'Favoritos ♡', icon: Heart   },
-  { href: '/cart',            label: 'Carrito',     icon: ShoppingCart },
-]
 
 export function MobileTabBar() {
   const pathname  = usePathname()
   const itemCount = useCartItemCount()
+  const { user }  = useAuth()
+
+  const TABS = [
+    { href: '/',                          label: 'Inicio',      icon: Home    },
+    { href: '/#categorias',               label: 'Categorías',  icon: LayoutGrid },
+    { href: user ? '/perfil' : '/login',  label: 'Perfil',      icon: User    },
+    { href: '/perfil/favoritos',          label: 'Favoritos ♡', icon: Heart   },
+    { href: '/cart',                      label: 'Carrito',     icon: ShoppingCart },
+  ]
 
   return (
     <nav
@@ -28,7 +30,7 @@ export function MobileTabBar() {
       <div className="flex justify-around w-full pt-2 pb-safe">
         {TABS.map((tab) => {
           const Icon   = tab.icon
-          const active = pathname === tab.href
+          const active = tab.label === 'Perfil' ? pathname.startsWith('/perfil') : pathname === tab.href
           const color  = active ? BRAND.blue : BRAND.gray
 
           return (
