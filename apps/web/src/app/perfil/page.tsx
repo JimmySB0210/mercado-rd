@@ -6,7 +6,8 @@
 
 import { useAuth } from '@/lib/hooks/useAuth'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { Navbar } from '@/components/shop/Navbar'
 import { PushNotificationButton } from '@/components/shop/PushNotificationButton'
 import { User, Mail, Phone, MapPin, ShoppingBag, LogOut } from 'lucide-react'
@@ -16,11 +17,27 @@ export default function PerfilPage() {
   const { user, profile, loading, signOut } = useAuth()
   const router = useRouter()
 
+  const [vendorInfo, setVendorInfo] = useState<{ business_name: string; logo_url: string | null } | null>(null)
+
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login?redirect=/perfil')
     }
   }, [user, loading, router])
+
+  // Si el usuario también es vendor, su identidad visible es la de la
+  // tienda (nombre, logo, badge) — nunca una identidad personal
+  // separada. Si no es vendor, se mantiene el comportamiento personal.
+  useEffect(() => {
+    if (!user) return
+    const supabase = createClient()
+    supabase
+      .from('vendors')
+      .select('business_name, logo_url')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data }) => setVendorInfo(data ?? null))
+  }, [user])
 
   if (loading) {
     return (
@@ -32,7 +49,7 @@ export default function PerfilPage() {
 
   if (!user) return null
 
-  const displayName = profile?.full_name || user.email?.split('@')[0] || 'Usuario'
+  const displayName = vendorInfo?.business_name || profile?.full_name || user.email?.split('@')[0] || 'Usuario'
   const initial = displayName.charAt(0).toUpperCase()
 
   const handleSignOut = async () => {
@@ -49,10 +66,15 @@ export default function PerfilPage() {
         {/* Avatar y nombre */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-4 flex items-center gap-4">
           <div
-            className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0"
+            className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0 overflow-hidden"
             style={{ background: BRAND.blue }}
           >
-            {initial}
+            {vendorInfo?.logo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={vendorInfo.logo_url} alt={displayName} className="w-full h-full object-cover" />
+            ) : (
+              initial
+            )}
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">{displayName}</h1>
@@ -61,7 +83,7 @@ export default function PerfilPage() {
               className="inline-block mt-1.5 text-xs font-medium px-2.5 py-0.5 rounded-full text-white"
               style={{ background: BRAND.blue }}
             >
-              Comprador
+              {vendorInfo ? 'Vendedor' : 'Comprador'}
             </span>
             <div className="mt-2">
               <PushNotificationButton />

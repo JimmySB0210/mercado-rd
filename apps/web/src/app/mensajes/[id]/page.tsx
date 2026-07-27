@@ -171,6 +171,7 @@ export default function ChatPage() {
 
   const otherName = isBuyer ? (conversation.vendor?.business_name ?? 'Vendedor') : buyerName
   const otherLink = isBuyer && conversation.vendor ? `/tienda/${conversation.vendor.id}` : null
+  const otherAvatarUrl = isBuyer ? (conversation.vendor?.logo_url ?? null) : null
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -184,10 +185,15 @@ export default function ChatPage() {
         {/* Header */}
         <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4 mb-3 flex items-center gap-3">
           <div
-            className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0"
+            className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden"
             style={{ background: BRAND.blue }}
           >
-            {otherName.charAt(0).toUpperCase()}
+            {otherAvatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={otherAvatarUrl} alt={otherName} className="w-full h-full object-cover" />
+            ) : (
+              otherName.charAt(0).toUpperCase()
+            )}
           </div>
           {otherLink ? (
             <a href={otherLink} className="text-sm font-semibold no-underline" style={{ color: BRAND.dark }}>
