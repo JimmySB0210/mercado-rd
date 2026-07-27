@@ -5,4 +5,5 @@ export const BRAND = {
   dark:  '#212121',
   gray:  '#757575',
   green: '#4CAF50',
+  gold:  '#FFC107',
 } as const;

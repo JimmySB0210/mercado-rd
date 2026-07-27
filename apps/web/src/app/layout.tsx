@@ -2,6 +2,7 @@ import './globals.css'
 import type { Metadata } from 'next'
 import { Poppins } from 'next/font/google'
 import { MobileTabBar } from '../components/shop/MobileTabBar'
+import { Footer } from '../components/shop/Footer'
 import { InactivityWarning } from '../components/shop/InactivityWarning'
 import { AbandonedCartTracker } from '../components/shop/AbandonedCartTracker'
 import { BRAND } from '@/lib/colors'
@@ -65,6 +66,7 @@ export default function RootLayout({
         } as React.CSSProperties}
       >
         {children}
+        <Footer />
         <MobileTabBar />
         <InactivityWarning />
         <AbandonedCartTracker />
