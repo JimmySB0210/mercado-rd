@@ -41,7 +41,12 @@ html, body {
 }
 
 /* ── Responsive grids ── */
-.grid-products,
+.grid-products {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+
 .grid-stores {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
