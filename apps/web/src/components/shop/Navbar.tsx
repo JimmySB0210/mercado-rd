@@ -350,8 +350,8 @@ export function Navbar() {
               <div style={{
                 position: 'absolute', top: '100%', left: 0, background: '#fff',
                 boxShadow: '0 12px 32px rgba(0,0,0,0.18)', borderRadius: 10,
-                padding: 20, zIndex: 50, width: 760,
-                display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '2px 20px',
+                padding: 20, zIndex: 50, width: 300,
+                display: 'grid', gridTemplateColumns: '1fr', gap: 2,
                 maxHeight: 480, overflowY: 'auto'
               }}>
                 {categories.map((cat) => (
