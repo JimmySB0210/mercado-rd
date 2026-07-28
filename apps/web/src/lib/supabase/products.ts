@@ -122,5 +122,9 @@ export async function getProductByIdPublic(id: string): Promise<Product | null> 
 // ─── Incrementar contador de visitas ─────────────────────────────────────────
 export async function incrementProductView(id: string) {
   const supabase = await createServerClient();
-  await supabase.rpc('increment_product_views', { product_id: id });
+  await Promise.all([
+    supabase.rpc('increment_product_views', { product_id: id }),
+    // No-op si no hay sesión — record_product_view revisa auth.uid() IS NULL
+    supabase.rpc('record_product_view', { p_product_id: id }),
+  ]);
 }
