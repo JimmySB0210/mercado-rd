@@ -14,7 +14,7 @@ const PERKS = [
   { icon: Headset, title: 'Soporte 24/7', sub: 'Estamos para ayudarte' },
 ];
 
-const SLIDE_INTERVAL_MS = 5000
+const SLIDE_INTERVAL_MS = 3500
 
 // Diapositiva de marca — contenido y estilos sin cambios respecto a la
 // versión original de HeroBanner, solo que ahora vive dentro del carrusel.
