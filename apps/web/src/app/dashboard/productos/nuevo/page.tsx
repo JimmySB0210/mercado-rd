@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { validateImageFile, getImageDimensions, MIN_PRODUCT_IMAGE_DIMENSION, LOW_RESOLUTION_WARNING } from '@/lib/storage/upload'
+import { validateImageFile, getImageDimensions, uploadProductImage, MIN_PRODUCT_IMAGE_DIMENSION, LOW_RESOLUTION_WARNING } from '@/lib/storage/upload'
 import { validateText, validatePrice } from '@/lib/validation'
 import { BRAND } from '@/lib/colors'
 
@@ -53,19 +53,54 @@ export default function NewProductPage() {
     color: string
     stock: string
     price: string
+    imageUrl: string | null
   }
   const [variantRows, setVariantRows] = useState<VariantRow[]>([])
+  const [uploadingVariantIndex, setUploadingVariantIndex] = useState<number | null>(null)
+  const [variantImageError, setVariantImageError] = useState<string | null>(null)
 
   const addVariantRow = () => {
-    setVariantRows(prev => [...prev, { size: '', color: '', stock: '', price: '' }])
+    setVariantRows(prev => [...prev, { size: '', color: '', stock: '', price: '', imageUrl: null }])
   }
 
-  const updateVariantRow = (index: number, field: keyof VariantRow, value: string) => {
+  const updateVariantRow = (index: number, field: keyof Omit<VariantRow, 'imageUrl'>, value: string) => {
     setVariantRows(prev => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)))
   }
 
   const removeVariantRow = (index: number) => {
     setVariantRows(prev => prev.filter((_, i) => i !== index))
+  }
+
+  // El vendor solo necesita subir la foto en UNA fila por color — al enviar
+  // el formulario se propaga a las demás filas del mismo color (ver handleSubmit)
+  const handleVariantImageSelect = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !vendorId) return
+
+    const validationError = validateImageFile(file)
+    if (validationError) {
+      setVariantImageError(validationError)
+      return
+    }
+    setVariantImageError(null)
+    setUploadingVariantIndex(index)
+
+    const { url, error: uploadError } = await uploadProductImage(file, vendorId)
+
+    if (uploadError || !url) {
+      console.error('[handleVariantImageSelect]', uploadError)
+      setVariantImageError('No se pudo subir la imagen. Intenta de nuevo.')
+      setUploadingVariantIndex(null)
+      return
+    }
+
+    setVariantRows(prev => prev.map((row, i) => (i === index ? { ...row, imageUrl: url } : row)))
+    setUploadingVariantIndex(null)
+  }
+
+  const removeVariantImage = (index: number) => {
+    setVariantRows(prev => prev.map((row, i) => (i === index ? { ...row, imageUrl: null } : row)))
   }
 
   const [imageFiles, setImageFiles] = useState<File[]>([])
@@ -243,17 +278,32 @@ export default function NewProductPage() {
 
       if (insertError) throw insertError
 
+      // Propagar la imagen subida en la primera fila de cada color hacia las
+      // demás filas del mismo color (case-insensitive) que no tengan imagen propia
+      const colorImageMap = new Map<string, string>()
+      for (const row of variantRows) {
+        const colorKey = row.color.trim().toLowerCase()
+        if (colorKey && row.imageUrl && !colorImageMap.has(colorKey)) {
+          colorImageMap.set(colorKey, row.imageUrl)
+        }
+      }
+
       // Variantes (opcional) — filas sin talla ni color se descartan
       const variantsPayload = variantRows
         .filter(row => row.size.trim() || row.color.trim())
-        .map(row => ({
-          product_id: newProduct.id,
-          size: row.size.trim() || null,
-          color: row.color.trim() || null,
-          stock: row.stock ? parseInt(row.stock) : 0,
-          price_rdp: row.price ? Math.round(parseFloat(row.price) * 100) : null,
-          is_active: true,
-        }))
+        .map(row => {
+          const colorKey = row.color.trim().toLowerCase()
+          const imageUrl = row.imageUrl ?? (colorKey ? colorImageMap.get(colorKey) ?? null : null)
+          return {
+            product_id: newProduct.id,
+            size: row.size.trim() || null,
+            color: row.color.trim() || null,
+            stock: row.stock ? parseInt(row.stock) : 0,
+            price_rdp: row.price ? Math.round(parseFloat(row.price) * 100) : null,
+            image_url: imageUrl,
+            is_active: true,
+          }
+        })
 
       if (variantsPayload.length > 0) {
         const { error: variantsError } = await supabase.from('product_variants').insert(variantsPayload)
@@ -460,12 +510,48 @@ export default function NewProductPage() {
                 </div>
                 <div className="col-span-3">
                   {i === 0 && <label className="text-xs text-gray-500 mb-1 block">Color</label>}
-                  <input
-                    value={row.color}
-                    onChange={e => updateVariantRow(i, 'color', e.target.value)}
-                    placeholder="Azul"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
-                  />
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      value={row.color}
+                      onChange={e => updateVariantRow(i, 'color', e.target.value)}
+                      placeholder="Azul"
+                      className="flex-1 min-w-0 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
+                    />
+                    {row.imageUrl ? (
+                      <div className="relative flex-shrink-0" style={{ width: 36, height: 36 }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={row.imageUrl}
+                          alt={row.color || 'Color'}
+                          className="w-full h-full rounded-lg object-cover border border-gray-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeVariantImage(i)}
+                          className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-black/60 text-white flex items-center justify-center leading-none"
+                          style={{ fontSize: 10 }}
+                          aria-label="Quitar imagen"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ) : (
+                      <label
+                        className="flex-shrink-0 rounded-lg border border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors"
+                        style={{ width: 36, height: 36, fontSize: 14 }}
+                        title="Subir foto de este color"
+                      >
+                        {uploadingVariantIndex === i ? '…' : '📷'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={e => handleVariantImageSelect(i, e)}
+                          className="hidden"
+                          disabled={uploadingVariantIndex === i}
+                        />
+                      </label>
+                    )}
+                  </div>
                 </div>
                 <div className="col-span-2">
                   {i === 0 && <label className="text-xs text-gray-500 mb-1 block">Stock</label>}
@@ -501,6 +587,7 @@ export default function NewProductPage() {
                 </div>
               </div>
             ))}
+            {variantImageError && <p className="text-xs text-red-600">{variantImageError}</p>}
           </div>
 
           {error && planLimitReached && (

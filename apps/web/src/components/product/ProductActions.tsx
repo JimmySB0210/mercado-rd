@@ -31,6 +31,14 @@ export function ProductActions({ product, variants = [] }: ProductActionProps) {
   const sizes = hasVariants ? variantSizes : legacySizes
   const colors = hasVariants ? variantColors : legacyColors
 
+  // Primera variante con image_url de cada color — usada para la miniatura
+  const colorImageMap = new Map<string, string>()
+  for (const v of variants) {
+    if (v.color && v.image_url && !colorImageMap.has(v.color)) {
+      colorImageMap.set(v.color, v.image_url)
+    }
+  }
+
   const [selectedSize, setSelectedSize] = useState<string | null>(
     sizes.length === 1 ? sizes[0] : null
   )
@@ -107,19 +115,37 @@ export function ProductActions({ product, variants = [] }: ProductActionProps) {
             {selectedColor && <span className="ml-2 text-gray-400 font-normal">{selectedColor}</span>}
           </p>
           <div className="flex flex-wrap gap-2">
-            {colors.map(color => (
-              <button
-                key={color}
-                onClick={() => setSelectedColor(color)}
-                className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-all ${
-                  selectedColor === color
-                    ? 'border-[var(--brand-blue)] text-[var(--brand-blue)] bg-[color-mix(in_srgb,var(--brand-blue)_8%,transparent)]'
-                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                }`}
-              >
-                {color}
-              </button>
-            ))}
+            {colors.map(color => {
+              const thumbUrl = colorImageMap.get(color)
+              return thumbUrl ? (
+                <button
+                  key={color}
+                  onClick={() => setSelectedColor(color)}
+                  title={color}
+                  aria-label={color}
+                  className={`w-10 h-10 rounded-lg overflow-hidden border-2 transition-all ${
+                    selectedColor === color
+                      ? 'border-[var(--brand-blue)]'
+                      : 'border-transparent hover:border-gray-300'
+                  }`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={thumbUrl} alt={color} className="w-full h-full object-cover" />
+                </button>
+              ) : (
+                <button
+                  key={color}
+                  onClick={() => setSelectedColor(color)}
+                  className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-all ${
+                    selectedColor === color
+                      ? 'border-[var(--brand-blue)] text-[var(--brand-blue)] bg-[color-mix(in_srgb,var(--brand-blue)_8%,transparent)]'
+                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                  }`}
+                >
+                  {color}
+                </button>
+              )
+            })}
           </div>
         </div>
       )}

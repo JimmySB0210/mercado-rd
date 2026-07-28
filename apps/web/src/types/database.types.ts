@@ -83,6 +83,7 @@ export interface ProductVariant {
   stock: number
   price_rdp: number | null // null = usa el precio base del producto
   sku: string | null
+  image_url: string | null
   is_active: boolean
   created_at: string
 }
