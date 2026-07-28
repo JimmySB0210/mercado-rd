@@ -26,6 +26,14 @@ const inputStyle: React.CSSProperties = {
   width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '9px 12px', fontSize: 13, outline: 'none',
 }
 
+// datetime-local necesita 'YYYY-MM-DDTHH:mm' en hora LOCAL, no el ISO/UTC que devuelve Postgres
+function toDatetimeLocalValue(iso: string | null): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
 export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onCancel }: Props) {
   const router = useRouter()
   const supabase = createClient()
@@ -38,6 +46,9 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
   const [subtitle, setSubtitle] = useState(initialData?.subtitle ?? '')
   const [linkUrl, setLinkUrl] = useState(initialData?.link_url ?? '')
   const [sortOrder, setSortOrder] = useState(String(initialData?.sort_order ?? nextSortOrder))
+  // Modo crear: días relativos a partir de ahora. Modo editar: fecha/hora exacta editable.
+  const [expiresInDays, setExpiresInDays] = useState('')
+  const [expiresAt, setExpiresAt] = useState(toDatetimeLocalValue(initialData?.expires_at ?? null))
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -82,6 +93,7 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
     setSubtitle('')
     setLinkUrl('')
     setSortOrder(String(newSortOrder))
+    setExpiresInDays('')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -118,6 +130,12 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
       mobileImageUrl = mUrl
     }
 
+    // Modo editar: el input datetime-local manda directo (vacío = sin expiración).
+    // Modo crear: días relativos a partir de ahora (vacío = sin expiración).
+    const expiresAtIso = mode === 'editar'
+      ? (expiresAt ? new Date(expiresAt).toISOString() : null)
+      : (expiresInDays ? new Date(Date.now() + Number(expiresInDays) * 24 * 60 * 60 * 1000).toISOString() : null)
+
     const payload = {
       image_url: imageUrl,
       mobile_image_url: mobileImageUrl,
@@ -125,6 +143,7 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
       subtitle: subtitle.trim() || null,
       link_url: linkUrl.trim() || null,
       sort_order: Number(sortOrder) || 0,
+      expires_at: expiresAtIso,
     }
 
     if (mode === 'editar' && initialData) {
@@ -241,6 +260,34 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
             style={inputStyle}
           />
         </div>
+      </div>
+
+      <div>
+        <label style={{ fontSize: 12, fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
+          {mode === 'editar' ? 'Expira el (opcional)' : 'Expira en (días, opcional)'}
+        </label>
+        {mode === 'editar' ? (
+          <input
+            type="datetime-local"
+            value={expiresAt}
+            onChange={e => setExpiresAt(e.target.value)}
+            style={{ ...inputStyle, maxWidth: 260 }}
+          />
+        ) : (
+          <input
+            type="number"
+            min="1"
+            value={expiresInDays}
+            onChange={e => setExpiresInDays(e.target.value)}
+            placeholder="Ej. 7 — vacío = sin expiración"
+            style={{ ...inputStyle, maxWidth: 260 }}
+          />
+        )}
+        <p style={{ fontSize: 11, color: '#999', margin: '6px 0 0' }}>
+          {mode === 'editar'
+            ? 'Vacía este campo para quitar la expiración.'
+            : 'El banner se deja de mostrar automáticamente al pasar esta fecha.'}
+        </p>
       </div>
 
       {error && <p style={{ fontSize: 12, color: BRAND.red, margin: 0 }}>{error}</p>}

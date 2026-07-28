@@ -139,10 +139,12 @@ export function HeroBanner() {
 
   useEffect(() => {
     const supabase = createPublicClient()
+    const nowIso = new Date().toISOString()
     supabase
       .from('promo_banners')
-      .select('id, image_url, mobile_image_url, title, subtitle, link_url, sort_order, is_active, created_at')
+      .select('id, image_url, mobile_image_url, title, subtitle, link_url, sort_order, is_active, expires_at, created_at')
       .eq('is_active', true)
+      .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
       .order('sort_order')
       .then(({ data }) => setBanners(data ?? []))
   }, [])

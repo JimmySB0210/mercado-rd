@@ -16,6 +16,11 @@ interface Props {
   onEdit: (banner: PromoBanner) => void
 }
 
+// Expirado = tiene expires_at Y ya pasó — distinto de "inactivo" (desactivado a mano)
+function isExpired(banner: PromoBanner): boolean {
+  return !!banner.expires_at && new Date(banner.expires_at).getTime() < Date.now()
+}
+
 export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
   const supabase = createClient()
   const [loadingId, setLoadingId] = useState<string | null>(null)
@@ -103,6 +108,7 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
             display: 'flex', alignItems: 'center', gap: 14, padding: '12px 18px',
             borderBottom: i < banners.length - 1 ? '1px solid #f0f0f0' : 'none',
             opacity: loadingId === banner.id ? 0.5 : 1,
+            flexWrap: 'wrap',
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -121,69 +127,84 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
             </div>
           </div>
 
-          <span
-            style={{
-              fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 10, flexShrink: 0,
-              background: banner.is_active ? '#DCFCE7' : '#F3F4F6',
-              color: banner.is_active ? '#166534' : '#666',
-            }}
-          >
-            {banner.is_active ? 'Activo' : 'Inactivo'}
-          </span>
+          {/* Agrupados para que, si no caben en una línea, bajen juntos a
+              una segunda fila en vez de empujarse fuera del contenedor */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <span
+              style={{
+                fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 10, flexShrink: 0,
+                background: banner.is_active ? '#DCFCE7' : '#F3F4F6',
+                color: banner.is_active ? '#166534' : '#666',
+              }}
+            >
+              {banner.is_active ? 'Activo' : 'Inactivo'}
+            </span>
 
-          <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+            {isExpired(banner) && (
+              <span
+                style={{
+                  fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 10, flexShrink: 0,
+                  background: '#FEF3C7', color: '#92400E',
+                }}
+              >
+                ⏱️ Expirado
+              </span>
+            )}
+
+            <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+              <button
+                type="button"
+                onClick={() => move(i, -1)}
+                disabled={i === 0 || loadingId !== null}
+                title="Subir"
+                style={{ width: 26, height: 26, border: '1px solid #e5e5e5', borderRadius: 6, background: '#fff', cursor: i === 0 ? 'not-allowed' : 'pointer', opacity: i === 0 ? 0.4 : 1, fontSize: 12 }}
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                onClick={() => move(i, 1)}
+                disabled={i === banners.length - 1 || loadingId !== null}
+                title="Bajar"
+                style={{ width: 26, height: 26, border: '1px solid #e5e5e5', borderRadius: 6, background: '#fff', cursor: i === banners.length - 1 ? 'not-allowed' : 'pointer', opacity: i === banners.length - 1 ? 0.4 : 1, fontSize: 12 }}
+              >
+                ↓
+              </button>
+            </div>
+
             <button
               type="button"
-              onClick={() => move(i, -1)}
-              disabled={i === 0 || loadingId !== null}
-              title="Subir"
-              style={{ width: 26, height: 26, border: '1px solid #e5e5e5', borderRadius: 6, background: '#fff', cursor: i === 0 ? 'not-allowed' : 'pointer', opacity: i === 0 ? 0.4 : 1, fontSize: 12 }}
+              onClick={() => toggleActive(banner)}
+              disabled={loadingId !== null}
+              style={{
+                fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 6, flexShrink: 0,
+                background: banner.is_active ? '#fff' : BRAND.blue,
+                color: banner.is_active ? '#666' : '#fff',
+                border: banner.is_active ? '1px solid #ddd' : 'none',
+                cursor: loadingId !== null ? 'not-allowed' : 'pointer',
+              }}
             >
-              ↑
+              {banner.is_active ? 'Desactivar' : 'Activar'}
             </button>
+
             <button
               type="button"
-              onClick={() => move(i, 1)}
-              disabled={i === banners.length - 1 || loadingId !== null}
-              title="Bajar"
-              style={{ width: 26, height: 26, border: '1px solid #e5e5e5', borderRadius: 6, background: '#fff', cursor: i === banners.length - 1 ? 'not-allowed' : 'pointer', opacity: i === banners.length - 1 ? 0.4 : 1, fontSize: 12 }}
+              onClick={() => onEdit(banner)}
+              disabled={loadingId !== null}
+              style={{ fontSize: 11, fontWeight: 700, color: BRAND.blue, background: 'transparent', border: 'none', cursor: loadingId !== null ? 'not-allowed' : 'pointer', flexShrink: 0 }}
             >
-              ↓
+              Editar
+            </button>
+
+            <button
+              type="button"
+              onClick={() => remove(banner)}
+              disabled={loadingId !== null}
+              style={{ fontSize: 11, fontWeight: 700, color: BRAND.red, background: 'transparent', border: 'none', cursor: loadingId !== null ? 'not-allowed' : 'pointer', flexShrink: 0 }}
+            >
+              Eliminar
             </button>
           </div>
-
-          <button
-            type="button"
-            onClick={() => toggleActive(banner)}
-            disabled={loadingId !== null}
-            style={{
-              fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 6, flexShrink: 0,
-              background: banner.is_active ? '#fff' : BRAND.blue,
-              color: banner.is_active ? '#666' : '#fff',
-              border: banner.is_active ? '1px solid #ddd' : 'none',
-              cursor: loadingId !== null ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {banner.is_active ? 'Desactivar' : 'Activar'}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onEdit(banner)}
-            disabled={loadingId !== null}
-            style={{ fontSize: 11, fontWeight: 700, color: BRAND.blue, background: 'transparent', border: 'none', cursor: loadingId !== null ? 'not-allowed' : 'pointer', flexShrink: 0 }}
-          >
-            Editar
-          </button>
-
-          <button
-            type="button"
-            onClick={() => remove(banner)}
-            disabled={loadingId !== null}
-            style={{ fontSize: 11, fontWeight: 700, color: BRAND.red, background: 'transparent', border: 'none', cursor: loadingId !== null ? 'not-allowed' : 'pointer', flexShrink: 0 }}
-          >
-            Eliminar
-          </button>
         </div>
       ))}
     </div>

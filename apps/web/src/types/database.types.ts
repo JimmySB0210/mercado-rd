@@ -35,6 +35,7 @@ export interface PromoBanner {
   link_url: string | null
   sort_order: number
   is_active: boolean
+  expires_at: string | null
   created_at: string
 }
 
