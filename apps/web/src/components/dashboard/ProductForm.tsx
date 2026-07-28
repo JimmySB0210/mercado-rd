@@ -47,6 +47,11 @@ interface VariantRow {
   imageUrl: string | null
 }
 
+// "Talla" también se usa para variantes que no son ropa (ej. "128GB"
+// en electrónicos) — de ahí la opción "Otra" con texto libre.
+const PRESET_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+const OTHER_SIZE = '__otra__'
+
 export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
   const router = useRouter()
   const supabase = createClient()
@@ -93,6 +98,16 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
   const [uploadingVariantIndex, setUploadingVariantIndex] = useState<number | null>(null)
   const [variantImageError, setVariantImageError] = useState<string | null>(null)
 
+  // Filas cuya "Talla" es libre (seleccionaron "Otra" o traían un valor
+  // existente que no coincide con ningún preset, ej. "128GB")
+  const [customSizeIndexes, setCustomSizeIndexes] = useState<Set<number>>(() => {
+    const initial = new Set<number>()
+    variantRows.forEach((row, i) => {
+      if (row.size && !PRESET_SIZES.includes(row.size)) initial.add(i)
+    })
+    return initial
+  })
+
   const addVariantRow = () => {
     setVariantRows(prev => [...prev, { size: '', color: '', stock: '', price: '', imageUrl: null }])
   }
@@ -101,8 +116,30 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     setVariantRows(prev => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)))
   }
 
+  const handleSizeSelectChange = (index: number, value: string) => {
+    if (value === OTHER_SIZE) {
+      setCustomSizeIndexes(prev => new Set(prev).add(index))
+      updateVariantRow(index, 'size', '')
+    } else {
+      setCustomSizeIndexes(prev => {
+        const next = new Set(prev)
+        next.delete(index)
+        return next
+      })
+      updateVariantRow(index, 'size', value)
+    }
+  }
+
   const removeVariantRow = (index: number) => {
     setVariantRows(prev => prev.filter((_, i) => i !== index))
+    setCustomSizeIndexes(prev => {
+      const next = new Set<number>()
+      prev.forEach(i => {
+        if (i < index) next.add(i)
+        else if (i > index) next.add(i - 1)
+      })
+      return next
+    })
   }
 
   // El vendor solo necesita subir la foto en UNA fila por color — al enviar
@@ -556,12 +593,26 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               <div key={i} className="grid grid-cols-12 gap-2 items-end">
                 <div className="col-span-3">
                   {i === 0 && <label className="text-xs text-gray-500 mb-1 block">Talla</label>}
-                  <input
-                    value={row.size}
-                    onChange={e => updateVariantRow(i, 'size', e.target.value)}
-                    placeholder="M"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
-                  />
+                  <select
+                    value={customSizeIndexes.has(i) ? OTHER_SIZE : (PRESET_SIZES.includes(row.size) ? row.size : '')}
+                    onChange={e => handleSizeSelectChange(i, e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none bg-white"
+                  >
+                    <option value="" disabled>Talla</option>
+                    {PRESET_SIZES.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                    <option value={OTHER_SIZE}>Otra (escribir)</option>
+                  </select>
+                  {customSizeIndexes.has(i) && (
+                    <input
+                      value={row.size}
+                      onChange={e => updateVariantRow(i, 'size', e.target.value)}
+                      placeholder="Ej. 128GB"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none mt-1.5"
+                      autoFocus
+                    />
+                  )}
                 </div>
                 <div className="col-span-3">
                   {i === 0 && <label className="text-xs text-gray-500 mb-1 block">Color</label>}

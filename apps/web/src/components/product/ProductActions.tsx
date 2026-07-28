@@ -147,21 +147,18 @@ export function ProductActions({ product, variants = [] }: ProductActionProps) {
               )
             })}
           </div>
-        </div>
-      )}
-
-      {/* Info de la variante seleccionada */}
-      {hasVariants && matchedVariant && (
-        <div className="text-sm">
-          {matchedVariant.price_rdp !== null && (
-            <p className="font-semibold text-gray-900">
-              Precio con esta variante: {formatPrice(matchedVariant.price_rdp)}
+          {/* Info de la variante seleccionada — integrada, no corta el flujo Talla → Color → Cantidad */}
+          {hasVariants && matchedVariant && (
+            <p className="text-xs text-gray-500 mt-2">
+              {matchedVariant.price_rdp !== null && (
+                <span className="font-medium text-gray-700">{formatPrice(matchedVariant.price_rdp)} · </span>
+              )}
+              {matchedVariant.stock === 0 ? (
+                <span className="font-medium text-red-500">Agotado</span>
+              ) : (
+                <span>Stock: {matchedVariant.stock} disponibles</span>
+              )}
             </p>
-          )}
-          {matchedVariant.stock === 0 ? (
-            <p className="font-medium text-red-500 mt-1">Agotado</p>
-          ) : (
-            <p className="text-gray-400 mt-1">{matchedVariant.stock} disponibles</p>
           )}
         </div>
       )}

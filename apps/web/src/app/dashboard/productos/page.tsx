@@ -8,6 +8,7 @@ import { createServerClient } from '@/lib/supabase/server'
 import { getCurrentVendor, getVendorProducts } from '@/lib/queries/vendor-dashboard'
 import { DashboardSidebar } from '@/components/vendor/DashboardSidebar'
 import { FeatureToggleButton } from '@/components/vendor/FeatureToggleButton'
+import { ProductActiveToggle } from '@/components/vendor/ProductActiveToggle'
 import { formatPrice } from '@/types/database.types'
 import { BRAND } from '@/lib/colors'
 
@@ -93,12 +94,15 @@ export default async function VendorProductsPage() {
                       initialFeatured={p.is_featured ?? false}
                       isPro={vendor.plan === 'pro'}
                     />
-                    <a
-                      href={`/dashboard/productos/${p.id}/editar`}
-                      style={{ fontSize: 11, fontWeight: 600, color: BRAND.blue, textDecoration: 'none' }}
-                    >
-                      Editar
-                    </a>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <a
+                        href={`/dashboard/productos/${p.id}/editar`}
+                        style={{ fontSize: 11, fontWeight: 600, color: BRAND.blue, textDecoration: 'none' }}
+                      >
+                        Editar
+                      </a>
+                      <ProductActiveToggle productId={p.id} initialActive={p.is_active} />
+                    </div>
                   </div>
                 </div>
               </div>
