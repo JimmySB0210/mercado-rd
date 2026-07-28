@@ -6,8 +6,7 @@
 import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
 import { isCurrentUserAdmin } from '@/lib/queries/admin'
-import { PromoBannerList } from '@/components/admin/PromoBannerList'
-import { PromoBannerForm } from '@/components/admin/PromoBannerForm'
+import { PromoBannerManager } from '@/components/admin/PromoBannerManager'
 import { BRAND } from '@/lib/colors'
 import type { PromoBanner } from '@/types/database.types'
 
@@ -41,9 +40,6 @@ export default async function AdminPromocionesPage() {
   if (error) console.error('[AdminPromocionesPage]', error)
 
   const bannerList = (banners ?? []) as PromoBanner[]
-  const nextSortOrder = bannerList.length > 0
-    ? Math.max(...bannerList.map(b => b.sort_order)) + 1
-    : 0
 
   return (
     <div style={{ minHeight: '100vh', fontFamily: 'inherit', display: 'grid', gridTemplateColumns: '220px 1fr' }}>
@@ -78,19 +74,7 @@ export default async function AdminPromocionesPage() {
           </p>
         </div>
 
-        <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)', marginBottom: 20 }}>
-          <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 800, fontSize: 15 }}>
-            Banners actuales ({bannerList.length})
-          </div>
-          <PromoBannerList initialBanners={bannerList} />
-        </div>
-
-        <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-          <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 800, fontSize: 15 }}>
-            Crear banner nuevo
-          </div>
-          <PromoBannerForm nextSortOrder={nextSortOrder} />
-        </div>
+        <PromoBannerManager initialBanners={bannerList} />
       </div>
     </div>
   )

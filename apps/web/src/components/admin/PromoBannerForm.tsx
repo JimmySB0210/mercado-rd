@@ -1,7 +1,10 @@
 'use client'
 // ============================================================
-// MercadoRD — Crear banner promocional (admin)
+// MercadoRD — Crear / editar banner promocional (admin)
 // Ruta: src/components/admin/PromoBannerForm.tsx
+// ============================================================
+// Componente compartido entre los modos 'crear' y 'editar', mismo
+// patrón que components/dashboard/ProductForm.tsx.
 // ============================================================
 
 import { useState } from 'react'
@@ -9,27 +12,32 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { validateImageFile, uploadBanner } from '@/lib/storage/upload'
 import { BRAND } from '@/lib/colors'
+import type { PromoBanner } from '@/types/database.types'
 
 interface Props {
+  mode: 'crear' | 'editar'
   nextSortOrder: number
+  initialData?: PromoBanner
+  onSaved: (banner: PromoBanner) => void
+  onCancel?: () => void
 }
 
 const inputStyle: React.CSSProperties = {
   width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '9px 12px', fontSize: 13, outline: 'none',
 }
 
-export function PromoBannerForm({ nextSortOrder }: Props) {
+export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onCancel }: Props) {
   const router = useRouter()
   const supabase = createClient()
 
   const [file, setFile] = useState<File | null>(null)
-  const [preview, setPreview] = useState<string | null>(null)
+  const [preview, setPreview] = useState<string | null>(initialData?.image_url ?? null)
   const [mobileFile, setMobileFile] = useState<File | null>(null)
-  const [mobilePreview, setMobilePreview] = useState<string | null>(null)
-  const [title, setTitle] = useState('')
-  const [subtitle, setSubtitle] = useState('')
-  const [linkUrl, setLinkUrl] = useState('')
-  const [sortOrder, setSortOrder] = useState(String(nextSortOrder))
+  const [mobilePreview, setMobilePreview] = useState<string | null>(initialData?.mobile_image_url ?? null)
+  const [title, setTitle] = useState(initialData?.title ?? '')
+  const [subtitle, setSubtitle] = useState(initialData?.subtitle ?? '')
+  const [linkUrl, setLinkUrl] = useState(initialData?.link_url ?? '')
+  const [sortOrder, setSortOrder] = useState(String(initialData?.sort_order ?? nextSortOrder))
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -78,7 +86,7 @@ export function PromoBannerForm({ nextSortOrder }: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!file) {
+    if (mode === 'crear' && !file) {
       setError('Selecciona una imagen para el banner')
       return
     }
@@ -86,14 +94,20 @@ export function PromoBannerForm({ nextSortOrder }: Props) {
     setSaving(true)
     setError(null)
 
-    const { url, error: uploadError } = await uploadBanner(file)
-    if (uploadError || !url) {
-      setSaving(false)
-      setError(uploadError ?? 'No se pudo subir la imagen')
-      return
+    // Imagen de desktop — sube la nueva si se seleccionó, si no conserva la existente
+    let imageUrl = initialData?.image_url ?? ''
+    if (file) {
+      const { url, error: uploadError } = await uploadBanner(file)
+      if (uploadError || !url) {
+        setSaving(false)
+        setError(uploadError ?? 'No se pudo subir la imagen')
+        return
+      }
+      imageUrl = url
     }
 
-    let mobileUrl: string | null = null
+    // Imagen de mobile — igual, opcional
+    let mobileImageUrl = initialData?.mobile_image_url ?? null
     if (mobileFile) {
       const { url: mUrl, error: mUploadError } = await uploadBanner(mobileFile)
       if (mUploadError || !mUrl) {
@@ -101,26 +115,52 @@ export function PromoBannerForm({ nextSortOrder }: Props) {
         setError(mUploadError ?? 'No se pudo subir la imagen para mobile')
         return
       }
-      mobileUrl = mUrl
+      mobileImageUrl = mUrl
     }
 
-    const { error: insertError } = await supabase.from('promo_banners').insert({
-      image_url: url,
-      mobile_image_url: mobileUrl,
+    const payload = {
+      image_url: imageUrl,
+      mobile_image_url: mobileImageUrl,
       title: title.trim() || null,
       subtitle: subtitle.trim() || null,
       link_url: linkUrl.trim() || null,
       sort_order: Number(sortOrder) || 0,
-      is_active: true,
-    })
+    }
 
-    setSaving(false)
+    if (mode === 'editar' && initialData) {
+      const { data: updated, error: updateError } = await supabase
+        .from('promo_banners')
+        .update(payload)
+        .eq('id', initialData.id)
+        .select()
+        .single()
 
-    if (insertError) {
-      setError(insertError.message)
+      setSaving(false)
+
+      if (updateError || !updated) {
+        setError(updateError?.message ?? 'No se pudo guardar el banner')
+        return
+      }
+
+      onSaved(updated as PromoBanner)
+      router.refresh()
       return
     }
 
+    const { data: inserted, error: insertError } = await supabase
+      .from('promo_banners')
+      .insert({ ...payload, is_active: true })
+      .select()
+      .single()
+
+    setSaving(false)
+
+    if (insertError || !inserted) {
+      setError(insertError?.message ?? 'No se pudo crear el banner')
+      return
+    }
+
+    onSaved(inserted as PromoBanner)
     resetForm(Number(sortOrder) + 1 || nextSortOrder + 1)
     router.refresh()
   }
@@ -138,6 +178,11 @@ export function PromoBannerForm({ nextSortOrder }: Props) {
           )}
           <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileChange} style={{ fontSize: 12 }} />
         </div>
+        {mode === 'editar' && (
+          <p style={{ fontSize: 11, color: '#999', margin: '6px 0 0' }}>
+            Deja el campo vacío para conservar la imagen actual.
+          </p>
+        )}
       </div>
 
       <div>
@@ -152,7 +197,9 @@ export function PromoBannerForm({ nextSortOrder }: Props) {
           <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleMobileFileChange} style={{ fontSize: 12 }} />
         </div>
         <p style={{ fontSize: 11, color: '#999', margin: '6px 0 0' }}>
-          Si no subes una, se usa la imagen de desktop también en mobile.
+          {mode === 'editar'
+            ? 'Deja el campo vacío para conservar la imagen actual (o la de desktop, si nunca subiste una).'
+            : 'Si no subes una, se usa la imagen de desktop también en mobile.'}
         </p>
       </div>
 
@@ -198,17 +245,33 @@ export function PromoBannerForm({ nextSortOrder }: Props) {
 
       {error && <p style={{ fontSize: 12, color: BRAND.red, margin: 0 }}>{error}</p>}
 
-      <button
-        type="submit"
-        disabled={saving}
-        style={{
-          justifySelf: 'start', background: BRAND.blue, color: '#fff', border: 'none',
-          padding: '9px 20px', borderRadius: 8, fontWeight: 700, fontSize: 13,
-          cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1,
-        }}
-      >
-        {saving ? 'Subiendo...' : '+ Crear banner'}
-      </button>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button
+          type="submit"
+          disabled={saving}
+          style={{
+            background: BRAND.blue, color: '#fff', border: 'none',
+            padding: '9px 20px', borderRadius: 8, fontWeight: 700, fontSize: 13,
+            cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1,
+          }}
+        >
+          {saving ? 'Guardando...' : mode === 'editar' ? 'Guardar cambios' : '+ Agregar banner'}
+        </button>
+        {mode === 'editar' && (
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={saving}
+            style={{
+              background: '#fff', color: '#666', border: '1px solid #ddd',
+              padding: '9px 20px', borderRadius: 8, fontWeight: 600, fontSize: 13,
+              cursor: saving ? 'not-allowed' : 'pointer',
+            }}
+          >
+            Cancelar
+          </button>
+        )}
+      </div>
     </form>
   )
 }

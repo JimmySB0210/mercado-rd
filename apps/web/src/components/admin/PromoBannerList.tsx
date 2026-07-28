@@ -11,12 +11,13 @@ import { BRAND } from '@/lib/colors'
 import type { PromoBanner } from '@/types/database.types'
 
 interface Props {
-  initialBanners: PromoBanner[]
+  banners: PromoBanner[]
+  setBanners: React.Dispatch<React.SetStateAction<PromoBanner[]>>
+  onEdit: (banner: PromoBanner) => void
 }
 
-export function PromoBannerList({ initialBanners }: Props) {
+export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
   const supabase = createClient()
-  const [banners, setBanners] = useState(initialBanners)
   const [loadingId, setLoadingId] = useState<string | null>(null)
 
   const move = async (index: number, direction: -1 | 1) => {
@@ -164,6 +165,15 @@ export function PromoBannerList({ initialBanners }: Props) {
             }}
           >
             {banner.is_active ? 'Desactivar' : 'Activar'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onEdit(banner)}
+            disabled={loadingId !== null}
+            style={{ fontSize: 11, fontWeight: 700, color: BRAND.blue, background: 'transparent', border: 'none', cursor: loadingId !== null ? 'not-allowed' : 'pointer', flexShrink: 0 }}
+          >
+            Editar
           </button>
 
           <button
