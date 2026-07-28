@@ -78,15 +78,18 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     return { name: '', description: '', categoryId: '', provinceId: '', price: '', comparePrice: '', stock: '' }
   })
 
-  const [variantRows, setVariantRows] = useState<VariantRow[]>(() =>
-    (initialData?.variants ?? []).map(v => ({
+  const [variantRows, setVariantRows] = useState<VariantRow[]>(() => {
+    if (!initialData?.variants?.length) {
+      return [{ size: '', color: '', stock: '', price: '', imageUrl: null }]
+    }
+    return initialData.variants.map(v => ({
       size: v.size ?? '',
       color: v.color ?? '',
       stock: String(v.stock),
       price: v.price_rdp !== null ? (v.price_rdp / 100).toString() : '',
       imageUrl: v.image_url,
     }))
-  )
+  })
   const [uploadingVariantIndex, setUploadingVariantIndex] = useState<number | null>(null)
   const [variantImageError, setVariantImageError] = useState<string | null>(null)
 
