@@ -26,6 +26,17 @@ export interface Category {
   parent_id: number | null
 }
 
+export interface PromoBanner {
+  id: string
+  image_url: string
+  title: string | null
+  subtitle: string | null
+  link_url: string | null
+  sort_order: number
+  is_active: boolean
+  created_at: string
+}
+
 export interface User {
   id: string
   full_name: string

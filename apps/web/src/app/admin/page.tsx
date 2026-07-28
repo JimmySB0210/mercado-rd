@@ -89,6 +89,9 @@ export default async function AdminPage() {
         <div style={{ padding: '10px 20px', color: '#fff', fontSize: 14, fontWeight: 600, background: 'rgba(255,255,255,0.08)', borderLeft: '2px solid #fff' }}>
           📊 Resumen
         </div>
+        <a href="/admin/promociones" style={{ padding: '10px 20px', color: '#666', fontSize: 14, textDecoration: 'none' }}>
+          🖼️ Promociones
+        </a>
         <a href="/dashboard" style={{ padding: '10px 20px', color: '#666', fontSize: 14, textDecoration: 'none' }}>
           ← Mi panel de vendedor
         </a>

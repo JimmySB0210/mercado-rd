@@ -108,9 +108,25 @@ export async function uploadAvatar(
   return { url: data.publicUrl, error: null }
 }
 
+// ─── Imagen de banner promocional (admin) ──────────────────────────────────
+export async function uploadBanner(file: File): Promise<UploadResult> {
+  const supabase = createClient()
+  const ext = file.name.split('.').pop()
+  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+
+  const { error } = await supabase.storage
+    .from('banners')
+    .upload(filename, file, { upsert: false })
+
+  if (error) return { url: null, error: error.message }
+
+  const { data } = supabase.storage.from('banners').getPublicUrl(filename)
+  return { url: data.publicUrl, error: null }
+}
+
 // ─── Eliminar imagen ────────────────────────────────────────────────────────
 export async function deleteImage(
-  bucket: 'products' | 'vendors' | 'avatars',
+  bucket: 'products' | 'vendors' | 'avatars' | 'banners',
   path: string
 ): Promise<boolean> {
   const supabase = createClient()
