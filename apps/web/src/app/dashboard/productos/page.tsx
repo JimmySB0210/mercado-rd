@@ -87,11 +87,19 @@ export default async function VendorProductsPage() {
                     <span>Stock: {p.stock}</span>
                     <span>{p.sold_count} vendidos</span>
                   </div>
-                  <FeatureToggleButton
-                    productId={p.id}
-                    initialFeatured={p.is_featured ?? false}
-                    isPro={vendor.plan === 'pro'}
-                  />
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                    <FeatureToggleButton
+                      productId={p.id}
+                      initialFeatured={p.is_featured ?? false}
+                      isPro={vendor.plan === 'pro'}
+                    />
+                    <a
+                      href={`/dashboard/productos/${p.id}/editar`}
+                      style={{ fontSize: 11, fontWeight: 600, color: BRAND.blue, textDecoration: 'none' }}
+                    >
+                      Editar
+                    </a>
+                  </div>
                 </div>
               </div>
             ))}
