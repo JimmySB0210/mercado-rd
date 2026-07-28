@@ -33,6 +33,7 @@ export default function VendorSettingsPage() {
     businessName: '',
     description: '',
     provinceId: '',
+    address: '',
     whatsapp: '',
     instagram: '',
     bankName: '',
@@ -46,6 +47,7 @@ export default function VendorSettingsPage() {
   const [businessNameError, setBusinessNameError] = useState<string | null>(null)
   const [whatsappError, setWhatsappError] = useState<string | null>(null)
   const [descriptionError, setDescriptionError] = useState<string | null>(null)
+  const [addressError, setAddressError] = useState<string | null>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -75,6 +77,7 @@ export default function VendorSettingsPage() {
         businessName: vendor.business_name ?? '',
         description: vendor.description ?? '',
         provinceId: vendor.province_id ? String(vendor.province_id) : '',
+        address: vendor.address ?? '',
         whatsapp: vendor.whatsapp ?? '',
         instagram: vendor.instagram ?? '',
         bankName: vendor.bank_name ?? '',
@@ -121,6 +124,7 @@ export default function VendorSettingsPage() {
     setBusinessNameError(null)
     setWhatsappError(null)
     setDescriptionError(null)
+    setAddressError(null)
 
     if (!vendorId || !userId) return
     if (!form.businessName) {
@@ -138,6 +142,11 @@ export default function VendorSettingsPage() {
 
     const descriptionErr = validateText(form.description, 'La descripción', 0, 500)
     if (descriptionErr) { setDescriptionError(descriptionErr); return }
+
+    if (form.address.trim().length > 0) {
+      const addressErr = validateText(form.address, 'Dirección', 10, 200)
+      if (addressErr) { setAddressError(addressErr); return }
+    }
 
     setSaving(true)
 
@@ -165,6 +174,7 @@ export default function VendorSettingsPage() {
           business_name: form.businessName,
           description: form.description || null,
           province_id: form.provinceId ? parseInt(form.provinceId) : null,
+          address: form.address.trim() || null,
           whatsapp: form.whatsapp || null,
           instagram: form.instagram || null,
           bank_name: form.bankName || null,
@@ -269,7 +279,7 @@ export default function VendorSettingsPage() {
               {descriptionError && <p style={{ fontSize: 12, color: '#c00', marginTop: 6 }}>{descriptionError}</p>}
             </div>
 
-            <div>
+            <div style={{ marginBottom: 12 }}>
               <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>Provincia</label>
               <select
                 name="provinceId"
@@ -282,6 +292,19 @@ export default function VendorSettingsPage() {
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
               </select>
+            </div>
+
+            <div>
+              <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>Dirección del negocio</label>
+              <textarea
+                name="address"
+                value={form.address}
+                onChange={handleChange}
+                rows={2}
+                placeholder="Ej: Calle Duarte #45, Sector Villa Consuelo, cerca del colmado Los Hermanos"
+                style={{ width: '100%', border: `1px solid ${addressError ? '#c00' : '#ddd'}`, borderRadius: 8, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }}
+              />
+              {addressError && <p style={{ fontSize: 12, color: '#c00', marginTop: 6 }}>{addressError}</p>}
             </div>
           </div>
 

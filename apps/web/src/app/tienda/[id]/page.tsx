@@ -109,6 +109,7 @@ export default async function VendorStorePage(
               {vendor.province && (
                 <p className="text-sm text-gray-400 mt-1">
                   📍 {(vendor.province as { name: string }).name}
+                  {vendor.address && ` · ${vendor.address}`}
                 </p>
               )}
 

@@ -39,9 +39,11 @@ export default function VendorRegisterPage() {
     categoryId: '',
     provinceId: '',
     whatsapp: '',
+    address: '',
   })
   const [businessNameError, setBusinessNameError] = useState<string | null>(null)
   const [whatsappError, setWhatsappError] = useState<string | null>(null)
+  const [addressError, setAddressError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -80,7 +82,7 @@ export default function VendorRegisterPage() {
       .then(({ data }) => setProvinces(data ?? []))
   }, [])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
   }
 
@@ -89,12 +91,16 @@ export default function VendorRegisterPage() {
     setError(null)
     setBusinessNameError(null)
     setWhatsappError(null)
+    setAddressError(null)
 
     const businessNameErr = validateText(form.businessName, 'El nombre del negocio', 3, 80)
     if (businessNameErr) { setBusinessNameError(businessNameErr); return }
 
     if (!form.categoryId) { setError('Selecciona una categoría'); return }
     if (!form.provinceId) { setError('Selecciona una provincia'); return }
+
+    const addressErr = validateText(form.address, 'Dirección', 10, 200)
+    if (addressErr) { setAddressError(addressErr); return }
 
     if (form.whatsapp.trim().length > 0) {
       const whatsappErr = validatePhone(form.whatsapp)
@@ -119,6 +125,7 @@ export default function VendorRegisterPage() {
       category_id: Number(form.categoryId),
       province_id: Number(form.provinceId),
       whatsapp: form.whatsapp.trim() || null,
+      address: form.address.trim(),
       description,
       plan: 'free',
       is_verified: false,
@@ -222,6 +229,19 @@ export default function VendorRegisterPage() {
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
+
+          <div>
+            <textarea
+              name="address"
+              style={{...inputStyle, resize:'vertical', minHeight:70}}
+              placeholder="Dirección del negocio * (Ej: Calle Duarte #45, Sector Villa Consuelo, cerca del colmado Los Hermanos)"
+              value={form.address}
+              onChange={handleChange}
+            />
+            {addressError && (
+              <p style={{color:BRAND.red,fontSize:12,marginTop:4}}>{addressError}</p>
+            )}
+          </div>
 
           <div>
             <input
