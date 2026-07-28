@@ -14,7 +14,7 @@ import { Search, ChevronDown, ShoppingCart, User, LogOut, LayoutDashboard, Shiel
 import { BRAND } from '@/lib/colors'
 import { useCartStore, useCartItemCount } from '@/lib/store/cart'
 import { useAuth } from '@/lib/hooks/useAuth'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Category, Province } from '@/types/database.types'
 import { useLocationStore } from '@/lib/store/location'
@@ -30,7 +30,20 @@ export function Navbar() {
   const { province, setProvince } = useLocationStore()
   const [vendorInfo, setVendorInfo] = useState<{ business_name: string; logo_url: string | null } | null>(null)
   const [showCategoryMenu, setShowCategoryMenu] = useState(false)
+  const [hoveredCategoryId, setHoveredCategoryId] = useState<number | null>(null)
   const accountMenuRef = useRef<HTMLDivElement>(null)
+
+  const topCategories = useMemo(() => categories.filter(c => !c.parent_id), [categories])
+  const subcategoriesByParent = useMemo(() => {
+    const map = new Map<number, Category[]>()
+    for (const cat of categories) {
+      if (!cat.parent_id) continue
+      const list = map.get(cat.parent_id) ?? []
+      list.push(cat)
+      map.set(cat.parent_id, list)
+    }
+    return map
+  }, [categories])
 
   // Cerrar el menú de cuenta al tocar/clickear afuera — mismo patrón que NotificationBell
   useEffect(() => {
@@ -49,7 +62,7 @@ export function Navbar() {
     const supabase = createClient()
     supabase
       .from('categories')
-      .select('id, name, slug, emoji, sort_order')
+      .select('id, name, slug, emoji, sort_order, parent_id')
       .order('sort_order')
       .then(({ data }) => setCategories(data ?? []))
     supabase
@@ -399,7 +412,7 @@ export function Navbar() {
         >
           <div
             onMouseEnter={() => setShowCategoryMenu(true)}
-            onMouseLeave={() => setShowCategoryMenu(false)}
+            onMouseLeave={() => { setShowCategoryMenu(false); setHoveredCategoryId(null) }}
             style={{ position: 'relative' }}
           >
             <a href='/categorias' style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 16px', color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, background: 'rgba(255,255,255,0.14)', whiteSpace: 'nowrap' }}>
@@ -407,24 +420,53 @@ export function Navbar() {
             </a>
 
             {showCategoryMenu && (
-              <div style={{
-                position: 'absolute', top: '100%', left: 0, background: '#fff',
-                boxShadow: '0 12px 32px rgba(0,0,0,0.18)', borderRadius: 10,
-                padding: 20, zIndex: 50, width: 300,
-                display: 'grid', gridTemplateColumns: '1fr', gap: 2,
-                maxHeight: 480, overflowY: 'auto'
-              }}>
-                {categories.map((cat) => (
-                  <a
-                    key={cat.id}
-                    href={`/categoria/${cat.slug}`}
-                    onClick={() => setShowCategoryMenu(false)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', color: '#333', textDecoration: 'none', fontSize: 13, borderRadius: 6, whiteSpace: 'nowrap' }}
-                  >
-                    <span style={{ filter: 'brightness(0)', fontSize: 15 }}>{cat.emoji}</span>
-                    {cat.name}
-                  </a>
-                ))}
+              <div style={{ position: 'absolute', top: '100%', left: 0, display: 'flex', zIndex: 50 }}>
+                <div style={{
+                  background: '#fff',
+                  boxShadow: '0 12px 32px rgba(0,0,0,0.18)', borderRadius: 10,
+                  padding: 20, width: 300,
+                  display: 'grid', gridTemplateColumns: '1fr', gap: 2,
+                  maxHeight: 480, overflowY: 'auto'
+                }}>
+                  {topCategories.map((cat) => (
+                    <a
+                      key={cat.id}
+                      href={`/categoria/${cat.slug}`}
+                      onClick={() => setShowCategoryMenu(false)}
+                      onPointerEnter={e => e.pointerType === 'mouse' && setHoveredCategoryId(cat.id)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px',
+                        color: '#333', textDecoration: 'none', fontSize: 13, borderRadius: 6, whiteSpace: 'nowrap',
+                        background: hoveredCategoryId === cat.id ? '#f5f5f5' : 'transparent',
+                      }}
+                    >
+                      <span style={{ filter: 'brightness(0)', fontSize: 15 }}>{cat.emoji}</span>
+                      {cat.name}
+                    </a>
+                  ))}
+                </div>
+
+                {hoveredCategoryId && (subcategoriesByParent.get(hoveredCategoryId)?.length ?? 0) > 0 && (
+                  <div style={{
+                    background: '#fff',
+                    boxShadow: '0 12px 32px rgba(0,0,0,0.18)', borderRadius: 10,
+                    padding: 20, width: 240,
+                    display: 'grid', gridTemplateColumns: '1fr', gap: 2,
+                    maxHeight: 480, overflowY: 'auto',
+                    borderLeft: '1px solid #EFEFEF',
+                  }}>
+                    {subcategoriesByParent.get(hoveredCategoryId)!.map((sub) => (
+                      <a
+                        key={sub.id}
+                        href={`/categoria/${sub.slug}`}
+                        onClick={() => setShowCategoryMenu(false)}
+                        style={{ display: 'flex', alignItems: 'center', padding: '9px 10px', color: '#555', textDecoration: 'none', fontSize: 13, borderRadius: 6, whiteSpace: 'nowrap' }}
+                      >
+                        {sub.name}
+                      </a>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -23,6 +23,7 @@ export interface Category {
   slug: string
   emoji: string
   sort_order: number
+  parent_id: number | null
 }
 
 export interface User {

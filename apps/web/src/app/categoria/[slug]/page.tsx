@@ -38,12 +38,19 @@ export default async function CategoryPage(
   // Buscar la categoría por slug (case-insensitive, tolera acentos simples)
   const { data: categories } = await supabase
     .from('categories')
-    .select('id, name, slug, emoji')
+    .select('id, name, slug, emoji, parent_id')
 
   const category = categories?.find(
     c => c.slug?.toLowerCase() === slug.toLowerCase() ||
          c.name?.toLowerCase().replace(/\s+/g, '-') === slug.toLowerCase()
   )
+
+  // Si es una categoría principal, incluir también los productos de sus
+  // subcategorías — el vendor puede haber asignado el producto directo
+  // a la subcategoría (category_id), no a la principal.
+  const categoryIds = category
+    ? [category.id, ...(categories ?? []).filter(c => c.parent_id === category.id).map(c => c.id)]
+    : []
 
   // Traer productos — si hay categoría específica, filtrar; si no, todos
   let query = supabase
@@ -55,10 +62,11 @@ export default async function CategoryPage(
       province:provinces_rd(id, name)
     `)
     .eq('is_active', true)
+    .order('is_featured', { ascending: false })
     .order('created_at', { ascending: false })
 
   if (category) {
-    query = query.eq('category_id', category.id)
+    query = query.in('category_id', categoryIds)
   }
 
   const { data: products, error } = await query.limit(60)
