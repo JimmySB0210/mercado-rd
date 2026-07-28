@@ -402,6 +402,16 @@ export function Navbar() {
             </button>
           </form>
         </div>
+
+        {/* Mismo CTA que el "Desktop row" (oculto en este breakpoint) — se
+            duplica aquí para que "Vender en RD" siga visible en mobile */}
+        <a
+          href='/vendor/register'
+          className="block text-center"
+          style={{ marginTop: 10, background: BRAND.blue, color: '#fff', textDecoration: 'none', padding: '10px 16px', borderRadius: 8, fontWeight: 600, fontSize: 13 }}
+        >
+          Vender en RD
+        </a>
       </div>
 
       {/* ─── Category bar ────────────────────────────────── */}
@@ -470,10 +480,6 @@ export function Navbar() {
               </div>
             )}
           </div>
-
-          <a href='/vendor/register' style={{ padding: '11px 16px', color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>
-            Vender en RD
-          </a>
         </div>
       </div>
     </header>
