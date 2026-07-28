@@ -87,12 +87,18 @@ function PromoSlide({ banner }: { banner: PromoBanner }) {
 
   const content = (
     <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 260 }}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={banner.image_url}
-        alt={banner.title ?? 'Promoción'}
-        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-      />
+      {/* Debajo de 1010px de contenedor, BrandSlide pasa a layout apilado
+          (ver HeroBanner: umbral donde el heading + perks dejan de caber
+          lado a lado) — coincide con el breakpoint usado aquí */}
+      <picture>
+        <source media="(max-width: 1009px)" srcSet={banner.mobile_image_url || banner.image_url} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={banner.image_url}
+          alt={banner.title ?? 'Promoción'}
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      </picture>
       {hasText && (
         <div style={{
           position: 'absolute', inset: 0,
@@ -135,7 +141,7 @@ export function HeroBanner() {
     const supabase = createPublicClient()
     supabase
       .from('promo_banners')
-      .select('id, image_url, title, subtitle, link_url, sort_order, is_active, created_at')
+      .select('id, image_url, mobile_image_url, title, subtitle, link_url, sort_order, is_active, created_at')
       .eq('is_active', true)
       .order('sort_order')
       .then(({ data }) => setBanners(data ?? []))

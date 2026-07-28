@@ -76,9 +76,13 @@ export function PromoBannerList({ initialBanners }: Props) {
     }
     setBanners(prev => prev.filter(b => b.id !== banner.id))
 
-    // Limpieza del archivo en Storage — no bloquea la UI si falla
+    // Limpieza de los archivos en Storage — no bloquea la UI si falla
     const path = banner.image_url.split('/banners/')[1]
     if (path) deleteImage('banners', path)
+    if (banner.mobile_image_url) {
+      const mobilePath = banner.mobile_image_url.split('/banners/')[1]
+      if (mobilePath) deleteImage('banners', mobilePath)
+    }
   }
 
   if (banners.length === 0) {

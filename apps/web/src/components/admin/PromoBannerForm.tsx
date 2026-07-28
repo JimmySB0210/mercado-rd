@@ -24,6 +24,8 @@ export function PromoBannerForm({ nextSortOrder }: Props) {
 
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
+  const [mobileFile, setMobileFile] = useState<File | null>(null)
+  const [mobilePreview, setMobilePreview] = useState<string | null>(null)
   const [title, setTitle] = useState('')
   const [subtitle, setSubtitle] = useState('')
   const [linkUrl, setLinkUrl] = useState('')
@@ -47,9 +49,27 @@ export function PromoBannerForm({ nextSortOrder }: Props) {
     setPreview(URL.createObjectURL(f))
   }
 
+  const handleMobileFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]
+    e.target.value = ''
+    if (!f) return
+
+    const validationError = validateImageFile(f)
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+
+    setError(null)
+    setMobileFile(f)
+    setMobilePreview(URL.createObjectURL(f))
+  }
+
   const resetForm = (newSortOrder: number) => {
     setFile(null)
     setPreview(null)
+    setMobileFile(null)
+    setMobilePreview(null)
     setTitle('')
     setSubtitle('')
     setLinkUrl('')
@@ -73,8 +93,20 @@ export function PromoBannerForm({ nextSortOrder }: Props) {
       return
     }
 
+    let mobileUrl: string | null = null
+    if (mobileFile) {
+      const { url: mUrl, error: mUploadError } = await uploadBanner(mobileFile)
+      if (mUploadError || !mUrl) {
+        setSaving(false)
+        setError(mUploadError ?? 'No se pudo subir la imagen para mobile')
+        return
+      }
+      mobileUrl = mUrl
+    }
+
     const { error: insertError } = await supabase.from('promo_banners').insert({
       image_url: url,
+      mobile_image_url: mobileUrl,
       title: title.trim() || null,
       subtitle: subtitle.trim() || null,
       link_url: linkUrl.trim() || null,
@@ -97,7 +129,7 @@ export function PromoBannerForm({ nextSortOrder }: Props) {
     <form onSubmit={handleSubmit} style={{ padding: 18, display: 'grid', gap: 12 }}>
       <div>
         <label style={{ fontSize: 12, fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
-          Imagen del banner
+          Imagen para desktop
         </label>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {preview && (
@@ -106,6 +138,22 @@ export function PromoBannerForm({ nextSortOrder }: Props) {
           )}
           <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileChange} style={{ fontSize: 12 }} />
         </div>
+      </div>
+
+      <div>
+        <label style={{ fontSize: 12, fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
+          Imagen para mobile (vertical, opcional)
+        </label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {mobilePreview && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={mobilePreview} alt="Vista previa mobile" style={{ width: 56, height: 80, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />
+          )}
+          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleMobileFileChange} style={{ fontSize: 12 }} />
+        </div>
+        <p style={{ fontSize: 11, color: '#999', margin: '6px 0 0' }}>
+          Si no subes una, se usa la imagen de desktop también en mobile.
+        </p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>

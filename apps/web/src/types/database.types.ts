@@ -29,6 +29,7 @@ export interface Category {
 export interface PromoBanner {
   id: string
   image_url: string
+  mobile_image_url: string | null
   title: string | null
   subtitle: string | null
   link_url: string | null
