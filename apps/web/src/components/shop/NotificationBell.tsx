@@ -111,10 +111,14 @@ export function NotificationBell() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const toggleDropdown = async () => {
-    const willOpen = !open
-    setOpen(willOpen)
-    if (willOpen && userId) {
+  // Siempre abre (idempotente) en vez de alternar. Con el toggle viejo, un
+  // tap real disparaba mouseenter->open(true) y luego click->toggle a
+  // false dentro del mismo gesto, así que el panel se abría y cerraba
+  // antes de que se llegara a ver. Cerrar en touch queda a cargo del
+  // listener de "click afuera" de abajo; en desktop, del onMouseLeave.
+  const openDropdown = async () => {
+    setOpen(true)
+    if (userId) {
       const { data } = await supabase
         .from('notifications')
         .select('id, title, body, link, is_read, created_at')
@@ -152,10 +156,15 @@ export function NotificationBell() {
   if (!userId) return null
 
   return (
-    <div className="relative" ref={containerRef}>
+    <div
+      className="relative"
+      ref={containerRef}
+      onPointerEnter={e => e.pointerType === 'mouse' && openDropdown()}
+      onPointerLeave={e => e.pointerType === 'mouse' && setOpen(false)}
+    >
       <button
         type="button"
-        onClick={toggleDropdown}
+        onClick={openDropdown}
         className="relative flex text-gray-800 border-none bg-transparent cursor-pointer p-0"
         aria-label="Notificaciones"
       >

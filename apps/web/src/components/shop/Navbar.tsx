@@ -14,7 +14,7 @@ import { Search, ChevronDown, ShoppingCart, User, LogOut, LayoutDashboard, Shiel
 import { BRAND } from '@/lib/colors'
 import { useCartStore, useCartItemCount } from '@/lib/store/cart'
 import { useAuth } from '@/lib/hooks/useAuth'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Category, Province } from '@/types/database.types'
 import { useLocationStore } from '@/lib/store/location'
@@ -30,6 +30,20 @@ export function Navbar() {
   const { province, setProvince } = useLocationStore()
   const [vendorInfo, setVendorInfo] = useState<{ business_name: string; logo_url: string | null } | null>(null)
   const [showCategoryMenu, setShowCategoryMenu] = useState(false)
+  const accountMenuRef = useRef<HTMLDivElement>(null)
+
+  // Cerrar el menú de cuenta al tocar/clickear afuera — mismo patrón que NotificationBell
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (accountMenuRef.current && !accountMenuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+  const [searchFocusedDesktop, setSearchFocusedDesktop] = useState(false)
+  const [searchFocusedMobile, setSearchFocusedMobile] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -60,55 +74,75 @@ export function Navbar() {
 
   const locationLabel = province?.name ?? 'Rep. Dom.'
 
-  const LocationSelector = ({ compact }: { compact?: boolean }) => (
-    <div className="relative">
+  const LocationSelector = ({ compact }: { compact?: boolean }) => {
+    const ref = useRef<HTMLDivElement>(null)
+
+    // Cerrar al tocar/clickear afuera — mismo patrón que NotificationBell
+    useEffect(() => {
+      const handleClickOutside = (e: MouseEvent) => {
+        if (ref.current && !ref.current.contains(e.target as Node)) {
+          setLocationOpen(false)
+        }
+      }
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
+
+    return (
       <div
-        onClick={() => setLocationOpen(o => !o)}
-        className="flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+        ref={ref}
+        className="relative"
+        onPointerEnter={e => e.pointerType === 'mouse' && setLocationOpen(true)}
+        onPointerLeave={e => e.pointerType === 'mouse' && setLocationOpen(false)}
       >
-        {!compact && (
-          <div style={{ lineHeight: 1.3 }}>
-            <div style={{ fontSize: 11, color: BRAND.gray }}>Enviar a</div>
-            <div className="flex items-center gap-0.5">
-              <span style={{ fontSize: 13, fontWeight: 600, color: BRAND.dark }}>{locationLabel}</span>
-              <ChevronDown size={14} color={BRAND.gray} />
+        <div
+          onClick={() => setLocationOpen(true)}
+          className="flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+        >
+          {!compact && (
+            <div style={{ lineHeight: 1.3 }}>
+              <div style={{ fontSize: 11, color: BRAND.gray }}>Enviar a</div>
+              <div className="flex items-center gap-0.5">
+                <span style={{ fontSize: 13, fontWeight: 600, color: BRAND.dark }}>{locationLabel}</span>
+                <ChevronDown size={14} color={BRAND.gray} />
+              </div>
             </div>
-          </div>
-        )}
-        {compact && (
-          <div className="flex items-center gap-1.5 text-xs" style={{ color: BRAND.gray }}>
-            {locationLabel} <ChevronDown size={13} color={BRAND.gray} />
+          )}
+          {compact && (
+            <div className="flex items-center gap-1.5 text-xs" style={{ color: BRAND.gray }}>
+              {locationLabel} <ChevronDown size={13} color={BRAND.gray} />
+            </div>
+          )}
+        </div>
+
+        {locationOpen && (
+          <div
+            className="absolute left-0 top-full mt-2 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 overflow-y-auto"
+            style={{ minWidth: 200, maxHeight: 320 }}
+          >
+            <button
+              onClick={() => { setProvince(null); setLocationOpen(false) }}
+              className="flex items-center w-full px-4 py-2 text-sm text-left border-none bg-transparent cursor-pointer hover:bg-gray-50 transition-colors"
+              style={{ color: !province ? BRAND.blue : BRAND.dark, fontWeight: !province ? 700 : 400 }}
+            >
+              Rep. Dom. (todo el país)
+            </button>
+            <hr className="my-1 border-gray-100" />
+            {provinces.map(p => (
+              <button
+                key={p.id}
+                onClick={() => { setProvince(p); setLocationOpen(false) }}
+                className="flex items-center w-full px-4 py-2 text-sm text-left border-none bg-transparent cursor-pointer hover:bg-gray-50 transition-colors"
+                style={{ color: province?.id === p.id ? BRAND.blue : BRAND.dark, fontWeight: province?.id === p.id ? 700 : 400 }}
+              >
+                {p.name}
+              </button>
+            ))}
           </div>
         )}
       </div>
-
-      {locationOpen && (
-        <div
-          className="absolute left-0 top-full mt-2 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 overflow-y-auto"
-          style={{ minWidth: 200, maxHeight: 320 }}
-        >
-          <button
-            onClick={() => { setProvince(null); setLocationOpen(false) }}
-            className="flex items-center w-full px-4 py-2 text-sm text-left border-none bg-transparent cursor-pointer hover:bg-gray-50 transition-colors"
-            style={{ color: !province ? BRAND.blue : BRAND.dark, fontWeight: !province ? 700 : 400 }}
-          >
-            Rep. Dom. (todo el país)
-          </button>
-          <hr className="my-1 border-gray-100" />
-          {provinces.map(p => (
-            <button
-              key={p.id}
-              onClick={() => { setProvince(p); setLocationOpen(false) }}
-              className="flex items-center w-full px-4 py-2 text-sm text-left border-none bg-transparent cursor-pointer hover:bg-gray-50 transition-colors"
-              style={{ color: province?.id === p.id ? BRAND.blue : BRAND.dark, fontWeight: province?.id === p.id ? 700 : 400 }}
-            >
-              {p.name}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
+    )
+  }
 
   const displayName = profile?.full_name?.split(' ')[0]
     ?? user?.email?.split('@')[0]
@@ -149,7 +183,13 @@ export function Navbar() {
                 type='text'
                 name='q'
                 placeholder='Buscar productos, tiendas...'
-                style={{ width: '100%', border: '1px solid #E0E0E0', background: BRAND.bg, borderRadius: 24, padding: '11px 50px 11px 18px', fontSize: 14, outline: 'none', color: BRAND.dark, boxSizing: 'border-box' }}
+                onFocus={() => setSearchFocusedDesktop(true)}
+                onBlur={() => setSearchFocusedDesktop(false)}
+                style={{
+                  width: '100%', border: `1.5px solid ${BRAND.blue}`, background: BRAND.bg, borderRadius: 24,
+                  padding: '11px 50px 11px 18px', fontSize: 14, outline: 'none', color: BRAND.dark, boxSizing: 'border-box',
+                  boxShadow: searchFocusedDesktop ? '0 0 0 3px rgba(13,71,161,0.15)' : 'none',
+                }}
               />
               <button type='submit' style={{ position: 'absolute', right: 4, top: 4, bottom: 4, width: 38, border: 'none', borderRadius: '50%', background: BRAND.blue, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                 <Search size={16} />
@@ -167,9 +207,14 @@ export function Navbar() {
         {/* Auth + CTA */}
         <div className="flex items-center gap-3 flex-shrink-0">
           {user ? (
-            <div className="relative">
+            <div
+              ref={accountMenuRef}
+              className="relative"
+              onPointerEnter={e => e.pointerType === 'mouse' && setMenuOpen(true)}
+              onPointerLeave={e => e.pointerType === 'mouse' && setMenuOpen(false)}
+            >
               <button
-                onClick={() => setMenuOpen(o => !o)}
+                onClick={() => setMenuOpen(true)}
                 className="flex items-center gap-2 text-sm font-medium cursor-pointer border-none bg-transparent"
                 style={{ color: BRAND.dark }}
               >
@@ -322,7 +367,13 @@ export function Navbar() {
               type='text'
               name='q'
               placeholder='Buscar productos, tiendas...'
-              style={{ width: '100%', border: '1px solid #E0E0E0', background: BRAND.bg, borderRadius: 24, padding: '10px 44px 10px 16px', fontSize: 13, outline: 'none', color: BRAND.dark, boxSizing: 'border-box' }}
+              onFocus={() => setSearchFocusedMobile(true)}
+              onBlur={() => setSearchFocusedMobile(false)}
+              style={{
+                width: '100%', border: `1.5px solid ${BRAND.blue}`, background: BRAND.bg, borderRadius: 24,
+                padding: '10px 44px 10px 16px', fontSize: 13, outline: 'none', color: BRAND.dark, boxSizing: 'border-box',
+                boxShadow: searchFocusedMobile ? '0 0 0 3px rgba(13,71,161,0.15)' : 'none',
+              }}
             />
             <button type='submit' style={{ position: 'absolute', right: 3, top: 3, bottom: 3, width: 32, border: 'none', borderRadius: '50%', background: BRAND.blue, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Search size={14} />
