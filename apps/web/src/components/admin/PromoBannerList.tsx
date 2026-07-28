@@ -122,8 +122,24 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
             <div style={{ fontSize: 13, fontWeight: 700, color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {banner.title || <span style={{ color: '#bbb', fontWeight: 400 }}>Sin título</span>}
             </div>
-            <div style={{ fontSize: 11, color: '#999' }}>
-              Orden: {banner.sort_order} {banner.link_url && `· ${banner.link_url}`}
+            <div style={{ fontSize: 11, color: '#999', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ flexShrink: 0 }}>Orden: {banner.sort_order}</span>
+              {banner.link_url && (
+                <>
+                  <span style={{ flexShrink: 0 }}>·</span>
+                  <a
+                    href={banner.link_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      color: '#999', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap', display: 'inline-block',
+                    }}
+                  >
+                    {banner.link_url}
+                  </a>
+                </>
+              )}
             </div>
           </div>
 
