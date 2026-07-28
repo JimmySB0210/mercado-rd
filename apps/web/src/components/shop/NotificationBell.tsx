@@ -181,7 +181,7 @@ export function NotificationBell() {
 
       {open && (
         <div
-          className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden"
+          className="absolute right-0 top-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden"
           style={{ width: 340 }}
         >
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">

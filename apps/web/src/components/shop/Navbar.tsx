@@ -117,7 +117,7 @@ export function Navbar() {
 
         {locationOpen && (
           <div
-            className="absolute left-0 top-full mt-2 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 overflow-y-auto"
+            className="absolute left-0 top-full bg-white rounded-xl shadow-lg border border-gray-100 pt-3 pb-1 z-50 overflow-y-auto"
             style={{ minWidth: 200, maxHeight: 320 }}
           >
             <button
@@ -237,7 +237,7 @@ export function Navbar() {
 
               {menuOpen && (
                 <div
-                  className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50"
+                  className="absolute right-0 top-full bg-white rounded-xl shadow-lg border border-gray-100 pt-3 pb-1 z-50"
                   style={{ minWidth: 180 }}
                 >
                   <a
