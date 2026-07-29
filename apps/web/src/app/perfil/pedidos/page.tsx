@@ -25,6 +25,7 @@ interface OrderItem {
   price_rdp: number
   size: string | null
   color: string | null
+  category_id: number | null
   hasReview: boolean
 }
 
@@ -37,7 +38,12 @@ interface Order {
   courier: string | null
   items: OrderItem[]
   disputeId: string | null
+  diasDesdeEntrega: number | null
+  tieneProductoAlimento: boolean
 }
+
+const FOOD_CATEGORY_ID = 3 // Alimentos & Bebidas
+const REFUND_WINDOW_DAYS = 7
 
 const STATUS_LABELS: Record<string, { label: string; bg: string; text: string }> = {
   pending:   { label: '⏳ Pendiente',  bg: '#FEF9C3', text: '#713f12' },
@@ -55,7 +61,12 @@ export default function MyOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [reviewTarget, setReviewTarget] = useState<{ orderId: string; item: OrderItem } | null>(null)
-  const [disputeTarget, setDisputeTarget] = useState<{ orderId: string; vendorId: string } | null>(null)
+  const [disputeTarget, setDisputeTarget] = useState<{
+    orderId: string
+    vendorId: string
+    refundEligible: boolean
+    refundIneligibleReason: string | null
+  } | null>(null)
   const [expandedTimelines, setExpandedTimelines] = useState<Set<string>>(new Set())
 
   const toggleTimeline = (orderId: string) => {
@@ -90,8 +101,22 @@ export default function MyOrdersPage() {
 
     const { data: items } = await supabase
       .from('order_items')
-      .select('id, order_id, product_id, vendor_id, quantity, price_rdp, size, color, product:products(name, images), vendor:vendors(business_name)')
+      .select('id, order_id, product_id, vendor_id, quantity, price_rdp, size, color, product:products(name, images, category_id), vendor:vendors(business_name)')
       .in('order_id', orderIds)
+
+    // Fecha en que cada pedido pasó a 'delivered' — usada para la ventana
+    // de 7 días de devolución (mismo criterio que el trigger de Postgres)
+    const { data: deliveredHistory } = await supabase
+      .from('order_status_history')
+      .select('order_id, created_at')
+      .in('order_id', orderIds)
+      .eq('status', 'delivered')
+      .order('created_at', { ascending: true })
+
+    const deliveredAtMap = new Map<string, string>()
+    for (const row of deliveredHistory ?? []) {
+      if (!deliveredAtMap.has(row.order_id)) deliveredAtMap.set(row.order_id, row.created_at)
+    }
 
     const { data: existingReviews } = await supabase
       .from('reviews')
@@ -111,15 +136,8 @@ export default function MyOrdersPage() {
 
     const disputeMap = new Map((existingDisputes ?? []).map(d => [d.order_id, d.id]))
 
-    const combined: Order[] = ordersData.map(order => ({
-      id: order.id,
-      status: order.status,
-      created_at: order.created_at,
-      total_rdp: order.total_rdp,
-      tracking_number: order.tracking_number,
-      courier: order.courier,
-      disputeId: disputeMap.get(order.id) ?? null,
-      items: (items ?? [])
+    const combined: Order[] = ordersData.map(order => {
+      const orderItems = (items ?? [])
         .filter((i: any) => i.order_id === order.id)
         .map((i: any) => ({
           id: i.id,
@@ -132,9 +150,28 @@ export default function MyOrdersPage() {
           price_rdp: i.price_rdp,
           size: i.size,
           color: i.color,
+          category_id: i.product?.category_id ?? null,
           hasReview: reviewedSet.has(reviewKey(order.id, i.product_id)),
-        })),
-    }))
+        }))
+
+      const deliveredAt = deliveredAtMap.get(order.id)
+      const diasDesdeEntrega = deliveredAt
+        ? Math.floor((Date.now() - new Date(deliveredAt).getTime()) / (24 * 60 * 60 * 1000))
+        : null
+
+      return {
+        id: order.id,
+        status: order.status,
+        created_at: order.created_at,
+        total_rdp: order.total_rdp,
+        tracking_number: order.tracking_number,
+        courier: order.courier,
+        disputeId: disputeMap.get(order.id) ?? null,
+        items: orderItems,
+        diasDesdeEntrega,
+        tieneProductoAlimento: orderItems.some(i => i.category_id === FOOD_CATEGORY_ID),
+      }
+    })
 
     setOrders(combined)
     setLoading(false)
@@ -273,7 +310,22 @@ export default function MyOrdersPage() {
                           </a>
                         ) : (
                           <button
-                            onClick={() => setDisputeTarget({ orderId: order.id, vendorId: order.items[0]?.vendor_id })}
+                            onClick={() => {
+                              // Prioridad: alimentos no elegibles es una restricción
+                              // permanente, la de 7 días es solo temporal
+                              const refundIneligibleReason = order.tieneProductoAlimento
+                                ? 'Los productos de alimentos no son elegibles para devolución'
+                                : !(order.status === 'delivered' && order.diasDesdeEntrega !== null && order.diasDesdeEntrega <= REFUND_WINDOW_DAYS)
+                                  ? 'Ya pasaron los 7 días para devolución'
+                                  : null
+
+                              setDisputeTarget({
+                                orderId: order.id,
+                                vendorId: order.items[0]?.vendor_id,
+                                refundEligible: refundIneligibleReason === null,
+                                refundIneligibleReason,
+                              })
+                            }}
                             style={{ color: BRAND.red }}
                             className="text-xs font-semibold underline bg-transparent border-none cursor-pointer"
                           >
@@ -308,6 +360,8 @@ export default function MyOrdersPage() {
         <DisputeModal
           orderId={disputeTarget.orderId}
           vendorId={disputeTarget.vendorId}
+          refundEligible={disputeTarget.refundEligible}
+          refundIneligibleReason={disputeTarget.refundIneligibleReason}
           onClose={() => setDisputeTarget(null)}
           onSuccess={() => {
             setDisputeTarget(null)

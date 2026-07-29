@@ -11,6 +11,8 @@ import { BRAND } from '@/lib/colors'
 interface Props {
   orderId: string
   vendorId: string
+  refundEligible?: boolean
+  refundIneligibleReason?: string | null
   onClose: () => void
   onSuccess: () => void
 }
@@ -24,7 +26,7 @@ const REASONS = [
   { value: 'other',            label: 'Otro' },
 ]
 
-export function DisputeModal({ orderId, vendorId, onClose, onSuccess }: Props) {
+export function DisputeModal({ orderId, vendorId, refundEligible = true, refundIneligibleReason = null, onClose, onSuccess }: Props) {
   const supabase = createClient()
   const [reason, setReason] = useState('')
   const [description, setDescription] = useState('')
@@ -85,13 +87,24 @@ export function DisputeModal({ orderId, vendorId, onClose, onSuccess }: Props) {
         <select
           value={reason}
           onChange={e => setReason(e.target.value)}
-          style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box', background: '#fff', marginBottom: 14 }}
+          style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box', background: '#fff', marginBottom: refundEligible ? 14 : 4 }}
         >
           <option value="">Selecciona una razón</option>
           {REASONS.map(r => (
-            <option key={r.value} value={r.value}>{r.label}</option>
+            <option
+              key={r.value}
+              value={r.value}
+              disabled={r.value === 'refund_request' && !refundEligible}
+            >
+              {r.label}
+            </option>
           ))}
         </select>
+        {!refundEligible && refundIneligibleReason && (
+          <p style={{ fontSize: 11, color: '#999', margin: '0 0 14px' }}>
+            "Solicito reembolso" no está disponible para este pedido: {refundIneligibleReason}.
+          </p>
+        )}
 
         <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>
           Describe el problema * <span style={{ color: '#999' }}>(mínimo 20 caracteres)</span>
