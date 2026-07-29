@@ -9,6 +9,7 @@ import { getProductByIdPublic } from '@/lib/supabase/products'
 import { createPublicClient } from '@/lib/supabase/public'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { ProductActions } from '@/components/product/ProductActions'
+import { FreeShippingBadge } from '@/components/product/FreeShippingBadge'
 import { ContactVendorButton } from '@/components/product/ContactVendorButton'
 import { ProductViewTracker } from '@/components/product/ProductViewTracker'
 import { RelatedProducts } from '@/components/shop/RelatedProducts'
@@ -127,6 +128,8 @@ export default async function ProductPage(
 
           {/* Info del producto */}
           <div className="flex flex-col gap-5">
+
+            <FreeShippingBadge />
 
             {/* Vendor */}
             <div className="flex items-center gap-2">
