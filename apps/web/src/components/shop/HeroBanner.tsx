@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { ShieldCheck, Truck, Store, Headset } from 'lucide-react';
 import { BRAND } from '@/lib/colors';
 import { createPublicClient } from '@/lib/supabase/public'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import type { PromoBanner } from '@/types/database.types'
 
 const PERKS = [
@@ -15,9 +16,11 @@ const PERKS = [
 ];
 
 const SLIDE_INTERVAL_MS = 3500
+const MOBILE_BREAKPOINT = 1010
 
 // Diapositiva de marca — contenido y estilos sin cambios respecto a la
-// versión original de HeroBanner, solo que ahora vive dentro del carrusel.
+// versión original de HeroBanner. Solo se usa en desktop (≥1010px de
+// contenedor); en mobile se reemplaza por WelcomeSlide + PerksSlide.
 function BrandSlide() {
   return (
     <div style={{
@@ -80,6 +83,54 @@ function BrandSlide() {
   );
 }
 
+// Mobile — mitad 1 de 2 del BrandSlide dividido: título + CTA, compacto
+// para caber en el aspect-ratio corto del contenedor en mobile.
+function WelcomeSlide() {
+  return (
+    <div style={{
+      position:'relative', width:'100%', height:'100%',
+      background:`linear-gradient(135deg, ${BRAND.blue} 0%, #082f6e 100%)`,
+      display:'flex', flexDirection:'column', alignItems:'flex-start', justifyContent:'center',
+      padding:'0 20px', color:'#fff', gap:6,
+    }}>
+      <h1 style={{fontSize:18,fontWeight:700,lineHeight:1.25,margin:0}}>
+        Compra y vende en toda República Dominicana
+      </h1>
+      <p style={{color:'rgba(255,255,255,0.75)',fontSize:11,margin:0,maxWidth:280}}>
+        Miles de productos, tiendas y personas conectados contigo.
+      </p>
+      <a href='#productos' style={{display:'inline-block',background:BRAND.red,color:'#fff',textDecoration:'none',padding:'7px 16px',borderRadius:6,fontWeight:600,fontSize:12,marginTop:4}}>
+        Explorar productos
+      </a>
+    </div>
+  );
+}
+
+// Mobile — mitad 2 de 2: los mismos 4 perks, en fila compacta en vez
+// del grid 2×2 de desktop (no cabría en el alto corto).
+function PerksSlide() {
+  return (
+    <div style={{
+      position:'relative', width:'100%', height:'100%',
+      background:`linear-gradient(135deg, ${BRAND.blue} 0%, #082f6e 100%)`,
+      display:'flex', alignItems:'center', justifyContent:'space-around',
+      padding:'0 8px', color:'#fff',
+    }}>
+      {PERKS.map((p,i) => {
+        const Icon = p.icon;
+        return (
+          <div key={i} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:5,flex:'1 1 0',minWidth:0}}>
+            <div style={{width:32,height:32,borderRadius:9,background:'rgba(255,255,255,0.15)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              <Icon size={16} color='#fff' />
+            </div>
+            <div style={{fontSize:10,fontWeight:600,textAlign:'center',lineHeight:1.2}}>{p.title}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // Diapositiva promocional — imagen a pantalla completa del hero, con
 // title/subtitle superpuestos (mismo estilo tipográfico que BrandSlide).
 function PromoSlide({ banner }: { banner: PromoBanner }) {
@@ -135,7 +186,11 @@ function PromoSlide({ banner }: { banner: PromoBanner }) {
 export function HeroBanner() {
   const [banners, setBanners] = useState<PromoBanner[]>([])
   const [activeIndex, setActiveIndex] = useState(0)
-  const totalSlides = 1 + banners.length
+  const isMobile = useIsMobile(MOBILE_BREAKPOINT)
+
+  // Mobile: Bienvenida + Perks (BrandSlide dividido) + promos.
+  // Desktop: BrandSlide entero (sin cambios) + promos.
+  const totalSlides = (isMobile ? 2 : 1) + banners.length
 
   useEffect(() => {
     const supabase = createPublicClient()
@@ -160,18 +215,34 @@ export function HeroBanner() {
   }, [totalSlides])
 
   return (
-    <div style={{maxWidth:1400,margin:'0 auto',padding:'24px 24px 0'}}>
-      <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 16 }}>
+    <div style={{maxWidth:1400, margin:'0 auto', padding: isMobile ? 0 : '24px 24px 0'}}>
+      <div style={{
+        position: 'relative', overflow: 'hidden',
+        borderRadius: isMobile ? 0 : 16,
+        aspectRatio: isMobile ? '2.4 / 1' : undefined,
+      }}>
         <div style={{
           display: 'flex',
+          height: '100%',
           transition: 'transform 0.6s ease',
           transform: `translateX(-${activeIndex * 100}%)`,
         }}>
-          <div style={{ flex: '0 0 100%', minWidth: 0 }}>
-            <BrandSlide />
-          </div>
+          {isMobile ? (
+            <>
+              <div style={{ flex: '0 0 100%', minWidth: 0, height: '100%' }}>
+                <WelcomeSlide />
+              </div>
+              <div style={{ flex: '0 0 100%', minWidth: 0, height: '100%' }}>
+                <PerksSlide />
+              </div>
+            </>
+          ) : (
+            <div style={{ flex: '0 0 100%', minWidth: 0, height: '100%' }}>
+              <BrandSlide />
+            </div>
+          )}
           {banners.map(banner => (
-            <div key={banner.id} style={{ flex: '0 0 100%', minWidth: 0 }}>
+            <div key={banner.id} style={{ flex: '0 0 100%', minWidth: 0, height: '100%' }}>
               <PromoSlide banner={banner} />
             </div>
           ))}
