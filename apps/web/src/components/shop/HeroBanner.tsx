@@ -94,7 +94,7 @@ function PromoSlide({ banner }: { banner: PromoBanner }) {
         <source media="(max-width: 1009px)" srcSet={banner.mobile_image_url || banner.image_url} />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={banner.image_url}
+          src={banner.image_url || banner.mobile_image_url || undefined}
           alt={banner.title ?? 'Promoción'}
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
         />

@@ -98,8 +98,8 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (mode === 'crear' && !file) {
-      setError('Selecciona una imagen para el banner')
+    if (mode === 'crear' && !file && !mobileFile) {
+      setError('Selecciona al menos una imagen (desktop o mobile)')
       return
     }
 
