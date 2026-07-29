@@ -5,7 +5,7 @@
 // ============================================================
 
 import { useState } from 'react'
-import { useCartStore } from '@/lib/store/cart'
+import { useCartStore, useCartSubtotal } from '@/lib/store/cart'
 import { formatPrice } from '@/types/database.types'
 import type { ProductVariant } from '@/types/database.types'
 import type { Product } from '@/types'
@@ -16,8 +16,12 @@ interface ProductActionProps {
   variants?: ProductVariant[]
 }
 
+// Mismo umbral que cart/page.tsx y checkout/page.tsx
+const FREE_SHIPPING_THRESHOLD_RDP = 250000 // RD$2,500
+
 export function ProductActions({ product, variants = [] }: ProductActionProps) {
   const addItem = useCartStore(s => s.addItem)
+  const cartSubtotal = useCartSubtotal()
   const hasVariants = variants.length > 0
 
   // Sin variantes: usa los arrays planos del producto (comportamiento de siempre)
@@ -81,6 +85,18 @@ export function ProductActions({ product, variants = [] }: ProductActionProps) {
 
   return (
     <div className="flex flex-col gap-4">
+
+      {/* Envío gratis — mismo tamaño/forma que el botón de WhatsApp de la
+          página, pero como detalle sutil, no un banner que compita con
+          "Añadir al carrito" */}
+      <div
+        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-medium text-sm"
+        style={{ background: 'rgba(13,71,161,0.08)', color: 'var(--brand-blue)' }}
+      >
+        {cartSubtotal >= FREE_SHIPPING_THRESHOLD_RDP
+          ? '🎉 ¡Envío gratis ya aplicado en tu carrito!'
+          : `🚚 Envío gratis desde RD$2,500 — te faltan RD$${((FREE_SHIPPING_THRESHOLD_RDP - cartSubtotal) / 100).toLocaleString('es-DO')}`}
+      </div>
 
       {/* Selector de talla */}
       {needsSize && (
