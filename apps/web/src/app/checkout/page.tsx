@@ -78,9 +78,17 @@ export default function CheckoutPage() {
   // si alguna provincia no tuviera tarifa cargada en shipping_rates
   const SHIPPING_FALLBACK_RDP = 25000
 
-  const ENVIO = items.length === 0
+  // Mismo umbral que create_order_from_cart aplica en el backend — se
+  // replica aquí para que lo que se muestra y lo que se cobra vía la
+  // pasarela de pago coincidan con lo que el RPC termina persistiendo.
+  const FREE_SHIPPING_THRESHOLD_RDP = 250000 // RD$2,500
+  const qualifiesForFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD_RDP
+
+  const rawShipping = items.length === 0
     ? 0
     : shippingRate?.price_rdp ?? (form.province && !shippingLoading ? SHIPPING_FALLBACK_RDP : 0)
+
+  const ENVIO = qualifiesForFreeShipping ? 0 : rawShipping
 
   const discountRdp = appliedCoupon?.discount_rdp ?? 0
 
@@ -580,7 +588,16 @@ export default function CheckoutPage() {
                     ? 'Selecciona provincia'
                     : shippingLoading
                       ? 'Calculando...'
-                      : `RD$${(ENVIO / 100).toLocaleString('es-DO')}`}
+                      : qualifiesForFreeShipping
+                        ? (
+                          <>
+                            <span style={{ textDecoration: 'line-through', color: BRAND.gray, marginRight: 6 }}>
+                              RD${(rawShipping / 100).toLocaleString('es-DO')}
+                            </span>
+                            <span style={{ color: '#2E7D32', fontWeight: 700 }}>GRATIS 🎉</span>
+                          </>
+                        )
+                        : `RD$${(ENVIO / 100).toLocaleString('es-DO')}`}
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: BRAND.dark }}>

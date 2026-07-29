@@ -15,7 +15,11 @@ export default function CartPage() {
   const subtotal = useCartSubtotal()
   const itbis = useCartItbis()
   const total = useCartTotal()
-  const ENVIO = items.length > 0 ? 18000 : 0 // RD$180 en centavos
+  // Mismo umbral que checkout/page.tsx y el RPC create_order_from_cart —
+  // esto es solo una estimación (el checkout calcula el envío real según
+  // provincia), pero debe ser consistente con el aviso de arriba.
+  const FREE_SHIPPING_THRESHOLD_RDP = 250000 // RD$2,500
+  const ENVIO = items.length === 0 ? 0 : subtotal >= FREE_SHIPPING_THRESHOLD_RDP ? 0 : 18000 // RD$180 en centavos
 
   return (
     <div style={{ minHeight: '100vh', background: BRAND.bg }}>
@@ -121,9 +125,24 @@ export default function CartPage() {
                 <span>Subtotal ({items.reduce((a, i) => a + i.quantity, 0)} artículos)</span>
                 <span>RD${(subtotal / 100).toLocaleString('es-DO')}</span>
               </div>
+
+              {subtotal < FREE_SHIPPING_THRESHOLD_RDP ? (
+                <div style={{ fontSize: 12, color: BRAND.blue, background: '#EFF6FF', borderRadius: 6, padding: '8px 10px', marginBottom: 12 }}>
+                  Te faltan RD${((FREE_SHIPPING_THRESHOLD_RDP - subtotal) / 100).toLocaleString('es-DO')} para envío gratis 🚚
+                </div>
+              ) : (
+                <div style={{ fontSize: 12, color: '#2E7D32', background: '#F0FDF4', borderRadius: 6, padding: '8px 10px', marginBottom: 12, fontWeight: 600 }}>
+                  ¡Envío gratis aplicado! 🎉
+                </div>
+              )}
+
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8, color: BRAND.dark }}>
                 <span>Envío</span>
-                <span>RD${(ENVIO / 100).toLocaleString('es-DO')}</span>
+                <span>
+                  {items.length > 0 && subtotal >= FREE_SHIPPING_THRESHOLD_RDP
+                    ? <span style={{ color: '#2E7D32', fontWeight: 700 }}>GRATIS 🎉</span>
+                    : `RD$${(ENVIO / 100).toLocaleString('es-DO')}`}
+                </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 16, color: BRAND.dark }}>
                 <span>ITBIS (18%)</span>
