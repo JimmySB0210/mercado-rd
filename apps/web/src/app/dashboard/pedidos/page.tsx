@@ -166,7 +166,7 @@ export default function VendorOrdersPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', fontFamily: 'inherit', display: 'grid', gridTemplateColumns: '220px 1fr' }}>
+    <div className="dashboard-grid" style={{ minHeight: '100vh', fontFamily: 'inherit' }}>
 
       <DashboardSidebar />
 

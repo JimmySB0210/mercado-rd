@@ -24,7 +24,7 @@ export default async function VendorProductsPage() {
   const products = await getVendorProducts(vendor.id)
 
   return (
-    <div style={{ minHeight: '100vh', fontFamily: 'inherit', display: 'grid', gridTemplateColumns: '220px 1fr' }}>
+    <div className="dashboard-grid" style={{ minHeight: '100vh', fontFamily: 'inherit' }}>
 
       <DashboardSidebar />
 

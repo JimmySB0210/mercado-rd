@@ -1,11 +1,10 @@
 'use client'
 // ============================================================
-// MercadoRD — Sidebar del dashboard de vendor (compartido)
-// Ruta: src/components/vendor/DashboardSidebar.tsx
+// MercadoRD — Sidebar del panel de administración (compartido)
+// Ruta: src/components/admin/AdminSidebar.tsx
 // ============================================================
-// Desktop (≥860px): columna fija de 220px, sin cambios respecto a la
-// versión original. Mobile (<860px): se colapsa a una barra compacta
-// con botón de menú, que abre el nav completo como drawer + overlay.
+// Mismo tratamiento responsive que components/vendor/DashboardSidebar.tsx:
+// columna fija en desktop (≥860px), barra compacta + drawer en mobile.
 // ============================================================
 
 import { useEffect, useRef, useState } from 'react'
@@ -15,27 +14,18 @@ import { BRAND } from '@/lib/colors'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 const NAV_ITEMS = [
-  { icon: '📊', label: 'Resumen', href: '/dashboard' },
-  { icon: '📦', label: 'Mis Productos', href: '/dashboard/productos' },
-  { icon: '🛒', label: 'Pedidos', href: '/dashboard/pedidos' },
-  { icon: '💬', label: 'Mensajes', href: '/dashboard/mensajes' },
-  { icon: '💰', label: 'Ingresos', href: '/dashboard/ingresos' },
-  { icon: '🎟️', label: 'Cupones', href: '/dashboard/cupones' },
-  { icon: '⭐', label: 'Reseñas', href: '/dashboard/resenas' },
-  { icon: '👑', label: 'Mi Plan', href: '/dashboard/plan' },
-  { icon: '⚙️', label: 'Configuración', href: '/dashboard/configuracion' },
+  { icon: '📊', label: 'Resumen', href: '/admin' },
+  { icon: '🖼️', label: 'Promociones', href: '/admin/promociones' },
 ]
 
-export function DashboardSidebar() {
+export function AdminSidebar() {
   const pathname = usePathname()
   const isMobile = useIsMobile(860)
   const [open, setOpen] = useState(false)
   const drawerRef = useRef<HTMLDivElement>(null)
 
-  // Cerrar el drawer al navegar
   useEffect(() => { setOpen(false) }, [pathname])
 
-  // Cerrar al tocar/clickear afuera — mismo patrón que Navbar
   useEffect(() => {
     if (!open) return
     const handleClickOutside = (e: MouseEvent) => {
@@ -60,18 +50,25 @@ export function DashboardSidebar() {
     )
   }
 
+  const backLink = (onClick?: () => void) => (
+    <a href="/dashboard" onClick={onClick} style={{ padding: '10px 20px', color: '#666', fontSize: 14, textDecoration: 'none' }}>
+      ← Mi panel de vendedor
+    </a>
+  )
+
   if (!isMobile) {
     return (
-      <div style={{ background: '#111', padding: '24px 0', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ background: '#0a0a0a', padding: '24px 0', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '0 20px 24px', borderBottom: '1px solid #222', marginBottom: 16 }}>
           <a href="/" style={{ textDecoration: 'none' }}>
             <div style={{ fontWeight: 900, fontSize: 18, color: '#fff', marginBottom: 4 }}>
               Mercado<span style={{ color: BRAND.red }}>RD</span>
             </div>
           </a>
-          <div style={{ fontSize: 12, color: '#555' }}>Panel del vendedor</div>
+          <div style={{ fontSize: 12, color: '#888' }}>🛡️ Panel de administración</div>
         </div>
         {NAV_ITEMS.map((item, i) => navLink(item, i))}
+        {backLink()}
       </div>
     )
   }
@@ -79,7 +76,7 @@ export function DashboardSidebar() {
   // Mobile — barra compacta + drawer con overlay
   return (
     <>
-      <div style={{ background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
+      <div style={{ background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
         <a href="/" style={{ textDecoration: 'none' }}>
           <div style={{ fontWeight: 900, fontSize: 16, color: '#fff' }}>
             Mercado<span style={{ color: BRAND.red }}>RD</span>
@@ -101,7 +98,7 @@ export function DashboardSidebar() {
             ref={drawerRef}
             style={{
               position: 'fixed', top: 0, left: 0, bottom: 0, width: 260, maxWidth: '80vw',
-              background: '#111', padding: '20px 0', display: 'flex', flexDirection: 'column',
+              background: '#0a0a0a', padding: '20px 0', display: 'flex', flexDirection: 'column',
               overflowY: 'auto',
             }}
           >
@@ -119,6 +116,7 @@ export function DashboardSidebar() {
               </button>
             </div>
             {NAV_ITEMS.map((item, i) => navLink(item, i, () => setOpen(false)))}
+            {backLink(() => setOpen(false))}
           </div>
         </div>
       )}

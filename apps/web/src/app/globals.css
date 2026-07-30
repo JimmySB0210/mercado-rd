@@ -85,6 +85,14 @@ html, body {
   padding: 48px;
 }
 
+/* Layout compartido de dashboard/vendor y admin — sidebar fijo de
+   220px en desktop, una sola columna en mobile (el sidebar mismo se
+   colapsa a barra compacta + drawer, ver DashboardSidebar/AdminSidebar) */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+}
+
 @media (max-width: 1100px) {
   .grid-products,
   .grid-stores {
@@ -158,5 +166,11 @@ html, body {
 @media (max-width: 860px) {
   body {
     padding-bottom: 60px;
+  }
+  /* minmax(0, 1fr), no solo 1fr — sin el mínimo explícito en 0, la pista
+     de grid se expande al ancho mínimo del contenido interno (ej. el
+     grid de KPIs con minmax(180px,1fr)) en vez de respetar el viewport */
+  .dashboard-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

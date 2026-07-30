@@ -8,6 +8,7 @@ import { createServerClient } from '@/lib/supabase/server'
 import { isCurrentUserAdmin, getMarketplaceKPIs, getAllVendors, getRecentOrders, getPaymentMetrics, getOpenDisputes, getAbandonedCarts } from '@/lib/queries/admin'
 import { VerifyVendorButton } from '@/components/admin/VerifyVendorButton'
 import { DisputeAdminRow } from '@/components/admin/DisputeAdminRow'
+import { AdminSidebar } from '@/components/admin/AdminSidebar'
 import { formatPrice } from '@/types/database.types'
 import { BRAND } from '@/lib/colors'
 
@@ -74,28 +75,9 @@ export default async function AdminPage() {
   ]
 
   return (
-    <div style={{ minHeight: '100vh', fontFamily: 'inherit', display: 'grid', gridTemplateColumns: '220px 1fr' }}>
+    <div className="dashboard-grid" style={{ minHeight: '100vh', fontFamily: 'inherit' }}>
 
-      {/* Sidebar admin */}
-      <div style={{ background: '#0a0a0a', padding: '24px 0', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '0 20px 24px', borderBottom: '1px solid #222', marginBottom: 16 }}>
-          <a href="/" style={{ textDecoration: 'none' }}>
-            <div style={{ fontWeight: 900, fontSize: 18, color: '#fff', marginBottom: 4 }}>
-              Mercado<span style={{ color: BRAND.red }}>RD</span>
-            </div>
-          </a>
-          <div style={{ fontSize: 12, color: '#888' }}>🛡️ Panel de administración</div>
-        </div>
-        <div style={{ padding: '10px 20px', color: '#fff', fontSize: 14, fontWeight: 600, background: 'rgba(255,255,255,0.08)', borderLeft: '2px solid #fff' }}>
-          📊 Resumen
-        </div>
-        <a href="/admin/promociones" style={{ padding: '10px 20px', color: '#666', fontSize: 14, textDecoration: 'none' }}>
-          🖼️ Promociones
-        </a>
-        <a href="/dashboard" style={{ padding: '10px 20px', color: '#666', fontSize: 14, textDecoration: 'none' }}>
-          ← Mi panel de vendedor
-        </a>
-      </div>
+      <AdminSidebar />
 
       {/* Contenido */}
       <div style={{ padding: 28, background: '#f5f5f5' }}>

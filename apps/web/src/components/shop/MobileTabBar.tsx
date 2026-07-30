@@ -15,6 +15,11 @@ export function MobileTabBar() {
   const itemCount = useCartItemCount()
   const { user }  = useAuth()
 
+  // El panel de vendor/admin tiene su propio menú (DashboardSidebar/
+  // AdminSidebar) — mostrar también esta barra ahí compite por espacio
+  // y confunde qué nav usar.
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/admin')) return null
+
   const TABS = [
     { href: '/',                          label: 'Inicio',      icon: Home    },
     { href: '/categorias',                label: 'Categorías',  icon: LayoutGrid },
