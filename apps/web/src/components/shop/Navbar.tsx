@@ -10,7 +10,7 @@
 //   - Breakpoint unificado: md = 860px en tailwind.config.js
 // ============================================================
 
-import { Search, ChevronDown, ShoppingCart, User, LogOut, LayoutDashboard, ShieldCheck, Heart, MessageCircle, Lock, HelpCircle, History } from 'lucide-react'
+import { Search, ChevronDown, ShoppingCart, User, LogOut, LayoutDashboard, ShieldCheck, Heart, MessageCircle, Lock, HelpCircle, History, X } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
 import { useCartStore, useCartItemCount } from '@/lib/store/cart'
 import { useAuth } from '@/lib/hooks/useAuth'
@@ -19,6 +19,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Category, Province } from '@/types/database.types'
 import { useLocationStore } from '@/lib/store/location'
 import { NotificationBell } from '@/components/shop/NotificationBell'
+import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 export function Navbar() {
   const itemCount       = useCartItemCount()
@@ -32,6 +33,7 @@ export function Navbar() {
   const [showCategoryMenu, setShowCategoryMenu] = useState(false)
   const [hoveredCategoryId, setHoveredCategoryId] = useState<number | null>(null)
   const accountMenuRef = useRef<HTMLDivElement>(null)
+  const isMobile = useIsMobile(860)
 
   const topCategories = useMemo(() => categories.filter(c => !c.parent_id), [categories])
   const subcategoriesByParent = useMemo(() => {
@@ -421,15 +423,25 @@ export function Navbar() {
           style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px' }}
         >
           <div
-            onMouseEnter={() => setShowCategoryMenu(true)}
-            onMouseLeave={() => { setShowCategoryMenu(false); setHoveredCategoryId(null) }}
+            onMouseEnter={() => !isMobile && setShowCategoryMenu(true)}
+            onMouseLeave={() => {
+              if (isMobile) return
+              setShowCategoryMenu(false)
+              setHoveredCategoryId(null)
+            }}
             style={{ position: 'relative' }}
           >
-            <a href='/categorias' style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 16px', color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, background: 'rgba(255,255,255,0.14)', whiteSpace: 'nowrap' }}>
+            <a
+              href='/categorias'
+              onClick={e => {
+                if (isMobile) { e.preventDefault(); setShowCategoryMenu(true) }
+              }}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 16px', color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, background: 'rgba(255,255,255,0.14)', whiteSpace: 'nowrap' }}
+            >
               ☰ Todas las categorías
             </a>
 
-            {showCategoryMenu && (
+            {!isMobile && showCategoryMenu && (
               <div style={{ position: 'absolute', top: '100%', left: 0, display: 'flex', zIndex: 50 }}>
                 <div style={{
                   background: '#fff',
@@ -482,6 +494,58 @@ export function Navbar() {
           </div>
         </div>
       </div>
+
+      {/* Mobile — el mismo menú de categorías como drawer que se desliza
+          desde la izquierda, en vez del dropdown de desktop. Montado
+          siempre (no solo cuando está abierto) para que la transición
+          de translateX anime tanto al abrir como al cerrar. */}
+      {isMobile && (
+        <>
+          <div
+            onClick={() => setShowCategoryMenu(false)}
+            style={{
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 199,
+              opacity: showCategoryMenu ? 1 : 0,
+              pointerEvents: showCategoryMenu ? 'auto' : 'none',
+              transition: 'opacity 0.3s ease',
+            }}
+          />
+          <div
+            style={{
+              position: 'fixed', top: 0, left: 0, bottom: 0, width: 280, maxWidth: '80vw',
+              background: '#fff', zIndex: 200, boxShadow: '4px 0 24px rgba(0,0,0,0.15)',
+              transform: `translateX(${showCategoryMenu ? '0' : '-100%'})`,
+              transition: 'transform 0.3s ease',
+              display: 'flex', flexDirection: 'column', overflowY: 'auto',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #eee', flexShrink: 0 }}>
+              <span style={{ fontWeight: 700, fontSize: 16, color: BRAND.dark }}>Categorías</span>
+              <button
+                type="button"
+                onClick={() => setShowCategoryMenu(false)}
+                aria-label="Cerrar menú de categorías"
+                style={{ background: 'transparent', border: 'none', color: BRAND.gray, display: 'flex', cursor: 'pointer', padding: 4 }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div style={{ padding: 10, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {topCategories.map(cat => (
+                <a
+                  key={cat.id}
+                  href={`/categoria/${cat.slug}`}
+                  onClick={() => setShowCategoryMenu(false)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 10px', color: '#333', textDecoration: 'none', fontSize: 14, borderRadius: 6, whiteSpace: 'nowrap' }}
+                >
+                  <span style={{ filter: 'brightness(0)', fontSize: 16 }}>{cat.emoji}</span>
+                  {cat.name}
+                </a>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </header>
   )
 }
