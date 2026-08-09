@@ -1,10 +1,14 @@
+'use client'
 // ============================================================
 // MercadoRD — Footer
 // Ruta: src/components/shop/Footer.tsx
 // ============================================================
+// Client Component: usa useTranslation (lee el store de idioma).
+// ============================================================
 
 import { Instagram, Facebook } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 
 // Lucide no incluye los logos de marca de X/Twitter ni TikTok — SVGs inline
 function XIcon({ size }: { size: number }) {
@@ -53,6 +57,8 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
 }
 
 export function Footer() {
+  const { t } = useTranslation('common')
+
   return (
     <footer style={{ background: '#0a1628', color: '#fff', marginTop: 'auto' }}>
       <div className="max-w-7xl mx-auto px-6 py-12">
@@ -65,7 +71,7 @@ export function Footer() {
               <span style={{ color: BRAND.red }}>RD</span>
             </div>
             <p style={{ color: '#B0B8C4', fontSize: 13, lineHeight: 1.6, maxWidth: 240 }}>
-              El marketplace dominicano para comprar y vender en las 32 provincias 🇩🇴
+              {t('footerTagline')}
             </p>
             <div className="flex items-center gap-4" style={{ marginTop: 16 }}>
               <SocialLink href="#" label="Instagram">
@@ -86,35 +92,35 @@ export function Footer() {
           {/* Comprar */}
           <div>
             <h3 style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              Comprar
+              {t('footerSectionBuy')}
             </h3>
             <ul style={{ display: 'flex', flexDirection: 'column', gap: 10, listStyle: 'none', padding: 0, margin: 0 }}>
-              <FooterLink href="/categorias">Todas las categorías</FooterLink>
-              <FooterLink href="/tiendas">Todas las tiendas</FooterLink>
-              <FooterLink href="/perfil/favoritos">Favoritos</FooterLink>
-              <FooterLink href="/perfil/pedidos">Mis pedidos</FooterLink>
+              <FooterLink href="/categorias">{t('allCategories')}</FooterLink>
+              <FooterLink href="/tiendas">{t('allStores')}</FooterLink>
+              <FooterLink href="/perfil/favoritos">{t('favorites')}</FooterLink>
+              <FooterLink href="/perfil/pedidos">{t('myOrders')}</FooterLink>
             </ul>
           </div>
 
           {/* Vender */}
           <div>
             <h3 style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              Vender
+              {t('footerSectionSell')}
             </h3>
             <ul style={{ display: 'flex', flexDirection: 'column', gap: 10, listStyle: 'none', padding: 0, margin: 0 }}>
-              <FooterLink href="/dashboard">Mi tienda</FooterLink>
+              <FooterLink href="/dashboard">{t('myStore')}</FooterLink>
             </ul>
           </div>
 
           {/* Ayuda */}
           <div>
             <h3 style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              Ayuda
+              {t('footerSectionHelp')}
             </h3>
             <ul style={{ display: 'flex', flexDirection: 'column', gap: 10, listStyle: 'none', padding: 0, margin: 0 }}>
-              <FooterLink href="/soporte">Centro de soporte</FooterLink>
-              <FooterLink href="/terminos">Términos y condiciones</FooterLink>
-              <FooterLink href="/privacidad">Política de privacidad</FooterLink>
+              <FooterLink href="/soporte">{t('supportCenter')}</FooterLink>
+              <FooterLink href="/terminos">{t('terms')}</FooterLink>
+              <FooterLink href="/privacidad">{t('privacyPolicy')}</FooterLink>
             </ul>
           </div>
 
@@ -126,10 +132,10 @@ export function Footer() {
           style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: 32, paddingTop: 20 }}
         >
           <p style={{ color: '#8A93A3', fontSize: 12, margin: 0 }}>
-            © 2026 MercadoRD. Todos los derechos reservados.
+            {t('copyright')}
           </p>
           <p style={{ color: '#8A93A3', fontSize: 12, margin: 0 }}>
-            Pagos seguros con Visa, Mastercard y Azul
+            {t('securePayments')}
           </p>
         </div>
       </div>

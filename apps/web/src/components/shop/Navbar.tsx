@@ -19,9 +19,12 @@ import { createClient } from '@/lib/supabase/client'
 import type { Category, Province } from '@/types/database.types'
 import { useLocationStore } from '@/lib/store/location'
 import { NotificationBell } from '@/components/shop/NotificationBell'
+import { LanguageSwitcher } from '@/components/shop/LanguageSwitcher'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 
 export function Navbar() {
+  const { t } = useTranslation('common')
   const itemCount       = useCartItemCount()
   const { user, profile, signOut } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -87,7 +90,7 @@ export function Navbar() {
       .then(({ data }) => setVendorInfo(data ?? null))
   }, [user])
 
-  const locationLabel = province?.name ?? 'Rep. Dom.'
+  const locationLabel = province?.name ?? t('countryShort')
 
   const LocationSelector = ({ compact }: { compact?: boolean }) => {
     const ref = useRef<HTMLDivElement>(null)
@@ -116,7 +119,7 @@ export function Navbar() {
         >
           {!compact && (
             <div style={{ lineHeight: 1.3 }}>
-              <div style={{ fontSize: 11, color: BRAND.gray }}>Enviar a</div>
+              <div style={{ fontSize: 11, color: BRAND.gray }}>{t('shipTo')}</div>
               <div className="flex items-center gap-0.5">
                 <span style={{ fontSize: 13, fontWeight: 600, color: BRAND.dark }}>{locationLabel}</span>
                 <ChevronDown size={14} color={BRAND.gray} />
@@ -140,7 +143,7 @@ export function Navbar() {
               className="flex items-center w-full px-4 py-2 text-sm text-left border-none bg-transparent cursor-pointer hover:bg-gray-50 transition-colors"
               style={{ color: !province ? BRAND.blue : BRAND.dark, fontWeight: !province ? 700 : 400 }}
             >
-              Rep. Dom. (todo el país)
+              {t('allCountryOption')}
             </button>
             <hr className="my-1 border-gray-100" />
             {provinces.map(p => (
@@ -197,7 +200,7 @@ export function Navbar() {
               <input
                 type='text'
                 name='q'
-                placeholder='Buscar productos, tiendas...'
+                placeholder={t('searchPlaceholder')}
                 onFocus={() => setSearchFocusedDesktop(true)}
                 onBlur={() => setSearchFocusedDesktop(false)}
                 style={{
@@ -213,6 +216,8 @@ export function Navbar() {
           </div>
 
           <LocationSelector />
+
+          <LanguageSwitcher />
 
           <NotificationBell />
 
@@ -262,7 +267,7 @@ export function Navbar() {
                     onClick={() => setMenuOpen(false)}
                   >
                     <LayoutDashboard size={15} color={BRAND.gray} />
-                    Mi dashboard
+                    {t('myDashboard')}
                   </a>
                   <a
                     href='/perfil/favoritos'
@@ -271,7 +276,7 @@ export function Navbar() {
                     onClick={() => setMenuOpen(false)}
                   >
                     <Heart size={15} color={BRAND.gray} />
-                    Mis favoritos ♡
+                    {t('myFavorites')}
                   </a>
                   <a
                     href='/perfil/historial'
@@ -280,7 +285,7 @@ export function Navbar() {
                     onClick={() => setMenuOpen(false)}
                   >
                     <History size={15} color={BRAND.gray} />
-                    Historial 🕐
+                    {t('history')}
                   </a>
                   <a
                     href='/mensajes'
@@ -289,7 +294,7 @@ export function Navbar() {
                     onClick={() => setMenuOpen(false)}
                   >
                     <MessageCircle size={15} color={BRAND.gray} />
-                    Mensajes
+                    {t('messages')}
                   </a>
                   <a
                     href='/perfil'
@@ -298,7 +303,7 @@ export function Navbar() {
                     onClick={() => setMenuOpen(false)}
                   >
                     <User size={15} color={BRAND.gray} />
-                    Mi perfil
+                    {t('myProfile')}
                   </a>
                   {profile?.is_admin && (
                     <a
@@ -308,7 +313,7 @@ export function Navbar() {
                       onClick={() => setMenuOpen(false)}
                     >
                       <ShieldCheck size={15} color={BRAND.gray} />
-                      Panel admin
+                      {t('adminPanel')}
                     </a>
                   )}
                   <a
@@ -318,7 +323,7 @@ export function Navbar() {
                     onClick={() => setMenuOpen(false)}
                   >
                     <Lock size={15} color={BRAND.gray} />
-                    Seguridad 🔒
+                    {t('security')}
                   </a>
                   <a
                     href='/soporte'
@@ -327,7 +332,7 @@ export function Navbar() {
                     onClick={() => setMenuOpen(false)}
                   >
                     <HelpCircle size={15} color={BRAND.gray} />
-                    Soporte
+                    {t('support')}
                   </a>
                   <hr className="my-1 border-gray-100" />
                   <button
@@ -336,14 +341,14 @@ export function Navbar() {
                     style={{ color: BRAND.red }}
                   >
                     <LogOut size={15} color={BRAND.red} />
-                    Cerrar sesión
+                    {t('logout')}
                   </button>
                 </div>
               )}
             </div>
           ) : (
             <a href='/login' style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 14, whiteSpace: 'nowrap' }}>
-              Iniciar sesión
+              {t('login')}
             </a>
           )}
 
@@ -351,7 +356,7 @@ export function Navbar() {
             href='/vendor/register'
             style={{ background: BRAND.blue, color: '#fff', textDecoration: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 600, fontSize: 14, whiteSpace: 'nowrap' }}
           >
-            Vender en RD
+            {t('sellCta')}
           </a>
         </div>
       </div>
@@ -382,6 +387,7 @@ export function Navbar() {
             ) : (
               <LocationSelector compact />
             )}
+            <LanguageSwitcher compact />
             <CartBadge size={21} />
           </div>
         </div>
@@ -390,7 +396,7 @@ export function Navbar() {
             <input
               type='text'
               name='q'
-              placeholder='Buscar productos, tiendas...'
+              placeholder={t('searchPlaceholder')}
               onFocus={() => setSearchFocusedMobile(true)}
               onBlur={() => setSearchFocusedMobile(false)}
               style={{
@@ -412,7 +418,7 @@ export function Navbar() {
           className="block text-center"
           style={{ marginTop: 10, background: BRAND.blue, color: '#fff', textDecoration: 'none', padding: '10px 16px', borderRadius: 8, fontWeight: 600, fontSize: 13 }}
         >
-          Vender en RD
+          {t('sellCta')}
         </a>
       </div>
 
@@ -438,7 +444,7 @@ export function Navbar() {
               }}
               style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 16px', color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, background: 'rgba(255,255,255,0.14)', whiteSpace: 'nowrap' }}
             >
-              ☰ Todas las categorías
+              ☰ {t('allCategories')}
             </a>
 
             {!isMobile && showCategoryMenu && (
@@ -494,7 +500,7 @@ export function Navbar() {
           </div>
 
           <a href='/proveedores' style={{ padding: '11px 16px', color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>
-            Proveedores
+            {t('providers')}
           </a>
         </div>
       </div>
@@ -524,11 +530,11 @@ export function Navbar() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #eee', flexShrink: 0 }}>
-              <span style={{ fontWeight: 700, fontSize: 16, color: BRAND.dark }}>Categorías</span>
+              <span style={{ fontWeight: 700, fontSize: 16, color: BRAND.dark }}>{t('categoriesDrawerTitle')}</span>
               <button
                 type="button"
                 onClick={() => setShowCategoryMenu(false)}
-                aria-label="Cerrar menú de categorías"
+                aria-label={t('closeCategoriesMenuAria')}
                 style={{ background: 'transparent', border: 'none', color: BRAND.gray, display: 'flex', cursor: 'pointer', padding: 4 }}
               >
                 <X size={20} />

@@ -6,13 +6,15 @@ import { ShieldCheck, Truck, Store, Headset } from 'lucide-react';
 import { BRAND } from '@/lib/colors';
 import { createPublicClient } from '@/lib/supabase/public'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import type { PromoBanner } from '@/types/database.types'
+import type { HomeDict } from '@/lib/i18n/es/home'
 
-const PERKS = [
-  { icon: ShieldCheck, title: 'Pago seguro', sub: 'Protegemos tu compra' },
-  { icon: Truck, title: 'Envíos a todo el país', sub: 'Rápido y confiable' },
-  { icon: Store, title: 'Miles de tiendas', sub: 'Apoya lo local' },
-  { icon: Headset, title: 'Soporte 24/7', sub: 'Estamos para ayudarte' },
+const PERK_KEYS: { icon: typeof ShieldCheck; titleKey: keyof HomeDict; subKey: keyof HomeDict }[] = [
+  { icon: ShieldCheck, titleKey: 'perkSecurePaymentTitle', subKey: 'perkSecurePaymentSub' },
+  { icon: Truck, titleKey: 'perkShippingTitle', subKey: 'perkShippingSub' },
+  { icon: Store, titleKey: 'perkStoresTitle', subKey: 'perkStoresSub' },
+  { icon: Headset, titleKey: 'perkSupportTitle', subKey: 'perkSupportSub' },
 ];
 
 const SLIDE_INTERVAL_MS = 3500
@@ -22,6 +24,8 @@ const MOBILE_BREAKPOINT = 1010
 // versión original de HeroBanner. Solo se usa en desktop (≥1010px de
 // contenedor); en mobile se reemplaza por WelcomeSlide + PerksSlide.
 function BrandSlide() {
+  const { t } = useTranslation('home')
+
   return (
     <div style={{
       position:'relative',
@@ -38,7 +42,7 @@ function BrandSlide() {
       <div className="hero-model-image" style={{position:'absolute',top:0,bottom:0,right:0,width:'38%',zIndex:0}}>
         <Image
           src="/images/hero-model.jpg"
-          alt="Clienta sonriendo mientras usa MercadoRD desde su celular"
+          alt={t('heroModelAlt')}
           fill
           sizes="45vw"
           style={{objectFit:'contain',objectPosition:'center'}}
@@ -53,18 +57,18 @@ function BrandSlide() {
 
       <div style={{position:'relative',zIndex:1,flex:'1 1 320px',minWidth:280}}>
         <h1 style={{fontSize:32,fontWeight:700,lineHeight:1.25,margin:'0 0 14px'}}>
-          Compra y vende<br/>en toda República<br/>Dominicana
+          {t('welcomeTitle')}
         </h1>
         <p style={{color:'rgba(255,255,255,0.75)',fontSize:14,margin:'0 0 22px',maxWidth:320}}>
-          Miles de productos, tiendas y personas conectados contigo.
+          {t('welcomeSubtitle')}
         </p>
         <a href='#productos' style={{display:'inline-block',background:BRAND.red,color:'#fff',textDecoration:'none',padding:'13px 26px',borderRadius:8,fontWeight:600,fontSize:14}}>
-          Explorar productos
+          {t('exploreCta')}
         </a>
       </div>
 
       <div className="hero-perks" style={{position:'relative',zIndex:1,flex:'1 1 320px'}}>
-        {PERKS.map((p,i) => {
+        {PERK_KEYS.map((p,i) => {
           const Icon = p.icon;
           return (
             <div key={i} style={{display:'flex',alignItems:'center',gap:12}}>
@@ -72,8 +76,8 @@ function BrandSlide() {
                 <Icon size={18} color='#fff' />
               </div>
               <div>
-                <div style={{fontWeight:600,fontSize:13}}>{p.title}</div>
-                <div style={{fontSize:11,color:'rgba(255,255,255,0.65)'}}>{p.sub}</div>
+                <div style={{fontWeight:600,fontSize:13}}>{t(p.titleKey)}</div>
+                <div style={{fontSize:11,color:'rgba(255,255,255,0.65)'}}>{t(p.subKey)}</div>
               </div>
             </div>
           );
@@ -86,6 +90,8 @@ function BrandSlide() {
 // Mobile — mitad 1 de 2 del BrandSlide dividido: título + CTA, compacto
 // para caber en el aspect-ratio corto del contenedor en mobile.
 function WelcomeSlide() {
+  const { t } = useTranslation('home')
+
   return (
     <div style={{
       position:'relative', width:'100%', height:'100%',
@@ -94,13 +100,13 @@ function WelcomeSlide() {
       padding:'0 20px', color:'#fff', gap:6,
     }}>
       <h1 style={{fontSize:18,fontWeight:700,lineHeight:1.25,margin:0}}>
-        Compra y vende en toda República Dominicana
+        {t('welcomeTitle')}
       </h1>
       <p style={{color:'rgba(255,255,255,0.75)',fontSize:11,margin:0,maxWidth:280}}>
-        Miles de productos, tiendas y personas conectados contigo.
+        {t('welcomeSubtitle')}
       </p>
       <a href='#productos' style={{display:'inline-block',background:BRAND.red,color:'#fff',textDecoration:'none',padding:'7px 16px',borderRadius:6,fontWeight:600,fontSize:12,marginTop:4}}>
-        Explorar productos
+        {t('exploreCta')}
       </a>
     </div>
   );
@@ -109,6 +115,8 @@ function WelcomeSlide() {
 // Mobile — mitad 2 de 2: los mismos 4 perks, en fila compacta en vez
 // del grid 2×2 de desktop (no cabría en el alto corto).
 function PerksSlide() {
+  const { t } = useTranslation('home')
+
   return (
     <div style={{
       position:'relative', width:'100%', height:'100%',
@@ -116,14 +124,14 @@ function PerksSlide() {
       display:'flex', alignItems:'center', justifyContent:'space-around',
       padding:'0 8px', color:'#fff',
     }}>
-      {PERKS.map((p,i) => {
+      {PERK_KEYS.map((p,i) => {
         const Icon = p.icon;
         return (
           <div key={i} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:5,flex:'1 1 0',minWidth:0}}>
             <div style={{width:32,height:32,borderRadius:9,background:'rgba(255,255,255,0.15)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
               <Icon size={16} color='#fff' />
             </div>
-            <div style={{fontSize:10,fontWeight:600,textAlign:'center',lineHeight:1.2}}>{p.title}</div>
+            <div style={{fontSize:10,fontWeight:600,textAlign:'center',lineHeight:1.2}}>{t(p.titleKey)}</div>
           </div>
         );
       })}
@@ -184,6 +192,7 @@ function PromoSlide({ banner }: { banner: PromoBanner }) {
 }
 
 export function HeroBanner() {
+  const { t } = useTranslation('home')
   const [banners, setBanners] = useState<PromoBanner[]>([])
   const [activeIndex, setActiveIndex] = useState(0)
   const isMobile = useIsMobile(MOBILE_BREAKPOINT)
@@ -255,7 +264,7 @@ export function HeroBanner() {
                 key={i}
                 type="button"
                 onClick={() => setActiveIndex(i)}
-                aria-label={`Ir a diapositiva ${i + 1}`}
+                aria-label={`${t('slideGoToAria')} ${i + 1}`}
                 style={{
                   width: i === activeIndex ? 20 : 8, height: 8, borderRadius: 4, border: 'none', padding: 0,
                   cursor: 'pointer', background: i === activeIndex ? '#fff' : 'rgba(255,255,255,0.5)',
