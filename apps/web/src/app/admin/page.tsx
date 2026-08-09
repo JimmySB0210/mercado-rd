@@ -6,9 +6,9 @@
 import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
 import { isCurrentUserAdmin, getMarketplaceKPIs, getAllVendors, getRecentOrders, getPaymentMetrics, getOpenDisputes, getAbandonedCarts } from '@/lib/queries/admin'
-import { VerifyVendorButton } from '@/components/admin/VerifyVendorButton'
 import { DisputeAdminRow } from '@/components/admin/DisputeAdminRow'
 import { AdminSidebar } from '@/components/admin/AdminSidebar'
+import { VerificationBadge } from '@/components/vendor/VerificationBadge'
 import { formatPrice } from '@/types/database.types'
 import { BRAND } from '@/lib/colors'
 
@@ -241,7 +241,7 @@ export default async function AdminPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: '#f8f8f8' }}>
-                    {['Tienda', 'Provincia', 'Productos', 'Plan', 'Ventas', 'Verificado'].map(h => (
+                    {['Tienda', 'Provincia', 'Productos', 'Plan', 'Ventas', 'Verificado', ''].map(h => (
                       <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 10, color: '#999', textTransform: 'uppercase', fontWeight: 600, borderBottom: '1px solid #f0f0f0', whiteSpace: 'nowrap' }}>
                         {h}
                       </th>
@@ -261,7 +261,14 @@ export default async function AdminPage() {
                       </td>
                       <td style={{ padding: '10px 12px', fontSize: 12, color: '#666', whiteSpace: 'nowrap' }}>{v.total_sales}</td>
                       <td style={{ padding: '10px 12px' }}>
-                        <VerifyVendorButton vendorId={v.id} isVerified={v.is_verified} />
+                        {v.verification_level >= 2
+                          ? <VerificationBadge level={v.verification_level} />
+                          : <span style={{ fontSize: 11, color: '#999' }}>Nivel 1</span>}
+                      </td>
+                      <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>
+                        <a href={`/admin/proveedores?vendor=${v.id}`} style={{ fontSize: 12, color: BRAND.blue, fontWeight: 600, textDecoration: 'none' }}>
+                          Ver detalle →
+                        </a>
                       </td>
                     </tr>
                   ))}

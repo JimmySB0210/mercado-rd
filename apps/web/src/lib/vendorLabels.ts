@@ -7,11 +7,14 @@
 // ============================================================
 
 import {
-  BUSINESS_TYPE_OPTIONS, CUSTOMER_TYPE_OPTIONS, PRODUCTION_TIME_OPTIONS, VENDOR_SERVICE_GROUPS,
+  BUSINESS_TYPE_OPTIONS, CUSTOMER_TYPE_OPTIONS, PRODUCTION_TIME_OPTIONS, VENDOR_SERVICE_GROUPS, MANUFACTURING_STATUS_OPTIONS,
 } from '@/lib/vendorWizardOptions'
 
 export const BUSINESS_TYPE_LABELS: Record<string, string> =
   Object.fromEntries(BUSINESS_TYPE_OPTIONS.map(o => [o.value, o.label]))
+
+export const MANUFACTURING_STATUS_LABELS: Record<string, string> =
+  Object.fromEntries(MANUFACTURING_STATUS_OPTIONS.map(o => [o.value, o.label]))
 
 export const CUSTOMER_TYPE_LABELS: Record<string, string> =
   Object.fromEntries(CUSTOMER_TYPE_OPTIONS.map(o => [o.value, o.label]))
@@ -27,4 +30,13 @@ export const VERIFICATION_BADGES: Record<number, { label: string; bg: string; te
   2: { label: '✓ Negocio verificado', bg: 'bg-blue-50', text: 'text-blue-600' },
   3: { label: '🏭 Fabricante verificado', bg: 'bg-indigo-50', text: 'text-indigo-600' },
   4: { label: '⭐ Proveedor destacado', bg: 'bg-amber-50', text: 'text-amber-700' },
+}
+
+// Labels cortos por nivel (1-4) — usados en el control de admin y filtros.
+// Nivel 1 no tiene badge visible al público, pero sí necesita label en admin.
+export const VERIFICATION_LEVEL_LABELS: Record<number, string> = {
+  1: 'Cuenta básica',
+  2: 'Negocio verificado',
+  3: 'Fabricante verificado',
+  4: 'Proveedor destacado',
 }

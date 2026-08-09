@@ -4,6 +4,7 @@
 // ============================================================
 
 import { createServerClient } from '@/lib/supabase/server'
+import type { Vendor, BusinessType, VendorService, CustomerType } from '@/types/database.types'
 
 export async function isCurrentUserAdmin(): Promise<boolean> {
   const supabase = await createServerClient()
@@ -76,6 +77,7 @@ export interface AdminVendorRow {
   id: string
   business_name: string
   is_verified: boolean
+  verification_level: number
   plan: string
   rating_avg: number
   total_sales: number
@@ -89,7 +91,7 @@ export async function getAllVendors(): Promise<AdminVendorRow[]> {
 
   const { data: vendors, error } = await supabase
     .from('vendors')
-    .select('id, business_name, is_verified, plan, rating_avg, total_sales, created_at, province:provinces_rd(name)')
+    .select('id, business_name, is_verified, verification_level, plan, rating_avg, total_sales, created_at, province:provinces_rd(name)')
     .order('created_at', { ascending: false })
 
   if (error || !vendors) {
@@ -111,6 +113,7 @@ export async function getAllVendors(): Promise<AdminVendorRow[]> {
     id: v.id,
     business_name: v.business_name,
     is_verified: v.is_verified,
+    verification_level: v.verification_level,
     plan: v.plan,
     rating_avg: v.rating_avg,
     total_sales: v.total_sales,
@@ -118,6 +121,100 @@ export async function getAllVendors(): Promise<AdminVendorRow[]> {
     province_name: v.province?.name ?? null,
     product_count: countMap.get(v.id) ?? 0,
   }))
+}
+
+// ─── Gestión de verificación de vendors (/admin/proveedores) ────────────────
+
+export interface AdminVendorVerificationRow {
+  id: string
+  business_name: string
+  logo_url: string | null
+  verification_level: number
+  onboarding_completed: boolean
+  province_name: string | null
+  business_types: BusinessType[]
+  created_at: string
+}
+
+export async function getAllVendorsForVerification(): Promise<AdminVendorVerificationRow[]> {
+  const supabase = await createServerClient()
+
+  const [{ data: vendors, error }, { data: businessTypeRows }] = await Promise.all([
+    supabase
+      .from('vendors')
+      .select('id, business_name, logo_url, verification_level, onboarding_completed, created_at, province:provinces_rd(name)')
+      .order('created_at', { ascending: false }),
+    supabase.from('vendor_business_types').select('vendor_id, business_type'),
+  ])
+
+  if (error || !vendors) {
+    console.error('[getAllVendorsForVerification]', error)
+    return []
+  }
+
+  const businessTypesMap = new Map<string, BusinessType[]>()
+  ;(businessTypeRows ?? []).forEach((r: any) => {
+    const list = businessTypesMap.get(r.vendor_id) ?? []
+    list.push(r.business_type)
+    businessTypesMap.set(r.vendor_id, list)
+  })
+
+  return vendors.map((v: any) => ({
+    id: v.id,
+    business_name: v.business_name,
+    logo_url: v.logo_url,
+    verification_level: v.verification_level,
+    onboarding_completed: v.onboarding_completed,
+    province_name: v.province?.name ?? null,
+    business_types: businessTypesMap.get(v.id) ?? [],
+    created_at: v.created_at,
+  }))
+}
+
+export interface AdminVendorDetail extends Vendor {
+  province_name: string | null
+  business_types: BusinessType[]
+  categories: { id: number; name: string; emoji: string; slug: string }[]
+  services: VendorService[]
+  target_customers: CustomerType[]
+  product_count: number
+}
+
+export async function getVendorDetailForAdmin(vendorId: string): Promise<AdminVendorDetail | null> {
+  const supabase = await createServerClient()
+
+  const { data: vendor, error } = await supabase
+    .from('vendors')
+    .select('*, province:provinces_rd(name)')
+    .eq('id', vendorId)
+    .single()
+
+  if (error || !vendor) {
+    console.error('[getVendorDetailForAdmin]', error)
+    return null
+  }
+
+  const [
+    { data: businessTypesRaw }, { data: categoriesRaw }, { data: servicesRaw }, { data: targetCustomersRaw }, { count: productCount },
+  ] = await Promise.all([
+    supabase.from('vendor_business_types').select('business_type').eq('vendor_id', vendorId),
+    supabase.from('vendor_categories').select('category_id, category:categories(id, name, emoji, slug)').eq('vendor_id', vendorId),
+    supabase.from('vendor_services').select('service').eq('vendor_id', vendorId),
+    supabase.from('vendor_target_customers').select('customer_type').eq('vendor_id', vendorId),
+    supabase.from('products').select('*', { count: 'exact', head: true }).eq('vendor_id', vendorId),
+  ])
+
+  return {
+    ...(vendor as any),
+    province_name: (vendor as any).province?.name ?? null,
+    business_types: (businessTypesRaw ?? []).map((r: any) => r.business_type),
+    categories: (categoriesRaw ?? [])
+      .map((r: any) => r.category)
+      .filter((c: any): c is { id: number; name: string; emoji: string; slug: string } => !!c),
+    services: (servicesRaw ?? []).map((r: any) => r.service),
+    target_customers: (targetCustomersRaw ?? []).map((r: any) => r.customer_type),
+    product_count: productCount ?? 0,
+  }
 }
 
 export interface PaymentBreakdown {

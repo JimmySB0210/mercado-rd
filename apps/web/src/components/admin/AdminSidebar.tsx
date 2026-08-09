@@ -15,6 +15,7 @@ import { useIsMobile } from '@/lib/hooks/useIsMobile'
 
 const NAV_ITEMS = [
   { icon: '📊', label: 'Resumen', href: '/admin' },
+  { icon: '🏪', label: 'Proveedores', href: '/admin/proveedores' },
   { icon: '🖼️', label: 'Promociones', href: '/admin/promociones' },
 ]
 

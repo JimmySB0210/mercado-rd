@@ -120,7 +120,7 @@ export function VendorRegisterWizard({ userId, initialVendor, initialStep, initi
     } else {
       const { data: inserted, error: insertError } = await supabase
         .from('vendors')
-        .insert({ ...payload, user_id: userId, plan: 'free', is_verified: false })
+        .insert({ ...payload, user_id: userId, plan: 'free' })
         .select('id')
         .single()
 
