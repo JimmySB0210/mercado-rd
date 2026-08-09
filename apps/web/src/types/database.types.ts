@@ -9,6 +9,29 @@ export type DeliveryType = 'standard' | 'express' | 'pickup'
 export type PaymentMethod = 'azul' | 'cardnet' | 'transfer' | 'cash'
 export type PaymentStatus = 'pending' | 'approved' | 'declined' | 'refunded'
 
+// ─── Wizard de registro de vendor (onboarding) ────────────────────────────────
+export type BusinessType =
+  | 'manufacturer' | 'wholesaler' | 'retailer' | 'importer' | 'distributor'
+  | 'supplier' | 'private_label' | 'artisan' | 'service_provider'
+
+export type ManufacturingStatus = 'fabricates_own' | 'buys_from_third_parties' | 'mixed'
+
+export type ProductionTimeRange =
+  | 'under_7_days' | 'days_7_15' | 'days_15_30' | 'days_30_60' | 'over_60_days'
+  | 'variable' | 'custom'
+
+export type CustomerType =
+  | 'end_consumer' | 'resellers' | 'stores' | 'businesses' | 'wholesalers'
+  | 'retailers' | 'manufacturers' | 'entrepreneurs' | 'distributors'
+
+export type VendorService =
+  | 'manufacturing' | 'private_label' | 'product_development' | 'formula_development'
+  | 'customization' | 'packaging' | 'labeling' | 'on_demand_production' | 'product_design'
+  | 'national_shipping' | 'delivery' | 'pickup' | 'importing' | 'storage' | 'distribution'
+  | 'other'
+
+export type CustomizationOption = 'yes' | 'no' | 'depends'
+
 // ─── Tablas base ────────────────────────────────────────────────────────────
 
 export interface Province {
@@ -65,7 +88,30 @@ export interface Vendor {
   instagram: string | null
   bank_name: string | null
   bank_account: string | null
+  address: string | null
+  category_id: number | null
   created_at: string
+  // Wizard de onboarding
+  legal_name: string | null
+  contact_full_name: string | null
+  municipio: string | null
+  sector: string | null
+  latitude: number | null
+  longitude: number | null
+  has_physical_store: boolean | null
+  has_warehouse: boolean | null
+  has_workshop: boolean | null
+  manufacturing_status: ManufacturingStatus | null
+  min_order_quantity: number | null
+  min_order_unit: string | null
+  production_time: ProductionTimeRange | null
+  production_time_custom: string | null
+  accepts_private_label: boolean | null
+  allows_customization: CustomizationOption | null
+  // verification_level: protegido por trigger — nunca se envía desde el frontend
+  verification_level: number
+  onboarding_step: number
+  onboarding_completed: boolean
 }
 
 export interface Product {
