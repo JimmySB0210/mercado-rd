@@ -492,6 +492,10 @@ export function Navbar() {
               </div>
             )}
           </div>
+
+          <a href='/proveedores' style={{ padding: '11px 16px', color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>
+            Proveedores
+          </a>
         </div>
       </div>
 

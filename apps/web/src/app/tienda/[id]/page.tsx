@@ -8,6 +8,10 @@ import { createServerClient } from '@/lib/supabase/server'
 import { Navbar } from '@/components/shop/Navbar'
 import { ProductCard } from '@/components/product/ProductCard'
 import { getMembershipDuration } from '@/lib/utils'
+import { CUSTOMIZATION_OPTION_LABELS } from '@/lib/vendorWizardOptions'
+import { BUSINESS_TYPE_LABELS, CUSTOMER_TYPE_LABELS, PRODUCTION_TIME_LABELS, SERVICE_LABELS } from '@/lib/vendorLabels'
+import { VerificationBadge } from '@/components/vendor/VerificationBadge'
+import type { BusinessType, CustomerType, VendorService, CustomizationOption } from '@/types/database.types'
 
 export default async function VendorStorePage(
   { params }: { params: Promise<{ id: string }> }
@@ -23,7 +27,10 @@ export default async function VendorStorePage(
 
   if (error || !vendor) notFound()
 
-  const [{ data: products }, { data: reviewsRaw }, { count: reviewCount }] = await Promise.all([
+  const [
+    { data: products }, { data: reviewsRaw }, { count: reviewCount },
+    { data: businessTypesRaw }, { data: vendorCategoriesRaw }, { data: servicesRaw }, { data: targetCustomersRaw },
+  ] = await Promise.all([
     supabase
       .from('products')
       .select('*, category:categories(id, name, slug, emoji), province:provinces_rd(id, name)')
@@ -40,6 +47,10 @@ export default async function VendorStorePage(
       .from('reviews')
       .select('*', { count: 'exact', head: true })
       .eq('vendor_id', id),
+    supabase.from('vendor_business_types').select('business_type').eq('vendor_id', id),
+    supabase.from('vendor_categories').select('category_id, category:categories(id, name, emoji, slug)').eq('vendor_id', id),
+    supabase.from('vendor_services').select('service').eq('vendor_id', id),
+    supabase.from('vendor_target_customers').select('customer_type').eq('vendor_id', id),
   ])
 
   // Nombres de compradores — consulta separada (no embebida). users tiene
@@ -75,6 +86,24 @@ export default async function VendorStorePage(
     month: 'long', year: 'numeric',
   })
 
+  const businessTypeLabels = (businessTypesRaw ?? [])
+    .map(r => BUSINESS_TYPE_LABELS[r.business_type as BusinessType] ?? r.business_type)
+  const vendorCategories = (vendorCategoriesRaw ?? [])
+    .map(r => r.category as unknown as { id: number; name: string; emoji: string; slug: string } | null)
+    .filter((c): c is { id: number; name: string; emoji: string; slug: string } => !!c)
+  const serviceLabels = (servicesRaw ?? [])
+    .map(r => SERVICE_LABELS[r.service as VendorService] ?? r.service)
+  const customerLabels = (targetCustomersRaw ?? [])
+    .map(r => CUSTOMER_TYPE_LABELS[r.customer_type as CustomerType] ?? r.customer_type)
+
+  const showsManufacturing = !!vendor.manufacturing_status
+  const productionTimeLabel = vendor.production_time === 'custom'
+    ? vendor.production_time_custom
+    : (vendor.production_time ? PRODUCTION_TIME_LABELS[vendor.production_time] : null)
+
+  const hasProviderInfo = businessTypeLabels.length > 0 || vendorCategories.length > 0 || showsManufacturing
+    || serviceLabels.length > 0 || customerLabels.length > 0 || !!vendor.min_order_quantity
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -96,18 +125,21 @@ export default async function VendorStorePage(
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl font-bold text-gray-900">{vendor.business_name}</h1>
-                {vendor.is_verified && (
-                  <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium bg-blue-50 text-blue-600">
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    Verificado
-                  </span>
-                )}
+                <VerificationBadge level={vendor.verification_level ?? 1} />
               </div>
 
+              {businessTypeLabels.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {businessTypeLabels.map(label => (
+                    <span key={label} className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              )}
+
               {vendor.province && (
-                <p className="text-sm text-gray-400 mt-1">
+                <p className="text-sm text-gray-400 mt-1.5">
                   📍 {(vendor.province as { name: string }).name}
                   {vendor.address && ` · ${vendor.address}`}
                 </p>
@@ -182,6 +214,82 @@ export default async function VendorStorePage(
             </div>
           </div>
         </div>
+
+        {/* Información del proveedor — solo si completó el wizard de registro */}
+        {hasProviderInfo && (
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">Información del proveedor</h2>
+
+            <div className="flex flex-col gap-5">
+              {vendorCategories.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Categorías</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {vendorCategories.map(cat => (
+                      <a
+                        key={cat.id}
+                        href={`/categoria/${cat.slug}`}
+                        className="text-xs px-2.5 py-1 rounded-full bg-gray-50 border border-gray-100 text-gray-700 font-medium no-underline hover:bg-gray-100 transition-colors"
+                      >
+                        {cat.emoji} {cat.name}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {showsManufacturing && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Especialidad de fabricación</p>
+                  <div className="flex flex-col gap-1 text-sm text-gray-600">
+                    {productionTimeLabel && <p>⏱️ Tiempo de producción: <span className="font-medium text-gray-900">{productionTimeLabel}</span></p>}
+                    {vendor.accepts_private_label !== null && (
+                      <p>🏷️ ¿Marca privada?: <span className="font-medium text-gray-900">{vendor.accepts_private_label ? 'Sí' : 'No'}</span></p>
+                    )}
+                    {vendor.allows_customization && (
+                      <p>🎨 ¿Personalización?: <span className="font-medium text-gray-900">{CUSTOMIZATION_OPTION_LABELS[vendor.allows_customization as CustomizationOption]}</span></p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {serviceLabels.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Servicios</p>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                    {serviceLabels.map(label => (
+                      <span key={label} className="text-sm text-gray-700">
+                        <span className="text-green-600 font-bold">✓</span> {label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {!!vendor.min_order_quantity && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Cantidad mínima de compra</p>
+                  <p className="text-sm text-gray-900 font-medium">
+                    {vendor.min_order_quantity} {vendor.min_order_unit ?? 'unidades'}
+                  </p>
+                </div>
+              )}
+
+              {customerLabels.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Clientes que atiende</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {customerLabels.map(label => (
+                      <span key={label} className="text-xs px-2.5 py-1 rounded-full bg-gray-50 border border-gray-100 text-gray-700 font-medium">
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Productos */}
         <div className="mb-8">
