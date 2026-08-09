@@ -43,7 +43,16 @@ export interface VendorWizardFormData {
   minOrderUnit: string
 }
 
-export function buildInitialWizardData(vendor: Vendor | null): VendorWizardFormData {
+// Filas de las 4 tablas muchos-a-muchos, ya cargadas para este vendor
+// (page.tsx las trae de una vez si el usuario está retomando el wizard)
+export interface VendorWizardM2MData {
+  businessTypes: BusinessType[]
+  categoryIds: number[]
+  services: VendorService[]
+  targetCustomers: CustomerType[]
+}
+
+export function buildInitialWizardData(vendor: Vendor | null, m2m?: VendorWizardM2MData): VendorWizardFormData {
   return {
     businessName: vendor?.business_name ?? '',
     legalName: vendor?.legal_name ?? '',
@@ -56,15 +65,15 @@ export function buildInitialWizardData(vendor: Vendor | null): VendorWizardFormD
     hasPhysicalStore: vendor?.has_physical_store ?? null,
     hasWarehouse: vendor?.has_warehouse ?? null,
     hasWorkshop: vendor?.has_workshop ?? null,
-    businessTypes: [],
-    categoryIds: [],
+    businessTypes: m2m?.businessTypes ?? [],
+    categoryIds: m2m?.categoryIds ?? [],
     manufacturingStatus: vendor?.manufacturing_status ?? null,
     productionTime: vendor?.production_time ?? null,
     productionTimeCustom: vendor?.production_time_custom ?? '',
     acceptsPrivateLabel: vendor?.accepts_private_label ?? null,
     allowsCustomization: vendor?.allows_customization ?? null,
-    services: [],
-    targetCustomers: [],
+    services: m2m?.services ?? [],
+    targetCustomers: m2m?.targetCustomers ?? [],
     minOrderQuantity: vendor?.min_order_quantity ? String(vendor.min_order_quantity) : '',
     minOrderUnit: vendor?.min_order_unit ?? 'unidades',
   }

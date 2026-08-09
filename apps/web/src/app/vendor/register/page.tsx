@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/colors'
 import { VendorRegisterWizard } from '@/components/vendor/VendorRegisterWizard'
 import type { Vendor, Category } from '@/types/database.types'
+import type { VendorWizardM2MData } from '@/components/vendor/wizard/vendorWizardTypes'
 
 interface ProvinceOption { id: number; name: string }
 
@@ -21,11 +22,13 @@ export default function VendorRegisterPage() {
   const [checking, setChecking] = useState(true)
   const [redirecting, setRedirecting] = useState(false)
   const [vendor, setVendor] = useState<Vendor | null>(null)
+  const [initialM2M, setInitialM2M] = useState<VendorWizardM2MData | undefined>(undefined)
   const [provinces, setProvinces] = useState<ProvinceOption[]>([])
   const [categories, setCategories] = useState<Category[]>([])
 
   // Si ya completó el onboarding, no necesita pasar por el wizard de
   // nuevo — si tiene un vendor a medias, retoma en su onboarding_step
+  // con las selecciones muchos-a-muchos que ya había guardado
   useEffect(() => {
     if (authLoading) return
     if (!user) { setChecking(false); return }
@@ -36,12 +39,28 @@ export default function VendorRegisterPage() {
       .select('*')
       .eq('user_id', user.id)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(async ({ data }) => {
         if (data?.onboarding_completed) {
           setRedirecting(true)
           router.push('/dashboard')
           return
         }
+
+        if (data) {
+          const [businessTypesRes, categoriesRes, servicesRes, customersRes] = await Promise.all([
+            supabase.from('vendor_business_types').select('business_type').eq('vendor_id', data.id),
+            supabase.from('vendor_categories').select('category_id').eq('vendor_id', data.id),
+            supabase.from('vendor_services').select('service').eq('vendor_id', data.id),
+            supabase.from('vendor_target_customers').select('customer_type').eq('vendor_id', data.id),
+          ])
+          setInitialM2M({
+            businessTypes: (businessTypesRes.data ?? []).map(r => r.business_type),
+            categoryIds: (categoriesRes.data ?? []).map(r => r.category_id),
+            services: (servicesRes.data ?? []).map(r => r.service),
+            targetCustomers: (customersRes.data ?? []).map(r => r.customer_type),
+          })
+        }
+
         setVendor(data ?? null)
         setChecking(false)
       })
@@ -107,6 +126,7 @@ export default function VendorRegisterPage() {
       userId={user.id}
       initialVendor={vendor}
       initialStep={vendor?.onboarding_step ?? 1}
+      initialM2M={initialM2M}
       provinces={provinces}
       categories={categories}
     />
