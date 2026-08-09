@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 import { getProductByIdPublic } from '@/lib/supabase/products'
 import { createPublicClient } from '@/lib/supabase/public'
+import { Navbar } from '@/components/shop/Navbar'
 import { ProductViewTracker } from '@/components/product/ProductViewTracker'
 import { RelatedProducts } from '@/components/shop/RelatedProducts'
 import { ProductPageContent } from './ProductPageContent'
@@ -95,6 +96,7 @@ export default async function ProductPage(
 
   return (
     <main className="min-h-screen bg-gray-50">
+      <Navbar />
       <ProductViewTracker productId={product.id} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
