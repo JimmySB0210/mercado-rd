@@ -11,6 +11,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 
 interface Props {
   vendorId: string
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function ContactVendorButton({ vendorId, productId, productName }: Props) {
+  const { t } = useTranslation('products')
   const router = useRouter()
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
@@ -65,7 +67,7 @@ export function ContactVendorButton({ vendorId, productId, productName }: Props)
       className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 font-medium transition-colors disabled:opacity-60"
       style={{ borderColor: 'var(--brand-blue)', color: 'var(--brand-blue)' }}
     >
-      💬 {loading ? 'Abriendo chat...' : 'Preguntar al vendedor'}
+      💬 {loading ? t('openingChat') : t('askVendorButton')}
     </button>
   )
 }

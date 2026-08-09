@@ -15,6 +15,8 @@ import { Star, ShieldCheck, Users, BadgeCheck, Truck } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
 import { ProductCard } from '@/components/product/ProductCard'
 import { createPublicClient } from '@/lib/supabase/public'
+import { useTranslation } from '@/lib/hooks/useTranslation'
+import type { ProductsDict } from '@/lib/i18n/es/products'
 import type { Product } from '@/types'
 
 const PAGE_SIZE = 12
@@ -50,11 +52,11 @@ async function fetchFeaturedVendors(): Promise<FeaturedVendor[]> {
   return (data ?? []) as FeaturedVendor[]
 }
 
-const TRUST = [
-  { icon: ShieldCheck, title:'Compra 100% segura',   sub:'Protegemos tu dinero' },
-  { icon: Users,       title:'Miles de compradores', sub:'Confían en nosotros'  },
-  { icon: BadgeCheck,  title:'Productos de calidad', sub:'Verificados'          },
-  { icon: Truck,       title:'+32 provincias',       sub:'Envíos a todo el país'},
+const TRUST_KEYS: { icon: typeof ShieldCheck; titleKey: keyof ProductsDict; subKey: keyof ProductsDict }[] = [
+  { icon: ShieldCheck, titleKey: 'trustSecureTitle',   subKey: 'trustSecureSub' },
+  { icon: Users,       titleKey: 'trustBuyersTitle',   subKey: 'trustBuyersSub' },
+  { icon: BadgeCheck,  titleKey: 'trustQualityTitle',  subKey: 'trustQualitySub' },
+  { icon: Truck,       titleKey: 'trustShippingTitle', subKey: 'trustShippingSub' },
 ]
 
 const IMAGE_RATIOS = ['1/1', '4/5', '5/4', '1/1', '5/6']
@@ -81,6 +83,7 @@ async function fetchProductsPage(offset: number): Promise<ProductsPageResult> {
 }
 
 export function HomeProductGrid() {
+  const { t } = useTranslation('products')
   const [products, setProducts] = useState<Product[]>([])
   const [loadingInitial, setLoadingInitial] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -154,9 +157,9 @@ export function HomeProductGrid() {
 
       {/* Ofertas destacadas */}
       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', margin:'20px 0 16px'}}>
-        <h2 style={{fontSize:18, fontWeight:700, color:BRAND.dark, margin:0}}>Ofertas destacadas</h2>
+        <h2 style={{fontSize:18, fontWeight:700, color:BRAND.dark, margin:0}}>{t('featuredOffersTitle')}</h2>
         <a href='/categoria/electronica' style={{color:BRAND.blue, fontSize:13, fontWeight:600, textDecoration:'none'}}>
-          Ver todas →
+          {t('viewAll')}
         </a>
       </div>
 
@@ -172,7 +175,7 @@ export function HomeProductGrid() {
       {showError && (
         <div style={{background:'#fff', border:'1px solid #EEE', borderRadius:10, padding:'40px 20px', textAlign:'center'}}>
           <div style={{fontSize:40, marginBottom:12}}>⚠️</div>
-          <p style={{color:BRAND.gray, fontSize:14, margin:0}}>No pudimos cargar los productos. Intenta recargar la página.</p>
+          <p style={{color:BRAND.gray, fontSize:14, margin:0}}>{t('loadError')}</p>
         </div>
       )}
 
@@ -225,15 +228,15 @@ export function HomeProductGrid() {
               opacity: loadingMore ? 0.7 : 1,
             }}
           >
-            {loadingMore ? 'Cargando...' : 'Ver más productos'}
+            {loadingMore ? t('loading') : t('loadMore')}
           </button>
         </div>
       )}
 
       {/* Tiendas destacadas */}
       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', margin:'36px 0 16px'}}>
-        <h2 style={{fontSize:18, fontWeight:700, color:BRAND.dark, margin:0}}>Tiendas destacadas</h2>
-        <a href='/tiendas' style={{color:BRAND.blue, fontSize:13, fontWeight:600, textDecoration:'none'}}>Ver todas →</a>
+        <h2 style={{fontSize:18, fontWeight:700, color:BRAND.dark, margin:0}}>{t('featuredStoresTitle')}</h2>
+        <a href='/tiendas' style={{color:BRAND.blue, fontSize:13, fontWeight:600, textDecoration:'none'}}>{t('viewAll')}</a>
       </div>
 
       {vendors.length > 0 && (
@@ -256,13 +259,13 @@ export function HomeProductGrid() {
               <div>
                 <div style={{fontWeight:600, fontSize:13, color:BRAND.dark}}>{v.business_name}</div>
                 {v.is_verified && (
-                  <div style={{fontSize:11, color:BRAND.blue, fontWeight:600}}>Verificado</div>
+                  <div style={{fontSize:11, color:BRAND.blue, fontWeight:600}}>{t('verifiedBadge')}</div>
                 )}
               </div>
               {Number(v.rating_avg) > 0 && (
                 <div style={{display:'flex', alignItems:'center', gap:4, fontSize:12, color:BRAND.gray}}>
                   <Star size={12} fill='#F5A623' color='#F5A623' />
-                  {Number(v.rating_avg).toFixed(1)} · {v.total_sales ?? 0} ventas
+                  {Number(v.rating_avg).toFixed(1)} · {v.total_sales ?? 0} {t('salesSuffix')}
                 </div>
               )}
             </a>
@@ -272,14 +275,14 @@ export function HomeProductGrid() {
 
       {/* Trust bar */}
       <div className="grid-trust" style={{background:'#fff', border:'1px solid #EEE', borderRadius:10, padding:'22px 0'}}>
-        {TRUST.map((t,i) => {
-          const Icon = t.icon
+        {TRUST_KEYS.map((item,i) => {
+          const Icon = item.icon
           return (
             <div key={i} style={{display:'flex', alignItems:'center', gap:10, justifyContent:'center'}}>
               <Icon size={20} color={BRAND.blue} />
               <div>
-                <div style={{fontWeight:600, fontSize:13, color:BRAND.dark}}>{t.title}</div>
-                <div style={{fontSize:11, color:BRAND.gray}}>{t.sub}</div>
+                <div style={{fontWeight:600, fontSize:13, color:BRAND.dark}}>{t(item.titleKey)}</div>
+                <div style={{fontSize:11, color:BRAND.gray}}>{t(item.subKey)}</div>
               </div>
             </div>
           )

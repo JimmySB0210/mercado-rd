@@ -7,6 +7,7 @@
 import { useState } from 'react'
 import { useCartStore } from '@/lib/store/cart'
 import { formatPrice } from '@/types/database.types'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import type { ProductVariant } from '@/types/database.types'
 import type { Product } from '@/types'
 
@@ -17,6 +18,7 @@ interface ProductActionProps {
 }
 
 export function ProductActions({ product, variants = [] }: ProductActionProps) {
+  const { t } = useTranslation('products')
   const addItem = useCartStore(s => s.addItem)
   const hasVariants = variants.length > 0
 
@@ -86,7 +88,7 @@ export function ProductActions({ product, variants = [] }: ProductActionProps) {
       {needsSize && (
         <div>
           <p className="text-sm font-medium text-gray-700 mb-2">
-            Talla
+            {t('sizeLabel')}
             {selectedSize && <span className="ml-2 text-gray-400 font-normal">{selectedSize}</span>}
           </p>
           <div className="flex flex-wrap gap-2">
@@ -111,7 +113,7 @@ export function ProductActions({ product, variants = [] }: ProductActionProps) {
       {needsColor && (
         <div>
           <p className="text-sm font-medium text-gray-700 mb-2">
-            Color
+            {t('colorLabel')}
             {selectedColor && <span className="ml-2 text-gray-400 font-normal">{selectedColor}</span>}
           </p>
           <div className="flex flex-wrap gap-2">
@@ -154,9 +156,9 @@ export function ProductActions({ product, variants = [] }: ProductActionProps) {
                 <span className="font-medium text-gray-700">{formatPrice(matchedVariant.price_rdp)} · </span>
               )}
               {matchedVariant.stock === 0 ? (
-                <span className="font-medium text-red-500">Agotado</span>
+                <span className="font-medium text-red-500">{t('outOfStock')}</span>
               ) : (
-                <span>Stock: {matchedVariant.stock} disponibles</span>
+                <span>{t('stockAvailable', { count: matchedVariant.stock })}</span>
               )}
             </p>
           )}
@@ -165,7 +167,7 @@ export function ProductActions({ product, variants = [] }: ProductActionProps) {
 
       {/* Cantidad */}
       <div>
-        <p className="text-sm font-medium text-gray-700 mb-2">Cantidad</p>
+        <p className="text-sm font-medium text-gray-700 mb-2">{t('quantityLabel')}</p>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setQuantity(q => Math.max(1, q - 1))}
@@ -198,12 +200,12 @@ export function ProductActions({ product, variants = [] }: ProductActionProps) {
         }`}
       >
         {isOutOfStock
-          ? (hasVariants ? 'Agotado' : 'Sin stock')
+          ? (hasVariants ? t('outOfStock') : t('noStock'))
           : !canAdd
-          ? `Selecciona ${needsSize && !selectedSize ? 'talla' : 'color'}`
+          ? (needsSize && !selectedSize ? t('selectSize') : t('selectColor'))
           : added
-          ? '✓ Añadido al carrito'
-          : 'Añadir al carrito'}
+          ? t('addedToCart')
+          : t('addToCart')}
       </button>
 
     </div>

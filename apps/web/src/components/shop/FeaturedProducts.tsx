@@ -4,8 +4,7 @@
 // ============================================================
 
 import { createPublicClient } from '@/lib/supabase/public'
-import { ProductCard } from '@/components/product/ProductCard'
-import { BRAND } from '@/lib/colors'
+import { FeaturedProductsGrid } from '@/components/shop/FeaturedProductsGrid'
 
 export async function FeaturedProducts() {
   const supabase = createPublicClient()
@@ -24,18 +23,5 @@ export async function FeaturedProducts() {
   // relación como `vendors` (nombre de la tabla, sin alias)
   const products = data.map((p: any) => ({ ...p, vendor: p.vendors }))
 
-  return (
-    <div style={{ maxWidth: 1400, margin: '0 auto', padding: '24px 24px 0' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 0 16px' }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700, color: BRAND.dark, margin: 0 }}>
-          Productos destacados ⭐
-        </h2>
-      </div>
-      <div className="grid-products">
-        {products.map(p => (
-          <ProductCard key={p.id} product={p as any} />
-        ))}
-      </div>
-    </div>
-  )
+  return <FeaturedProductsGrid products={products as any} />
 }

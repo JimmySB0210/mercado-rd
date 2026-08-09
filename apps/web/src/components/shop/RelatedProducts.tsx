@@ -7,7 +7,7 @@
 // ============================================================
 
 import { createPublicClient } from '@/lib/supabase/public'
-import { ProductCard } from '@/components/product/ProductCard'
+import { RelatedProductsSection } from '@/components/shop/RelatedProductsSection'
 
 interface Props {
   categoryId: number | null
@@ -56,14 +56,5 @@ export async function RelatedProducts({ categoryId, vendorId, currentProductId }
 
   if (deduped.length === 0) return null
 
-  return (
-    <section className="mt-16">
-      <h2 className="text-xl font-bold text-gray-900 mb-6">También te puede interesar</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {deduped.map(p => (
-          <ProductCard key={p.id} product={p as any} />
-        ))}
-      </div>
-    </section>
-  )
+  return <RelatedProductsSection products={deduped as any} />
 }

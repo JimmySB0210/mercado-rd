@@ -2,11 +2,13 @@
 // MercadoRD — Página de categoría
 // Ruta: src/app/categoria/[slug]/page.tsx
 // ============================================================
+// Server Component — el texto traducido vive en CategoryContent
+// (Client Component).
+// ============================================================
 
-import { notFound } from 'next/navigation'
 import { createPublicClient } from '@/lib/supabase/public'
-import { ProductCard } from '@/components/product/ProductCard'
 import { Navbar } from '@/components/shop/Navbar'
+import { CategoryContent } from './CategoryContent'
 
 export const revalidate = 300
 
@@ -75,45 +77,14 @@ export default async function CategoryPage(
     console.error('[CategoryPage]', error)
   }
 
-  const title = category?.name ?? CATEGORY_LABELS[slug.toLowerCase()] ?? 'Todos los productos'
+  // null = usa el fallback traducido ("Todos los productos") en CategoryContent
+  const title = category?.name ?? CATEGORY_LABELS[slug.toLowerCase()] ?? null
   const emoji = category?.emoji ?? '🛍️'
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-        <nav className="text-sm text-gray-400 mb-4">
-          <a href="/" className="hover:text-gray-600 transition-colors no-underline">Inicio</a>
-          <span className="mx-2">/</span>
-          <span className="text-gray-600">{title}</span>
-        </nav>
-
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">
-          {emoji} {title}
-        </h1>
-        <p className="text-sm text-gray-400 mb-6">
-          {products?.length ?? 0} productos encontrados
-        </p>
-
-        {!products || products.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-            <div className="text-5xl mb-4">📦</div>
-            <p className="text-gray-500">Todavía no hay productos en esta categoría.</p>
-            <a href="/" className="text-blue-600 underline mt-4 inline-block text-sm">
-              Volver al inicio
-            </a>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {products.map(p => (
-              <ProductCard key={p.id} product={p as any} />
-            ))}
-          </div>
-        )}
-
-      </div>
+      <CategoryContent title={title} emoji={emoji} products={(products ?? []) as any} />
     </div>
   )
 }
