@@ -60,6 +60,9 @@ import { vendorOptions as vendorOptionsFr } from '@/lib/i18n/fr/vendorOptions'
 import { auth as authEs, type AuthDict } from '@/lib/i18n/es/auth'
 import { auth as authEn } from '@/lib/i18n/en/auth'
 import { auth as authFr } from '@/lib/i18n/fr/auth'
+import { profile as profileEs, type ProfileDict } from '@/lib/i18n/es/profile'
+import { profile as profileEn } from '@/lib/i18n/en/profile'
+import { profile as profileFr } from '@/lib/i18n/fr/profile'
 
 const NAMESPACES = {
   common: { es: commonEs, en: commonEn, fr: commonFr },
@@ -71,6 +74,7 @@ const NAMESPACES = {
   dashboard: { es: dashboardEs, en: dashboardEn, fr: dashboardFr },
   vendorOptions: { es: vendorOptionsEs, en: vendorOptionsEn, fr: vendorOptionsFr },
   auth: { es: authEs, en: authEn, fr: authFr },
+  profile: { es: profileEs, en: profileEn, fr: profileFr },
 } as const
 
 // Genera 'businessType.manufacturer' | 'verificationLevel.1' | ... para
@@ -118,6 +122,7 @@ export function useTranslation(namespace: 'checkout'): TranslationResult<keyof C
 export function useTranslation(namespace: 'dashboard'): TranslationResult<keyof DashboardDict>
 export function useTranslation(namespace: 'vendorOptions'): TranslationResult<DotPaths<VendorOptionsDict>>
 export function useTranslation(namespace: 'auth'): TranslationResult<keyof AuthDict>
+export function useTranslation(namespace: 'profile'): TranslationResult<DotPaths<ProfileDict>>
 export function useTranslation(namespace: Namespace): TranslationResult<string> {
   const language = useLanguageStore((s) => s.language)
 

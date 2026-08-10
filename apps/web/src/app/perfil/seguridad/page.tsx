@@ -8,11 +8,13 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Navbar } from '@/components/shop/Navbar'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
 
 export default function SecurityPage() {
   const router = useRouter()
   const supabase = createClient()
+  const { t } = useTranslation('profile')
 
   const [loading, setLoading] = useState(true)
 
@@ -62,11 +64,11 @@ export default function SecurityPage() {
     setPasswordSuccess(false)
 
     if (passwordNew.length < 6) {
-      setPasswordError('La contraseña debe tener al menos 6 caracteres')
+      setPasswordError(t('passwordTooShort'))
       return
     }
     if (passwordNew !== passwordConfirm) {
-      setPasswordError('Las contraseñas no coinciden')
+      setPasswordError(t('passwordMismatch'))
       return
     }
 
@@ -76,7 +78,7 @@ export default function SecurityPage() {
 
     if (error) {
       console.error('[SecurityPage updateUser]', error)
-      setPasswordError('No se pudo cambiar la contraseña. Intenta de nuevo.')
+      setPasswordError(t('passwordChangeError'))
       return
     }
 
@@ -109,7 +111,7 @@ export default function SecurityPage() {
 
     if (error || !data) {
       console.error('[SecurityPage enroll]', error)
-      setMfaError('No se pudo iniciar la activación de MFA. Intenta de nuevo.')
+      setMfaError(t('mfaEnrollStartError'))
       return
     }
 
@@ -123,7 +125,7 @@ export default function SecurityPage() {
     setMfaError(null)
 
     if (!pendingFactorId || verifyCode.trim().length !== 6) {
-      setMfaError('Ingresa el código de 6 dígitos')
+      setMfaError(t('mfaCodeRequired'))
       return
     }
 
@@ -136,7 +138,7 @@ export default function SecurityPage() {
 
     if (error) {
       console.error('[SecurityPage verify]', error)
-      setMfaError('Código incorrecto. Intenta de nuevo.')
+      setMfaError(t('mfaVerifyError'))
       return
     }
 
@@ -168,7 +170,7 @@ export default function SecurityPage() {
 
     if (error) {
       console.error('[SecurityPage unenroll]', error)
-      setMfaError('No se pudo desactivar MFA. Intenta de nuevo.')
+      setMfaError(t('mfaUnenrollError'))
       return
     }
 
@@ -180,7 +182,7 @@ export default function SecurityPage() {
       <div className="min-h-screen bg-gray-50">
         <Navbar />
         <div className="flex items-center justify-center py-20">
-          <div className="text-gray-400 text-sm">Cargando...</div>
+          <div className="text-gray-400 text-sm">{t('loading')}</div>
         </div>
       </div>
     )
@@ -191,26 +193,26 @@ export default function SecurityPage() {
       <Navbar />
 
       <main className="max-w-xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Seguridad de la cuenta</h1>
-        <p className="text-sm text-gray-400 mb-6">Protege el acceso a tu cuenta de MercadoRD</p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">{t('securityPageTitle')}</h1>
+        <p className="text-sm text-gray-400 mb-6">{t('securityPageSubtitle')}</p>
 
         {/* Cambiar contraseña */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-4">
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">Cambiar contraseña</h2>
+          <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('changePasswordTitle')}</h2>
 
           <form onSubmit={handlePasswordSubmit} className="space-y-3">
             <input
               type="password"
               value={passwordNew}
               onChange={e => setPasswordNew(e.target.value)}
-              placeholder="Contraseña nueva"
+              placeholder={t('newPasswordPlaceholder')}
               className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
             />
             <input
               type="password"
               value={passwordConfirm}
               onChange={e => setPasswordConfirm(e.target.value)}
-              placeholder="Confirma la contraseña nueva"
+              placeholder={t('confirmNewPasswordPlaceholder')}
               className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
             />
 
@@ -221,7 +223,7 @@ export default function SecurityPage() {
             )}
             {passwordSuccess && (
               <div className="bg-green-50 border border-green-200 text-green-700 text-xs rounded-lg px-3 py-2">
-                ✓ Contraseña actualizada correctamente
+                {t('passwordChangeSuccess')}
               </div>
             )}
 
@@ -231,14 +233,14 @@ export default function SecurityPage() {
               style={{ background: passwordSaving ? '#ccc' : BRAND.blue }}
               className="w-full text-white font-medium py-2.5 rounded-lg text-sm border-none cursor-pointer"
             >
-              {passwordSaving ? 'Guardando...' : 'Actualizar contraseña'}
+              {passwordSaving ? t('savingButton') : t('updatePasswordButton')}
             </button>
           </form>
         </div>
 
         {/* MFA */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">Autenticación de dos factores (MFA)</h2>
+          <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('mfaTitle')}</h2>
 
           {mfaError && (
             <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 mb-3">
@@ -249,7 +251,7 @@ export default function SecurityPage() {
           {mfaFactorId && !enrolling ? (
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <span className="text-sm font-semibold" style={{ color: BRAND.green }}>
-                MFA activado ✓
+                {t('mfaActive')}
               </span>
               <button
                 onClick={handleUnenroll}
@@ -257,19 +259,19 @@ export default function SecurityPage() {
                 className="text-sm font-semibold underline bg-transparent border-none cursor-pointer"
                 style={{ color: BRAND.red }}
               >
-                {mfaBusy ? 'Desactivando...' : 'Desactivar'}
+                {mfaBusy ? t('deactivatingButton') : t('deactivateButton')}
               </button>
             </div>
           ) : enrolling ? (
             <div>
               <p className="text-xs text-gray-500 mb-3">
-                Escanea este código QR con Google Authenticator (o una app similar) y luego ingresa el código de 6 dígitos.
+                {t('mfaScanInstructions')}
               </p>
 
               {qrCode && (
                 <div className="flex justify-center mb-4">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={qrCode} alt="Código QR para MFA" className="w-44 h-44 border border-gray-100 rounded-lg" />
+                  <img src={qrCode} alt={t('mfaQrAlt')} className="w-44 h-44 border border-gray-100 rounded-lg" />
                 </div>
               )}
 
@@ -277,7 +279,7 @@ export default function SecurityPage() {
                 <input
                   value={verifyCode}
                   onChange={e => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="Código de 6 dígitos"
+                  placeholder={t('mfaCodePlaceholder')}
                   inputMode="numeric"
                   className="flex-1 border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none tracking-widest"
                 />
@@ -287,20 +289,20 @@ export default function SecurityPage() {
                   style={{ background: mfaBusy ? '#ccc' : BRAND.blue }}
                   className="text-white font-medium px-5 rounded-lg text-sm border-none cursor-pointer"
                 >
-                  Confirmar
+                  {t('confirmButton')}
                 </button>
               </form>
               <button
                 onClick={handleCancelEnroll}
                 className="text-xs text-gray-400 underline bg-transparent border-none cursor-pointer mt-3"
               >
-                Cancelar
+                {t('cancelButton')}
               </button>
             </div>
           ) : (
             <div>
               <p className="text-xs text-gray-500 mb-3">
-                Agrega una capa extra de seguridad pidiendo un código de tu app de autenticación al iniciar sesión.
+                {t('mfaEnrollHint')}
               </p>
               <button
                 onClick={handleEnrollStart}
@@ -308,7 +310,7 @@ export default function SecurityPage() {
                 style={{ background: mfaBusy ? '#ccc' : BRAND.blue }}
                 className="text-white font-medium px-5 py-2.5 rounded-lg text-sm border-none cursor-pointer"
               >
-                {mfaBusy ? 'Iniciando...' : 'Activar MFA'}
+                {mfaBusy ? t('startingButton') : t('activateMfaButton')}
               </button>
             </div>
           )}

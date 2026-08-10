@@ -11,11 +11,13 @@ import { createClient } from '@/lib/supabase/client'
 import { Navbar } from '@/components/shop/Navbar'
 import { PushNotificationButton } from '@/components/shop/PushNotificationButton'
 import { User, Mail, Phone, MapPin, ShoppingBag, LogOut } from 'lucide-react'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
 
 export default function PerfilPage() {
   const { user, profile, loading, signOut } = useAuth()
   const router = useRouter()
+  const { t } = useTranslation('profile')
 
   const [vendorInfo, setVendorInfo] = useState<{ business_name: string; logo_url: string | null } | null>(null)
 
@@ -42,14 +44,14 @@ export default function PerfilPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-400 text-sm">Cargando...</div>
+        <div className="text-gray-400 text-sm">{t('loading')}</div>
       </div>
     )
   }
 
   if (!user) return null
 
-  const displayName = vendorInfo?.business_name || profile?.full_name || user.email?.split('@')[0] || 'Usuario'
+  const displayName = vendorInfo?.business_name || profile?.full_name || user.email?.split('@')[0] || t('defaultUserName')
   const initial = displayName.charAt(0).toUpperCase()
 
   const handleSignOut = async () => {
@@ -83,7 +85,7 @@ export default function PerfilPage() {
               className="inline-block mt-1.5 text-xs font-medium px-2.5 py-0.5 rounded-full text-white"
               style={{ background: BRAND.blue }}
             >
-              {vendorInfo ? 'Vendedor' : 'Comprador'}
+              {vendorInfo ? t('roleVendor') : t('roleBuyer')}
             </span>
             <div className="mt-2">
               <PushNotificationButton />
@@ -93,12 +95,12 @@ export default function PerfilPage() {
 
         {/* Info del perfil */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-4">
-          <h2 className="text-sm font-semibold text-gray-700 mb-4">Información</h2>
+          <h2 className="text-sm font-semibold text-gray-700 mb-4">{t('infoSectionTitle')}</h2>
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <User size={16} color={BRAND.gray} />
               <div>
-                <p className="text-xs text-gray-400">Nombre</p>
+                <p className="text-xs text-gray-400">{t('nameLabel')}</p>
                 <p className="text-sm font-medium text-gray-900">
                   {profile?.full_name || '—'}
                 </p>
@@ -107,14 +109,14 @@ export default function PerfilPage() {
             <div className="flex items-center gap-3">
               <Mail size={16} color={BRAND.gray} />
               <div>
-                <p className="text-xs text-gray-400">Correo</p>
+                <p className="text-xs text-gray-400">{t('emailLabel')}</p>
                 <p className="text-sm font-medium text-gray-900">{user.email}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <Phone size={16} color={BRAND.gray} />
               <div>
-                <p className="text-xs text-gray-400">Teléfono</p>
+                <p className="text-xs text-gray-400">{t('phoneLabel')}</p>
                 <p className="text-sm font-medium text-gray-900">
                   {profile?.phone || '—'}
                 </p>
@@ -123,8 +125,8 @@ export default function PerfilPage() {
             <div className="flex items-center gap-3">
               <MapPin size={16} color={BRAND.gray} />
               <div>
-                <p className="text-xs text-gray-400">Provincia</p>
-                <p className="text-sm font-medium text-gray-900">República Dominicana</p>
+                <p className="text-xs text-gray-400">{t('provinceLabel')}</p>
+                <p className="text-sm font-medium text-gray-900">{t('dominicanRepublic')}</p>
               </div>
             </div>
           </div>
@@ -138,7 +140,7 @@ export default function PerfilPage() {
           >
             <div className="flex items-center gap-3">
               <ShoppingBag size={18} color={BRAND.blue} />
-              <span className="text-sm font-medium text-gray-900">Mis pedidos</span>
+              <span className="text-sm font-medium text-gray-900">{t('myOrdersLink')}</span>
             </div>
             <span className="text-gray-300 text-lg">›</span>
           </a>
@@ -153,7 +155,7 @@ export default function PerfilPage() {
               >
                 V
               </div>
-              <span className="text-sm font-medium text-gray-900">Vender en MercadoRD</span>
+              <span className="text-sm font-medium text-gray-900">{t('sellOnMercadoRD')}</span>
             </div>
             <span className="text-gray-300 text-lg">›</span>
           </a>
@@ -166,7 +168,7 @@ export default function PerfilPage() {
           style={{ borderColor: BRAND.red, color: BRAND.red }}
         >
           <LogOut size={16} />
-          Cerrar sesión
+          {t('signOutButton')}
         </button>
 
       </main>

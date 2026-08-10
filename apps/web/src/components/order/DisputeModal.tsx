@@ -6,6 +6,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
 
 interface Props {
@@ -17,17 +18,11 @@ interface Props {
   onSuccess: () => void
 }
 
-const REASONS = [
-  { value: 'not_received',     label: 'No recibí el pedido' },
-  { value: 'not_as_described', label: 'No es como se describe' },
-  { value: 'damaged',          label: 'Llegó dañado' },
-  { value: 'wrong_item',       label: 'Producto equivocado' },
-  { value: 'refund_request',   label: 'Solicito reembolso' },
-  { value: 'other',            label: 'Otro' },
-]
+const REASON_VALUES = ['not_received', 'not_as_described', 'damaged', 'wrong_item', 'refund_request', 'other'] as const
 
 export function DisputeModal({ orderId, vendorId, refundEligible = true, refundIneligibleReason = null, onClose, onSuccess }: Props) {
   const supabase = createClient()
+  const { t } = useTranslation('profile')
   const [reason, setReason] = useState('')
   const [description, setDescription] = useState('')
   const [saving, setSaving] = useState(false)
@@ -35,11 +30,11 @@ export function DisputeModal({ orderId, vendorId, refundEligible = true, refundI
 
   const handleSubmit = async () => {
     if (!reason) {
-      setError('Selecciona una razón')
+      setError(t('reasonRequired'))
       return
     }
     if (description.trim().length < 20) {
-      setError('Describe el problema con al menos 20 caracteres')
+      setError(t('descriptionTooShort'))
       return
     }
 
@@ -61,7 +56,7 @@ export function DisputeModal({ orderId, vendorId, refundEligible = true, refundI
 
     if (insertError) {
       console.error('[DisputeModal]', insertError)
-      setError('No se pudo abrir la disputa. Intenta de nuevo.')
+      setError(t('openDisputeError'))
       setSaving(false)
       return
     }
@@ -78,46 +73,46 @@ export function DisputeModal({ orderId, vendorId, refundEligible = true, refundI
         onClick={e => e.stopPropagation()}
         style={{ background: '#fff', borderRadius: 16, padding: 24, maxWidth: 440, width: '100%' }}
       >
-        <h2 style={{ fontSize: 17, fontWeight: 700, color: '#111', marginBottom: 4 }}>Abrir disputa</h2>
+        <h2 style={{ fontSize: 17, fontWeight: 700, color: '#111', marginBottom: 4 }}>{t('openDisputeTitle')}</h2>
         <p style={{ fontSize: 13, color: '#666', marginBottom: 18 }}>
-          Pedido #{orderId.split('-')[0].toUpperCase()}
+          {t('orderNumberLabel', { id: orderId.split('-')[0].toUpperCase() })}
         </p>
 
-        <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>Razón *</label>
+        <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>{t('reasonLabel')}</label>
         <select
           value={reason}
           onChange={e => setReason(e.target.value)}
           style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box', background: '#fff', marginBottom: refundEligible ? 14 : 4 }}
         >
-          <option value="">Selecciona una razón</option>
-          {REASONS.map(r => (
+          <option value="">{t('selectReasonOption')}</option>
+          {REASON_VALUES.map(value => (
             <option
-              key={r.value}
-              value={r.value}
-              disabled={r.value === 'refund_request' && !refundEligible}
+              key={value}
+              value={value}
+              disabled={value === 'refund_request' && !refundEligible}
             >
-              {r.label}
+              {t(`disputeReason.${value}`)}
             </option>
           ))}
         </select>
         {!refundEligible && refundIneligibleReason && (
           <p style={{ fontSize: 11, color: '#999', margin: '0 0 14px' }}>
-            "Solicito reembolso" no está disponible para este pedido: {refundIneligibleReason}.
+            {t('refundRequestUnavailable', { reason: refundIneligibleReason })}
           </p>
         )}
 
         <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>
-          Describe el problema * <span style={{ color: '#999' }}>(mínimo 20 caracteres)</span>
+          {t('describeProblemLabel')} <span style={{ color: '#999' }}>{t('minCharsHint')}</span>
         </label>
         <textarea
           value={description}
           onChange={e => setDescription(e.target.value)}
-          placeholder="Cuéntanos qué pasó con tu pedido..."
+          placeholder={t('describePlaceholder')}
           rows={4}
           style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', marginBottom: 4 }}
         />
         <p style={{ fontSize: 11, color: description.trim().length < 20 ? '#c00' : '#999', marginBottom: 14 }}>
-          {description.trim().length}/20
+          {t('charCounter', { count: description.trim().length })}
         </p>
 
         {error && (
@@ -132,7 +127,7 @@ export function DisputeModal({ orderId, vendorId, refundEligible = true, refundI
             onClick={onClose}
             style={{ flex: 1, background: '#fff', border: '1px solid #ddd', color: '#333', padding: '11px', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}
           >
-            Cancelar
+            {t('cancelButton')}
           </button>
           <button
             type="button"
@@ -140,7 +135,7 @@ export function DisputeModal({ orderId, vendorId, refundEligible = true, refundI
             disabled={saving}
             style={{ flex: 1, background: saving ? '#ccc' : BRAND.red, color: '#fff', border: 'none', padding: '11px', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: saving ? 'not-allowed' : 'pointer' }}
           >
-            {saving ? 'Enviando...' : 'Abrir disputa'}
+            {saving ? t('sendingButton') : t('openDisputeButton')}
           </button>
         </div>
       </div>

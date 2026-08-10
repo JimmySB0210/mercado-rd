@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
 
 interface HistoryRow {
@@ -17,14 +18,10 @@ interface Props {
   orderId: string
 }
 
-const MAIN_STEPS = [
-  { status: 'pending', label: 'Pendiente' },
-  { status: 'confirmed', label: 'Confirmado' },
-  { status: 'shipped', label: 'Enviado' },
-  { status: 'delivered', label: 'Entregado' },
-]
+const MAIN_STEPS = ['pending', 'confirmed', 'shipped', 'delivered'] as const
 
 export function OrderTimeline({ orderId }: Props) {
+  const { t } = useTranslation('profile')
   const [history, setHistory] = useState<HistoryRow[] | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -50,7 +47,7 @@ export function OrderTimeline({ orderId }: Props) {
   }, [orderId])
 
   if (loading) {
-    return <div style={{ fontSize: 12, color: '#999', padding: '10px 4px' }}>Cargando seguimiento...</div>
+    return <div style={{ fontSize: 12, color: '#999', padding: '10px 4px' }}>{t('loadingTimeline')}</div>
   }
 
   if (!history || history.length === 0) {
@@ -67,12 +64,12 @@ export function OrderTimeline({ orderId }: Props) {
 
   // Último paso principal alcanzado — para cortar la cadena ahí si se canceló
   let lastReachedIndex = -1
-  MAIN_STEPS.forEach((step, i) => {
-    if (firstSeenAt.has(step.status)) lastReachedIndex = i
+  MAIN_STEPS.forEach((status, i) => {
+    if (firstSeenAt.has(status)) lastReachedIndex = i
   })
 
   const steps = isCancelled
-    ? [...MAIN_STEPS.slice(0, lastReachedIndex + 1), { status: 'cancelled', label: 'Cancelado' }]
+    ? [...MAIN_STEPS.slice(0, lastReachedIndex + 1), 'cancelled' as const]
     : MAIN_STEPS
 
   const formatDate = (iso: string) =>
@@ -80,15 +77,15 @@ export function OrderTimeline({ orderId }: Props) {
 
   return (
     <div style={{ padding: '12px 4px' }}>
-      {steps.map((step, i) => {
-        const reachedAt = firstSeenAt.get(step.status)
+      {steps.map((status, i) => {
+        const reachedAt = firstSeenAt.get(status)
         const isReached = !!reachedAt
         const isLast = i === steps.length - 1
-        const isCancelledStep = step.status === 'cancelled'
+        const isCancelledStep = status === 'cancelled'
         const dotColor = isCancelledStep ? '#C62828' : BRAND.blue
 
         return (
-          <div key={step.status} style={{ display: 'flex', gap: 12 }}>
+          <div key={status} style={{ display: 'flex', gap: 12 }}>
             {/* Círculo + línea conectora */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 14 }}>
               <div
@@ -109,7 +106,7 @@ export function OrderTimeline({ orderId }: Props) {
                 fontSize: 13, fontWeight: 600, margin: 0,
                 color: isCancelledStep ? '#C62828' : (isReached ? BRAND.dark : '#999'),
               }}>
-                {step.label}
+                {t(`timelineStep.${status}` as 'timelineStep.pending')}
               </p>
               {reachedAt && (
                 <p style={{ fontSize: 11, color: '#999', margin: '2px 0 0' }}>

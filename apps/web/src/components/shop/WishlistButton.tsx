@@ -13,6 +13,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Heart } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 
 interface Props {
   productId: string
@@ -21,6 +22,7 @@ interface Props {
 export function WishlistButton({ productId }: Props) {
   const router = useRouter()
   const supabase = createClient()
+  const { t } = useTranslation('profile')
 
   const [isFavorited, setIsFavorited] = useState(false)
   const [checking, setChecking] = useState(true)
@@ -95,7 +97,7 @@ export function WishlistButton({ productId }: Props) {
       type="button"
       onClick={handleClick}
       disabled={loading}
-      aria-label={isFavorited ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+      aria-label={isFavorited ? t('removeFromFavoritesAria') : t('addToFavoritesAria')}
       className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm hover:scale-110 transition-transform disabled:opacity-60 disabled:cursor-wait border-none cursor-pointer"
     >
       <Heart

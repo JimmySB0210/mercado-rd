@@ -12,6 +12,7 @@ import { ReviewModal } from '@/components/product/ReviewModal'
 import { DisputeModal } from '@/components/order/DisputeModal'
 import { OrderTimeline } from '@/components/shop/OrderTimeline'
 import { formatPrice } from '@/types/database.types'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
 
 interface OrderItem {
@@ -45,18 +46,21 @@ interface Order {
 const FOOD_CATEGORY_ID = 3 // Alimentos & Bebidas
 const REFUND_WINDOW_DAYS = 7
 
-const STATUS_LABELS: Record<string, { label: string; bg: string; text: string }> = {
-  pending:   { label: '⏳ Pendiente',  bg: '#FEF9C3', text: '#713f12' },
-  confirmed: { label: '✅ Confirmado',  bg: '#DBEAFE', text: '#1e3a8a' },
-  preparing: { label: '📦 Preparando', bg: '#E0E7FF', text: '#3730a3' },
-  shipped:   { label: '🚚 Enviado',    bg: '#DBEAFE', text: '#1e3a8a' },
-  delivered: { label: '✔️ Entregado',   bg: '#DCFCE7', text: '#166534' },
-  cancelled: { label: '❌ Cancelado',   bg: '#FEE2E2', text: '#991B1B' },
+// El texto del label se resuelve en render vía t('orderStatus.<status>') —
+// aquí solo quedan los colores, que no dependen del idioma.
+const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
+  pending:   { bg: '#FEF9C3', text: '#713f12' },
+  confirmed: { bg: '#DBEAFE', text: '#1e3a8a' },
+  preparing: { bg: '#E0E7FF', text: '#3730a3' },
+  shipped:   { bg: '#DBEAFE', text: '#1e3a8a' },
+  delivered: { bg: '#DCFCE7', text: '#166534' },
+  cancelled: { bg: '#FEE2E2', text: '#991B1B' },
 }
 
 export default function MyOrdersPage() {
   const router = useRouter()
   const supabase = createClient()
+  const { t } = useTranslation('profile')
 
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
@@ -187,7 +191,7 @@ export default function MyOrdersPage() {
       <div className="min-h-screen bg-gray-50">
         <Navbar />
         <div className="flex items-center justify-center py-20">
-          <div className="text-gray-400 text-sm">Cargando tus pedidos...</div>
+          <div className="text-gray-400 text-sm">{t('loadingOrders')}</div>
         </div>
       </div>
     )
@@ -198,22 +202,24 @@ export default function MyOrdersPage() {
       <Navbar />
 
       <main className="max-w-3xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Mis pedidos</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">{t('ordersPageTitle')}</h1>
         <p className="text-sm text-gray-400 mb-6">
-          {orders.length} {orders.length === 1 ? 'pedido' : 'pedidos'}
+          {orders.length} {orders.length === 1 ? t('orderSingular') : t('orderPlural')}
         </p>
 
         {orders.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
             <div className="text-5xl mb-4">📦</div>
-            <p className="text-gray-500 mb-4">Aún no has hecho ningún pedido.</p>
-            <a href="/" className="text-blue-600 underline text-sm">Explorar productos</a>
+            <p className="text-gray-500 mb-4">{t('emptyOrdersMessage')}</p>
+            <a href="/" className="text-blue-600 underline text-sm">{t('exploreProductsLink')}</a>
           </div>
         ) : (
           <div className="space-y-4">
             {orders.map(order => {
               const shortId = order.id.split('-')[0].toUpperCase()
-              const statusInfo = STATUS_LABELS[order.status] ?? STATUS_LABELS.pending
+              const knownStatus = order.status in STATUS_COLORS ? order.status : 'pending'
+              const statusColors = STATUS_COLORS[knownStatus]
+              const statusLabel = t(`orderStatus.${knownStatus}` as 'orderStatus.pending')
               const date = new Date(order.created_at).toLocaleDateString('es-DO', { day: 'numeric', month: 'long', year: 'numeric' })
 
               return (
@@ -224,10 +230,10 @@ export default function MyOrdersPage() {
                       <span className="text-xs text-gray-400 ml-3">{date}</span>
                     </div>
                     <span
-                      style={{ background: statusInfo.bg, color: statusInfo.text }}
+                      style={{ background: statusColors.bg, color: statusColors.text }}
                       className="text-xs font-bold px-3 py-1 rounded-full"
                     >
-                      {statusInfo.label}
+                      {statusLabel}
                     </span>
                   </div>
 
@@ -254,14 +260,14 @@ export default function MyOrdersPage() {
                           </p>
                           {order.status === 'delivered' && (
                             item.hasReview ? (
-                              <span className="text-xs text-green-600">✓ Reseñado</span>
+                              <span className="text-xs text-green-600">{t('reviewedLabel')}</span>
                             ) : (
                               <button
                                 onClick={() => setReviewTarget({ orderId: order.id, item })}
                                 style={{ color: BRAND.blue }}
                                 className="text-xs font-semibold underline bg-transparent border-none cursor-pointer"
                               >
-                                Dejar reseña
+                                {t('leaveReviewButton')}
                               </button>
                             )
                           )}
@@ -273,13 +279,13 @@ export default function MyOrdersPage() {
                   {(order.status === 'shipped' || order.status === 'delivered') && order.tracking_number && (
                     <div className="px-5 py-3 bg-blue-50 border-t border-blue-100">
                       <p className="text-sm font-semibold" style={{ color: BRAND.dark }}>
-                        📦 Número de seguimiento: {order.tracking_number}
+                        {t('trackingNumberLabel', { number: order.tracking_number })}
                       </p>
                       {order.courier && (
                         <p className="text-xs text-gray-500 mt-0.5">{order.courier}</p>
                       )}
                       <p className="text-xs text-gray-400 mt-1">
-                        Contacta a tu courier con este número para rastrear tu paquete.
+                        {t('trackingHint')}
                       </p>
                     </div>
                   )}
@@ -290,13 +296,13 @@ export default function MyOrdersPage() {
                       style={{ color: BRAND.gray }}
                       className="text-xs font-semibold bg-transparent border-none cursor-pointer py-2.5"
                     >
-                      {expandedTimelines.has(order.id) ? 'Ocultar seguimiento ▴' : 'Ver seguimiento ▾'}
+                      {expandedTimelines.has(order.id) ? t('hideTimelineButton') : t('showTimelineButton')}
                     </button>
                     {expandedTimelines.has(order.id) && <OrderTimeline orderId={order.id} />}
                   </div>
 
                   <div className="px-5 py-3 bg-gray-50 flex justify-between items-center flex-wrap gap-2">
-                    <span className="text-xs text-gray-500">Total del pedido</span>
+                    <span className="text-xs text-gray-500">{t('orderTotalLabel')}</span>
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-bold text-gray-900">{formatPrice(order.total_rdp)}</span>
                       {(order.status === 'delivered' || order.status === 'shipped') && (
@@ -306,7 +312,7 @@ export default function MyOrdersPage() {
                             className="text-xs font-semibold underline"
                             style={{ color: BRAND.gray }}
                           >
-                            Ver disputa →
+                            {t('viewDisputeLink')}
                           </a>
                         ) : (
                           <button
@@ -314,9 +320,9 @@ export default function MyOrdersPage() {
                               // Prioridad: alimentos no elegibles es una restricción
                               // permanente, la de 7 días es solo temporal
                               const refundIneligibleReason = order.tieneProductoAlimento
-                                ? 'Los productos de alimentos no son elegibles para devolución'
+                                ? t('refundIneligibleFood')
                                 : !(order.status === 'delivered' && order.diasDesdeEntrega !== null && order.diasDesdeEntrega <= REFUND_WINDOW_DAYS)
-                                  ? 'Ya pasaron los 7 días para devolución'
+                                  ? t('refundIneligibleWindowExpired')
                                   : null
 
                               setDisputeTarget({
@@ -329,7 +335,7 @@ export default function MyOrdersPage() {
                             style={{ color: BRAND.red }}
                             className="text-xs font-semibold underline bg-transparent border-none cursor-pointer"
                           >
-                            Abrir disputa
+                            {t('openDisputeButton')}
                           </button>
                         )
                       )}
