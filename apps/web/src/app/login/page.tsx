@@ -8,6 +8,7 @@ import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/hooks/useAuth'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
 
 export default function LoginPage() {
@@ -24,6 +25,7 @@ function LoginForm() {
   const redirect = searchParams.get('redirect') ?? '/'
   const reason = searchParams.get('reason')
   const { signInWithEmail, signInWithGoogle } = useAuth()
+  const { t } = useTranslation('auth')
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -41,8 +43,8 @@ function LoginForm() {
     if (error) {
       setError(
         error.message === 'Invalid login credentials'
-          ? 'Email o contraseña incorrectos'
-          : (typeof error.message === 'string' ? error.message : 'Error al iniciar sesión')
+          ? t('invalidCredentials')
+          : (typeof error.message === 'string' ? error.message : t('genericLoginError'))
       )
       setLoading(false)
       return
@@ -58,7 +60,7 @@ function LoginForm() {
     try {
       await signInWithGoogle()
     } catch {
-      setError('No se pudo iniciar sesión. Intenta de nuevo.')
+      setError(t('googleSignInErrorLogin'))
       setOauthLoading(false)
     }
   }
@@ -78,12 +80,12 @@ function LoginForm() {
               <span className="text-[var(--brand-blue)]">D</span>
             </span>
           </Link>
-          <p className="mt-2 text-gray-500 text-sm">Inicia sesión en tu cuenta</p>
+          <p className="mt-2 text-gray-500 text-sm">{t('subtitleLogin')}</p>
         </div>
 
         {reason === 'inactivity' && (
           <div className="mb-4 bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-lg px-4 py-3">
-            Tu sesión cerró automáticamente por inactividad. Inicia sesión de nuevo para continuar.
+            {t('inactivityBanner')}
           </div>
         )}
 
@@ -104,41 +106,41 @@ function LoginForm() {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
               </svg>
-              {oauthLoading ? 'Conectando...' : 'Continuar con Google'}
+              {oauthLoading ? t('connecting') : t('continueWithGoogle')}
             </button>
           </div>
 
           <div className="flex items-center gap-3 mb-6">
             <hr className="flex-1 border-gray-200" />
-            <span className="text-xs text-gray-400 whitespace-nowrap">o continúa con</span>
+            <span className="text-xs text-gray-400 whitespace-nowrap">{t('orContinueWith')}</span>
             <hr className="flex-1 border-gray-200" />
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Correo electrónico
+                {t('emailLabel')}
               </label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="tucorreo@ejemplo.com"
+                placeholder={t('emailPlaceholder')}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)] focus:border-transparent"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Contraseña
+                {t('passwordLabel')}
               </label>
               <input
                 type="password"
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder={t('passwordPlaceholder')}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)] focus:border-transparent"
               />
             </div>
@@ -154,21 +156,21 @@ function LoginForm() {
               disabled={loading}
               className="w-full bg-[var(--brand-red)] hover:brightness-90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition-colors"
             >
-              {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+              {loading ? t('loggingIn') : t('loginButton')}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-500">
-            ¿No tienes cuenta?{' '}
+            {t('noAccountYet')}{' '}
             <Link href="/register" className="text-[var(--brand-blue)] font-medium hover:underline">
-              Regístrate gratis
+              {t('registerFreeLink')}
             </Link>
           </p>
         </div>
 
         {/* Demo hint */}
         <div className="mt-4 bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 text-xs text-blue-700">
-          <strong>Cuentas de prueba:</strong><br />
+          <strong>{t('demoAccountsTitle')}</strong><br />
           carlos@demo.mercadord.com / Demo1234!<br />
           maria@demo.mercadord.com / Demo1234!
         </div>

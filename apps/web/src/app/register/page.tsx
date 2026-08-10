@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Script from 'next/script'
 import Link from 'next/link'
 import { useAuth } from '@/lib/hooks/useAuth'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
@@ -26,6 +27,7 @@ function RegisterForm() {
   const searchParams = useSearchParams()
   const redirect = searchParams.get('redirect')
   const { signUpWithEmail, signInWithGoogle } = useAuth()
+  const { t } = useTranslation('auth')
   const [oauthLoading, setOauthLoading] = useState(false)
 
   const [form, setForm] = useState({
@@ -59,7 +61,7 @@ function RegisterForm() {
     try {
       await signInWithGoogle()
     } catch {
-      setError('No se pudo continuar. Intenta de nuevo.')
+      setError(t('googleSignInErrorRegister'))
       setOauthLoading(false)
     }
   }
@@ -69,22 +71,22 @@ function RegisterForm() {
     setError(null)
 
     if (form.password !== form.confirmPassword) {
-      setError('Las contraseñas no coinciden')
+      setError(t('passwordMismatch'))
       return
     }
 
     if (form.password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres')
+      setError(t('passwordTooShort'))
       return
     }
 
     if (!acceptedTerms) {
-      setError('Debes aceptar los Términos de Servicio y la Política de Privacidad')
+      setError(t('mustAcceptTerms'))
       return
     }
 
     if (TURNSTILE_SITE_KEY && !captchaToken) {
-      setError('Completa la verificación de seguridad')
+      setError(t('completeCaptcha'))
       return
     }
 
@@ -99,7 +101,7 @@ function RegisterForm() {
       const captchaData = await captchaRes.json().catch(() => ({ success: false }))
 
       if (!captchaData.success) {
-        setError('Verificación de seguridad fallida. Intenta de nuevo.')
+        setError(t('captchaFailed'))
         setLoading(false)
         return
       }
@@ -115,7 +117,7 @@ function RegisterForm() {
     if (error) {
       setError(
         error.message.includes('already registered')
-          ? 'Este correo ya está registrado'
+          ? t('emailAlreadyRegistered')
           : error.message
       )
       setLoading(false)
@@ -136,15 +138,15 @@ function RegisterForm() {
         <div className="w-full max-w-md text-center">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
             <div className="text-5xl mb-4">✅</div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">¡Cuenta creada!</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">{t('accountCreatedTitle')}</h2>
             <p className="text-gray-500 text-sm mb-6">
-              Revisa tu correo <strong>{form.email}</strong> para confirmar tu cuenta, luego inicia sesión.
+              {t('checkEmailPrefix')} <strong>{form.email}</strong> {t('checkEmailSuffix')}
             </p>
             <Link
               href={redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : '/login'}
               className="block w-full bg-[var(--brand-red)] text-white font-medium py-3 rounded-lg text-center hover:brightness-90 transition-colors"
             >
-              Ir a iniciar sesión
+              {t('goToLoginLink')}
             </Link>
           </div>
         </div>
@@ -167,7 +169,7 @@ function RegisterForm() {
               <span className="text-[var(--brand-blue)]">D</span>
             </span>
           </Link>
-          <p className="mt-2 text-gray-500 text-sm">Crea tu cuenta gratis</p>
+          <p className="mt-2 text-gray-500 text-sm">{t('subtitleRegister')}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
@@ -186,20 +188,20 @@ function RegisterForm() {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
               </svg>
-              {oauthLoading ? 'Conectando...' : 'Continuar con Google'}
+              {oauthLoading ? t('connecting') : t('continueWithGoogle')}
             </button>
           </div>
 
           <div className="flex items-center gap-3 mb-6">
             <hr className="flex-1 border-gray-200" />
-            <span className="text-xs text-gray-400 whitespace-nowrap">o continúa con</span>
+            <span className="text-xs text-gray-400 whitespace-nowrap">{t('orContinueWith')}</span>
             <hr className="flex-1 border-gray-200" />
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nombre completo
+                {t('fullNameLabel')}
               </label>
               <input
                 name="fullName"
@@ -207,14 +209,14 @@ function RegisterForm() {
                 required
                 value={form.fullName}
                 onChange={handleChange}
-                placeholder="Tu nombre y apellido"
+                placeholder={t('fullNamePlaceholder')}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Correo electrónico
+                {t('emailLabel')}
               </label>
               <input
                 name="email"
@@ -222,28 +224,28 @@ function RegisterForm() {
                 required
                 value={form.email}
                 onChange={handleChange}
-                placeholder="tucorreo@ejemplo.com"
+                placeholder={t('emailPlaceholder')}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Teléfono <span className="text-gray-400">(opcional)</span>
+                {t('phoneLabel')} <span className="text-gray-400">{t('phoneOptional')}</span>
               </label>
               <input
                 name="phone"
                 type="tel"
                 value={form.phone}
                 onChange={handleChange}
-                placeholder="809-555-0000"
+                placeholder={t('phonePlaceholder')}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Contraseña
+                {t('passwordLabel')}
               </label>
               <input
                 name="password"
@@ -251,14 +253,14 @@ function RegisterForm() {
                 required
                 value={form.password}
                 onChange={handleChange}
-                placeholder="Mínimo 6 caracteres"
+                placeholder={t('registerPasswordPlaceholder')}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Confirmar contraseña
+                {t('confirmPasswordLabel')}
               </label>
               <input
                 name="confirmPassword"
@@ -266,7 +268,7 @@ function RegisterForm() {
                 required
                 value={form.confirmPassword}
                 onChange={handleChange}
-                placeholder="Repite tu contraseña"
+                placeholder={t('confirmPasswordPlaceholder')}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
               />
             </div>
@@ -279,13 +281,13 @@ function RegisterForm() {
                 className="mt-0.5"
               />
               <span>
-                Acepto los{' '}
+                {t('acceptTermsPrefix')}{' '}
                 <Link href="/terminos" target="_blank" className="text-[var(--brand-blue)] hover:underline">
-                  Términos de Servicio
+                  {t('termsOfServiceLink')}
                 </Link>
-                {' '}y la{' '}
+                {' '}{t('andConnector')}{' '}
                 <Link href="/privacidad" target="_blank" className="text-[var(--brand-blue)] hover:underline">
-                  Política de Privacidad
+                  {t('privacyPolicyLink')}
                 </Link>
               </span>
             </label>
@@ -313,14 +315,14 @@ function RegisterForm() {
               disabled={loading || (!!TURNSTILE_SITE_KEY && !captchaToken)}
               className="w-full bg-[var(--brand-red)] hover:brightness-90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition-colors mt-2"
             >
-              {loading ? 'Creando cuenta...' : 'Crear cuenta'}
+              {loading ? t('creatingAccount') : t('createAccountButton')}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-500">
-            ¿Ya tienes cuenta?{' '}
+            {t('alreadyHaveAccount')}{' '}
             <Link href="/login" className="text-[var(--brand-blue)] font-medium hover:underline">
-              Inicia sesión
+              {t('loginLink')}
             </Link>
           </p>
         </div>
