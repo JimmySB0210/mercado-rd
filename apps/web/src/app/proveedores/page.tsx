@@ -13,6 +13,7 @@ import { useEffect, useState } from 'react'
 import { createPublicClient } from '@/lib/supabase/public'
 import { Navbar } from '@/components/shop/Navbar'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
 import { ProviderFilters } from '@/components/providers/ProviderFilters'
 import { ProviderCard } from '@/components/providers/ProviderCard'
@@ -23,6 +24,7 @@ interface ProvinceOption { id: number; name: string }
 
 export default function ProvidersDirectoryPage() {
   const isMobile = useIsMobile(860)
+  const { t } = useTranslation('directory')
 
   const [filters, setFilters] = useState<ProviderFiltersState>(EMPTY_PROVIDER_FILTERS)
   const [provinces, setProvinces] = useState<ProvinceOption[]>([])
@@ -122,9 +124,9 @@ export default function ProvidersDirectoryPage() {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div style={{ marginBottom: 20 }}>
-          <h1 className="text-2xl font-bold text-gray-900">Proveedores</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('providersPageTitle')}</h1>
           <p className="text-sm text-gray-400 mt-1">
-            Fabricantes, mayoristas y distribuidores dominicanos — filtra por lo que necesitas
+            {t('providersPageSubtitle')}
           </p>
         </div>
 
@@ -138,7 +140,7 @@ export default function ProvidersDirectoryPage() {
               marginBottom: 16, cursor: 'pointer',
             }}
           >
-            ⚙️ Filtros
+            {t('mobileFiltersButton')}
           </button>
         )}
 
@@ -152,13 +154,13 @@ export default function ProvidersDirectoryPage() {
           <div>
             {loading ? (
               <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-                <p className="text-gray-400 text-sm">Buscando proveedores...</p>
+                <p className="text-gray-400 text-sm">{t('searchingProviders')}</p>
               </div>
             ) : results.length === 0 ? (
               <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
                 <div className="text-4xl mb-3">🔍</div>
                 <p className="text-gray-500 text-sm">
-                  No encontramos proveedores con esos filtros — prueba ajustando la búsqueda
+                  {t('noProvidersFound')}
                 </p>
               </div>
             ) : (
@@ -200,11 +202,11 @@ export default function ProvidersDirectoryPage() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #eee', flexShrink: 0 }}>
-              <span style={{ fontWeight: 700, fontSize: 16, color: BRAND.dark }}>Filtros</span>
+              <span style={{ fontWeight: 700, fontSize: 16, color: BRAND.dark }}>{t('filtersDrawerTitle')}</span>
               <button
                 type="button"
                 onClick={() => setMobileFiltersOpen(false)}
-                aria-label="Cerrar filtros"
+                aria-label={t('closeFiltersAria')}
                 style={{ background: 'transparent', border: 'none', color: BRAND.gray, fontSize: 20, cursor: 'pointer' }}
               >
                 ×
@@ -220,7 +222,7 @@ export default function ProvidersDirectoryPage() {
                   borderRadius: 8, fontWeight: 700, fontSize: 14, marginTop: 20, cursor: 'pointer',
                 }}
               >
-                Ver resultados
+                {t('viewResultsButton')}
               </button>
             </div>
           </div>

@@ -22,6 +22,7 @@ interface Props {
 
 export function ProviderFilters({ filters, onChange, provinces, categories }: Props) {
   const { t } = useTranslation('vendorOptions')
+  const { t: td } = useTranslation('directory')
   const businessTypeOptions = BUSINESS_TYPE_OPTIONS.map(value => ({ value, label: t(`businessType.${value}`) }))
 
   const toggleBusinessType = (value: BusinessType) => {
@@ -43,12 +44,12 @@ export function ProviderFilters({ filters, onChange, provinces, categories }: Pr
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div>
-        <label style={labelStyle}>Tipo de negocio</label>
+        <label style={labelStyle}>{td('businessTypeFilterLabel')}</label>
         <CheckboxGrid options={businessTypeOptions} selected={filters.businessTypes} onToggle={toggleBusinessType} columns={1} />
       </div>
 
       <div>
-        <label style={labelStyle}>Categoría</label>
+        <label style={labelStyle}>{td('categoryFilterLabel')}</label>
         <CategoryMultiSelect
           categories={categories}
           selectedIds={filters.categoryIds}
@@ -57,13 +58,13 @@ export function ProviderFilters({ filters, onChange, provinces, categories }: Pr
       </div>
 
       <div>
-        <label style={labelStyle}>Provincia</label>
+        <label style={labelStyle}>{td('provinceFilterLabel')}</label>
         <select
           style={{ ...inputStyle, background: '#fff' }}
           value={filters.provinceId}
           onChange={e => onChange({ provinceId: e.target.value })}
         >
-          <option value="">Todas</option>
+          <option value="">{td('allProvincesOption')}</option>
           {provinces.map(p => (
             <option key={p.id} value={p.id}>{p.name}</option>
           ))}
@@ -71,19 +72,19 @@ export function ProviderFilters({ filters, onChange, provinces, categories }: Pr
       </div>
 
       <div>
-        <label style={labelStyle}>MOQ máximo</label>
+        <label style={labelStyle}>{td('maxMoqFilterLabel')}</label>
         <input
           type="number"
           min="1"
           style={inputStyle}
           value={filters.maxMoq}
           onChange={e => onChange({ maxMoq: e.target.value })}
-          placeholder="Mostrar proveedores con MOQ ≤ X"
+          placeholder={td('maxMoqPlaceholder')}
         />
       </div>
 
       <div>
-        <label style={labelStyle}>Servicios</label>
+        <label style={labelStyle}>{td('servicesFilterLabel')}</label>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {VENDOR_SERVICE_GROUPS.map(group => (
             <div key={group.titleKey}>
@@ -100,16 +101,16 @@ export function ProviderFilters({ filters, onChange, provinces, categories }: Pr
       </div>
 
       <div>
-        <label style={labelStyle}>Nivel de verificación mínimo</label>
+        <label style={labelStyle}>{td('minVerificationFilterLabel')}</label>
         <select
           style={{ ...inputStyle, background: '#fff' }}
           value={filters.minVerificationLevel}
           onChange={e => onChange({ minVerificationLevel: e.target.value })}
         >
-          <option value="">Cualquiera</option>
-          <option value="2">✓ Negocio verificado o más</option>
-          <option value="3">🏭 Fabricante verificado o más</option>
-          <option value="4">⭐ Solo proveedores destacados</option>
+          <option value="">{td('anyVerificationOption')}</option>
+          <option value="2">{td('verifiedOrMoreOption')}</option>
+          <option value="3">{td('manufacturerVerifiedOrMoreOption')}</option>
+          <option value="4">{td('featuredOnlyOption')}</option>
         </select>
       </div>
     </div>

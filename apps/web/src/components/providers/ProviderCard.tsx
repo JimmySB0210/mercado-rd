@@ -18,6 +18,7 @@ interface Props {
 
 export function ProviderCard({ vendor, provinceName, businessTypes, services }: Props) {
   const { t } = useTranslation('vendorOptions')
+  const { t: td } = useTranslation('directory')
   const businessTypeLabels = businessTypes.map(v => t(`businessType.${v}`))
   const serviceLabels = services.slice(0, 3).map(v => t(`service.${v}`))
 
@@ -66,7 +67,7 @@ export function ProviderCard({ vendor, provinceName, businessTypes, services }: 
 
       {!!vendor.min_order_quantity && (
         <p className="text-xs font-medium" style={{ color: BRAND.blue }}>
-          MOQ: {vendor.min_order_quantity} {vendor.min_order_unit ?? 'unidades'}
+          MOQ: {vendor.min_order_quantity} {vendor.min_order_unit ?? td('unitsFallback')}
         </p>
       )}
     </a>
