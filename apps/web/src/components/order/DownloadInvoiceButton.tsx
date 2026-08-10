@@ -12,12 +12,14 @@
 
 import { useState } from 'react'
 import type { InvoiceData } from '@/lib/invoice/generateInvoice'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 
 interface Props {
   data: InvoiceData
 }
 
 export function DownloadInvoiceButton({ data }: Props) {
+  const { t } = useTranslation('checkout')
   const [loading, setLoading] = useState(false)
 
   const handleDownload = async () => {
@@ -34,7 +36,7 @@ export function DownloadInvoiceButton({ data }: Props) {
       disabled={loading}
       className="block w-full text-center bg-white border border-gray-200 text-gray-900 py-3 rounded-xl font-medium hover:bg-gray-50 transition-colors cursor-pointer disabled:cursor-wait disabled:opacity-60"
     >
-      {loading ? 'Generando...' : '📄 Descargar factura'}
+      {loading ? t('generatingInvoice') : t('downloadInvoice')}
     </button>
   )
 }

@@ -16,17 +16,20 @@ import { useLocationStore } from '@/lib/store/location'
 import type { Province } from '@/types/database.types'
 import { notifyOrderConfirmed } from '@/lib/whatsapp/notifications'
 import { processPayment, type PaymentResult } from '@/lib/payments/azul'
-import { validateText } from '@/lib/validation'
+import { DANGEROUS_PATTERN } from '@/lib/validation'
+import { useTranslation } from '@/lib/hooks/useTranslation'
+import type { CheckoutDict } from '@/lib/i18n/es/checkout'
 import Image from 'next/image'
 
-const PAYMENT_METHODS = [
-  { id: 'azul',     label: 'Tarjeta (Azul)',    emoji: '💳' },
-  { id: 'cardnet',  label: 'Tarjeta (CardNet)', emoji: '🏦' },
-  { id: 'transfer', label: 'Transferencia',     emoji: '🏧' },
-  { id: 'cash',     label: 'Efectivo',          emoji: '💵' },
+const PAYMENT_METHOD_KEYS: { id: string; labelKey: keyof CheckoutDict; emoji: string }[] = [
+  { id: 'azul',     labelKey: 'paymentAzulLabel',     emoji: '💳' },
+  { id: 'cardnet',  labelKey: 'paymentCardnetLabel',  emoji: '🏦' },
+  { id: 'transfer', labelKey: 'paymentTransferLabel', emoji: '🏧' },
+  { id: 'cash',     labelKey: 'paymentCashLabel',      emoji: '💵' },
 ]
 
 export default function CheckoutPage() {
+  const { t } = useTranslation('checkout')
   const router = useRouter()
   const { user, profile } = useAuth()
   const { items, clearCart } = useCartStore()
@@ -158,7 +161,7 @@ export default function CheckoutPage() {
     setCouponApplying(false)
 
     if (error || !data?.valid) {
-      setCouponError(data?.error ?? 'No se pudo validar el cupón')
+      setCouponError(data?.error ?? t('couponGenericError'))
       setAppliedCoupon(null)
       return
     }
@@ -175,15 +178,15 @@ export default function CheckoutPage() {
   const handleSubmit = async () => {
     if (!user) { router.push('/login?redirect=/checkout'); return }
     if (!form.fullName || !form.phone || !form.address || !form.province) {
-      setError('Por favor completa todos los campos obligatorios')
+      setError(t('requiredFieldsError'))
       return
     }
     if (form.payMethod === 'azul' && (!form.cardNumber || !form.cardExpiration || !form.cardCvc)) {
-      setError('Completa los datos de la tarjeta')
+      setError(t('cardDetailsRequired'))
       return
     }
     if (shippingLoading) {
-      setError('Espera un momento, estamos calculando el costo de envío')
+      setError(t('waitingShippingCalc'))
       return
     }
     if (items.length === 0) { router.push('/'); return }
@@ -191,11 +194,29 @@ export default function CheckoutPage() {
     setAddressError(null)
     setNotesError(null)
 
-    const addressErr = validateText(form.address, 'La dirección', 10, 200)
-    if (addressErr) { setAddressError(addressErr); return }
+    // Misma lógica que lib/validation.ts validateText() (longitud +
+    // DANGEROUS_PATTERN), pero con el mensaje traducido — validateText
+    // arma el string completo en español y lo comparten 4 componentes
+    // más fuera del alcance de este namespace, así que no se toca.
+    const addressTrimmed = form.address.trim()
+    if (addressTrimmed.length < 10 || addressTrimmed.length > 200) {
+      setAddressError(t('addressLengthError', { min: 10, max: 200 }))
+      return
+    }
+    if (DANGEROUS_PATTERN.test(addressTrimmed)) {
+      setAddressError(t('addressInvalidChars'))
+      return
+    }
 
-    const notesErr = validateText(form.notes, 'Las notas', 0, 500)
-    if (notesErr) { setNotesError(notesErr); return }
+    const notesTrimmed = form.notes.trim()
+    if (notesTrimmed.length > 500) {
+      setNotesError(t('notesTooLong', { max: 500 }))
+      return
+    }
+    if (DANGEROUS_PATTERN.test(notesTrimmed)) {
+      setNotesError(t('notesInvalidChars'))
+      return
+    }
 
     setLoading(true)
     setError(null)
@@ -214,7 +235,7 @@ export default function CheckoutPage() {
 
       if (rateCheckRes.status === 429) {
         const { error: rateError } = await rateCheckRes.json().catch(() => ({ error: null }))
-        setError(rateError ?? 'Demasiados intentos. Espera 15 minutos antes de intentar de nuevo.')
+        setError(rateError ?? t('rateLimitFallback'))
         setRateLimited(true)
         setLoading(false)
         return
@@ -235,7 +256,10 @@ export default function CheckoutPage() {
         })
 
         if (!paymentResult.success) {
-          setError(paymentResult.responseMessage)
+          // paymentResult.responseMessage viene de la pasarela (mock o Azul
+          // real) en español fijo — no se traduce (mensaje de un sistema
+          // externo). Mapeamos por código a un mensaje traducido en su lugar.
+          setError(paymentResult.responseCode === '05' ? t('paymentDeclined') : t('paymentErrorGeneric'))
           setLoading(false)
           fetch('/api/checkout/rate-check', {
             method: 'POST',
@@ -327,7 +351,7 @@ export default function CheckoutPage() {
       router.push(`/confirm?order=${orderId}`)
     } catch (err) {
       console.error('[checkout]', err)
-      setError('Ocurrió un error al procesar tu pedido. Intenta de nuevo.')
+      setError(t('genericOrderError'))
       setLoading(false)
     }
   }
@@ -338,10 +362,10 @@ export default function CheckoutPage() {
         <Navbar />
         <div style={{ maxWidth: 480, margin: '80px auto', textAlign: 'center', padding: '0 24px' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🛒</div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: BRAND.dark, marginBottom: 8 }}>Tu carrito está vacío</h2>
-          <p style={{ color: BRAND.gray, fontSize: 14, marginBottom: 24 }}>Agrega productos antes de ir al checkout</p>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: BRAND.dark, marginBottom: 8 }}>{t('emptyCartTitle')}</h2>
+          <p style={{ color: BRAND.gray, fontSize: 14, marginBottom: 24 }}>{t('emptyCartSub')}</p>
           <a href="/" style={{ display: 'inline-block', background: BRAND.blue, color: '#fff', textDecoration: 'none', padding: '12px 28px', borderRadius: 8, fontWeight: 600 }}>
-            Explorar productos
+            {t('exploreProducts')}
           </a>
         </div>
       </div>
@@ -359,20 +383,20 @@ export default function CheckoutPage() {
 
           {/* Dirección */}
           <div style={{ background: '#fff', borderRadius: 12, padding: 24, marginBottom: 16, border: '1px solid #EEE' }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 18, color: BRAND.dark }}>Dirección de entrega</h2>
+            <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 18, color: BRAND.dark }}>{t('deliveryAddressHeading')}</h2>
             <div style={{ display: 'grid', gap: 12 }}>
               <input
                 name="fullName"
                 value={form.fullName}
                 onChange={handleChange}
-                placeholder="Nombre completo *"
+                placeholder={t('fullNamePlaceholder')}
                 style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
               />
               <input
                 name="phone"
                 value={form.phone}
                 onChange={handleChange}
-                placeholder="Teléfono *"
+                placeholder={t('phonePlaceholder')}
                 style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
               />
               <div>
@@ -380,7 +404,7 @@ export default function CheckoutPage() {
                   name="address"
                   value={form.address}
                   onChange={handleChange}
-                  placeholder="Dirección completa *"
+                  placeholder={t('addressPlaceholder')}
                   style={{ width: '100%', border: `1px solid ${addressError ? '#E53935' : '#E0E0E0'}`, borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
                 />
                 {addressError && <p style={{ fontSize: 12, color: '#E53935', margin: '4px 0 0' }}>{addressError}</p>}
@@ -392,7 +416,7 @@ export default function CheckoutPage() {
                   onChange={handleChange}
                   style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box', appearance: 'none', background: '#fff', color: form.province ? BRAND.dark : BRAND.gray }}
                 >
-                  <option value="">Selecciona tu provincia *</option>
+                  <option value="">{t('selectProvincePlaceholder')}</option>
                   {provinces.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
                 </select>
                 <ChevronDown size={16} color={BRAND.gray} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
@@ -402,7 +426,7 @@ export default function CheckoutPage() {
                   name="notes"
                   value={form.notes}
                   onChange={handleChange}
-                  placeholder="Instrucciones de entrega (opcional)"
+                  placeholder={t('notesPlaceholder')}
                   rows={2}
                   style={{ width: '100%', border: `1px solid ${notesError ? '#E53935' : '#E0E0E0'}`, borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }}
                 />
@@ -413,9 +437,9 @@ export default function CheckoutPage() {
 
           {/* Método de pago */}
           <div style={{ background: '#fff', borderRadius: 12, padding: 24, border: '1px solid #EEE' }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 18, color: BRAND.dark }}>Método de pago</h2>
+            <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 18, color: BRAND.dark }}>{t('paymentMethodHeading')}</h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              {PAYMENT_METHODS.map(m => (
+              {PAYMENT_METHOD_KEYS.map(m => (
                 <label
                   key={m.id}
                   style={{
@@ -435,7 +459,7 @@ export default function CheckoutPage() {
                     style={{ display: 'none' }}
                   />
                   <span style={{ fontSize: 18 }}>{m.emoji}</span>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: BRAND.dark }}>{m.label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: BRAND.dark }}>{t(m.labelKey)}</span>
                 </label>
               ))}
             </div>
@@ -446,7 +470,7 @@ export default function CheckoutPage() {
                   name="cardNumber"
                   value={form.cardNumber}
                   onChange={handleChange}
-                  placeholder="Número de tarjeta *"
+                  placeholder={t('cardNumberPlaceholder')}
                   inputMode="numeric"
                   style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
                 />
@@ -455,7 +479,7 @@ export default function CheckoutPage() {
                     name="cardExpiration"
                     value={form.cardExpiration}
                     onChange={handleChange}
-                    placeholder="MMAA *"
+                    placeholder={t('cardExpirationPlaceholder')}
                     maxLength={4}
                     inputMode="numeric"
                     style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
@@ -464,21 +488,21 @@ export default function CheckoutPage() {
                     name="cardCvc"
                     value={form.cardCvc}
                     onChange={handleChange}
-                    placeholder="CVC *"
+                    placeholder={t('cardCvcPlaceholder')}
                     maxLength={4}
                     inputMode="numeric"
                     style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
                   />
                 </div>
                 <p style={{ fontSize: 11, color: BRAND.gray, margin: 0 }}>
-                  💡 Modo simulado activo — cualquier tarjeta aprueba, excepto una que termine en 0000.
+                  {t('mockModeNotice')}
                 </p>
               </div>
             )}
 
             {form.payMethod === 'cardnet' && (
               <div style={{ marginTop: 14, padding: 12, background: '#FFF8E1', borderRadius: 8, border: '1px solid #FFE082', fontSize: 12, color: '#5D4037' }}>
-                💡 Serás redirigido al portal seguro de CardNet para completar el pago.
+                {t('cardnetRedirectNotice')}
               </div>
             )}
           </div>
@@ -488,7 +512,9 @@ export default function CheckoutPage() {
         <div style={{ position: 'sticky', top: 20 }}>
           <div style={{ background: '#fff', borderRadius: 12, padding: 20, border: '1px solid #EEE', marginBottom: 12 }}>
             <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 14, color: BRAND.dark }}>
-              Tu pedido ({items.length} {items.length === 1 ? 'artículo' : 'artículos'})
+              {items.length === 1
+                ? t('orderItemsCountOne', { count: items.length })
+                : t('orderItemsCountOther', { count: items.length })}
             </h2>
 
             {/* Items */}
@@ -522,13 +548,13 @@ export default function CheckoutPage() {
             {/* Cupón */}
             <div style={{ borderTop: '1px solid #EEE', paddingTop: 12, marginBottom: 12 }}>
               <label style={{ fontSize: 12, color: BRAND.gray, display: 'block', marginBottom: 6 }}>
-                ¿Tienes un cupón?
+                {t('couponQuestion')}
               </label>
               <div style={{ display: 'flex', gap: 8 }}>
                 <input
                   value={couponCode}
                   onChange={e => setCouponCode(e.target.value)}
-                  placeholder="CÓDIGO"
+                  placeholder={t('couponPlaceholder')}
                   disabled={!!appliedCoupon}
                   style={{
                     flex: 1, border: '1px solid #E0E0E0', borderRadius: 8, padding: '9px 12px',
@@ -542,7 +568,7 @@ export default function CheckoutPage() {
                     onClick={handleRemoveCoupon}
                     style={{ border: '1px solid #E0E0E0', background: '#fff', color: BRAND.gray, borderRadius: 8, padding: '9px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
                   >
-                    Quitar
+                    {t('removeCoupon')}
                   </button>
                 ) : (
                   <button
@@ -556,61 +582,61 @@ export default function CheckoutPage() {
                       cursor: couponApplying || !couponCode.trim() ? 'not-allowed' : 'pointer',
                     }}
                   >
-                    {couponApplying ? '...' : 'Aplicar'}
+                    {couponApplying ? '...' : t('applyCoupon')}
                   </button>
                 )}
               </div>
               {couponError && <p style={{ fontSize: 12, color: '#E53935', margin: '6px 0 0' }}>{couponError}</p>}
               {appliedCoupon && (
                 <p style={{ fontSize: 12, color: '#2E7D32', margin: '6px 0 0', fontWeight: 600 }}>
-                  ✓ Cupón {appliedCoupon.code} aplicado
+                  {t('couponAppliedMsg', { code: appliedCoupon.code })}
                 </p>
               )}
             </div>
 
             <div style={{ borderTop: '1px solid #EEE', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: BRAND.dark }}>
-                <span>Subtotal</span><span>RD${(subtotal / 100).toLocaleString('es-DO')}</span>
+                <span>{t('subtotalLabel')}</span><span>RD${(subtotal / 100).toLocaleString('es-DO')}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: BRAND.dark }}>
                 <span>
-                  Envío
+                  {t('shippingLabel')}
                   {shippingRate && (
                     <span style={{ display: 'block', fontSize: 11, color: BRAND.gray }}>
                       {shippingRate.estimated_days_min === shippingRate.estimated_days_max
-                        ? `${shippingRate.estimated_days_min} día${shippingRate.estimated_days_min === 1 ? '' : 's'}`
-                        : `${shippingRate.estimated_days_min}-${shippingRate.estimated_days_max} días`}
+                        ? t(shippingRate.estimated_days_min === 1 ? 'shippingDaysOne' : 'shippingDaysOther', { count: shippingRate.estimated_days_min })
+                        : t('shippingDaysRange', { min: shippingRate.estimated_days_min, max: shippingRate.estimated_days_max })}
                     </span>
                   )}
                 </span>
                 <span>
                   {!form.province
-                    ? 'Selecciona provincia'
+                    ? t('selectProvinceHint')
                     : shippingLoading
-                      ? 'Calculando...'
+                      ? t('calculatingShipping')
                       : qualifiesForFreeShipping
                         ? (
                           <>
                             <span style={{ textDecoration: 'line-through', color: BRAND.gray, marginRight: 6 }}>
                               RD${(rawShipping / 100).toLocaleString('es-DO')}
                             </span>
-                            <span style={{ color: '#2E7D32', fontWeight: 700 }}>GRATIS 🎉</span>
+                            <span style={{ color: '#2E7D32', fontWeight: 700 }}>{t('freeBadge')}</span>
                           </>
                         )
                         : `RD$${(ENVIO / 100).toLocaleString('es-DO')}`}
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: BRAND.dark }}>
-                <span>ITBIS (18%)</span><span>RD${(itbis / 100).toLocaleString('es-DO')}</span>
+                <span>{t('itbisLabel')}</span><span>RD${(itbis / 100).toLocaleString('es-DO')}</span>
               </div>
               {appliedCoupon && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#2E7D32', fontWeight: 600 }}>
-                  <span>Descuento ({appliedCoupon.code})</span>
+                  <span>{t('discountLabel', { code: appliedCoupon.code })}</span>
                   <span>-RD${(discountRdp / 100).toLocaleString('es-DO')}</span>
                 </div>
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 16, borderTop: '1px solid #EEE', paddingTop: 10, marginTop: 4, color: BRAND.dark }}>
-                <span>Total</span>
+                <span>{t('totalLabel')}</span>
                 <span>RD${(Math.max(0, total + ENVIO - discountRdp) / 100).toLocaleString('es-DO')}</span>
               </div>
             </div>
@@ -623,13 +649,13 @@ export default function CheckoutPage() {
           )}
 
           <p style={{ fontSize: 11, color: BRAND.gray, textAlign: 'center', marginBottom: 10 }}>
-            Al confirmar, aceptas nuestros{' '}
+            {t('acceptTermsPrefix')}{' '}
             <a href="/terminos" target="_blank" style={{ color: BRAND.blue, textDecoration: 'underline' }}>
-              Términos de Servicio
+              {t('termsOfServiceLink')}
             </a>
-            {' '}y{' '}
+            {' '}{t('andWord')}{' '}
             <a href="/privacidad" target="_blank" style={{ color: BRAND.blue, textDecoration: 'underline' }}>
-              Política de Privacidad
+              {t('privacyPolicyLink')}
             </a>
           </p>
 
@@ -643,12 +669,12 @@ export default function CheckoutPage() {
               marginBottom: 10,
             }}
           >
-            {loading ? 'Procesando...' : shippingLoading ? 'Calculando envío...' : rateLimited ? 'Bloqueado temporalmente' : 'Confirmar y pagar'}
+            {loading ? t('processingPayment') : shippingLoading ? t('calculatingShippingButton') : rateLimited ? t('rateLimitedButton') : t('confirmAndPay')}
           </button>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 12, background: '#F0FDF4', borderRadius: 8, border: '1px solid #C8E6C9' }}>
             <ShieldCheck size={15} color={BRAND.green} style={{ flexShrink: 0 }} />
-            <span style={{ fontSize: 11, color: '#1B5E20' }}>Pago seguro — tu información está protegida</span>
+            <span style={{ fontSize: 11, color: '#1B5E20' }}>{t('securePaymentNotice')}</span>
           </div>
         </div>
       </div>

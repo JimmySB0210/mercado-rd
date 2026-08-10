@@ -1,0 +1,92 @@
+// ============================================================
+// MercadoRD — i18n: namespace "checkout" (English)
+// Ruta: src/lib/i18n/en/checkout.ts
+// ============================================================
+
+import type { CheckoutDict } from '@/lib/i18n/es/checkout'
+
+export const checkout = {
+  emptyCartTitle: 'Your cart is empty',
+  emptyCartSub: 'Add products before going to checkout',
+  exploreProducts: 'Explore products',
+
+  deliveryAddressHeading: 'Delivery address',
+  fullNamePlaceholder: 'Full name *',
+  phonePlaceholder: 'Phone *',
+  addressPlaceholder: 'Full address *',
+  selectProvincePlaceholder: 'Select your province *',
+  notesPlaceholder: 'Delivery instructions (optional)',
+
+  paymentMethodHeading: 'Payment method',
+  paymentAzulLabel: 'Card (Azul)',
+  paymentCardnetLabel: 'Card (CardNet)',
+  paymentTransferLabel: 'Bank transfer',
+  paymentCashLabel: 'Cash',
+  cardNumberPlaceholder: 'Card number *',
+  cardExpirationPlaceholder: 'MMYY *',
+  cardCvcPlaceholder: 'CVC *',
+  mockModeNotice: '💡 Simulated mode active — any card is approved, except one ending in 0000.',
+  cardnetRedirectNotice: "💡 You'll be redirected to CardNet's secure portal to complete the payment.",
+
+  orderItemsCountOne: 'Your order ({count} item)',
+  orderItemsCountOther: 'Your order ({count} items)',
+  couponQuestion: 'Have a coupon?',
+  couponPlaceholder: 'CODE',
+  removeCoupon: 'Remove',
+  applyCoupon: 'Apply',
+  couponGenericError: "The coupon couldn't be validated",
+  couponAppliedMsg: '✓ Coupon {code} applied',
+  subtotalLabel: 'Subtotal',
+  shippingLabel: 'Shipping',
+  shippingDaysOne: '{count} day',
+  shippingDaysOther: '{count} days',
+  shippingDaysRange: '{min}-{max} days',
+  selectProvinceHint: 'Select a province',
+  calculatingShipping: 'Calculating...',
+  freeBadge: 'FREE 🎉',
+  itbisLabel: 'ITBIS (18%)',
+  discountLabel: 'Discount ({code})',
+  totalLabel: 'Total',
+
+  acceptTermsPrefix: 'By confirming, you accept our',
+  termsOfServiceLink: 'Terms of Service',
+  andWord: 'and',
+  privacyPolicyLink: 'Privacy Policy',
+
+  processingPayment: 'Processing...',
+  calculatingShippingButton: 'Calculating shipping...',
+  rateLimitedButton: 'Temporarily blocked',
+  confirmAndPay: 'Confirm and pay',
+  securePaymentNotice: 'Secure payment — your information is protected',
+
+  requiredFieldsError: 'Please fill in all required fields',
+  cardDetailsRequired: 'Complete your card details',
+  waitingShippingCalc: "Please wait, we're calculating the shipping cost",
+  rateLimitFallback: 'Too many attempts. Wait 15 minutes before trying again.',
+  addressLengthError: 'The address must be between {min} and {max} characters',
+  addressInvalidChars: 'The address contains characters that are not allowed',
+  notesTooLong: 'Notes cannot exceed {max} characters',
+  notesInvalidChars: 'Notes contain characters that are not allowed',
+  paymentDeclined: 'Transaction declined — check your card details and try again',
+  paymentErrorGeneric: "We couldn't process the payment. Try again.",
+  genericOrderError: 'There was an error processing your order. Try again.',
+
+  orderNotFound: 'Order number not found.',
+  backToHome: 'Back to home',
+  orderConfirmedTitle: 'Order confirmed!',
+  thankYouMessage: 'Thanks for shopping at MercadoRD 🇩🇴',
+  whatsappConfirmationNotice: "You'll receive a WhatsApp confirmation in the next few minutes.",
+  deliveryHeading: '📍 DELIVERY',
+  productsHeading: '📦 PRODUCTS',
+  totalPaidLabel: 'Total paid',
+  contactVendorHeadingOne: '📲 CONTACT SELLER',
+  contactVendorHeadingOther: '📲 CONTACT SELLERS',
+  contactVendorButton: 'Contact {name}',
+  continueShoppingArrow: 'Continue shopping →',
+  viewMyOrders: 'View my orders',
+  protectedByMercadoRD: '🛡️ Purchase protected by MercadoRD',
+  protectedGuaranteeText: "If the product doesn't arrive or isn't as described, we'll give you a full refund.",
+
+  generatingInvoice: 'Generating...',
+  downloadInvoice: '📄 Download invoice',
+} satisfies CheckoutDict

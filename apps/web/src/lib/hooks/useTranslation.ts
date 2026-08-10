@@ -37,12 +37,20 @@ import { categories as categoriesFr } from '@/lib/i18n/fr/categories'
 import { products as productsEs, type ProductsDict } from '@/lib/i18n/es/products'
 import { products as productsEn } from '@/lib/i18n/en/products'
 import { products as productsFr } from '@/lib/i18n/fr/products'
+import { cart as cartEs, type CartDict } from '@/lib/i18n/es/cart'
+import { cart as cartEn } from '@/lib/i18n/en/cart'
+import { cart as cartFr } from '@/lib/i18n/fr/cart'
+import { checkout as checkoutEs, type CheckoutDict } from '@/lib/i18n/es/checkout'
+import { checkout as checkoutEn } from '@/lib/i18n/en/checkout'
+import { checkout as checkoutFr } from '@/lib/i18n/fr/checkout'
 
 const NAMESPACES = {
   common: { es: commonEs, en: commonEn, fr: commonFr },
   home: { es: homeEs, en: homeEn, fr: homeFr },
   categories: { es: categoriesEs, en: categoriesEn, fr: categoriesFr },
   products: { es: productsEs, en: productsEn, fr: productsFr },
+  cart: { es: cartEs, en: cartEn, fr: cartFr },
+  checkout: { es: checkoutEs, en: checkoutEn, fr: checkoutFr },
 } as const
 
 export type Namespace = keyof typeof NAMESPACES
@@ -65,6 +73,8 @@ export function useTranslation(namespace: 'common'): TranslationResult<keyof Com
 export function useTranslation(namespace: 'home'): TranslationResult<keyof HomeDict>
 export function useTranslation(namespace: 'categories'): TranslationResult<keyof CategoriesDict>
 export function useTranslation(namespace: 'products'): TranslationResult<keyof ProductsDict>
+export function useTranslation(namespace: 'cart'): TranslationResult<keyof CartDict>
+export function useTranslation(namespace: 'checkout'): TranslationResult<keyof CheckoutDict>
 export function useTranslation(namespace: Namespace): TranslationResult<string> {
   const language = useLanguageStore((s) => s.language)
 

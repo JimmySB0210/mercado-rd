@@ -8,9 +8,11 @@ import { ShoppingCart, Trash2, Minus, Plus, ShieldCheck } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
 import { useCartStore, useCartSubtotal, useCartItbis, useCartTotal } from '@/lib/store/cart'
 import { Navbar } from '@/components/shop/Navbar'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import Image from 'next/image'
 
 export default function CartPage() {
+  const { t } = useTranslation('cart')
   const { items, updateQty, removeItem } = useCartStore()
   const subtotal = useCartSubtotal()
   const itbis = useCartItbis()
@@ -30,18 +32,18 @@ export default function CartPage() {
         {/* Lista de items */}
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 20, color: BRAND.dark }}>
-            Tu carrito ({items.length})
+            {t('cartTitle', { count: items.length })}
           </h1>
 
           {items.length === 0 ? (
             <div style={{ background: '#fff', borderRadius: 10, padding: 40, textAlign: 'center', border: '1px solid #EEE' }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>🛒</div>
-              <p style={{ color: BRAND.gray, fontSize: 14, marginBottom: 16 }}>Tu carrito está vacío</p>
+              <p style={{ color: BRAND.gray, fontSize: 14, marginBottom: 16 }}>{t('emptyCart')}</p>
               <a
                 href="/"
                 style={{ display: 'inline-block', background: BRAND.blue, color: '#fff', textDecoration: 'none', padding: '10px 24px', borderRadius: 8, fontWeight: 600, fontSize: 14 }}
               >
-                Explorar productos
+                {t('exploreProducts')}
               </a>
             </div>
           ) : (
@@ -106,7 +108,7 @@ export default function CartPage() {
                       onClick={() => removeItem(item.product.id)}
                       style={{ background: 'none', border: 'none', color: BRAND.gray, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}
                     >
-                      <Trash2 size={13} /> Eliminar
+                      <Trash2 size={13} /> {t('removeItem')}
                     </button>
                   </div>
                 </div>
@@ -119,38 +121,38 @@ export default function CartPage() {
         {items.length > 0 && (
           <div>
             <div style={{ background: '#fff', borderRadius: 10, padding: 20, border: '1px solid #EEE', position: 'sticky', top: 20 }}>
-              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16, color: BRAND.dark }}>Resumen del pedido</div>
+              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16, color: BRAND.dark }}>{t('orderSummary')}</div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8, color: BRAND.dark }}>
-                <span>Subtotal ({items.reduce((a, i) => a + i.quantity, 0)} artículos)</span>
+                <span>{t('subtotalLabel', { count: items.reduce((a, i) => a + i.quantity, 0) })}</span>
                 <span>RD${(subtotal / 100).toLocaleString('es-DO')}</span>
               </div>
 
               {subtotal < FREE_SHIPPING_THRESHOLD_RDP ? (
                 <div style={{ fontSize: 12, color: BRAND.blue, background: '#EFF6FF', borderRadius: 6, padding: '8px 10px', marginBottom: 12 }}>
-                  Te faltan RD${((FREE_SHIPPING_THRESHOLD_RDP - subtotal) / 100).toLocaleString('es-DO')} para envío gratis 🚚
+                  {t('freeShippingMissing', { amount: ((FREE_SHIPPING_THRESHOLD_RDP - subtotal) / 100).toLocaleString('es-DO') })}
                 </div>
               ) : (
                 <div style={{ fontSize: 12, color: '#2E7D32', background: '#F0FDF4', borderRadius: 6, padding: '8px 10px', marginBottom: 12, fontWeight: 600 }}>
-                  ¡Envío gratis aplicado! 🎉
+                  {t('freeShippingApplied')}
                 </div>
               )}
 
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8, color: BRAND.dark }}>
-                <span>Envío</span>
+                <span>{t('shippingLabel')}</span>
                 <span>
                   {items.length > 0 && subtotal >= FREE_SHIPPING_THRESHOLD_RDP
-                    ? <span style={{ color: '#2E7D32', fontWeight: 700 }}>GRATIS 🎉</span>
+                    ? <span style={{ color: '#2E7D32', fontWeight: 700 }}>{t('freeBadge')}</span>
                     : `RD$${(ENVIO / 100).toLocaleString('es-DO')}`}
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 16, color: BRAND.dark }}>
-                <span>ITBIS (18%)</span>
+                <span>{t('itbisLabel')}</span>
                 <span>RD${(itbis / 100).toLocaleString('es-DO')}</span>
               </div>
 
               <div style={{ borderTop: '1px solid #eee', paddingTop: 14, display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 17, marginBottom: 16, color: BRAND.dark }}>
-                <span>Total</span>
+                <span>{t('totalLabel')}</span>
                 <span>RD${((total + ENVIO) / 100).toLocaleString('es-DO')}</span>
               </div>
 
@@ -158,25 +160,25 @@ export default function CartPage() {
                 href="/checkout"
                 style={{ display: 'block', background: BRAND.red, color: '#fff', textDecoration: 'none', textAlign: 'center', padding: 14, borderRadius: 8, fontWeight: 700, fontSize: 15, marginBottom: 10 }}
               >
-                Proceder al pago
+                {t('proceedToCheckout')}
               </a>
               <a href="/" style={{ display: 'block', textAlign: 'center', fontSize: 13, color: BRAND.gray, textDecoration: 'none' }}>
-                ← Seguir comprando
+                {t('continueShopping')}
               </a>
 
               <div style={{ marginTop: 14, padding: 12, background: '#F0FDF4', borderRadius: 8, border: '1px solid #C8E6C9', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                 <ShieldCheck size={16} color={BRAND.green} style={{ flexShrink: 0, marginTop: 1 }} />
                 <div>
-                  <div style={{ fontSize: 12, color: '#1B5E20', fontWeight: 600, marginBottom: 2 }}>Compra protegida</div>
-                  <div style={{ fontSize: 11, color: '#1B5E20' }}>Si el producto no llega te devolvemos tu dinero</div>
+                  <div style={{ fontSize: 12, color: '#1B5E20', fontWeight: 600, marginBottom: 2 }}>{t('protectedPurchaseTitle')}</div>
+                  <div style={{ fontSize: 11, color: '#1B5E20' }}>{t('protectedPurchaseSub')}</div>
                 </div>
               </div>
 
               <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center', gap: 12, fontSize: 11, color: BRAND.gray }}>
                 <span>💳 Azul</span>
                 <span>🏦 CardNet</span>
-                <span>🏧 Transferencia</span>
-                <span>💵 Efectivo</span>
+                <span>{t('paymentTransfer')}</span>
+                <span>{t('paymentCash')}</span>
               </div>
             </div>
           </div>

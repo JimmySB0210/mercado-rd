@@ -1,0 +1,92 @@
+// ============================================================
+// MercadoRD — i18n: namespace "checkout" (Français)
+// Ruta: src/lib/i18n/fr/checkout.ts
+// ============================================================
+
+import type { CheckoutDict } from '@/lib/i18n/es/checkout'
+
+export const checkout = {
+  emptyCartTitle: 'Votre panier est vide',
+  emptyCartSub: 'Ajoutez des produits avant de passer à la caisse',
+  exploreProducts: 'Explorer les produits',
+
+  deliveryAddressHeading: 'Adresse de livraison',
+  fullNamePlaceholder: 'Nom complet *',
+  phonePlaceholder: 'Téléphone *',
+  addressPlaceholder: 'Adresse complète *',
+  selectProvincePlaceholder: 'Choisissez votre province *',
+  notesPlaceholder: 'Instructions de livraison (facultatif)',
+
+  paymentMethodHeading: 'Mode de paiement',
+  paymentAzulLabel: 'Carte (Azul)',
+  paymentCardnetLabel: 'Carte (CardNet)',
+  paymentTransferLabel: 'Virement bancaire',
+  paymentCashLabel: 'Espèces',
+  cardNumberPlaceholder: 'Numéro de carte *',
+  cardExpirationPlaceholder: 'MMAA *',
+  cardCvcPlaceholder: 'CVC *',
+  mockModeNotice: '💡 Mode simulé actif — toute carte est approuvée, sauf celle se terminant par 0000.',
+  cardnetRedirectNotice: '💡 Vous serez redirigé vers le portail sécurisé de CardNet pour finaliser le paiement.',
+
+  orderItemsCountOne: 'Votre commande ({count} article)',
+  orderItemsCountOther: 'Votre commande ({count} articles)',
+  couponQuestion: 'Vous avez un code promo ?',
+  couponPlaceholder: 'CODE',
+  removeCoupon: 'Retirer',
+  applyCoupon: 'Appliquer',
+  couponGenericError: "Le code promo n'a pas pu être validé",
+  couponAppliedMsg: '✓ Code promo {code} appliqué',
+  subtotalLabel: 'Sous-total',
+  shippingLabel: 'Livraison',
+  shippingDaysOne: '{count} jour',
+  shippingDaysOther: '{count} jours',
+  shippingDaysRange: '{min}-{max} jours',
+  selectProvinceHint: 'Choisissez une province',
+  calculatingShipping: 'Calcul en cours...',
+  freeBadge: 'GRATUIT 🎉',
+  itbisLabel: 'ITBIS (18 %)',
+  discountLabel: 'Réduction ({code})',
+  totalLabel: 'Total',
+
+  acceptTermsPrefix: 'En confirmant, vous acceptez nos',
+  termsOfServiceLink: "Conditions d'utilisation",
+  andWord: 'et',
+  privacyPolicyLink: 'Politique de confidentialité',
+
+  processingPayment: 'Traitement en cours...',
+  calculatingShippingButton: 'Calcul de la livraison...',
+  rateLimitedButton: 'Temporairement bloqué',
+  confirmAndPay: 'Confirmer et payer',
+  securePaymentNotice: 'Paiement sécurisé — vos informations sont protégées',
+
+  requiredFieldsError: 'Veuillez remplir tous les champs obligatoires',
+  cardDetailsRequired: 'Complétez les informations de votre carte',
+  waitingShippingCalc: 'Un instant, nous calculons les frais de livraison',
+  rateLimitFallback: "Trop de tentatives. Attendez 15 minutes avant de réessayer.",
+  addressLengthError: "L'adresse doit contenir entre {min} et {max} caractères",
+  addressInvalidChars: "L'adresse contient des caractères non autorisés",
+  notesTooLong: 'Les notes ne peuvent pas dépasser {max} caractères',
+  notesInvalidChars: 'Les notes contiennent des caractères non autorisés',
+  paymentDeclined: 'Transaction refusée — vérifiez les informations de votre carte et réessayez',
+  paymentErrorGeneric: "Le paiement n'a pas pu être traité. Réessayez.",
+  genericOrderError: "Une erreur s'est produite lors du traitement de votre commande. Réessayez.",
+
+  orderNotFound: "Le numéro de commande n'a pas été trouvé.",
+  backToHome: "Retour à l'accueil",
+  orderConfirmedTitle: 'Commande confirmée !',
+  thankYouMessage: "Merci d'avoir acheté sur MercadoRD 🇩🇴",
+  whatsappConfirmationNotice: 'Vous recevrez une confirmation par WhatsApp dans quelques minutes.',
+  deliveryHeading: '📍 LIVRAISON',
+  productsHeading: '📦 PRODUITS',
+  totalPaidLabel: 'Total payé',
+  contactVendorHeadingOne: '📲 CONTACTER LE VENDEUR',
+  contactVendorHeadingOther: '📲 CONTACTER LES VENDEURS',
+  contactVendorButton: 'Contacter {name}',
+  continueShoppingArrow: 'Continuer mes achats →',
+  viewMyOrders: 'Voir mes commandes',
+  protectedByMercadoRD: '🛡️ Achat protégé par MercadoRD',
+  protectedGuaranteeText: "Si le produit n'arrive pas ou ne correspond pas à la description, nous vous remboursons intégralement.",
+
+  generatingInvoice: 'Génération en cours...',
+  downloadInvoice: '📄 Télécharger la facture',
+} satisfies CheckoutDict

@@ -8,7 +8,7 @@
 // una capa adicional, no la única.
 // ============================================================
 
-const DANGEROUS_PATTERN = /<|>|script|--|;/i
+export const DANGEROUS_PATTERN = /<|>|script|--|;/i
 
 export function validateText(value: string, field: string, min: number, max: number): string | null {
   if (typeof value !== 'string') return `${field} debe ser texto`
