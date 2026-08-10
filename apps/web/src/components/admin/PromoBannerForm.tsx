@@ -10,7 +10,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { validateImageFile, uploadBanner } from '@/lib/storage/upload'
+import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE_BYTES, uploadBanner } from '@/lib/storage/upload'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
 import type { PromoBanner } from '@/types/database.types'
 
@@ -37,6 +38,17 @@ function toDatetimeLocalValue(iso: string | null): string {
 export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onCancel }: Props) {
   const router = useRouter()
   const supabase = createClient()
+  const { t } = useTranslation('admin')
+
+  // Replica localmente la validación de validateImageFile() de
+  // lib/storage/upload.ts (con las constantes ya exportadas) en vez de
+  // modificar esa función — también la usan ProductForm.tsx y
+  // LogoSection.tsx, fuera de este alcance.
+  const validateImageFileLocal = (file: File): string | null => {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) return t('invalidImageType')
+    if (file.size > MAX_IMAGE_SIZE_BYTES) return t('imageTooLarge')
+    return null
+  }
 
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(initialData?.image_url ?? null)
@@ -57,7 +69,7 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
     e.target.value = ''
     if (!f) return
 
-    const validationError = validateImageFile(f)
+    const validationError = validateImageFileLocal(f)
     if (validationError) {
       setError(validationError)
       return
@@ -73,7 +85,7 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
     e.target.value = ''
     if (!f) return
 
-    const validationError = validateImageFile(f)
+    const validationError = validateImageFileLocal(f)
     if (validationError) {
       setError(validationError)
       return
@@ -99,7 +111,7 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (mode === 'crear' && !file && !mobileFile) {
-      setError('Selecciona al menos una imagen (desktop o mobile)')
+      setError(t('selectAtLeastOneImage'))
       return
     }
 
@@ -112,7 +124,7 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
       const { url, error: uploadError } = await uploadBanner(file)
       if (uploadError || !url) {
         setSaving(false)
-        setError(uploadError ?? 'No se pudo subir la imagen')
+        setError(uploadError ?? t('imageUploadFailed'))
         return
       }
       imageUrl = url
@@ -124,7 +136,7 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
       const { url: mUrl, error: mUploadError } = await uploadBanner(mobileFile)
       if (mUploadError || !mUrl) {
         setSaving(false)
-        setError(mUploadError ?? 'No se pudo subir la imagen para mobile')
+        setError(mUploadError ?? t('mobileImageUploadFailed'))
         return
       }
       mobileImageUrl = mUrl
@@ -157,7 +169,7 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
       setSaving(false)
 
       if (updateError || !updated) {
-        setError(updateError?.message ?? 'No se pudo guardar el banner')
+        setError(updateError?.message ?? t('saveBannerFailed'))
         return
       }
 
@@ -175,7 +187,7 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
     setSaving(false)
 
     if (insertError || !inserted) {
-      setError(insertError?.message ?? 'No se pudo crear el banner')
+      setError(insertError?.message ?? t('createBannerFailed'))
       return
     }
 
@@ -188,70 +200,68 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
     <form onSubmit={handleSubmit} style={{ padding: 18, display: 'grid', gap: 12 }}>
       <div>
         <label style={{ fontSize: 12, fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
-          Imagen para desktop
+          {t('desktopImageLabel')}
         </label>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {preview && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={preview} alt="Vista previa" style={{ width: 96, height: 56, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />
+            <img src={preview} alt={t('previewAlt')} style={{ width: 96, height: 56, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />
           )}
           <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileChange} style={{ fontSize: 12 }} />
         </div>
         {mode === 'editar' && (
           <p style={{ fontSize: 11, color: '#999', margin: '6px 0 0' }}>
-            Deja el campo vacío para conservar la imagen actual.
+            {t('keepCurrentImageHint')}
           </p>
         )}
       </div>
 
       <div>
         <label style={{ fontSize: 12, fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
-          Imagen para mobile (vertical, opcional)
+          {t('mobileImageLabel')}
         </label>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {mobilePreview && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={mobilePreview} alt="Vista previa mobile" style={{ width: 56, height: 80, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />
+            <img src={mobilePreview} alt={t('previewMobileAlt')} style={{ width: 56, height: 80, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />
           )}
           <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleMobileFileChange} style={{ fontSize: 12 }} />
         </div>
         <p style={{ fontSize: 11, color: '#999', margin: '6px 0 0' }}>
-          {mode === 'editar'
-            ? 'Deja el campo vacío para conservar la imagen actual (o la de desktop, si nunca subiste una).'
-            : 'Si no subes una, se usa la imagen de desktop también en mobile.'}
+          {mode === 'editar' ? t('keepCurrentMobileImageHintEdit') : t('keepCurrentMobileImageHintCreate')}
         </p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <div>
           <label style={{ fontSize: 12, fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
-            Título (opcional)
+            {t('titleFieldLabel')}
           </label>
-          <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Ej. Ofertas de temporada" style={inputStyle} />
+          <input value={title} onChange={e => setTitle(e.target.value)} placeholder={t('titlePlaceholder')} style={inputStyle} />
         </div>
         <div>
           <label style={{ fontSize: 12, fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
-            Subtítulo (opcional)
+            {t('subtitleFieldLabel')}
           </label>
-          <input value={subtitle} onChange={e => setSubtitle(e.target.value)} placeholder="Ej. Hasta 30% off" style={inputStyle} />
+          <input value={subtitle} onChange={e => setSubtitle(e.target.value)} placeholder={t('subtitlePlaceholder')} style={inputStyle} />
         </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px', gap: 12 }}>
         <div>
           <label style={{ fontSize: 12, fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
-            Link de destino (opcional)
+            {t('linkFieldLabel')}
           </label>
           <input
             value={linkUrl}
             onChange={e => setLinkUrl(e.target.value)}
-            placeholder="/categoria/ropa, /tienda/xxx o https://..."
+            placeholder={t('linkPlaceholder')}
             style={inputStyle}
           />
         </div>
         <div>
           <label style={{ fontSize: 12, fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
-            Orden
+            {t('orderFieldLabel')}
           </label>
           <input
             type="number"
@@ -264,7 +274,7 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
 
       <div>
         <label style={{ fontSize: 12, fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
-          {mode === 'editar' ? 'Expira el (opcional)' : 'Expira en (días, opcional)'}
+          {mode === 'editar' ? t('expiresOnLabelEdit') : t('expiresInLabelCreate')}
         </label>
         {mode === 'editar' ? (
           <input
@@ -279,14 +289,12 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
             min="1"
             value={expiresInDays}
             onChange={e => setExpiresInDays(e.target.value)}
-            placeholder="Ej. 7 — vacío = sin expiración"
+            placeholder={t('expiresInPlaceholder')}
             style={{ ...inputStyle, maxWidth: 260 }}
           />
         )}
         <p style={{ fontSize: 11, color: '#999', margin: '6px 0 0' }}>
-          {mode === 'editar'
-            ? 'Vacía este campo para quitar la expiración.'
-            : 'El banner se deja de mostrar automáticamente al pasar esta fecha.'}
+          {mode === 'editar' ? t('clearExpirationHint') : t('autoHideHint')}
         </p>
       </div>
 
@@ -302,7 +310,7 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
             cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1,
           }}
         >
-          {saving ? 'Guardando...' : mode === 'editar' ? 'Guardar cambios' : '+ Agregar banner'}
+          {saving ? t('savingButton') : mode === 'editar' ? t('saveChangesButton') : t('addBannerButton')}
         </button>
         {mode === 'editar' && (
           <button
@@ -315,7 +323,7 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
               cursor: saving ? 'not-allowed' : 'pointer',
             }}
           >
-            Cancelar
+            {t('cancelButton')}
           </button>
         )}
       </div>

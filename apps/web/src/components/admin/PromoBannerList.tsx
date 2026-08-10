@@ -7,6 +7,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { deleteImage } from '@/lib/storage/upload'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
 import type { PromoBanner } from '@/types/database.types'
 
@@ -23,6 +24,7 @@ function isExpired(banner: PromoBanner): boolean {
 
 export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
   const supabase = createClient()
+  const { t } = useTranslation('admin')
   const [loadingId, setLoadingId] = useState<string | null>(null)
 
   const move = async (index: number, direction: -1 | 1) => {
@@ -68,7 +70,7 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
 
   const remove = async (banner: PromoBanner) => {
     const confirmed = window.confirm(
-      `¿Eliminar el banner "${banner.title ?? 'sin título'}"? Esta acción no se puede deshacer.`
+      t('deleteBannerConfirm', { title: banner.title ?? t('noTitleFallback').toLowerCase() })
     )
     if (!confirmed) return
 
@@ -94,7 +96,7 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
   if (banners.length === 0) {
     return (
       <div style={{ padding: 32, textAlign: 'center', fontSize: 13, color: '#999' }}>
-        Todavía no hay banners promocionales. Crea el primero abajo.
+        {t('noBannersYet')}
       </div>
     )
   }
@@ -114,16 +116,16 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={banner.image_url}
-            alt={banner.title ?? 'Banner promocional'}
+            alt={banner.title ?? t('untitledBannerAlt')}
             style={{ width: 72, height: 44, borderRadius: 6, objectFit: 'cover', flexShrink: 0, background: '#f0f0f0' }}
           />
 
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {banner.title || <span style={{ color: '#bbb', fontWeight: 400 }}>Sin título</span>}
+              {banner.title || <span style={{ color: '#bbb', fontWeight: 400 }}>{t('noTitleFallback')}</span>}
             </div>
             <div style={{ fontSize: 11, color: '#999', display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ flexShrink: 0 }}>Orden: {banner.sort_order}</span>
+              <span style={{ flexShrink: 0 }}>{t('orderLabel', { order: banner.sort_order })}</span>
               {banner.link_url && (
                 <>
                   <span style={{ flexShrink: 0 }}>·</span>
@@ -153,7 +155,7 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
                 color: banner.is_active ? '#166534' : '#666',
               }}
             >
-              {banner.is_active ? 'Activo' : 'Inactivo'}
+              {banner.is_active ? t('activeBadge') : t('inactiveBadge')}
             </span>
 
             {isExpired(banner) && (
@@ -163,7 +165,7 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
                   background: '#FEF3C7', color: '#92400E',
                 }}
               >
-                ⏱️ Expirado
+                {t('expiredBadge')}
               </span>
             )}
 
@@ -172,7 +174,7 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
                 type="button"
                 onClick={() => move(i, -1)}
                 disabled={i === 0 || loadingId !== null}
-                title="Subir"
+                title={t('moveUpTitle')}
                 style={{ width: 26, height: 26, border: '1px solid #e5e5e5', borderRadius: 6, background: '#fff', cursor: i === 0 ? 'not-allowed' : 'pointer', opacity: i === 0 ? 0.4 : 1, fontSize: 12 }}
               >
                 ↑
@@ -181,7 +183,7 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
                 type="button"
                 onClick={() => move(i, 1)}
                 disabled={i === banners.length - 1 || loadingId !== null}
-                title="Bajar"
+                title={t('moveDownTitle')}
                 style={{ width: 26, height: 26, border: '1px solid #e5e5e5', borderRadius: 6, background: '#fff', cursor: i === banners.length - 1 ? 'not-allowed' : 'pointer', opacity: i === banners.length - 1 ? 0.4 : 1, fontSize: 12 }}
               >
                 ↓
@@ -200,7 +202,7 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
                 cursor: loadingId !== null ? 'not-allowed' : 'pointer',
               }}
             >
-              {banner.is_active ? 'Desactivar' : 'Activar'}
+              {banner.is_active ? t('deactivateButton') : t('activateButton')}
             </button>
 
             <button
@@ -209,7 +211,7 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
               disabled={loadingId !== null}
               style={{ fontSize: 11, fontWeight: 700, color: BRAND.blue, background: 'transparent', border: 'none', cursor: loadingId !== null ? 'not-allowed' : 'pointer', flexShrink: 0 }}
             >
-              Editar
+              {t('editButton')}
             </button>
 
             <button
@@ -218,7 +220,7 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
               disabled={loadingId !== null}
               style={{ fontSize: 11, fontWeight: 700, color: BRAND.red, background: 'transparent', border: 'none', cursor: loadingId !== null ? 'not-allowed' : 'pointer', flexShrink: 0 }}
             >
-              Eliminar
+              {t('deleteButton')}
             </button>
           </div>
         </div>

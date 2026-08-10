@@ -7,6 +7,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
 
 interface Props {
@@ -20,25 +21,12 @@ interface Props {
   createdAt: string
 }
 
-const REASON_LABELS: Record<string, string> = {
-  not_received: 'No recibió el pedido',
-  not_as_described: 'No es como se describe',
-  damaged: 'Llegó dañado',
-  wrong_item: 'Producto equivocado',
-  refund_request: 'Solicita reembolso',
-  other: 'Otro',
-}
-
-const STATUS_OPTIONS = [
-  { value: 'open',      label: 'Abierta' },
-  { value: 'reviewing', label: 'En revisión' },
-  { value: 'resolved',  label: 'Resuelta' },
-  { value: 'closed',    label: 'Cerrada' },
-]
+const STATUS_VALUES = ['open', 'reviewing', 'resolved', 'closed'] as const
 
 export function DisputeAdminRow({ disputeId, orderId, reason, description, status, buyerName, vendorName, createdAt }: Props) {
   const router = useRouter()
   const supabase = createClient()
+  const { t } = useTranslation('admin')
 
   const [currentStatus, setCurrentStatus] = useState(status)
   const [resolution, setResolution] = useState('')
@@ -62,7 +50,7 @@ export function DisputeAdminRow({ disputeId, orderId, reason, description, statu
 
     if (updateError) {
       console.error('[DisputeAdminRow]', updateError)
-      setError('No se pudo guardar. Intenta de nuevo.')
+      setError(t('saveFailedGeneric'))
       setSaving(false)
       return
     }
@@ -79,7 +67,7 @@ export function DisputeAdminRow({ disputeId, orderId, reason, description, statu
           <div style={{ fontSize: 11, color: '#999' }}>{buyerName} → {vendorName} · {date}</div>
         </div>
         <span style={{ background: '#FEF9C3', color: '#713f12', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>
-          {REASON_LABELS[reason] ?? reason}
+          {t(`disputeReason.${reason}` as 'disputeReason.other')}
         </span>
       </div>
 
@@ -91,15 +79,15 @@ export function DisputeAdminRow({ disputeId, orderId, reason, description, statu
           onChange={e => setCurrentStatus(e.target.value)}
           style={{ border: '1px solid #ddd', borderRadius: 6, padding: '6px 10px', fontSize: 12, background: '#fff' }}
         >
-          {STATUS_OPTIONS.map(s => (
-            <option key={s.value} value={s.value}>{s.label}</option>
+          {STATUS_VALUES.map(value => (
+            <option key={value} value={value}>{t(`disputeStatusOption.${value}`)}</option>
           ))}
         </select>
 
         <input
           value={resolution}
           onChange={e => setResolution(e.target.value)}
-          placeholder="Nota de resolución (opcional)"
+          placeholder={t('resolutionNotePlaceholder')}
           style={{ flex: 1, minWidth: 160, border: '1px solid #ddd', borderRadius: 6, padding: '6px 10px', fontSize: 12 }}
         />
 
@@ -112,7 +100,7 @@ export function DisputeAdminRow({ disputeId, orderId, reason, description, statu
             cursor: saving ? 'not-allowed' : 'pointer',
           }}
         >
-          {saving ? 'Guardando...' : 'Guardar'}
+          {saving ? t('savingButton') : t('saveButton')}
         </button>
       </div>
 

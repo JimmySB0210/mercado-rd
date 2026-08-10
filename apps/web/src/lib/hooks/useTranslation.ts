@@ -69,6 +69,9 @@ import { directory as directoryFr } from '@/lib/i18n/fr/directory'
 import { chat as chatEs, type ChatDict } from '@/lib/i18n/es/chat'
 import { chat as chatEn } from '@/lib/i18n/en/chat'
 import { chat as chatFr } from '@/lib/i18n/fr/chat'
+import { admin as adminEs, type AdminDict } from '@/lib/i18n/es/admin'
+import { admin as adminEn } from '@/lib/i18n/en/admin'
+import { admin as adminFr } from '@/lib/i18n/fr/admin'
 
 const NAMESPACES = {
   common: { es: commonEs, en: commonEn, fr: commonFr },
@@ -83,6 +86,7 @@ const NAMESPACES = {
   profile: { es: profileEs, en: profileEn, fr: profileFr },
   directory: { es: directoryEs, en: directoryEn, fr: directoryFr },
   chat: { es: chatEs, en: chatEn, fr: chatFr },
+  admin: { es: adminEs, en: adminEn, fr: adminFr },
 } as const
 
 // Genera 'businessType.manufacturer' | 'verificationLevel.1' | ... para
@@ -133,6 +137,7 @@ export function useTranslation(namespace: 'auth'): TranslationResult<keyof AuthD
 export function useTranslation(namespace: 'profile'): TranslationResult<DotPaths<ProfileDict>>
 export function useTranslation(namespace: 'directory'): TranslationResult<keyof DirectoryDict>
 export function useTranslation(namespace: 'chat'): TranslationResult<keyof ChatDict>
+export function useTranslation(namespace: 'admin'): TranslationResult<DotPaths<AdminDict>>
 export function useTranslation(namespace: Namespace): TranslationResult<string> {
   const language = useLanguageStore((s) => s.language)
 

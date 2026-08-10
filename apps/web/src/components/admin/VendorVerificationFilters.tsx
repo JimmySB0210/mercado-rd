@@ -17,6 +17,7 @@ const selectStyle: React.CSSProperties = {
 
 export function VendorVerificationFilters() {
   const { t } = useTranslation('vendorOptions')
+  const { t: ta } = useTranslation('admin')
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -35,14 +36,14 @@ export function VendorVerificationFilters() {
   return (
     <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
       <select value={level} onChange={e => updateParam('level', e.target.value)} style={selectStyle}>
-        <option value="">Todos los niveles</option>
+        <option value="">{ta('allLevelsOption')}</option>
         {[1, 2, 3, 4].map(l => (
-          <option key={l} value={l}>Nivel {l} — {t(`verificationLevel.${l}` as Parameters<typeof t>[0])}</option>
+          <option key={l} value={l}>{ta('levelOptionLabel', { level: l, label: t(`verificationLevel.${l}` as Parameters<typeof t>[0]) })}</option>
         ))}
       </select>
 
       <select value={businessType} onChange={e => updateParam('businessType', e.target.value)} style={selectStyle}>
-        <option value="">Todos los tipos de negocio</option>
+        <option value="">{ta('allBusinessTypesOption')}</option>
         {BUSINESS_TYPE_OPTIONS.map(value => (
           <option key={value} value={value}>{t(`businessType.${value}`)}</option>
         ))}

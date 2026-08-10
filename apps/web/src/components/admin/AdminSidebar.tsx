@@ -12,16 +12,18 @@ import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
-
-const NAV_ITEMS = [
-  { icon: '📊', label: 'Resumen', href: '/admin' },
-  { icon: '🏪', label: 'Proveedores', href: '/admin/proveedores' },
-  { icon: '🖼️', label: 'Promociones', href: '/admin/promociones' },
+import { useTranslation } from '@/lib/hooks/useTranslation'
+import { LanguageSwitcher } from '@/components/shop/LanguageSwitcher'
+const NAV_ITEM_KEYS: { icon: string; labelKey: 'navOverview' | 'navProviders' | 'navPromotions'; href: string }[] = [
+  { icon: '📊', labelKey: 'navOverview', href: '/admin' },
+  { icon: '🏪', labelKey: 'navProviders', href: '/admin/proveedores' },
+  { icon: '🖼️', labelKey: 'navPromotions', href: '/admin/promociones' },
 ]
 
 export function AdminSidebar() {
   const pathname = usePathname()
   const isMobile = useIsMobile(860)
+  const { t } = useTranslation('admin')
   const [open, setOpen] = useState(false)
   const drawerRef = useRef<HTMLDivElement>(null)
 
@@ -36,7 +38,7 @@ export function AdminSidebar() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [open])
 
-  const navLink = (item: typeof NAV_ITEMS[number], i: number, onClick?: () => void) => {
+  const navLink = (item: typeof NAV_ITEM_KEYS[number], i: number, onClick?: () => void) => {
     const active = pathname === item.href
     return (
       <a key={i} href={item.href} onClick={onClick} style={{
@@ -46,14 +48,14 @@ export function AdminSidebar() {
         color: active ? '#fff' : '#666', fontSize: 14, fontWeight: active ? 600 : 400,
         textDecoration: 'none',
       }}>
-        <span>{item.icon}</span>{item.label}
+        <span>{item.icon}</span>{t(item.labelKey)}
       </a>
     )
   }
 
   const backLink = (onClick?: () => void) => (
     <a href="/dashboard" onClick={onClick} style={{ padding: '10px 20px', color: '#666', fontSize: 14, textDecoration: 'none' }}>
-      ← Mi panel de vendedor
+      {t('backToVendorPanelLink')}
     </a>
   )
 
@@ -66,10 +68,13 @@ export function AdminSidebar() {
               Mercado<span style={{ color: BRAND.red }}>RD</span>
             </div>
           </a>
-          <div style={{ fontSize: 12, color: '#888' }}>🛡️ Panel de administración</div>
+          <div style={{ fontSize: 12, color: '#888' }}>{t('adminPanelLabel')}</div>
         </div>
-        {NAV_ITEMS.map((item, i) => navLink(item, i))}
+        {NAV_ITEM_KEYS.map((item, i) => navLink(item, i))}
         {backLink()}
+        <div style={{ marginTop: 'auto', padding: '16px 20px', borderTop: '1px solid #222' }}>
+          <LanguageSwitcher />
+        </div>
       </div>
     )
   }
@@ -86,7 +91,7 @@ export function AdminSidebar() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label="Abrir menú del panel"
+          aria-label={t('openMenuAria')}
           style={{ background: 'transparent', border: 'none', color: '#fff', display: 'flex', padding: 4, cursor: 'pointer' }}
         >
           <Menu size={22} />
@@ -110,14 +115,17 @@ export function AdminSidebar() {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                aria-label="Cerrar menú"
+                aria-label={t('closeMenuAria')}
                 style={{ background: 'transparent', border: 'none', color: '#888', display: 'flex', cursor: 'pointer' }}
               >
                 <X size={20} />
               </button>
             </div>
-            {NAV_ITEMS.map((item, i) => navLink(item, i, () => setOpen(false)))}
+            {NAV_ITEM_KEYS.map((item, i) => navLink(item, i, () => setOpen(false)))}
             {backLink(() => setOpen(false))}
+            <div style={{ marginTop: 'auto', padding: '16px 20px', borderTop: '1px solid #222' }}>
+              <LanguageSwitcher compact />
+            </div>
           </div>
         </div>
       )}

@@ -11,6 +11,7 @@
 import { useState } from 'react'
 import { PromoBannerList } from './PromoBannerList'
 import { PromoBannerForm } from './PromoBannerForm'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import type { PromoBanner } from '@/types/database.types'
 
 interface Props {
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export function PromoBannerManager({ initialBanners }: Props) {
+  const { t } = useTranslation('admin')
   const [banners, setBanners] = useState(initialBanners)
   const [editingBanner, setEditingBanner] = useState<PromoBanner | null>(null)
 
@@ -38,14 +40,14 @@ export function PromoBannerManager({ initialBanners }: Props) {
     <>
       <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)', marginBottom: 20 }}>
         <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 800, fontSize: 15 }}>
-          Banners actuales ({banners.length})
+          {t('currentBannersTitle', { count: banners.length })}
         </div>
         <PromoBannerList banners={banners} setBanners={setBanners} onEdit={setEditingBanner} />
       </div>
 
       <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
         <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 800, fontSize: 15 }}>
-          {editingBanner ? 'Editar banner' : 'Crear banner nuevo'}
+          {editingBanner ? t('editBannerTitle') : t('createBannerTitle')}
         </div>
         {/* key fuerza remount al cambiar de banner editado (o volver a "crear"),
             así el formulario siempre arranca con el estado inicial correcto */}

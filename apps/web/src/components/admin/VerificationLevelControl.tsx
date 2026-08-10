@@ -25,6 +25,7 @@ const LEVELS = [1, 2, 3, 4]
 
 export function VerificationLevelControl({ vendorId, currentLevel }: Props) {
   const { t } = useTranslation('vendorOptions')
+  const { t: ta } = useTranslation('admin')
   const levelLabel = (l: number) => t(`verificationLevel.${l}` as Parameters<typeof t>[0])
   const [level, setLevel] = useState(currentLevel)
   const [saving, setSaving] = useState(false)
@@ -35,7 +36,7 @@ export function VerificationLevelControl({ vendorId, currentLevel }: Props) {
     if (newLevel === level || saving) return
 
     const note = window.prompt(
-      `Cambiar de "${levelLabel(level)}" a "${levelLabel(newLevel)}".\nNota interna (opcional):`,
+      `${ta('changeLevelPrompt', { from: levelLabel(level), to: levelLabel(newLevel) })}\n${ta('internalNotePromptLabel')}`,
       ''
     )
     if (note === null) return // canceló
@@ -50,7 +51,7 @@ export function VerificationLevelControl({ vendorId, currentLevel }: Props) {
 
     if (error) {
       console.error('[VerificationLevelControl]', error)
-      window.alert('No se pudo actualizar el nivel. Intenta de nuevo.')
+      window.alert(ta('levelUpdateFailed'))
       setSaving(false)
       return
     }
@@ -83,7 +84,7 @@ export function VerificationLevelControl({ vendorId, currentLevel }: Props) {
               }}
             >
               <div style={{ fontSize: 11, fontWeight: 700, color: active ? BRAND.blue : '#999' }}>
-                Nivel {l}
+                {ta('levelButtonPrefix', { level: l })}
               </div>
               <div style={{ fontSize: 12, color: active ? BRAND.dark : '#666', marginTop: 2 }}>
                 {levelLabel(l)}
@@ -92,7 +93,7 @@ export function VerificationLevelControl({ vendorId, currentLevel }: Props) {
           )
         })}
       </div>
-      {saving && <p style={{ fontSize: 11, color: '#999', marginTop: 8 }}>Guardando...</p>}
+      {saving && <p style={{ fontSize: 11, color: '#999', marginTop: 8 }}>{ta('savingButton')}</p>}
     </div>
   )
 }
