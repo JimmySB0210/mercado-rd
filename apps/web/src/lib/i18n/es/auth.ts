@@ -71,6 +71,28 @@ export const auth = {
   completeCaptcha: 'Completa la verificación de seguridad',
   captchaFailed: 'Verificación de seguridad fallida. Intenta de nuevo.',
   emailAlreadyRegistered: 'Este correo ya está registrado',
+
+  // Recuperar contraseña — app/login/page.tsx (link + banner de éxito)
+  forgotPasswordLink: '¿Olvidaste tu contraseña?',
+  passwordResetSuccessBanner: 'Contraseña actualizada. Inicia sesión con tu nueva contraseña.',
+
+  // app/recuperar-password/page.tsx
+  forgotPasswordSubtitle: 'Recupera tu contraseña',
+  forgotPasswordInstructions: 'Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.',
+  sendResetLinkButton: 'Enviar enlace de recuperación',
+  sendingResetLink: 'Enviando...',
+  resetLinkSentTitle: '¡Revisa tu correo!',
+  resetLinkSentPrefix: 'Enviamos un enlace a',
+  resetLinkSentSuffix: 'para que puedas restablecer tu contraseña.',
+  resetLinkError: 'No se pudo enviar el enlace. Intenta de nuevo.',
+  googleUsersNote: 'Si te registraste con Google, no necesitas contraseña — usa el botón "Continuar con Google" en su lugar.',
+
+  // app/restablecer-password/page.tsx
+  resetPasswordSubtitle: 'Crea una nueva contraseña',
+  resetPasswordButton: 'Restablecer contraseña',
+  resettingPassword: 'Restableciendo...',
+  passwordResetFailed: 'No se pudo actualizar la contraseña. Intenta de nuevo.',
+  invalidOrExpiredLinkMessage: 'Este enlace de recuperación ya no es válido. Solicita un enlace nuevo desde la página de inicio de sesión.',
 }
 
 export type AuthDict = typeof auth

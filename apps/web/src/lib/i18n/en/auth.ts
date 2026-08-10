@@ -58,4 +58,23 @@ export const auth = {
   completeCaptcha: 'Complete the security check',
   captchaFailed: 'Security check failed. Try again.',
   emailAlreadyRegistered: 'This email is already registered',
+
+  forgotPasswordLink: 'Forgot your password?',
+  passwordResetSuccessBanner: 'Password updated. Log in with your new password.',
+
+  forgotPasswordSubtitle: 'Recover your password',
+  forgotPasswordInstructions: "Enter your email and we'll send you a link to reset your password.",
+  sendResetLinkButton: 'Send reset link',
+  sendingResetLink: 'Sending...',
+  resetLinkSentTitle: 'Check your email!',
+  resetLinkSentPrefix: 'We sent a link to',
+  resetLinkSentSuffix: 'so you can reset your password.',
+  resetLinkError: "Couldn't send the link. Try again.",
+  googleUsersNote: 'If you signed up with Google, you don\'t need a password — use the "Continue with Google" button instead.',
+
+  resetPasswordSubtitle: 'Create a new password',
+  resetPasswordButton: 'Reset password',
+  resettingPassword: 'Resetting...',
+  passwordResetFailed: "Couldn't update the password. Try again.",
+  invalidOrExpiredLinkMessage: 'This recovery link is no longer valid. Request a new one from the login page.',
 } satisfies AuthDict

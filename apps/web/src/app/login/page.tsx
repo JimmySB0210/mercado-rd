@@ -24,6 +24,7 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const redirect = searchParams.get('redirect') ?? '/'
   const reason = searchParams.get('reason')
+  const resetSuccess = searchParams.get('reset') === 'success'
   const { signInWithEmail, signInWithGoogle } = useAuth()
   const { t } = useTranslation('auth')
 
@@ -86,6 +87,12 @@ function LoginForm() {
         {reason === 'inactivity' && (
           <div className="mb-4 bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-lg px-4 py-3">
             {t('inactivityBanner')}
+          </div>
+        )}
+
+        {resetSuccess && (
+          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg px-4 py-3">
+            {t('passwordResetSuccessBanner')}
           </div>
         )}
 
@@ -160,7 +167,13 @@ function LoginForm() {
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-gray-500">
+          <p className="mt-4 text-center text-sm">
+            <Link href="/recuperar-password" className="text-[var(--brand-blue)] font-medium hover:underline">
+              {t('forgotPasswordLink')}
+            </Link>
+          </p>
+
+          <p className="mt-4 text-center text-sm text-gray-500">
             {t('noAccountYet')}{' '}
             <Link href="/register" className="text-[var(--brand-blue)] font-medium hover:underline">
               {t('registerFreeLink')}

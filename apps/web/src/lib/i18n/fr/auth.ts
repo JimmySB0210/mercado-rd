@@ -58,4 +58,23 @@ export const auth = {
   completeCaptcha: 'Complétez la vérification de sécurité',
   captchaFailed: 'Échec de la vérification de sécurité. Réessayez.',
   emailAlreadyRegistered: 'Cet e-mail est déjà enregistré',
+
+  forgotPasswordLink: 'Mot de passe oublié ?',
+  passwordResetSuccessBanner: 'Mot de passe mis à jour. Connectez-vous avec votre nouveau mot de passe.',
+
+  forgotPasswordSubtitle: 'Récupérez votre mot de passe',
+  forgotPasswordInstructions: 'Entrez votre e-mail et nous vous enverrons un lien pour réinitialiser votre mot de passe.',
+  sendResetLinkButton: 'Envoyer le lien de récupération',
+  sendingResetLink: 'Envoi en cours...',
+  resetLinkSentTitle: 'Vérifiez votre e-mail !',
+  resetLinkSentPrefix: 'Nous avons envoyé un lien à',
+  resetLinkSentSuffix: 'pour que vous puissiez réinitialiser votre mot de passe.',
+  resetLinkError: "Impossible d'envoyer le lien. Réessayez.",
+  googleUsersNote: 'Si vous vous êtes inscrit avec Google, vous n\'avez pas besoin de mot de passe — utilisez plutôt le bouton « Continuer avec Google ».',
+
+  resetPasswordSubtitle: 'Créez un nouveau mot de passe',
+  resetPasswordButton: 'Réinitialiser le mot de passe',
+  resettingPassword: 'Réinitialisation...',
+  passwordResetFailed: 'Impossible de mettre à jour le mot de passe. Réessayez.',
+  invalidOrExpiredLinkMessage: "Ce lien de récupération n'est plus valide. Demandez-en un nouveau depuis la page de connexion.",
 } satisfies AuthDict
