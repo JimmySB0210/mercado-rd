@@ -14,29 +14,32 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Navbar } from '@/components/shop/Navbar'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
 
 interface ConversationRow {
   id: string
-  name: string
+  name: string | null
   avatarUrl: string | null
   lastMessage: string | null
   lastMessageAt: string
   unreadCount: number
 }
 
-function timeAgo(dateStr: string): string {
-  const minutes = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000)
-  if (minutes < 1) return 'ahora'
-  if (minutes < 60) return `hace ${minutes} min`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `hace ${hours}h`
-  const days = Math.floor(hours / 24)
-  if (days < 7) return `hace ${days}d`
-  return new Date(dateStr).toLocaleDateString('es-DO', { day: 'numeric', month: 'short' })
-}
+function ConversationList({ rows, emptyMessage, defaultName }: { rows: ConversationRow[]; emptyMessage: string; defaultName: string }) {
+  const { t } = useTranslation('chat')
 
-function ConversationList({ rows, emptyMessage }: { rows: ConversationRow[]; emptyMessage: string }) {
+  const timeAgo = (dateStr: string): string => {
+    const minutes = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000)
+    if (minutes < 1) return t('justNow')
+    if (minutes < 60) return t('minutesAgo', { count: minutes })
+    const hours = Math.floor(minutes / 60)
+    if (hours < 24) return t('hoursAgo', { count: hours })
+    const days = Math.floor(hours / 24)
+    if (days < 7) return t('daysAgo', { count: days })
+    return new Date(dateStr).toLocaleDateString('es-DO', { day: 'numeric', month: 'short' })
+  }
+
   if (rows.length === 0) {
     return (
       <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
@@ -48,7 +51,9 @@ function ConversationList({ rows, emptyMessage }: { rows: ConversationRow[]; emp
 
   return (
     <div className="space-y-2">
-      {rows.map(c => (
+      {rows.map(c => {
+        const name = c.name ?? defaultName
+        return (
         <a
           key={c.id}
           href={`/mensajes/${c.id}`}
@@ -60,17 +65,17 @@ function ConversationList({ rows, emptyMessage }: { rows: ConversationRow[]; emp
           >
             {c.avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={c.avatarUrl} alt={c.name} className="w-full h-full object-cover" />
+              <img src={c.avatarUrl} alt={name} className="w-full h-full object-cover" />
             ) : (
-              c.name.charAt(0).toUpperCase()
+              name.charAt(0).toUpperCase()
             )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-semibold text-gray-900 truncate">{c.name}</p>
+              <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
               <span className="text-xs text-gray-400 flex-shrink-0">{timeAgo(c.lastMessageAt)}</span>
             </div>
-            <p className="text-xs text-gray-500 truncate mt-0.5">{c.lastMessage ?? 'Sin mensajes todavía'}</p>
+            <p className="text-xs text-gray-500 truncate mt-0.5">{c.lastMessage ?? t('noMessagesInConvoShort')}</p>
           </div>
           {c.unreadCount > 0 && (
             <span
@@ -81,7 +86,8 @@ function ConversationList({ rows, emptyMessage }: { rows: ConversationRow[]; emp
             </span>
           )}
         </a>
-      ))}
+        )
+      })}
     </div>
   )
 }
@@ -89,6 +95,7 @@ function ConversationList({ rows, emptyMessage }: { rows: ConversationRow[]; emp
 export default function MessagesPage() {
   const router = useRouter()
   const supabase = createClient()
+  const { t } = useTranslation('chat')
 
   const [buyerConversations, setBuyerConversations] = useState<ConversationRow[]>([])
   const [vendorConversations, setVendorConversations] = useState<ConversationRow[]>([])
@@ -113,7 +120,7 @@ export default function MessagesPage() {
       setBuyerConversations(
         (buyerConvs ?? []).map((c: any) => ({
           id: c.id,
-          name: c.vendor?.business_name ?? 'Vendedor',
+          name: c.vendor?.business_name ?? null,
           avatarUrl: c.vendor?.logo_url ?? null,
           lastMessage: c.last_message,
           lastMessageAt: c.last_message_at,
@@ -152,7 +159,7 @@ export default function MessagesPage() {
             const buyer = buyerMap.get(c.buyer_id)
             return {
               id: c.id,
-              name: buyer?.full_name ?? 'Comprador',
+              name: buyer?.full_name ?? null,
               avatarUrl: buyer?.avatar_url ?? null,
               lastMessage: c.last_message,
               lastMessageAt: c.last_message_at,
@@ -172,7 +179,7 @@ export default function MessagesPage() {
       <div className="min-h-screen bg-gray-50">
         <Navbar />
         <div className="flex items-center justify-center py-20">
-          <div className="text-gray-400 text-sm">Cargando conversaciones...</div>
+          <div className="text-gray-400 text-sm">{t('loadingConversations')}</div>
         </div>
       </div>
     )
@@ -183,22 +190,22 @@ export default function MessagesPage() {
       <Navbar />
 
       <main className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Mensajes</h1>
-        <p className="text-sm text-gray-400 mb-6">Tus conversaciones con tiendas</p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">{t('messagesPageTitle')}</h1>
+        <p className="text-sm text-gray-400 mb-6">{t('messagesPageSubtitle')}</p>
 
         {isVendor ? (
           <div className="space-y-8">
             <section>
-              <h2 className="text-sm font-semibold text-gray-700 mb-3">Como comprador</h2>
-              <ConversationList rows={buyerConversations} emptyMessage="Aún no tienes mensajes como comprador" />
+              <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('asBuyerSectionTitle')}</h2>
+              <ConversationList rows={buyerConversations} emptyMessage={t('emptyAsBuyer')} defaultName={t('defaultVendorName')} />
             </section>
             <section>
-              <h2 className="text-sm font-semibold text-gray-700 mb-3">Como vendedor</h2>
-              <ConversationList rows={vendorConversations} emptyMessage="Aún no tienes mensajes como vendedor" />
+              <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('asVendorSectionTitle')}</h2>
+              <ConversationList rows={vendorConversations} emptyMessage={t('emptyAsVendor')} defaultName={t('defaultBuyerName')} />
             </section>
           </div>
         ) : (
-          <ConversationList rows={buyerConversations} emptyMessage="Aún no tienes mensajes" />
+          <ConversationList rows={buyerConversations} emptyMessage={t('emptyGeneric')} defaultName={t('defaultVendorName')} />
         )}
       </main>
     </div>

@@ -13,8 +13,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Navbar } from '@/components/shop/Navbar'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
-import { getMembershipDuration } from '@/lib/utils'
 
 interface ConversationInfo {
   id: string
@@ -38,21 +38,31 @@ interface MessageRow {
   created_at: string
 }
 
-function membershipText(createdAt: string): string {
-  const duration = getMembershipDuration(createdAt)
-  return duration === 'nuevo' ? 'Nuevo en MercadoRD' : `En MercadoRD ${duration}`
-}
-
 export default function ChatPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
   const supabase = createClient()
   const bottomRef = useRef<HTMLDivElement>(null)
+  const { t } = useTranslation('chat')
+
+  // Recalcula la duración de membresía localmente y traducida, en vez de
+  // usar getMembershipDuration() de lib/utils.ts — esa función también la
+  // usa app/tienda/[id] (ya resuelto vía "directory") y no se toca.
+  const membershipText = (createdAt: string): string => {
+    const created = new Date(createdAt)
+    const now = new Date()
+    const months = (now.getFullYear() - created.getFullYear()) * 12 + (now.getMonth() - created.getMonth())
+    if (months < 1) return t('newOnMercadoRD')
+    const duration = months < 12
+      ? t(months === 1 ? 'membershipMonthsSingular' : 'membershipMonthsPlural', { count: months })
+      : t(Math.floor(months / 12) === 1 ? 'membershipYearsSingular' : 'membershipYearsPlural', { count: Math.floor(months / 12) })
+    return t('onMercadoRDSince', { duration })
+  }
 
   const [userId, setUserId] = useState<string | null>(null)
   const [conversation, setConversation] = useState<ConversationInfo | null>(null)
   const [messages, setMessages] = useState<MessageRow[]>([])
-  const [buyerName, setBuyerName] = useState<string>('Comprador')
+  const [buyerName, setBuyerName] = useState<string | null>(null)
   const [buyerCreatedAt, setBuyerCreatedAt] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [newMessage, setNewMessage] = useState('')
@@ -99,7 +109,7 @@ export default function ChatPage() {
         .select('full_name, created_at')
         .eq('id', conv.buyer_id)
         .maybeSingle()
-      setBuyerName(buyer?.full_name ?? 'Comprador')
+      setBuyerName(buyer?.full_name ?? null)
       setBuyerCreatedAt(buyer?.created_at ?? null)
     }
 
@@ -166,7 +176,7 @@ export default function ChatPage() {
       <div className="min-h-screen bg-gray-50">
         <Navbar />
         <div className="flex items-center justify-center py-20">
-          <div className="text-gray-400 text-sm">Cargando chat...</div>
+          <div className="text-gray-400 text-sm">{t('loadingChat')}</div>
         </div>
       </div>
     )
@@ -177,14 +187,14 @@ export default function ChatPage() {
       <div className="min-h-screen bg-gray-50">
         <Navbar />
         <div className="max-w-xl mx-auto px-4 py-20 text-center">
-          <p className="text-gray-500">No se encontró esta conversación.</p>
-          <a href="/mensajes" className="text-blue-600 underline mt-4 inline-block">Volver a mensajes</a>
+          <p className="text-gray-500">{t('conversationNotFound')}</p>
+          <a href="/mensajes" className="text-blue-600 underline mt-4 inline-block">{t('backToMessagesLink')}</a>
         </div>
       </div>
     )
   }
 
-  const otherName = isBuyer ? (conversation.vendor?.business_name ?? 'Vendedor') : buyerName
+  const otherName = isBuyer ? (conversation.vendor?.business_name ?? t('defaultVendorName')) : (buyerName ?? t('defaultBuyerName'))
   const otherLink = isBuyer && conversation.vendor ? `/tienda/${conversation.vendor.id}` : null
   const otherAvatarUrl = isBuyer ? (conversation.vendor?.logo_url ?? null) : null
 
@@ -193,7 +203,7 @@ export default function ChatPage() {
   const otherTrustLine = isBuyer
     ? (conversation.vendor
         ? [
-            conversation.vendor.is_verified ? '✓ Verificado' : null,
+            conversation.vendor.is_verified ? t('verifiedTrustBadge') : null,
             membershipText(conversation.vendor.created_at),
             conversation.vendor.province?.name ?? null,
           ].filter(Boolean).join(' · ')
@@ -206,7 +216,7 @@ export default function ChatPage() {
 
       <main className="max-w-2xl w-full mx-auto px-4 py-6 flex-1 flex flex-col">
         <a href="/mensajes" className="text-sm no-underline mb-3" style={{ color: BRAND.gray }}>
-          ← Volver a mensajes
+          ← {t('backToMessagesLink')}
         </a>
 
         {/* Header */}
@@ -240,7 +250,7 @@ export default function ChatPage() {
         <div className="bg-white rounded-2xl border border-gray-100 flex-1 flex flex-col overflow-hidden">
           <div className="px-5 py-4 flex-1 flex flex-col gap-3" style={{ overflowY: 'auto', maxHeight: 440 }}>
             {messages.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-6">Aún no hay mensajes en esta conversación.</p>
+              <p className="text-sm text-gray-400 text-center py-6">{t('noMessagesInThread')}</p>
             ) : (
               messages.map(m => {
                 const isMine = m.sender_id === userId
@@ -268,7 +278,7 @@ export default function ChatPage() {
               value={newMessage}
               onChange={e => setNewMessage(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') handleSend() }}
-              placeholder="Escribe un mensaje..."
+              placeholder={t('messagePlaceholder')}
               className="flex-1 border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
             />
             <button
@@ -277,7 +287,7 @@ export default function ChatPage() {
               style={{ background: sending || !newMessage.trim() ? '#ccc' : BRAND.blue }}
               className="text-white font-medium px-5 rounded-lg text-sm border-none cursor-pointer"
             >
-              Enviar
+              {t('sendButton')}
             </button>
           </div>
         </div>
