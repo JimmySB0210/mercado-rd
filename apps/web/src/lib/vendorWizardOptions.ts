@@ -1,6 +1,11 @@
 // ============================================================
-// MercadoRD — Opciones y labels del wizard de registro de vendor
+// MercadoRD — Opciones del wizard de registro de vendor
 // Archivo: lib/vendorWizardOptions.ts
+// ============================================================
+// Solo los `value` reales de cada enum — nunca texto traducible.
+// Los labels visibles viven en lib/i18n/{es,en,fr}/vendorOptions.ts
+// (namespace de traducción 'vendorOptions'), buscados por value vía
+// useTranslation('vendorOptions').
 // ============================================================
 
 import type {
@@ -9,82 +14,39 @@ import type {
   ProductionTimeRange,
   CustomerType,
   VendorService,
-  CustomizationOption,
 } from '@/types/database.types'
 
-export const BUSINESS_TYPE_OPTIONS: { value: BusinessType; label: string }[] = [
-  { value: 'manufacturer',      label: 'Fabricante' },
-  { value: 'wholesaler',        label: 'Mayorista' },
-  { value: 'retailer',          label: 'Minorista' },
-  { value: 'importer',          label: 'Importador' },
-  { value: 'distributor',       label: 'Distribuidor' },
-  { value: 'supplier',          label: 'Proveedor' },
-  { value: 'private_label',     label: 'Marca propia' },
-  { value: 'artisan',           label: 'Artesano/Productor' },
-  { value: 'service_provider',  label: 'Prestador de servicios' },
+export const BUSINESS_TYPE_OPTIONS: BusinessType[] = [
+  'manufacturer', 'wholesaler', 'retailer', 'importer', 'distributor',
+  'supplier', 'private_label', 'artisan', 'service_provider',
 ]
 
-export const MANUFACTURING_STATUS_OPTIONS: { value: ManufacturingStatus; label: string }[] = [
-  { value: 'fabricates_own',          label: 'Fabrico mis productos' },
-  { value: 'buys_from_third_parties', label: 'Compro a terceros' },
-  { value: 'mixed',                   label: 'Mixto (fabrico algunos, compro otros)' },
+export const MANUFACTURING_STATUS_OPTIONS: ManufacturingStatus[] = [
+  'fabricates_own', 'buys_from_third_parties', 'mixed',
 ]
 
-export const PRODUCTION_TIME_OPTIONS: { value: ProductionTimeRange; label: string }[] = [
-  { value: 'under_7_days', label: 'Menos de 7 días' },
-  { value: 'days_7_15',    label: '7 a 15 días' },
-  { value: 'days_15_30',   label: '15 a 30 días' },
-  { value: 'days_30_60',   label: '30 a 60 días' },
-  { value: 'over_60_days', label: 'Más de 60 días' },
-  { value: 'variable',     label: 'Variable, según el pedido' },
-  { value: 'custom',       label: 'Personalizado' },
+export const PRODUCTION_TIME_OPTIONS: ProductionTimeRange[] = [
+  'under_7_days', 'days_7_15', 'days_15_30', 'days_30_60', 'over_60_days', 'variable', 'custom',
 ]
 
-export const CUSTOMER_TYPE_OPTIONS: { value: CustomerType; label: string }[] = [
-  { value: 'end_consumer',  label: 'Consumidor final' },
-  { value: 'resellers',     label: 'Revendedores' },
-  { value: 'stores',        label: 'Tiendas' },
-  { value: 'businesses',    label: 'Negocios' },
-  { value: 'wholesalers',   label: 'Mayoristas' },
-  { value: 'retailers',     label: 'Minoristas' },
-  { value: 'manufacturers', label: 'Fabricantes' },
-  { value: 'entrepreneurs', label: 'Emprendedores' },
-  { value: 'distributors',  label: 'Distribuidores' },
+export const CUSTOMER_TYPE_OPTIONS: CustomerType[] = [
+  'end_consumer', 'resellers', 'stores', 'businesses', 'wholesalers',
+  'retailers', 'manufacturers', 'entrepreneurs', 'distributors',
 ]
 
-export const CUSTOMIZATION_OPTION_LABELS: Record<CustomizationOption, string> = {
-  yes: 'Sí',
-  no: 'No',
-  depends: 'Depende',
-}
-
-// Paso 4 — agrupados en 2 secciones visuales
-export const VENDOR_SERVICE_GROUPS: { title: string; options: { value: VendorService; label: string }[] }[] = [
+// Paso 4 — agrupados en 2 secciones visuales. El título de cada grupo
+// vive en vendorOptions.serviceGroupTitles[titleKey].
+export const VENDOR_SERVICE_GROUPS: { titleKey: 'manufacturing_dev' | 'logistics'; options: VendorService[] }[] = [
   {
-    title: 'Fabricación y desarrollo',
+    titleKey: 'manufacturing_dev',
     options: [
-      { value: 'manufacturing',        label: 'Fabricación' },
-      { value: 'private_label',        label: 'Marca privada' },
-      { value: 'product_development',  label: 'Desarrollo de producto' },
-      { value: 'formula_development',  label: 'Desarrollo de fórmula' },
-      { value: 'customization',        label: 'Personalización' },
-      { value: 'packaging',            label: 'Envasado' },
-      { value: 'labeling',             label: 'Etiquetado' },
-      { value: 'on_demand_production', label: 'Producción por encargo' },
-      { value: 'product_design',       label: 'Diseño de producto' },
-      { value: 'other',                label: 'Otro' },
+      'manufacturing', 'private_label', 'product_development', 'formula_development',
+      'customization', 'packaging', 'labeling', 'on_demand_production', 'product_design', 'other',
     ],
   },
   {
-    title: 'Logística y distribución',
-    options: [
-      { value: 'national_shipping', label: 'Envíos nacionales' },
-      { value: 'delivery',          label: 'Delivery' },
-      { value: 'pickup',            label: 'Pickup' },
-      { value: 'importing',         label: 'Importación' },
-      { value: 'storage',           label: 'Almacenamiento' },
-      { value: 'distribution',      label: 'Distribución' },
-    ],
+    titleKey: 'logistics',
+    options: ['national_shipping', 'delivery', 'pickup', 'importing', 'storage', 'distribution'],
   },
 ]
 

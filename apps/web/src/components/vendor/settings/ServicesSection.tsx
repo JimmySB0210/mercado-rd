@@ -8,6 +8,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { VENDOR_SERVICE_GROUPS } from '@/lib/vendorWizardOptions'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import type { VendorService } from '@/types/database.types'
 import { labelStyle, CheckboxGrid } from '@/components/vendor/wizard/sharedUI'
 import { SectionCard, SaveSectionButton } from './SectionCard'
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export function ServicesSection({ vendorId, initialServices }: Props) {
+  const { t } = useTranslation('vendorOptions')
   const router = useRouter()
   const supabase = createClient()
 
@@ -64,9 +66,13 @@ export function ServicesSection({ vendorId, initialServices }: Props) {
     <SectionCard title="Servicios que ofreces">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         {VENDOR_SERVICE_GROUPS.map(group => (
-          <div key={group.title}>
-            <label style={labelStyle}>{group.title}</label>
-            <CheckboxGrid options={group.options} selected={services} onToggle={toggle} />
+          <div key={group.titleKey}>
+            <label style={labelStyle}>{t(`serviceGroupTitles.${group.titleKey}`)}</label>
+            <CheckboxGrid
+              options={group.options.map(value => ({ value, label: t(`service.${value}`) }))}
+              selected={services}
+              onToggle={toggle}
+            />
           </div>
         ))}
       </div>

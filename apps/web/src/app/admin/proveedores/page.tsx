@@ -14,12 +14,8 @@ import { AdminSidebar } from '@/components/admin/AdminSidebar'
 import { VendorVerificationFilters } from '@/components/admin/VendorVerificationFilters'
 import { VerificationLevelControl } from '@/components/admin/VerificationLevelControl'
 import { VerificationBadge } from '@/components/vendor/VerificationBadge'
-import {
-  BUSINESS_TYPE_LABELS, CUSTOMER_TYPE_LABELS, SERVICE_LABELS, PRODUCTION_TIME_LABELS, MANUFACTURING_STATUS_LABELS,
-} from '@/lib/vendorLabels'
-import { CUSTOMIZATION_OPTION_LABELS } from '@/lib/vendorWizardOptions'
+import { VendorOptionLabel } from '@/components/vendor/VendorOptionLabel'
 import { BRAND } from '@/lib/colors'
-import type { CustomizationOption } from '@/types/database.types'
 
 export default async function AdminProveedoresPage(
   { searchParams }: { searchParams: Promise<{ vendor?: string; level?: string; businessType?: string }> }
@@ -94,7 +90,7 @@ export default async function AdminProveedoresPage(
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
                         {v.business_types.slice(0, 3).map(bt => (
                           <span key={bt} style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: '#F3F4F6', color: '#666', fontWeight: 600 }}>
-                            {BUSINESS_TYPE_LABELS[bt] ?? bt}
+                            <VendorOptionLabel category="businessType" value={bt} />
                           </span>
                         ))}
                         {!v.onboarding_completed && (
@@ -162,7 +158,7 @@ export default async function AdminProveedoresPage(
                 <div>
                   <p style={sectionLabelStyle}>Tipos de negocio</p>
                   {selectedVendor.business_types.length > 0 ? (
-                    <ChipList items={selectedVendor.business_types.map(bt => BUSINESS_TYPE_LABELS[bt] ?? bt)} />
+                    <ChipList items={selectedVendor.business_types.map(bt => ({ key: bt, content: <VendorOptionLabel category="businessType" value={bt} /> }))} />
                   ) : <EmptyNote />}
                 </div>
 
@@ -170,7 +166,7 @@ export default async function AdminProveedoresPage(
                 <div>
                   <p style={sectionLabelStyle}>Categorías</p>
                   {selectedVendor.categories.length > 0 ? (
-                    <ChipList items={selectedVendor.categories.map(c => `${c.emoji} ${c.name}`)} />
+                    <ChipList items={selectedVendor.categories.map(c => ({ key: String(c.id), content: `${c.emoji} ${c.name}` }))} />
                   ) : <EmptyNote />}
                 </div>
 
@@ -189,15 +185,18 @@ export default async function AdminProveedoresPage(
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 13, color: '#333' }}>
                     {selectedVendor.manufacturing_status ? (
                       <>
-                        <p>🏭 {MANUFACTURING_STATUS_LABELS[selectedVendor.manufacturing_status] ?? selectedVendor.manufacturing_status}</p>
+                        <p>🏭 <VendorOptionLabel category="manufacturingStatus" value={selectedVendor.manufacturing_status} /></p>
                         {selectedVendor.production_time && (
-                          <p>⏱️ Tiempo de producción: {selectedVendor.production_time === 'custom' ? selectedVendor.production_time_custom : PRODUCTION_TIME_LABELS[selectedVendor.production_time]}</p>
+                          <p>⏱️ Tiempo de producción: {selectedVendor.production_time === 'custom'
+                            ? selectedVendor.production_time_custom
+                            : <VendorOptionLabel category="productionTime" value={selectedVendor.production_time} />}
+                          </p>
                         )}
                         {selectedVendor.accepts_private_label !== null && (
                           <p>🏷️ Marca privada: {selectedVendor.accepts_private_label ? 'Sí' : 'No'}</p>
                         )}
                         {selectedVendor.allows_customization && (
-                          <p>🎨 Personalización: {CUSTOMIZATION_OPTION_LABELS[selectedVendor.allows_customization as CustomizationOption]}</p>
+                          <p>🎨 Personalización: <VendorOptionLabel category="customizationOption" value={selectedVendor.allows_customization} /></p>
                         )}
                       </>
                     ) : <EmptyNote />}
@@ -208,7 +207,7 @@ export default async function AdminProveedoresPage(
                 <div>
                   <p style={sectionLabelStyle}>Servicios</p>
                   {selectedVendor.services.length > 0 ? (
-                    <ChipList items={selectedVendor.services.map(s => SERVICE_LABELS[s] ?? s)} variant="check" />
+                    <ChipList items={selectedVendor.services.map(s => ({ key: s, content: <VendorOptionLabel category="service" value={s} /> }))} variant="check" />
                   ) : <EmptyNote />}
                 </div>
 
@@ -226,7 +225,7 @@ export default async function AdminProveedoresPage(
                 <div>
                   <p style={sectionLabelStyle}>Clientes que atiende</p>
                   {selectedVendor.target_customers.length > 0 ? (
-                    <ChipList items={selectedVendor.target_customers.map(c => CUSTOMER_TYPE_LABELS[c] ?? c)} />
+                    <ChipList items={selectedVendor.target_customers.map(c => ({ key: c, content: <VendorOptionLabel category="customerType" value={c} /> }))} />
                   ) : <EmptyNote />}
                 </div>
 
@@ -258,17 +257,17 @@ function InfoStat({ label, value }: { label: string; value: string }) {
   )
 }
 
-function ChipList({ items, variant = 'plain' }: { items: string[]; variant?: 'plain' | 'check' }) {
+function ChipList({ items, variant = 'plain' }: { items: { key: string; content: React.ReactNode }[]; variant?: 'plain' | 'check' }) {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: variant === 'check' ? 12 : 6 }}>
-      {items.map(label => (
+      {items.map(item => (
         variant === 'check' ? (
-          <span key={label} style={{ fontSize: 13, color: '#333' }}>
-            <span style={{ color: BRAND.green, fontWeight: 700 }}>✓</span> {label}
+          <span key={item.key} style={{ fontSize: 13, color: '#333' }}>
+            <span style={{ color: BRAND.green, fontWeight: 700 }}>✓</span> {item.content}
           </span>
         ) : (
-          <span key={label} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 10, background: '#F3F4F6', color: '#666', fontWeight: 600 }}>
-            {label}
+          <span key={item.key} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 10, background: '#F3F4F6', color: '#666', fontWeight: 600 }}>
+            {item.content}
           </span>
         )
       ))}

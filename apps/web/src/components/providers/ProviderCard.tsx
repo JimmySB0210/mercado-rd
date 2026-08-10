@@ -5,7 +5,7 @@
 // ============================================================
 
 import { BRAND } from '@/lib/colors'
-import { BUSINESS_TYPE_LABELS, SERVICE_LABELS } from '@/lib/vendorLabels'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import { VerificationBadge } from '@/components/vendor/VerificationBadge'
 import type { Vendor, BusinessType, VendorService } from '@/types/database.types'
 
@@ -17,8 +17,9 @@ interface Props {
 }
 
 export function ProviderCard({ vendor, provinceName, businessTypes, services }: Props) {
-  const businessTypeLabels = businessTypes.map(v => BUSINESS_TYPE_LABELS[v] ?? v)
-  const serviceLabels = services.slice(0, 3).map(v => SERVICE_LABELS[v] ?? v)
+  const { t } = useTranslation('vendorOptions')
+  const businessTypeLabels = businessTypes.map(v => t(`businessType.${v}`))
+  const serviceLabels = services.slice(0, 3).map(v => t(`service.${v}`))
 
   return (
     <a

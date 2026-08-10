@@ -7,7 +7,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { MANUFACTURING_STATUS_OPTIONS, PRODUCTION_TIME_OPTIONS, CUSTOMIZATION_OPTION_LABELS } from '@/lib/vendorWizardOptions'
+import { MANUFACTURING_STATUS_OPTIONS, PRODUCTION_TIME_OPTIONS } from '@/lib/vendorWizardOptions'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import type { ManufacturingStatus, ProductionTimeRange, CustomizationOption } from '@/types/database.types'
 import { BRAND } from '@/lib/colors'
 import { inputStyle, labelStyle, helperTextStyle, YesNoToggle, SegmentedChoice } from '@/components/vendor/wizard/sharedUI'
@@ -24,10 +25,12 @@ interface Props {
   }
 }
 
-const CUSTOMIZATION_OPTIONS: { value: CustomizationOption; label: string }[] =
-  (['yes', 'no', 'depends'] as const).map(v => ({ value: v, label: CUSTOMIZATION_OPTION_LABELS[v] }))
+const CUSTOMIZATION_VALUES = ['yes', 'no', 'depends'] as const
 
 export function ManufacturingSection({ vendorId, initial }: Props) {
+  const { t } = useTranslation('vendorOptions')
+  const manufacturingOptions = MANUFACTURING_STATUS_OPTIONS.map(value => ({ value, label: t(`manufacturingStatus.${value}`) }))
+  const customizationOptions = CUSTOMIZATION_VALUES.map(value => ({ value, label: t(`customizationOption.${value}`) }))
   const router = useRouter()
   const supabase = createClient()
 
@@ -73,7 +76,7 @@ export function ManufacturingSection({ vendorId, initial }: Props) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <SegmentedChoice
           label="¿Tú fabricas alguno de los productos que ofreces?"
-          options={MANUFACTURING_STATUS_OPTIONS}
+          options={manufacturingOptions}
           value={manufacturingStatus}
           onChange={setManufacturingStatus}
         />
@@ -90,8 +93,8 @@ export function ManufacturingSection({ vendorId, initial }: Props) {
                 onChange={e => setProductionTime((e.target.value || null) as ProductionTimeRange | null)}
               >
                 <option value="">Selecciona...</option>
-                {PRODUCTION_TIME_OPTIONS.map(o => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
+                {PRODUCTION_TIME_OPTIONS.map(value => (
+                  <option key={value} value={value}>{t(`productionTime.${value}`)}</option>
                 ))}
               </select>
               {productionTime === 'custom' && (
@@ -108,7 +111,7 @@ export function ManufacturingSection({ vendorId, initial }: Props) {
 
             <SegmentedChoice
               label="¿Permites personalización?"
-              options={CUSTOMIZATION_OPTIONS}
+              options={customizationOptions}
               value={allowsCustomization}
               onChange={setAllowsCustomization}
             />

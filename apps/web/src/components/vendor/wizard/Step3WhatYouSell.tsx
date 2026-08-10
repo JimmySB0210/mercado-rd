@@ -5,8 +5,9 @@
 // ============================================================
 
 import { BRAND } from '@/lib/colors'
-import { MANUFACTURING_STATUS_OPTIONS, PRODUCTION_TIME_OPTIONS, CUSTOMIZATION_OPTION_LABELS } from '@/lib/vendorWizardOptions'
-import type { Category, CustomizationOption } from '@/types/database.types'
+import { MANUFACTURING_STATUS_OPTIONS, PRODUCTION_TIME_OPTIONS } from '@/lib/vendorWizardOptions'
+import { useTranslation } from '@/lib/hooks/useTranslation'
+import type { Category } from '@/types/database.types'
 import type { VendorWizardFormData } from './vendorWizardTypes'
 import { inputStyle, labelStyle, helperTextStyle, SaveErrorBox, StepNavButtons, YesNoToggle, SegmentedChoice } from './sharedUI'
 import { CategoryMultiSelect } from './CategoryMultiSelect'
@@ -21,10 +22,12 @@ interface Props {
   error: string | null
 }
 
-const CUSTOMIZATION_OPTIONS: { value: CustomizationOption; label: string }[] =
-  (['yes', 'no', 'depends'] as const).map(v => ({ value: v, label: CUSTOMIZATION_OPTION_LABELS[v] }))
+const CUSTOMIZATION_VALUES = ['yes', 'no', 'depends'] as const
 
 export function Step3WhatYouSell({ data, updateData, categories, onNext, onBack, saving, error }: Props) {
+  const { t } = useTranslation('vendorOptions')
+  const manufacturingOptions = MANUFACTURING_STATUS_OPTIONS.map(value => ({ value, label: t(`manufacturingStatus.${value}`) }))
+  const customizationOptions = CUSTOMIZATION_VALUES.map(value => ({ value, label: t(`customizationOption.${value}`) }))
   const showManufacturingFields = data.manufacturingStatus === 'fabricates_own' || data.manufacturingStatus === 'mixed'
 
   return (
@@ -40,7 +43,7 @@ export function Step3WhatYouSell({ data, updateData, categories, onNext, onBack,
 
       <SegmentedChoice
         label="¿Tú fabricas alguno de los productos que ofreces?"
-        options={MANUFACTURING_STATUS_OPTIONS}
+        options={manufacturingOptions}
         value={data.manufacturingStatus}
         onChange={v => updateData({ manufacturingStatus: v })}
       />
@@ -57,8 +60,8 @@ export function Step3WhatYouSell({ data, updateData, categories, onNext, onBack,
               onChange={e => updateData({ productionTime: (e.target.value || null) as VendorWizardFormData['productionTime'] })}
             >
               <option value="">Selecciona...</option>
-              {PRODUCTION_TIME_OPTIONS.map(o => (
-                <option key={o.value} value={o.value}>{o.label}</option>
+              {PRODUCTION_TIME_OPTIONS.map(value => (
+                <option key={value} value={value}>{t(`productionTime.${value}`)}</option>
               ))}
             </select>
             {data.productionTime === 'custom' && (
@@ -79,7 +82,7 @@ export function Step3WhatYouSell({ data, updateData, categories, onNext, onBack,
 
           <SegmentedChoice
             label="¿Permites personalización?"
-            options={CUSTOMIZATION_OPTIONS}
+            options={customizationOptions}
             value={data.allowsCustomization}
             onChange={v => updateData({ allowsCustomization: v })}
           />

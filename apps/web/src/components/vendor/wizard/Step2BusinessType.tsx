@@ -5,6 +5,7 @@
 // ============================================================
 
 import { BUSINESS_TYPE_OPTIONS } from '@/lib/vendorWizardOptions'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import type { BusinessType } from '@/types/database.types'
 import type { VendorWizardFormData } from './vendorWizardTypes'
 import { helperTextStyle, SaveErrorBox, StepNavButtons, CheckboxGrid } from './sharedUI'
@@ -19,6 +20,9 @@ interface Props {
 }
 
 export function Step2BusinessType({ data, updateData, onNext, onBack, saving, error }: Props) {
+  const { t } = useTranslation('vendorOptions')
+  const options = BUSINESS_TYPE_OPTIONS.map(value => ({ value, label: t(`businessType.${value}`) }))
+
   const toggle = (value: BusinessType) => {
     updateData({
       businessTypes: data.businessTypes.includes(value)
@@ -31,7 +35,7 @@ export function Step2BusinessType({ data, updateData, onNext, onBack, saving, er
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <p style={helperTextStyle}>¿Cuál es tu tipo de negocio? Selecciona todas las que apliquen.</p>
 
-      <CheckboxGrid options={BUSINESS_TYPE_OPTIONS} selected={data.businessTypes} onToggle={toggle} />
+      <CheckboxGrid options={options} selected={data.businessTypes} onToggle={toggle} />
 
       <SaveErrorBox error={error} />
       <StepNavButtons onBack={onBack} onNext={onNext} saving={saving} />

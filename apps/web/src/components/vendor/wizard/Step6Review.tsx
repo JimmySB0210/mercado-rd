@@ -5,10 +5,7 @@
 // ============================================================
 
 import { BRAND } from '@/lib/colors'
-import {
-  BUSINESS_TYPE_OPTIONS, MANUFACTURING_STATUS_OPTIONS, PRODUCTION_TIME_OPTIONS,
-  CUSTOMIZATION_OPTION_LABELS, VENDOR_SERVICE_GROUPS, CUSTOMER_TYPE_OPTIONS,
-} from '@/lib/vendorWizardOptions'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import type { Category } from '@/types/database.types'
 import type { VendorWizardFormData } from './vendorWizardTypes'
 import { SaveErrorBox } from './sharedUI'
@@ -56,10 +53,11 @@ const sectionStyle: React.CSSProperties = {
 }
 
 export function Step6Review({ data, provinces, categories, onEditStep, onSubmit, saving, error }: Props) {
+  const { t } = useTranslation('vendorOptions')
   const provinceName = provinces.find(p => String(p.id) === data.provinceId)?.name ?? '—'
 
   const businessTypeLabels = data.businessTypes
-    .map(v => BUSINESS_TYPE_OPTIONS.find(o => o.value === v)?.label ?? v)
+    .map(v => t(`businessType.${v}`))
     .join(', ') || '—'
 
   const categoryNames = data.categoryIds
@@ -67,18 +65,17 @@ export function Step6Review({ data, provinces, categories, onEditStep, onSubmit,
     .filter(Boolean)
     .join(', ') || '—'
 
-  const manufacturingLabel = MANUFACTURING_STATUS_OPTIONS.find(o => o.value === data.manufacturingStatus)?.label ?? '—'
+  const manufacturingLabel = data.manufacturingStatus ? t(`manufacturingStatus.${data.manufacturingStatus}`) : '—'
   const productionTimeLabel = data.productionTime === 'custom'
     ? (data.productionTimeCustom || '—')
-    : (PRODUCTION_TIME_OPTIONS.find(o => o.value === data.productionTime)?.label ?? '—')
+    : (data.productionTime ? t(`productionTime.${data.productionTime}`) : '—')
 
-  const allServiceOptions = VENDOR_SERVICE_GROUPS.flatMap(g => g.options)
   const serviceLabels = data.services
-    .map(v => allServiceOptions.find(o => o.value === v)?.label ?? v)
+    .map(v => t(`service.${v}`))
     .join(', ') || '—'
 
   const customerLabels = data.targetCustomers
-    .map(v => CUSTOMER_TYPE_OPTIONS.find(o => o.value === v)?.label ?? v)
+    .map(v => t(`customerType.${v}`))
     .join(', ') || '—'
 
   const minOrderLabel = data.minOrderQuantity
@@ -119,7 +116,7 @@ export function Step6Review({ data, provinces, categories, onEditStep, onSubmit,
           <>
             <Row label="Tiempo de producción" value={productionTimeLabel} />
             <Row label="Marca privada" value={yesNoLabel(data.acceptsPrivateLabel)} />
-            <Row label="Personalización" value={data.allowsCustomization ? CUSTOMIZATION_OPTION_LABELS[data.allowsCustomization] : '—'} />
+            <Row label="Personalización" value={data.allowsCustomization ? t(`customizationOption.${data.allowsCustomization}`) : '—'} />
           </>
         )}
       </div>

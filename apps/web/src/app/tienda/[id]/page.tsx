@@ -8,10 +8,9 @@ import { createServerClient } from '@/lib/supabase/server'
 import { Navbar } from '@/components/shop/Navbar'
 import { ProductCard } from '@/components/product/ProductCard'
 import { getMembershipDuration } from '@/lib/utils'
-import { CUSTOMIZATION_OPTION_LABELS } from '@/lib/vendorWizardOptions'
-import { BUSINESS_TYPE_LABELS, CUSTOMER_TYPE_LABELS, PRODUCTION_TIME_LABELS, SERVICE_LABELS } from '@/lib/vendorLabels'
 import { VerificationBadge } from '@/components/vendor/VerificationBadge'
-import type { BusinessType, CustomerType, VendorService, CustomizationOption } from '@/types/database.types'
+import { VendorOptionLabel } from '@/components/vendor/VendorOptionLabel'
+import type { BusinessType, CustomerType, VendorService } from '@/types/database.types'
 
 export default async function VendorStorePage(
   { params }: { params: Promise<{ id: string }> }
@@ -86,23 +85,17 @@ export default async function VendorStorePage(
     month: 'long', year: 'numeric',
   })
 
-  const businessTypeLabels = (businessTypesRaw ?? [])
-    .map(r => BUSINESS_TYPE_LABELS[r.business_type as BusinessType] ?? r.business_type)
+  const businessTypes = (businessTypesRaw ?? []).map(r => r.business_type as BusinessType)
   const vendorCategories = (vendorCategoriesRaw ?? [])
     .map(r => r.category as unknown as { id: number; name: string; emoji: string; slug: string } | null)
     .filter((c): c is { id: number; name: string; emoji: string; slug: string } => !!c)
-  const serviceLabels = (servicesRaw ?? [])
-    .map(r => SERVICE_LABELS[r.service as VendorService] ?? r.service)
-  const customerLabels = (targetCustomersRaw ?? [])
-    .map(r => CUSTOMER_TYPE_LABELS[r.customer_type as CustomerType] ?? r.customer_type)
+  const services = (servicesRaw ?? []).map(r => r.service as VendorService)
+  const targetCustomers = (targetCustomersRaw ?? []).map(r => r.customer_type as CustomerType)
 
   const showsManufacturing = !!vendor.manufacturing_status
-  const productionTimeLabel = vendor.production_time === 'custom'
-    ? vendor.production_time_custom
-    : (vendor.production_time ? PRODUCTION_TIME_LABELS[vendor.production_time] : null)
 
-  const hasProviderInfo = businessTypeLabels.length > 0 || vendorCategories.length > 0 || showsManufacturing
-    || serviceLabels.length > 0 || customerLabels.length > 0 || !!vendor.min_order_quantity
+  const hasProviderInfo = businessTypes.length > 0 || vendorCategories.length > 0 || showsManufacturing
+    || services.length > 0 || targetCustomers.length > 0 || !!vendor.min_order_quantity
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -128,11 +121,11 @@ export default async function VendorStorePage(
                 <VerificationBadge level={vendor.verification_level ?? 1} />
               </div>
 
-              {businessTypeLabels.length > 0 && (
+              {businessTypes.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
-                  {businessTypeLabels.map(label => (
-                    <span key={label} className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
-                      {label}
+                  {businessTypes.map(bt => (
+                    <span key={bt} className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
+                      <VendorOptionLabel category="businessType" value={bt} />
                     </span>
                   ))}
                 </div>
@@ -242,24 +235,32 @@ export default async function VendorStorePage(
                 <div>
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Especialidad de fabricación</p>
                   <div className="flex flex-col gap-1 text-sm text-gray-600">
-                    {productionTimeLabel && <p>⏱️ Tiempo de producción: <span className="font-medium text-gray-900">{productionTimeLabel}</span></p>}
+                    {vendor.production_time && (
+                      <p>⏱️ Tiempo de producción: <span className="font-medium text-gray-900">
+                        {vendor.production_time === 'custom'
+                          ? vendor.production_time_custom
+                          : <VendorOptionLabel category="productionTime" value={vendor.production_time} />}
+                      </span></p>
+                    )}
                     {vendor.accepts_private_label !== null && (
                       <p>🏷️ ¿Marca privada?: <span className="font-medium text-gray-900">{vendor.accepts_private_label ? 'Sí' : 'No'}</span></p>
                     )}
                     {vendor.allows_customization && (
-                      <p>🎨 ¿Personalización?: <span className="font-medium text-gray-900">{CUSTOMIZATION_OPTION_LABELS[vendor.allows_customization as CustomizationOption]}</span></p>
+                      <p>🎨 ¿Personalización?: <span className="font-medium text-gray-900">
+                        <VendorOptionLabel category="customizationOption" value={vendor.allows_customization} />
+                      </span></p>
                     )}
                   </div>
                 </div>
               )}
 
-              {serviceLabels.length > 0 && (
+              {services.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Servicios</p>
                   <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                    {serviceLabels.map(label => (
-                      <span key={label} className="text-sm text-gray-700">
-                        <span className="text-green-600 font-bold">✓</span> {label}
+                    {services.map(s => (
+                      <span key={s} className="text-sm text-gray-700">
+                        <span className="text-green-600 font-bold">✓</span> <VendorOptionLabel category="service" value={s} />
                       </span>
                     ))}
                   </div>
@@ -275,13 +276,13 @@ export default async function VendorStorePage(
                 </div>
               )}
 
-              {customerLabels.length > 0 && (
+              {targetCustomers.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Clientes que atiende</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {customerLabels.map(label => (
-                      <span key={label} className="text-xs px-2.5 py-1 rounded-full bg-gray-50 border border-gray-100 text-gray-700 font-medium">
-                        {label}
+                    {targetCustomers.map(c => (
+                      <span key={c} className="text-xs px-2.5 py-1 rounded-full bg-gray-50 border border-gray-100 text-gray-700 font-medium">
+                        <VendorOptionLabel category="customerType" value={c} />
                       </span>
                     ))}
                   </div>

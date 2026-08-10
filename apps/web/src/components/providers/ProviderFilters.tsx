@@ -5,6 +5,7 @@
 // ============================================================
 
 import { BUSINESS_TYPE_OPTIONS, VENDOR_SERVICE_GROUPS } from '@/lib/vendorWizardOptions'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import { CheckboxGrid, labelStyle, inputStyle } from '@/components/vendor/wizard/sharedUI'
 import { CategoryMultiSelect } from '@/components/vendor/wizard/CategoryMultiSelect'
 import type { BusinessType, VendorService, Category } from '@/types/database.types'
@@ -20,6 +21,9 @@ interface Props {
 }
 
 export function ProviderFilters({ filters, onChange, provinces, categories }: Props) {
+  const { t } = useTranslation('vendorOptions')
+  const businessTypeOptions = BUSINESS_TYPE_OPTIONS.map(value => ({ value, label: t(`businessType.${value}`) }))
+
   const toggleBusinessType = (value: BusinessType) => {
     onChange({
       businessTypes: filters.businessTypes.includes(value)
@@ -40,7 +44,7 @@ export function ProviderFilters({ filters, onChange, provinces, categories }: Pr
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div>
         <label style={labelStyle}>Tipo de negocio</label>
-        <CheckboxGrid options={BUSINESS_TYPE_OPTIONS} selected={filters.businessTypes} onToggle={toggleBusinessType} columns={1} />
+        <CheckboxGrid options={businessTypeOptions} selected={filters.businessTypes} onToggle={toggleBusinessType} columns={1} />
       </div>
 
       <div>
@@ -82,9 +86,14 @@ export function ProviderFilters({ filters, onChange, provinces, categories }: Pr
         <label style={labelStyle}>Servicios</label>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {VENDOR_SERVICE_GROUPS.map(group => (
-            <div key={group.title}>
-              <p style={{ fontSize: 11, color: '#999', fontWeight: 600, marginBottom: 6 }}>{group.title}</p>
-              <CheckboxGrid options={group.options} selected={filters.services} onToggle={toggleService} columns={1} />
+            <div key={group.titleKey}>
+              <p style={{ fontSize: 11, color: '#999', fontWeight: 600, marginBottom: 6 }}>{t(`serviceGroupTitles.${group.titleKey}`)}</p>
+              <CheckboxGrid
+                options={group.options.map(value => ({ value, label: t(`service.${value}`) }))}
+                selected={filters.services}
+                onToggle={toggleService}
+                columns={1}
+              />
             </div>
           ))}
         </div>

@@ -8,6 +8,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { CUSTOMER_TYPE_OPTIONS, MIN_ORDER_QUANTITY_OPTIONS } from '@/lib/vendorWizardOptions'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import type { CustomerType } from '@/types/database.types'
 import { inputStyle, labelStyle, CheckboxGrid } from '@/components/vendor/wizard/sharedUI'
 import { SectionCard, SaveSectionButton } from './SectionCard'
@@ -21,6 +22,8 @@ interface Props {
 const CUSTOM_MARKER = '__custom__'
 
 export function CustomersSection({ vendorId, initialTargetCustomers, initial }: Props) {
+  const { t } = useTranslation('vendorOptions')
+  const options = CUSTOMER_TYPE_OPTIONS.map(value => ({ value, label: t(`customerType.${value}`) }))
   const router = useRouter()
   const supabase = createClient()
 
@@ -86,7 +89,7 @@ export function CustomersSection({ vendorId, initialTargetCustomers, initial }: 
       <div style={{ marginBottom: 18 }}>
         <label style={labelStyle}>¿A quién le vendes?</label>
         <div style={{ marginTop: 8 }}>
-          <CheckboxGrid options={CUSTOMER_TYPE_OPTIONS} selected={targetCustomers} onToggle={toggle} />
+          <CheckboxGrid options={options} selected={targetCustomers} onToggle={toggle} />
         </div>
       </div>
 

@@ -5,6 +5,7 @@
 // ============================================================
 
 import { VENDOR_SERVICE_GROUPS } from '@/lib/vendorWizardOptions'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import type { VendorService } from '@/types/database.types'
 import type { VendorWizardFormData } from './vendorWizardTypes'
 import { labelStyle, helperTextStyle, SaveErrorBox, StepNavButtons, CheckboxGrid } from './sharedUI'
@@ -19,6 +20,8 @@ interface Props {
 }
 
 export function Step4Services({ data, updateData, onNext, onBack, saving, error }: Props) {
+  const { t } = useTranslation('vendorOptions')
+
   const toggle = (value: VendorService) => {
     updateData({
       services: data.services.includes(value)
@@ -32,9 +35,13 @@ export function Step4Services({ data, updateData, onNext, onBack, saving, error 
       <p style={helperTextStyle}>Selecciona todos los servicios que ofreces.</p>
 
       {VENDOR_SERVICE_GROUPS.map(group => (
-        <div key={group.title}>
-          <label style={labelStyle}>{group.title}</label>
-          <CheckboxGrid options={group.options} selected={data.services} onToggle={toggle} />
+        <div key={group.titleKey}>
+          <label style={labelStyle}>{t(`serviceGroupTitles.${group.titleKey}`)}</label>
+          <CheckboxGrid
+            options={group.options.map(value => ({ value, label: t(`service.${value}`) }))}
+            selected={data.services}
+            onToggle={toggle}
+          />
         </div>
       ))}
 

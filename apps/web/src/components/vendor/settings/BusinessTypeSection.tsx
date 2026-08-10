@@ -8,6 +8,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { BUSINESS_TYPE_OPTIONS } from '@/lib/vendorWizardOptions'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import type { BusinessType } from '@/types/database.types'
 import { CheckboxGrid } from '@/components/vendor/wizard/sharedUI'
 import { SectionCard, SaveSectionButton } from './SectionCard'
@@ -18,6 +19,8 @@ interface Props {
 }
 
 export function BusinessTypeSection({ vendorId, initialBusinessTypes }: Props) {
+  const { t } = useTranslation('vendorOptions')
+  const options = BUSINESS_TYPE_OPTIONS.map(value => ({ value, label: t(`businessType.${value}`) }))
   const router = useRouter()
   const supabase = createClient()
 
@@ -62,7 +65,7 @@ export function BusinessTypeSection({ vendorId, initialBusinessTypes }: Props) {
 
   return (
     <SectionCard title="Tipo de negocio" subtitle="Selecciona todas las que apliquen.">
-      <CheckboxGrid options={BUSINESS_TYPE_OPTIONS} selected={businessTypes} onToggle={toggle} />
+      <CheckboxGrid options={options} selected={businessTypes} onToggle={toggle} />
       <SaveSectionButton onClick={handleSave} saving={saving} error={error} success={success} />
     </SectionCard>
   )

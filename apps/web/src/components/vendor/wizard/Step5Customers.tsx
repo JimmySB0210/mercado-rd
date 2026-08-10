@@ -5,6 +5,7 @@
 // ============================================================
 
 import { CUSTOMER_TYPE_OPTIONS, MIN_ORDER_QUANTITY_OPTIONS } from '@/lib/vendorWizardOptions'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import type { CustomerType } from '@/types/database.types'
 import type { VendorWizardFormData } from './vendorWizardTypes'
 import { inputStyle, labelStyle, helperTextStyle, SaveErrorBox, StepNavButtons, CheckboxGrid } from './sharedUI'
@@ -21,6 +22,9 @@ interface Props {
 const CUSTOM_MARKER = '__custom__'
 
 export function Step5Customers({ data, updateData, onNext, onBack, saving, error }: Props) {
+  const { t } = useTranslation('vendorOptions')
+  const options = CUSTOMER_TYPE_OPTIONS.map(value => ({ value, label: t(`customerType.${value}`) }))
+
   const toggle = (value: CustomerType) => {
     updateData({
       targetCustomers: data.targetCustomers.includes(value)
@@ -37,7 +41,7 @@ export function Step5Customers({ data, updateData, onNext, onBack, saving, error
       <div>
         <label style={labelStyle}>¿A quién le vendes?</label>
         <p style={{ ...helperTextStyle, marginBottom: 10 }}>Selecciona todas las que apliquen.</p>
-        <CheckboxGrid options={CUSTOMER_TYPE_OPTIONS} selected={data.targetCustomers} onToggle={toggle} />
+        <CheckboxGrid options={options} selected={data.targetCustomers} onToggle={toggle} />
       </div>
 
       <div>

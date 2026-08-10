@@ -14,7 +14,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/colors'
-import { VERIFICATION_LEVEL_LABELS } from '@/lib/vendorLabels'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 
 interface Props {
   vendorId: string
@@ -24,6 +24,8 @@ interface Props {
 const LEVELS = [1, 2, 3, 4]
 
 export function VerificationLevelControl({ vendorId, currentLevel }: Props) {
+  const { t } = useTranslation('vendorOptions')
+  const levelLabel = (l: number) => t(`verificationLevel.${l}` as Parameters<typeof t>[0])
   const [level, setLevel] = useState(currentLevel)
   const [saving, setSaving] = useState(false)
   const router = useRouter()
@@ -33,7 +35,7 @@ export function VerificationLevelControl({ vendorId, currentLevel }: Props) {
     if (newLevel === level || saving) return
 
     const note = window.prompt(
-      `Cambiar de "${VERIFICATION_LEVEL_LABELS[level]}" a "${VERIFICATION_LEVEL_LABELS[newLevel]}".\nNota interna (opcional):`,
+      `Cambiar de "${levelLabel(level)}" a "${levelLabel(newLevel)}".\nNota interna (opcional):`,
       ''
     )
     if (note === null) return // canceló
@@ -84,7 +86,7 @@ export function VerificationLevelControl({ vendorId, currentLevel }: Props) {
                 Nivel {l}
               </div>
               <div style={{ fontSize: 12, color: active ? BRAND.dark : '#666', marginTop: 2 }}>
-                {VERIFICATION_LEVEL_LABELS[l]}
+                {levelLabel(l)}
               </div>
             </button>
           )

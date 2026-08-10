@@ -21,6 +21,14 @@
 // pero cada call site sigue teniendo autocompletado y error de
 // compilación si la key no existe. Nuevos namespaces: agregar el
 // diccionario a NAMESPACES y un overload más abajo.
+//
+// Namespaces anidados (ej. vendorOptions): DotPaths<T> genera el tipo
+// de las keys como rutas con punto ('businessType.manufacturer'). Para
+// un diccionario plano, DotPaths<T> es idéntico a keyof T — por eso
+// los namespaces existentes no necesitan cambiar su overload. t() usa
+// getByPath() para resolver la ruta contra el objeto anidado; en un
+// diccionario plano, una ruta de un solo segmento equivale al acceso
+// directo de siempre.
 // ============================================================
 
 import { useLanguageStore, type Language } from '@/lib/store/language'
@@ -46,6 +54,9 @@ import { checkout as checkoutFr } from '@/lib/i18n/fr/checkout'
 import { dashboard as dashboardEs, type DashboardDict } from '@/lib/i18n/es/dashboard'
 import { dashboard as dashboardEn } from '@/lib/i18n/en/dashboard'
 import { dashboard as dashboardFr } from '@/lib/i18n/fr/dashboard'
+import { vendorOptions as vendorOptionsEs, type VendorOptionsDict } from '@/lib/i18n/es/vendorOptions'
+import { vendorOptions as vendorOptionsEn } from '@/lib/i18n/en/vendorOptions'
+import { vendorOptions as vendorOptionsFr } from '@/lib/i18n/fr/vendorOptions'
 
 const NAMESPACES = {
   common: { es: commonEs, en: commonEn, fr: commonFr },
@@ -55,7 +66,28 @@ const NAMESPACES = {
   cart: { es: cartEs, en: cartEn, fr: cartFr },
   checkout: { es: checkoutEs, en: checkoutEn, fr: checkoutFr },
   dashboard: { es: dashboardEs, en: dashboardEn, fr: dashboardFr },
+  vendorOptions: { es: vendorOptionsEs, en: vendorOptionsEn, fr: vendorOptionsFr },
 } as const
+
+// Genera 'businessType.manufacturer' | 'verificationLevel.1' | ... para
+// un diccionario anidado un nivel; para un diccionario plano genera
+// exactamente keyof T (cada valor string ya es la ruta completa).
+type DotPaths<T> = {
+  [K in keyof T & string]: T[K] extends string
+    ? K
+    : T[K] extends Record<string, string>
+      ? `${K}.${keyof T[K] & string}`
+      : never
+}[keyof T & string]
+
+function getByPath(obj: unknown, path: string): string | undefined {
+  let cur: unknown = obj
+  for (const part of path.split('.')) {
+    if (cur == null || typeof cur !== 'object') return undefined
+    cur = (cur as Record<string, unknown>)[part]
+  }
+  return typeof cur === 'string' ? cur : undefined
+}
 
 export type Namespace = keyof typeof NAMESPACES
 
@@ -80,15 +112,16 @@ export function useTranslation(namespace: 'products'): TranslationResult<keyof P
 export function useTranslation(namespace: 'cart'): TranslationResult<keyof CartDict>
 export function useTranslation(namespace: 'checkout'): TranslationResult<keyof CheckoutDict>
 export function useTranslation(namespace: 'dashboard'): TranslationResult<keyof DashboardDict>
+export function useTranslation(namespace: 'vendorOptions'): TranslationResult<DotPaths<VendorOptionsDict>>
 export function useTranslation(namespace: Namespace): TranslationResult<string> {
   const language = useLanguageStore((s) => s.language)
 
   const dicts = NAMESPACES[namespace]
-  const currentDict = dicts[language] as Record<string, string>
-  const fallbackDict = dicts.es as Record<string, string>
+  const currentDict = dicts[language]
+  const fallbackDict = dicts.es
 
   function t(key: string, params?: TranslationParams): string {
-    const template = currentDict[key] ?? fallbackDict[key]
+    const template = getByPath(currentDict, key) ?? getByPath(fallbackDict, key) ?? key
     return interpolate(template, params)
   }
 
