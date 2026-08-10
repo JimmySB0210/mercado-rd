@@ -10,19 +10,21 @@
 
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { formatPrice } from '@/types/database.types'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 
 interface Props {
   data: { month: string; revenue: number }[]
 }
 
 export function RevenueChart({ data }: Props) {
+  const { t } = useTranslation('dashboard')
   const hasRevenue = data.some(p => p.revenue > 0)
 
   if (!hasRevenue) {
     return (
       <div style={{ padding: '48px 24px', textAlign: 'center' }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}>📊</div>
-        <p style={{ color: '#999', fontSize: 14 }}>Aún no hay ventas registradas</p>
+        <p style={{ color: '#999', fontSize: 14 }}>{t('noRevenueYet')}</p>
       </div>
     )
   }
@@ -46,7 +48,7 @@ export function RevenueChart({ data }: Props) {
             width={72}
           />
           <Tooltip
-            formatter={(value) => [formatPrice(Number(value)), 'Ingresos']}
+            formatter={(value) => [formatPrice(Number(value)), t('revenueTooltipLabel')]}
             labelStyle={{ color: '#111', fontWeight: 700 }}
             contentStyle={{ borderRadius: 8, border: '1px solid #eee', fontSize: 13 }}
           />

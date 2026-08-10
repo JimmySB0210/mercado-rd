@@ -9,14 +9,16 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { BRAND } from '@/lib/colors'
 import { notifyOrderShipped, notifyOrderDelivered } from '@/lib/whatsapp/notifications'
+import { useTranslation } from '@/lib/hooks/useTranslation'
+import type { DashboardDict } from '@/lib/i18n/es/dashboard'
 
-const STATUS_OPTIONS = [
-  { value: 'pending',   label: '⏳ Pendiente',  bg: '#FEF9C3', text: '#713f12' },
-  { value: 'confirmed', label: '✅ Confirmado',  bg: '#DBEAFE', text: '#1e3a8a' },
-  { value: 'preparing', label: '📦 Preparando', bg: '#E0E7FF', text: '#3730a3' },
-  { value: 'shipped',   label: '🚚 Enviado',    bg: '#DBEAFE', text: '#1e3a8a' },
-  { value: 'delivered', label: '✓ Entregado',   bg: '#DCFCE7', text: '#166534' },
-  { value: 'cancelled', label: '✗ Cancelado',   bg: '#FEE2E2', text: '#991B1B' },
+const STATUS_OPTION_KEYS: { value: string; labelKey: keyof DashboardDict; bg: string; text: string }[] = [
+  { value: 'pending',   labelKey: 'statusPendingLabel',   bg: '#FEF9C3', text: '#713f12' },
+  { value: 'confirmed', labelKey: 'statusConfirmedLabel', bg: '#DBEAFE', text: '#1e3a8a' },
+  { value: 'preparing', labelKey: 'statusPreparingLabel', bg: '#E0E7FF', text: '#3730a3' },
+  { value: 'shipped',   labelKey: 'statusShippedLabel',   bg: '#DBEAFE', text: '#1e3a8a' },
+  { value: 'delivered', labelKey: 'selectDeliveredLabel', bg: '#DCFCE7', text: '#166534' },
+  { value: 'cancelled', labelKey: 'selectCancelledLabel', bg: '#FEE2E2', text: '#991B1B' },
 ]
 
 interface Props {
@@ -25,11 +27,12 @@ interface Props {
 }
 
 export function OrderStatusSelect({ orderId, currentStatus }: Props) {
+  const { t } = useTranslation('dashboard')
   const [status, setStatus] = useState(currentStatus)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  const current = STATUS_OPTIONS.find(s => s.value === status) ?? STATUS_OPTIONS[0]
+  const current = STATUS_OPTION_KEYS.find(s => s.value === status) ?? STATUS_OPTION_KEYS[0]
 
   const handleChange = async (newStatus: string) => {
     setLoading(true)
@@ -85,8 +88,8 @@ export function OrderStatusSelect({ orderId, currentStatus }: Props) {
         opacity: loading ? 0.6 : 1,
       }}
     >
-      {STATUS_OPTIONS.map(opt => (
-        <option key={opt.value} value={opt.value}>{opt.label}</option>
+      {STATUS_OPTION_KEYS.map(opt => (
+        <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
       ))}
     </select>
   )

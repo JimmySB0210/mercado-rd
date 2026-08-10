@@ -13,6 +13,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/colors'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 
 interface Props {
   productId: string
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export function ProductActiveToggle({ productId, initialActive }: Props) {
+  const { t } = useTranslation('dashboard')
   const router = useRouter()
   const supabase = createClient()
 
@@ -27,9 +29,7 @@ export function ProductActiveToggle({ productId, initialActive }: Props) {
   const [saving, setSaving] = useState(false)
 
   const handleDeactivate = async () => {
-    const confirmed = window.confirm(
-      '¿Seguro que quieres quitar este producto de tu tienda? Ya no será visible para compradores, pero conservamos tus datos de ventas.'
-    )
+    const confirmed = window.confirm(t('deactivateProductConfirm'))
     if (!confirmed) return
 
     setSaving(true)
@@ -71,7 +71,7 @@ export function ProductActiveToggle({ productId, initialActive }: Props) {
           opacity: saving ? 0.6 : 1, padding: 0,
         }}
       >
-        Eliminar
+        {t('deleteButton')}
       </button>
     )
   }
@@ -87,7 +87,7 @@ export function ProductActiveToggle({ productId, initialActive }: Props) {
         opacity: saving ? 0.6 : 1, padding: 0,
       }}
     >
-      {saving ? '...' : 'Reactivar'}
+      {saving ? '...' : t('reactivateButton')}
     </button>
   )
 }

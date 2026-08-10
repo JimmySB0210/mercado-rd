@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 import { DashboardSidebar } from '@/components/vendor/DashboardSidebar'
 import { formatPrice } from '@/types/database.types'
 import { BRAND } from '@/lib/colors'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 
 interface Coupon {
   id: string
@@ -25,6 +26,7 @@ interface Coupon {
 }
 
 export default function VendorCouponsPage() {
+  const { t } = useTranslation('dashboard')
   const router = useRouter()
   const supabase = createClient()
 
@@ -94,17 +96,17 @@ export default function VendorCouponsPage() {
 
     if (!vendorId) return
     if (!form.code.trim()) {
-      setError('El código es obligatorio')
+      setError(t('codeRequiredError'))
       return
     }
 
     const valueNum = parseFloat(form.value)
     if (isNaN(valueNum) || valueNum <= 0) {
-      setError('El valor debe ser un número mayor a 0')
+      setError(t('valueInvalidError'))
       return
     }
     if (form.type === 'percentage' && valueNum > 100) {
-      setError('El porcentaje no puede superar 100')
+      setError(t('percentageMaxError'))
       return
     }
 
@@ -127,8 +129,8 @@ export default function VendorCouponsPage() {
       console.error('[VendorCouponsPage create]', insertError)
       setError(
         insertError.code === '23505'
-          ? 'Ya tienes un cupón con ese código'
-          : 'No se pudo crear el cupón. Intenta de nuevo.'
+          ? t('duplicateCodeError')
+          : t('couponCreateError')
       )
       return
     }
@@ -154,7 +156,7 @@ export default function VendorCouponsPage() {
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: '#999', fontSize: 14 }}>Cargando...</div>
+        <div style={{ color: '#999', fontSize: 14 }}>{t('loadingGeneric')}</div>
       </div>
     )
   }
@@ -166,8 +168,8 @@ export default function VendorCouponsPage() {
 
       <div style={{ padding: 28, background: '#f5f5f5' }}>
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 4 }}>Cupones</h1>
-          <p style={{ color: '#666', fontSize: 14 }}>Crea descuentos para tus clientes</p>
+          <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 4 }}>{t('couponsPageTitle')}</h1>
+          <p style={{ color: '#666', fontSize: 14 }}>{t('couponsPageSub')}</p>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20 }} className="coupons-grid">
@@ -175,19 +177,19 @@ export default function VendorCouponsPage() {
           {/* Lista */}
           <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
             <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 800, fontSize: 15 }}>
-              Tus cupones ({coupons.length})
+              {t('yourCouponsHeading', { count: coupons.length })}
             </div>
 
             {coupons.length === 0 ? (
               <div style={{ padding: 40, textAlign: 'center', fontSize: 13, color: '#999' }}>
-                Aún no has creado ningún cupón.
+                {t('noCouponsYet')}
               </div>
             ) : (
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: '#f8f8f8' }}>
-                      {['Código', 'Tipo', 'Valor', 'Usos', 'Vence', 'Estado', ''].map(h => (
+                      {[t('tableCode'), t('tableType'), t('tableValue'), t('tableUses'), t('tableExpires'), t('tableStatus'), ''].map(h => (
                         <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 10, color: '#999', textTransform: 'uppercase', fontWeight: 600, borderBottom: '1px solid #f0f0f0', whiteSpace: 'nowrap' }}>
                           {h}
                         </th>
@@ -199,7 +201,7 @@ export default function VendorCouponsPage() {
                       <tr key={c.id} style={{ borderBottom: '1px solid #f8f8f8' }}>
                         <td style={{ padding: '10px 12px', fontSize: 13, fontWeight: 700, color: BRAND.blue }}>{c.code}</td>
                         <td style={{ padding: '10px 12px', fontSize: 12, color: '#666' }}>
-                          {c.type === 'percentage' ? 'Porcentaje' : 'Monto fijo'}
+                          {c.type === 'percentage' ? t('typePercentage') : t('typeFixed')}
                         </td>
                         <td style={{ padding: '10px 12px', fontSize: 12, color: '#666', whiteSpace: 'nowrap' }}>
                           {c.type === 'percentage' ? `${c.value}%` : formatPrice(c.value)}
@@ -210,7 +212,7 @@ export default function VendorCouponsPage() {
                         <td style={{ padding: '10px 12px', fontSize: 12, color: '#666', whiteSpace: 'nowrap' }}>
                           {c.expires_at
                             ? new Date(c.expires_at).toLocaleDateString('es-DO', { day: 'numeric', month: 'short', year: 'numeric' })
-                            : 'Sin vencimiento'}
+                            : t('noExpiration')}
                         </td>
                         <td style={{ padding: '10px 12px' }}>
                           <span style={{
@@ -218,7 +220,7 @@ export default function VendorCouponsPage() {
                             color: c.is_active ? '#166534' : '#666',
                             fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10,
                           }}>
-                            {c.is_active ? 'Activo' : 'Inactivo'}
+                            {c.is_active ? t('activeBadge') : t('inactiveBadge')}
                           </span>
                         </td>
                         <td style={{ padding: '10px 12px' }}>
@@ -229,7 +231,7 @@ export default function VendorCouponsPage() {
                               padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer', color: '#333',
                             }}
                           >
-                            {c.is_active ? 'Desactivar' : 'Activar'}
+                            {c.is_active ? t('deactivateBtn') : t('activateBtn')}
                           </button>
                         </td>
                       </tr>
@@ -242,36 +244,36 @@ export default function VendorCouponsPage() {
 
           {/* Formulario */}
           <div style={{ background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 8px rgba(0,0,0,0.06)', alignSelf: 'start' }}>
-            <h2 style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Nuevo cupón</h2>
+            <h2 style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>{t('newCouponHeading')}</h2>
 
             <form onSubmit={handleCreate} style={{ display: 'grid', gap: 10 }}>
               <div>
-                <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>Código *</label>
+                <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>{t('codeLabel')}</label>
                 <input
                   name="code"
                   value={form.code}
                   onChange={handleCodeChange}
-                  placeholder="VERANO20"
+                  placeholder={t('codePlaceholder')}
                   style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '9px 12px', fontSize: 14, boxSizing: 'border-box', textTransform: 'uppercase' }}
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>Tipo *</label>
+                <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>{t('typeLabel')}</label>
                 <select
                   name="type"
                   value={form.type}
                   onChange={handleChange}
                   style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '9px 12px', fontSize: 14, boxSizing: 'border-box', background: '#fff' }}
                 >
-                  <option value="percentage">Porcentaje (%)</option>
-                  <option value="fixed">Monto fijo (RD$)</option>
+                  <option value="percentage">{t('typePercentageOption')}</option>
+                  <option value="fixed">{t('typeFixedOption')}</option>
                 </select>
               </div>
 
               <div>
                 <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>
-                  {form.type === 'percentage' ? 'Porcentaje de descuento *' : 'Monto del descuento (RD$) *'}
+                  {form.type === 'percentage' ? t('discountPercentLabel') : t('discountAmountLabel')}
                 </label>
                 <input
                   name="value"
@@ -286,7 +288,7 @@ export default function VendorCouponsPage() {
               </div>
 
               <div>
-                <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>Monto mínimo de compra (opcional)</label>
+                <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>{t('minOrderLabel')}</label>
                 <input
                   name="minOrder"
                   type="number"
@@ -300,20 +302,20 @@ export default function VendorCouponsPage() {
               </div>
 
               <div>
-                <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>Límite de usos (opcional)</label>
+                <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>{t('maxUsesLabel')}</label>
                 <input
                   name="maxUses"
                   type="number"
                   min="1"
                   value={form.maxUses}
                   onChange={handleChange}
-                  placeholder="Sin límite"
+                  placeholder={t('maxUsesPlaceholder')}
                   style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '9px 12px', fontSize: 14, boxSizing: 'border-box' }}
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>Fecha de vencimiento (opcional)</label>
+                <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>{t('expirationDateLabel')}</label>
                 <input
                   name="expiresAt"
                   type="date"
@@ -337,7 +339,7 @@ export default function VendorCouponsPage() {
                   padding: '11px', borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: saving ? 'not-allowed' : 'pointer', marginTop: 4,
                 }}
               >
-                {saving ? 'Creando...' : 'Crear cupón'}
+                {saving ? t('creatingCoupon') : t('createCouponBtn')}
               </button>
             </form>
           </div>

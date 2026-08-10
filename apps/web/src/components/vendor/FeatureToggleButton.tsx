@@ -8,6 +8,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/colors'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 
 interface Props {
   productId: string
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function FeatureToggleButton({ productId, initialFeatured, isPro }: Props) {
+  const { t } = useTranslation('dashboard')
   const router = useRouter()
   const supabase = createClient()
 
@@ -24,7 +26,7 @@ export function FeatureToggleButton({ productId, initialFeatured, isPro }: Props
 
   if (!isPro) {
     return (
-      <span style={{ fontSize: 11, color: '#999' }}>Solo plan Pro</span>
+      <span style={{ fontSize: 11, color: '#999' }}>{t('proOnlyLabel')}</span>
     )
   }
 
@@ -57,7 +59,7 @@ export function FeatureToggleButton({ productId, initialFeatured, isPro }: Props
         cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1,
       }}
     >
-      {featured ? '✓ Destacado' : '⭐ Destacar'}
+      {featured ? t('featuredBadge') : t('featureButton')}
     </button>
   )
 }

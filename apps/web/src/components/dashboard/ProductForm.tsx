@@ -14,7 +14,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { validateImageFile, getImageDimensions, uploadProductImage, MIN_PRODUCT_IMAGE_DIMENSION, LOW_RESOLUTION_WARNING } from '@/lib/storage/upload'
-import { validateText, validatePrice } from '@/lib/validation'
+import { DANGEROUS_PATTERN } from '@/lib/validation'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
 import type { Product, ProductVariant } from '@/types/database.types'
 
@@ -53,6 +54,7 @@ const PRESET_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 const OTHER_SIZE = '__otra__'
 
 export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
+  const { t } = useTranslation('dashboard')
   const router = useRouter()
   const supabase = createClient()
 
@@ -161,7 +163,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
 
     if (uploadError || !url) {
       console.error('[handleVariantImageSelect]', uploadError)
-      setVariantImageError('No se pudo subir la imagen. Intenta de nuevo.')
+      setVariantImageError(t('imageUploadError'))
       setUploadingVariantIndex(null)
       return
     }
@@ -274,31 +276,54 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     setStockError(null)
 
     if (!form.name || !form.price || !form.categoryId) {
-      setError('Completa al menos el nombre, precio y categoría')
+      setError(t('fillRequiredFields'))
       return
     }
 
-    const nameErr = validateText(form.name, 'El nombre', 3, 100)
-    if (nameErr) { setNameError(nameErr); return }
+    // Misma lógica que lib/validation.ts validateText() (longitud +
+    // DANGEROUS_PATTERN), pero con el mensaje traducido — validateText
+    // arma el string completo en español y lo comparten otros
+    // componentes fuera del alcance de este namespace, así que no se toca.
+    const nameTrimmed = form.name.trim()
+    if (nameTrimmed.length < 3 || nameTrimmed.length > 100) {
+      setNameError(t('nameLengthError', { min: 3, max: 100 }))
+      return
+    }
+    if (DANGEROUS_PATTERN.test(nameTrimmed)) {
+      setNameError(t('nameInvalidChars'))
+      return
+    }
 
     if (form.description.trim().length > 0) {
-      const descriptionErr = validateText(form.description, 'La descripción', 10, 1000)
-      if (descriptionErr) { setDescriptionError(descriptionErr); return }
+      const descriptionTrimmed = form.description.trim()
+      if (descriptionTrimmed.length < 10 || descriptionTrimmed.length > 1000) {
+        setDescriptionError(t('descriptionLengthError', { min: 10, max: 1000 }))
+        return
+      }
+      if (DANGEROUS_PATTERN.test(descriptionTrimmed)) {
+        setDescriptionError(t('descriptionInvalidChars'))
+        return
+      }
     }
 
     const priceNum = parseFloat(form.price)
     if (isNaN(priceNum) || priceNum <= 0) {
-      setError('El precio debe ser un número válido mayor a 0')
+      setError(t('invalidPriceError'))
       return
     }
 
     const priceCents = Math.round(priceNum * 100) // pesos → centavos
-    const priceErr = validatePrice(priceCents)
-    if (priceErr) { setPriceError(priceErr); return }
+    // validatePrice() solo se usa aquí — replicamos su único chequeo
+    // alcanzable en este punto (los demás ya quedaron cubiertos arriba)
+    // con el mensaje traducido, en vez de tocar la función compartida.
+    if (priceCents > 99999999) {
+      setPriceError(t('priceTooLargeError'))
+      return
+    }
 
     const stockNum = form.stock ? parseInt(form.stock) : 0
     if (isNaN(stockNum) || stockNum < 0 || stockNum > 9999) {
-      setStockError('El stock debe estar entre 0 y 9999')
+      setStockError(t('stockRangeError'))
       return
     }
 
@@ -393,7 +418,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
         setError(message.replace('PLAN_LIMIT_REACHED:', '').trim())
         setPlanLimitReached(true)
       } else {
-        setError('Ocurrió un error al guardar el producto. Intenta de nuevo.')
+        setError(t('saveProductError'))
       }
       setSaving(false)
     }
@@ -402,7 +427,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-400 text-sm">Cargando...</div>
+        <div className="text-gray-400 text-sm">{t('loadingForm')}</div>
       </div>
     )
   }
@@ -419,10 +444,10 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               className="text-sm no-underline"
               style={{ color: BRAND.gray }}
             >
-              ← Volver {mode === 'editar' ? 'a mis productos' : 'al dashboard'}
+              {mode === 'editar' ? t('backToProductsLink') : t('backToDashboardLink')}
             </a>
             <h1 className="text-2xl font-bold text-gray-900 mt-1">
-              {mode === 'editar' ? 'Editar producto' : 'Nuevo producto'}
+              {mode === 'editar' ? t('editProductTitle') : t('newProductTitle')}
             </h1>
           </div>
         </div>
@@ -431,7 +456,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
 
           {/* Imágenes */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <h2 className="text-sm font-semibold text-gray-700 mb-3">Fotos del producto</h2>
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('photosHeading')}</h2>
             <div className="flex flex-wrap gap-3 mb-3">
               {existingImageUrls.map((src, i) => (
                 <div key={`existing-${i}`} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
@@ -466,21 +491,21 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                 </label>
               )}
             </div>
-            <p className="text-xs text-gray-400">Hasta 5 fotos. La primera será la principal.</p>
+            <p className="text-xs text-gray-400">{t('photosHint')}</p>
             {imageError && <p className="text-xs text-red-600 mt-2">{imageError}</p>}
             {imageWarning && <p className="text-xs text-amber-600 mt-2">{imageWarning}</p>}
           </div>
 
           {/* Info básica */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
-            <h2 className="text-sm font-semibold text-gray-700 mb-1">Información básica</h2>
+            <h2 className="text-sm font-semibold text-gray-700 mb-1">{t('basicInfoHeading')}</h2>
 
             <div>
               <input
                 name="name"
                 value={form.name}
                 onChange={handleChange}
-                placeholder="Nombre del producto *"
+                placeholder={t('productNamePlaceholder')}
                 className={`w-full border rounded-lg px-4 py-2.5 text-sm outline-none ${nameError ? 'border-red-400' : 'border-gray-200'}`}
               />
               {nameError && <p className="text-xs text-red-600 mt-1">{nameError}</p>}
@@ -491,7 +516,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                 name="description"
                 value={form.description}
                 onChange={handleChange}
-                placeholder="Descripción"
+                placeholder={t('descriptionPlaceholder')}
                 rows={3}
                 className={`w-full border rounded-lg px-4 py-2.5 text-sm outline-none resize-none ${descriptionError ? 'border-red-400' : 'border-gray-200'}`}
               />
@@ -504,7 +529,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               onChange={handleChange}
               className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none bg-white"
             >
-              <option value="">Selecciona categoría *</option>
+              <option value="">{t('selectCategoryPlaceholder')}</option>
               {categories.map(c => (
                 <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>
               ))}
@@ -516,7 +541,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               onChange={handleChange}
               className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none bg-white"
             >
-              <option value="">Provincia de origen (opcional)</option>
+              <option value="">{t('originProvincePlaceholder')}</option>
               {provinces.map(p => (
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
@@ -525,11 +550,11 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
 
           {/* Precio y stock */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
-            <h2 className="text-sm font-semibold text-gray-700 mb-1">Precio e inventario</h2>
+            <h2 className="text-sm font-semibold text-gray-700 mb-1">{t('priceInventoryHeading')}</h2>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">Precio (RD$) *</label>
+                <label className="text-xs text-gray-500 mb-1 block">{t('priceLabel')}</label>
                 <input
                   name="price"
                   type="number"
@@ -543,7 +568,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                 {priceError && <p className="text-xs text-red-600 mt-1">{priceError}</p>}
               </div>
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">Precio anterior (opcional)</label>
+                <label className="text-xs text-gray-500 mb-1 block">{t('comparePriceLabel')}</label>
                 <input
                   name="comparePrice"
                   type="number"
@@ -558,7 +583,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
             </div>
 
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Stock disponible</label>
+              <label className="text-xs text-gray-500 mb-1 block">{t('stockAvailableLabel')}</label>
               <input
                 name="stock"
                 type="number"
@@ -575,52 +600,52 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           {/* Variantes */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
             <div className="flex items-center justify-between mb-1">
-              <h2 className="text-sm font-semibold text-gray-700">Variantes (opcional)</h2>
+              <h2 className="text-sm font-semibold text-gray-700">{t('variantsHeading')}</h2>
               <button
                 type="button"
                 onClick={addVariantRow}
                 style={{ color: BRAND.blue }}
                 className="text-xs font-semibold bg-transparent border-none cursor-pointer"
               >
-                + Agregar variante
+                {t('addVariantBtn')}
               </button>
             </div>
             <p className="text-xs text-gray-400">
-              Si no agregas ninguna, el producto usa el stock y precio generales de arriba.
+              {t('variantsHint')}
             </p>
 
             {variantRows.map((row, i) => (
               <div key={i} className="grid grid-cols-12 gap-2 items-end">
                 <div className="col-span-3">
-                  {i === 0 && <label className="text-xs text-gray-500 mb-1 block">Talla</label>}
+                  {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('sizeLabel')}</label>}
                   <select
                     value={customSizeIndexes.has(i) ? OTHER_SIZE : (PRESET_SIZES.includes(row.size) ? row.size : '')}
                     onChange={e => handleSizeSelectChange(i, e.target.value)}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none bg-white"
                   >
-                    <option value="" disabled>Talla</option>
+                    <option value="" disabled>{t('sizeLabel')}</option>
                     {PRESET_SIZES.map(s => (
                       <option key={s} value={s}>{s}</option>
                     ))}
-                    <option value={OTHER_SIZE}>Otra (escribir)</option>
+                    <option value={OTHER_SIZE}>{t('sizeOtherOption')}</option>
                   </select>
                   {customSizeIndexes.has(i) && (
                     <input
                       value={row.size}
                       onChange={e => updateVariantRow(i, 'size', e.target.value)}
-                      placeholder="Ej. 128GB"
+                      placeholder={t('sizeOtherPlaceholder')}
                       className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none mt-1.5"
                       autoFocus
                     />
                   )}
                 </div>
                 <div className="col-span-3">
-                  {i === 0 && <label className="text-xs text-gray-500 mb-1 block">Color</label>}
+                  {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('colorLabel')}</label>}
                   <div className="flex items-center gap-1.5">
                     <input
                       value={row.color}
                       onChange={e => updateVariantRow(i, 'color', e.target.value)}
-                      placeholder="Azul"
+                      placeholder={t('colorPlaceholder')}
                       className="flex-1 min-w-0 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
                     />
                     {row.imageUrl ? (
@@ -628,7 +653,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={row.imageUrl}
-                          alt={row.color || 'Color'}
+                          alt={row.color || t('colorLabel')}
                           className="w-full h-full rounded-lg object-cover border border-gray-200"
                         />
                         <button
@@ -636,7 +661,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                           onClick={() => removeVariantImage(i)}
                           className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-black/60 text-white flex items-center justify-center leading-none"
                           style={{ fontSize: 10 }}
-                          aria-label="Quitar imagen"
+                          aria-label={t('removeImageAria')}
                         >
                           ×
                         </button>
@@ -645,7 +670,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                       <label
                         className="flex-shrink-0 rounded-lg border border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors"
                         style={{ width: 36, height: 36, fontSize: 14 }}
-                        title="Subir foto de este color"
+                        title={t('uploadColorPhotoTitle')}
                       >
                         {uploadingVariantIndex === i ? '…' : '📷'}
                         <input
@@ -660,7 +685,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                   </div>
                 </div>
                 <div className="col-span-2">
-                  {i === 0 && <label className="text-xs text-gray-500 mb-1 block">Stock</label>}
+                  {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('variantStockLabel')}</label>}
                   <input
                     type="number"
                     min="0"
@@ -671,14 +696,14 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                   />
                 </div>
                 <div className="col-span-3">
-                  {i === 0 && <label className="text-xs text-gray-500 mb-1 block">Precio (RD$, opcional)</label>}
+                  {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('variantPriceLabel')}</label>}
                   <input
                     type="number"
                     step="0.01"
                     min="0"
                     value={row.price}
                     onChange={e => updateVariantRow(i, 'price', e.target.value)}
-                    placeholder="Igual al general"
+                    placeholder={t('variantPricePlaceholder')}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
                   />
                 </div>
@@ -704,7 +729,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                 className="inline-block font-semibold underline"
                 style={{ color: BRAND.blue }}
               >
-                Actualizar a Pro →
+                {t('upgradeToProLink')}
               </a>
             </div>
           )}
@@ -722,8 +747,8 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
             className="w-full text-white font-medium py-3.5 rounded-xl transition-colors"
           >
             {mode === 'editar'
-              ? (saving ? 'Guardando...' : 'Guardar cambios')
-              : (saving ? 'Publicando...' : 'Publicar producto')}
+              ? (saving ? t('savingChanges') : t('saveChanges'))
+              : (saving ? t('publishing') : t('publishProduct'))}
           </button>
 
         </form>

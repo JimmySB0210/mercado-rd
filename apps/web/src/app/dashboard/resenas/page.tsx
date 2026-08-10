@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { DashboardSidebar } from '@/components/vendor/DashboardSidebar'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 
 interface ReviewRow {
   id: string
@@ -19,6 +20,7 @@ interface ReviewRow {
 }
 
 export default function VendorReviewsPage() {
+  const { t } = useTranslation('dashboard')
   const router = useRouter()
   const supabase = createClient()
 
@@ -89,7 +91,7 @@ export default function VendorReviewsPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-400 text-sm">Cargando...</div>
+        <div className="text-gray-400 text-sm">{t('loadingGeneric')}</div>
       </div>
     )
   }
@@ -101,17 +103,17 @@ export default function VendorReviewsPage() {
 
       <div style={{ padding: 28, background: '#f5f5f5' }}>
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 4 }}>Reseñas</h1>
-          <p style={{ color: '#666', fontSize: 14 }}>Lo que tus clientes opinan de tu tienda</p>
+          <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 4 }}>{t('reviewsPageTitle')}</h1>
+          <p style={{ color: '#666', fontSize: 14 }}>{t('reviewsPageSub')}</p>
         </div>
 
         {reviews.length === 0 ? (
           <div style={{ background: '#fff', borderRadius: 12, padding: 48, textAlign: 'center', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>⭐</div>
-            <p style={{ color: '#333', fontSize: 15, fontWeight: 600, marginBottom: 6 }}>Aún no tienes reseñas</p>
+            <p style={{ color: '#333', fontSize: 15, fontWeight: 600, marginBottom: 6 }}>{t('noReviewsTitle')}</p>
             <p style={{ color: '#999', fontSize: 13, maxWidth: 360, margin: '0 auto' }}>
-              Los compradores pueden dejar una reseña una vez que su pedido sea marcado como
-              <strong> Entregado</strong>. Cuando eso pase, las verás aquí.
+              {t('noReviewsSubPrefix')}
+              <strong> {t('statusDeliveredPlain')}</strong>{t('noReviewsSubSuffix')}
             </p>
           </div>
         ) : (
@@ -121,7 +123,7 @@ export default function VendorReviewsPage() {
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: 40, fontWeight: 900, color: '#111' }}>{avgRating.toFixed(1)}</div>
                 <Stars value={Math.round(avgRating)} />
-                <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>{reviews.length} reseñas</div>
+                <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>{t('reviewsCountSuffix', { count: reviews.length })}</div>
               </div>
               <div style={{ flex: 1, minWidth: 200 }}>
                 {distribution.map(d => (

@@ -12,6 +12,8 @@ import { OrderStatusSelect } from '@/components/vendor/OrderStatusSelect'
 import { TrackingForm } from '@/components/vendor/TrackingForm'
 import { formatPrice } from '@/types/database.types'
 import { BRAND } from '@/lib/colors'
+import { useTranslation } from '@/lib/hooks/useTranslation'
+import type { DashboardDict } from '@/lib/i18n/es/dashboard'
 
 interface OrderRow {
   order_id: string
@@ -37,17 +39,18 @@ interface OrderRow {
   vendor_subtotal_rdp: number
 }
 
-const STATUS_FILTERS = [
-  { value: 'all', label: 'Todos' },
-  { value: 'pending', label: '⏳ Pendiente' },
-  { value: 'confirmed', label: '✅ Confirmado' },
-  { value: 'preparing', label: '📦 Preparando' },
-  { value: 'shipped', label: '🚚 Enviado' },
-  { value: 'delivered', label: '✔️ Entregado' },
-  { value: 'cancelled', label: '❌ Cancelado' },
+const STATUS_FILTER_KEYS: { value: string; labelKey: keyof DashboardDict }[] = [
+  { value: 'all', labelKey: 'filterAll' },
+  { value: 'pending', labelKey: 'statusPendingLabel' },
+  { value: 'confirmed', labelKey: 'statusConfirmedLabel' },
+  { value: 'preparing', labelKey: 'statusPreparingLabel' },
+  { value: 'shipped', labelKey: 'statusShippedLabel' },
+  { value: 'delivered', labelKey: 'filterDeliveredLabel' },
+  { value: 'cancelled', labelKey: 'filterCancelledLabel' },
 ]
 
 export default function VendorOrdersPage() {
+  const { t } = useTranslation('dashboard')
   const router = useRouter()
   const supabase = createClient()
 
@@ -154,13 +157,13 @@ export default function VendorOrdersPage() {
     : orders.filter(o => o.status === filter)
 
   const PAYMENT_LABELS: Record<string, string> = {
-    azul: '💳 Azul', cardnet: '🏦 CardNet', transfer: '🏧 Transferencia', cash: '💵 Efectivo',
+    azul: t('paymentAzul'), cardnet: t('paymentCardnet'), transfer: t('paymentTransfer'), cash: t('paymentCash'),
   }
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-400 text-sm">Cargando pedidos...</div>
+        <div className="text-gray-400 text-sm">{t('loadingOrders')}</div>
       </div>
     )
   }
@@ -172,15 +175,15 @@ export default function VendorOrdersPage() {
 
       <div style={{ padding: 28, background: '#f5f5f5' }}>
         <div style={{ marginBottom: 20 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 4 }}>Pedidos</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 4 }}>{t('ordersPageTitle')}</h1>
           <p style={{ color: '#666', fontSize: 14 }}>
-            {orders.length} {orders.length === 1 ? 'pedido total' : 'pedidos totales'}
+            {orders.length === 1 ? t('orderCountOne', { count: orders.length }) : t('orderCountOther', { count: orders.length })}
           </p>
         </div>
 
         {/* Filtros */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-          {STATUS_FILTERS.map(f => (
+          {STATUS_FILTER_KEYS.map(f => (
             <button
               key={f.value}
               onClick={() => setFilter(f.value)}
@@ -192,7 +195,7 @@ export default function VendorOrdersPage() {
                 cursor: 'pointer', transition: 'all .15s',
               }}
             >
-              {f.label}
+              {t(f.labelKey)}
             </button>
           ))}
         </div>
@@ -202,7 +205,7 @@ export default function VendorOrdersPage() {
           <div style={{ background: '#fff', borderRadius: 12, padding: 48, textAlign: 'center', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
             <p style={{ color: '#999', fontSize: 14 }}>
-              {filter === 'all' ? 'Aún no tienes pedidos.' : 'No hay pedidos con este estado.'}
+              {filter === 'all' ? t('ordersEmptyAll') : t('ordersEmptyFiltered')}
             </p>
           </div>
         ) : (
@@ -242,13 +245,13 @@ export default function VendorOrdersPage() {
                     <div style={{ borderTop: '1px solid #f0f0f0', padding: '16px 20px', background: '#fafafa' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 16 }}>
                         <div>
-                          <p style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 4 }}>Entrega</p>
+                          <p style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 4 }}>{t('deliveryLabel')}</p>
                           <p style={{ fontSize: 13, color: '#333' }}>{order.delivery_address}</p>
                           <p style={{ fontSize: 12, color: '#999' }}>{order.province_name}</p>
                         </div>
                         <div>
-                          <p style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 4 }}>Contacto</p>
-                          <p style={{ fontSize: 13, color: '#333' }}>{order.buyer_phone || 'No disponible'}</p>
+                          <p style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 4 }}>{t('contactLabel')}</p>
+                          <p style={{ fontSize: 13, color: '#333' }}>{order.buyer_phone || t('notAvailable')}</p>
                           <p style={{ fontSize: 12, color: '#999' }}>{PAYMENT_LABELS[order.payment_method] ?? order.payment_method}</p>
                         </div>
                       </div>
@@ -260,7 +263,7 @@ export default function VendorOrdersPage() {
                       )}
 
                       <p style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 8 }}>
-                        Productos ({order.items.length})
+                        {t('orderProductsCount', { count: order.items.length })}
                       </p>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         {order.items.map(item => (

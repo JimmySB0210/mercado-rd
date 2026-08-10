@@ -10,6 +10,8 @@ import { createClient } from '@/lib/supabase/client'
 import { DashboardSidebar } from '@/components/vendor/DashboardSidebar'
 import { formatPrice } from '@/types/database.types'
 import { BRAND } from '@/lib/colors'
+import { useTranslation } from '@/lib/hooks/useTranslation'
+import type { DashboardDict } from '@/lib/i18n/es/dashboard'
 
 interface IncomeItem {
   id: string
@@ -20,12 +22,13 @@ interface IncomeItem {
   status: string
 }
 
-const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+const MONTH_KEYS: (keyof DashboardDict)[] = [
+  'monthJanuary', 'monthFebruary', 'monthMarch', 'monthApril', 'monthMay', 'monthJune',
+  'monthJuly', 'monthAugust', 'monthSeptember', 'monthOctober', 'monthNovember', 'monthDecember',
 ]
 
 export default function VendorIncomePage() {
+  const { t } = useTranslation('dashboard')
   const router = useRouter()
   const supabase = createClient()
 
@@ -91,7 +94,7 @@ export default function VendorIncomePage() {
     .sort((a, b) => b[0].localeCompare(a[0]))
     .map(([key, total]) => {
       const [year, month] = key.split('-').map(Number)
-      return { label: `${MONTH_NAMES[month]} ${year}`, total }
+      return { label: `${t(MONTH_KEYS[month])} ${year}`, total }
     })
 
   // Agrupar por producto
@@ -109,7 +112,7 @@ export default function VendorIncomePage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-400 text-sm">Cargando...</div>
+        <div className="text-gray-400 text-sm">{t('loadingGeneric')}</div>
       </div>
     )
   }
@@ -121,23 +124,23 @@ export default function VendorIncomePage() {
 
       <div style={{ padding: 28, background: '#f5f5f5' }}>
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 4 }}>Ingresos</h1>
-          <p style={{ color: '#666', fontSize: 14 }}>Desglose financiero de tu tienda</p>
+          <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 4 }}>{t('incomePageTitle')}</h1>
+          <p style={{ color: '#666', fontSize: 14 }}>{t('incomePageSub')}</p>
         </div>
 
         {/* KPIs principales */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>
           <div style={{ background: '#fff', borderRadius: 12, padding: 18, boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-            <div style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 8 }}>Ingresos totales</div>
+            <div style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 8 }}>{t('totalIncomeLabel')}</div>
             <div style={{ fontWeight: 900, fontSize: 22, color: BRAND.green }}>{formatPrice(totalIncome)}</div>
           </div>
           <div style={{ background: '#fff', borderRadius: 12, padding: 18, boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-            <div style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 8 }}>Unidades vendidas</div>
+            <div style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 8 }}>{t('unitsSoldLabel')}</div>
             <div style={{ fontWeight: 900, fontSize: 22, color: '#111' }}>{totalUnits}</div>
           </div>
           {lostToCancellations > 0 && (
             <div style={{ background: '#fff', borderRadius: 12, padding: 18, boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-              <div style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 8 }}>Perdido en cancelaciones</div>
+              <div style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 8 }}>{t('lostToCancellationsLabel')}</div>
               <div style={{ fontWeight: 900, fontSize: 22, color: BRAND.red }}>{formatPrice(lostToCancellations)}</div>
             </div>
           )}
@@ -146,7 +149,7 @@ export default function VendorIncomePage() {
         {items.length === 0 ? (
           <div style={{ background: '#fff', borderRadius: 12, padding: 48, textAlign: 'center', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>💰</div>
-            <p style={{ color: '#999', fontSize: 14 }}>Aún no tienes ingresos registrados.</p>
+            <p style={{ color: '#999', fontSize: 14 }}>{t('noIncomeYet')}</p>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }} className="income-grid">
@@ -154,7 +157,7 @@ export default function VendorIncomePage() {
             {/* Por mes */}
             <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
               <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 800, fontSize: 15 }}>
-                Por mes
+                {t('byMonthHeading')}
               </div>
               <div>
                 {monthRows.map((row, i) => (
@@ -169,14 +172,14 @@ export default function VendorIncomePage() {
             {/* Por producto */}
             <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
               <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 800, fontSize: 15 }}>
-                Por producto
+                {t('byProductHeading')}
               </div>
               <div>
                 {productRows.map(([name, data], i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 18px', borderBottom: i < productRows.length - 1 ? '1px solid #f8f8f8' : 'none' }}>
                     <div>
                       <div style={{ fontSize: 13, color: '#333', fontWeight: 600 }}>{name}</div>
-                      <div style={{ fontSize: 11, color: '#999' }}>{data.units} vendidos</div>
+                      <div style={{ fontSize: 11, color: '#999' }}>{t('soldCountLabel', { count: data.units })}</div>
                     </div>
                     <span style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{formatPrice(data.revenue)}</span>
                   </div>

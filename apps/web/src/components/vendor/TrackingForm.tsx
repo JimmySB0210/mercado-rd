@@ -7,8 +7,9 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/colors'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 
-const COURIERS = ['Caribe Express', 'Freddy Courier', 'AeroPost', 'Otro']
+const COURIERS = ['Caribe Express', 'Freddy Courier', 'AeroPost']
 
 interface Props {
   orderId: string
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export function TrackingForm({ orderId, initialTracking, initialCourier }: Props) {
+  const { t } = useTranslation('dashboard')
   const [trackingNumber, setTrackingNumber] = useState('')
   const [courier, setCourier] = useState(COURIERS[0])
   const [saved, setSaved] = useState<{ tracking_number: string; courier: string } | null>(
@@ -27,7 +29,7 @@ export function TrackingForm({ orderId, initialTracking, initialCourier }: Props
 
   const handleSubmit = async () => {
     if (!trackingNumber.trim()) {
-      setError('El número de tracking es obligatorio')
+      setError(t('trackingRequiredError'))
       return
     }
     setError(null)
@@ -44,7 +46,7 @@ export function TrackingForm({ orderId, initialTracking, initialCourier }: Props
 
     if (rpcError) {
       console.error('[TrackingForm]', rpcError)
-      setError('No se pudo guardar el tracking. Intenta de nuevo.')
+      setError(t('trackingSaveError'))
       return
     }
 
@@ -54,7 +56,7 @@ export function TrackingForm({ orderId, initialTracking, initialCourier }: Props
   if (saved) {
     return (
       <div style={{ background: '#fff', borderRadius: 8, padding: 12, marginTop: 12, border: '1px solid #e0e0e0' }}>
-        <p style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 4 }}>Tracking</p>
+        <p style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 4 }}>{t('trackingHeading')}</p>
         <p style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>📦 {saved.tracking_number}</p>
         <p style={{ fontSize: 12, color: '#666' }}>{saved.courier}</p>
       </div>
@@ -63,12 +65,12 @@ export function TrackingForm({ orderId, initialTracking, initialCourier }: Props
 
   return (
     <div style={{ background: '#fff', borderRadius: 8, padding: 12, marginTop: 12, border: '1px solid #e0e0e0' }}>
-      <p style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 8 }}>Marcar como enviado</p>
+      <p style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 8 }}>{t('markAsShippedHeading')}</p>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <input
           value={trackingNumber}
           onChange={e => setTrackingNumber(e.target.value)}
-          placeholder="Número de tracking"
+          placeholder={t('trackingNumberPlaceholder')}
           style={{ flex: 1, minWidth: 160, border: '1px solid #ddd', borderRadius: 6, padding: '7px 10px', fontSize: 13 }}
         />
         <select
@@ -79,6 +81,7 @@ export function TrackingForm({ orderId, initialTracking, initialCourier }: Props
           {COURIERS.map(c => (
             <option key={c} value={c}>{c}</option>
           ))}
+          <option value="Otro">{t('courierOtherOption')}</option>
         </select>
         <button
           onClick={handleSubmit}
@@ -89,7 +92,7 @@ export function TrackingForm({ orderId, initialTracking, initialCourier }: Props
             cursor: saving ? 'not-allowed' : 'pointer',
           }}
         >
-          {saving ? 'Guardando...' : 'Marcar como enviado'}
+          {saving ? t('savingTracking') : t('markAsShippedBtn')}
         </button>
       </div>
       {error && <p style={{ fontSize: 12, color: '#c00', marginTop: 6 }}>{error}</p>}

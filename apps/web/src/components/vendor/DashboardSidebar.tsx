@@ -13,20 +13,24 @@ import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
+import { useTranslation } from '@/lib/hooks/useTranslation'
+import { LanguageSwitcher } from '@/components/shop/LanguageSwitcher'
+import type { DashboardDict } from '@/lib/i18n/es/dashboard'
 
-const NAV_ITEMS = [
-  { icon: '📊', label: 'Resumen', href: '/dashboard' },
-  { icon: '📦', label: 'Mis Productos', href: '/dashboard/productos' },
-  { icon: '🛒', label: 'Pedidos', href: '/dashboard/pedidos' },
-  { icon: '💬', label: 'Mensajes', href: '/dashboard/mensajes' },
-  { icon: '💰', label: 'Ingresos', href: '/dashboard/ingresos' },
-  { icon: '🎟️', label: 'Cupones', href: '/dashboard/cupones' },
-  { icon: '⭐', label: 'Reseñas', href: '/dashboard/resenas' },
-  { icon: '👑', label: 'Mi Plan', href: '/dashboard/plan' },
-  { icon: '⚙️', label: 'Configuración', href: '/dashboard/configuracion' },
+const NAV_ITEM_KEYS: { icon: string; labelKey: keyof DashboardDict; href: string }[] = [
+  { icon: '📊', labelKey: 'navSummary', href: '/dashboard' },
+  { icon: '📦', labelKey: 'navMyProducts', href: '/dashboard/productos' },
+  { icon: '🛒', labelKey: 'navOrders', href: '/dashboard/pedidos' },
+  { icon: '💬', labelKey: 'navMessages', href: '/dashboard/mensajes' },
+  { icon: '💰', labelKey: 'navIncome', href: '/dashboard/ingresos' },
+  { icon: '🎟️', labelKey: 'navCoupons', href: '/dashboard/cupones' },
+  { icon: '⭐', labelKey: 'navReviews', href: '/dashboard/resenas' },
+  { icon: '👑', labelKey: 'navMyPlan', href: '/dashboard/plan' },
+  { icon: '⚙️', labelKey: 'navSettings', href: '/dashboard/configuracion' },
 ]
 
 export function DashboardSidebar() {
+  const { t } = useTranslation('dashboard')
   const pathname = usePathname()
   const isMobile = useIsMobile(860)
   const [open, setOpen] = useState(false)
@@ -45,7 +49,7 @@ export function DashboardSidebar() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [open])
 
-  const navLink = (item: typeof NAV_ITEMS[number], i: number, onClick?: () => void) => {
+  const navLink = (item: typeof NAV_ITEM_KEYS[number], i: number, onClick?: () => void) => {
     const active = pathname === item.href
     return (
       <a key={i} href={item.href} onClick={onClick} style={{
@@ -55,7 +59,7 @@ export function DashboardSidebar() {
         color: active ? '#fff' : '#666', fontSize: 14, fontWeight: active ? 600 : 400,
         textDecoration: 'none',
       }}>
-        <span>{item.icon}</span>{item.label}
+        <span>{item.icon}</span>{t(item.labelKey)}
       </a>
     )
   }
@@ -69,9 +73,12 @@ export function DashboardSidebar() {
               Mercado<span style={{ color: BRAND.red }}>RD</span>
             </div>
           </a>
-          <div style={{ fontSize: 12, color: '#555' }}>Panel del vendedor</div>
+          <div style={{ fontSize: 12, color: '#555' }}>{t('vendorPanelLabel')}</div>
         </div>
-        {NAV_ITEMS.map((item, i) => navLink(item, i))}
+        {NAV_ITEM_KEYS.map((item, i) => navLink(item, i))}
+        <div style={{ marginTop: 'auto', padding: '16px 20px', borderTop: '1px solid #222' }}>
+          <LanguageSwitcher />
+        </div>
       </div>
     )
   }
@@ -88,7 +95,7 @@ export function DashboardSidebar() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label="Abrir menú del panel"
+          aria-label={t('openPanelMenuAria')}
           style={{ background: 'transparent', border: 'none', color: '#fff', display: 'flex', padding: 4, cursor: 'pointer' }}
         >
           <Menu size={22} />
@@ -112,13 +119,16 @@ export function DashboardSidebar() {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                aria-label="Cerrar menú"
+                aria-label={t('closePanelMenuAria')}
                 style={{ background: 'transparent', border: 'none', color: '#888', display: 'flex', cursor: 'pointer' }}
               >
                 <X size={20} />
               </button>
             </div>
-            {NAV_ITEMS.map((item, i) => navLink(item, i, () => setOpen(false)))}
+            {NAV_ITEM_KEYS.map((item, i) => navLink(item, i, () => setOpen(false)))}
+            <div style={{ marginTop: 'auto', padding: '16px 20px', borderTop: '1px solid #222' }}>
+              <LanguageSwitcher compact />
+            </div>
           </div>
         </div>
       )}

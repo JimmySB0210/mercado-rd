@@ -43,6 +43,9 @@ import { cart as cartFr } from '@/lib/i18n/fr/cart'
 import { checkout as checkoutEs, type CheckoutDict } from '@/lib/i18n/es/checkout'
 import { checkout as checkoutEn } from '@/lib/i18n/en/checkout'
 import { checkout as checkoutFr } from '@/lib/i18n/fr/checkout'
+import { dashboard as dashboardEs, type DashboardDict } from '@/lib/i18n/es/dashboard'
+import { dashboard as dashboardEn } from '@/lib/i18n/en/dashboard'
+import { dashboard as dashboardFr } from '@/lib/i18n/fr/dashboard'
 
 const NAMESPACES = {
   common: { es: commonEs, en: commonEn, fr: commonFr },
@@ -51,6 +54,7 @@ const NAMESPACES = {
   products: { es: productsEs, en: productsEn, fr: productsFr },
   cart: { es: cartEs, en: cartEn, fr: cartFr },
   checkout: { es: checkoutEs, en: checkoutEn, fr: checkoutFr },
+  dashboard: { es: dashboardEs, en: dashboardEn, fr: dashboardFr },
 } as const
 
 export type Namespace = keyof typeof NAMESPACES
@@ -75,6 +79,7 @@ export function useTranslation(namespace: 'categories'): TranslationResult<keyof
 export function useTranslation(namespace: 'products'): TranslationResult<keyof ProductsDict>
 export function useTranslation(namespace: 'cart'): TranslationResult<keyof CartDict>
 export function useTranslation(namespace: 'checkout'): TranslationResult<keyof CheckoutDict>
+export function useTranslation(namespace: 'dashboard'): TranslationResult<keyof DashboardDict>
 export function useTranslation(namespace: Namespace): TranslationResult<string> {
   const language = useLanguageStore((s) => s.language)
 
