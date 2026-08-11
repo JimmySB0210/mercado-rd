@@ -19,13 +19,13 @@ interface Props {
 }
 
 export function DownloadInvoiceButton({ data }: Props) {
-  const { t } = useTranslation('checkout')
+  const { t, language } = useTranslation('checkout')
   const [loading, setLoading] = useState(false)
 
   const handleDownload = async () => {
     setLoading(true)
     const { generateInvoicePdf } = await import('@/lib/invoice/generateInvoice')
-    generateInvoicePdf(data)
+    generateInvoicePdf(data, language)
     setLoading(false)
   }
 

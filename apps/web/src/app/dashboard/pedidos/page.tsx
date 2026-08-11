@@ -11,6 +11,7 @@ import { DashboardSidebar } from '@/components/vendor/DashboardSidebar'
 import { OrderStatusSelect } from '@/components/vendor/OrderStatusSelect'
 import { TrackingForm } from '@/components/vendor/TrackingForm'
 import { formatPrice } from '@/types/database.types'
+import { formatDate } from '@/lib/utils'
 import { BRAND } from '@/lib/colors'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import type { DashboardDict } from '@/lib/i18n/es/dashboard'
@@ -50,7 +51,7 @@ const STATUS_FILTER_KEYS: { value: string; labelKey: keyof DashboardDict }[] = [
 ]
 
 export default function VendorOrdersPage() {
-  const { t } = useTranslation('dashboard')
+  const { t, language } = useTranslation('dashboard')
   const router = useRouter()
   const supabase = createClient()
 
@@ -213,7 +214,7 @@ export default function VendorOrdersPage() {
             {filteredOrders.map(order => {
               const shortId = order.order_id.split('-')[0].toUpperCase()
               const isExpanded = expandedId === order.order_id
-              const date = new Date(order.created_at).toLocaleDateString('es-DO', {
+              const date = formatDate(order.created_at, language, {
                 day: 'numeric', month: 'short', year: 'numeric',
               })
 

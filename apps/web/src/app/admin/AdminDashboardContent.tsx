@@ -12,6 +12,7 @@ import { DisputeAdminRow } from '@/components/admin/DisputeAdminRow'
 import { VerificationBadge } from '@/components/vendor/VerificationBadge'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { formatPrice } from '@/types/database.types'
+import { formatDate } from '@/lib/utils'
 import { BRAND } from '@/lib/colors'
 
 interface Props {
@@ -61,7 +62,7 @@ const ORDER_STATUS_COLORS: Record<string, { bg: string; text: string }> = {
 }
 
 export function AdminDashboardContent({ kpis, vendors, orders, paymentMetrics, openDisputes, abandonedCarts }: Props) {
-  const { t } = useTranslation('admin')
+  const { t, language } = useTranslation('admin')
 
   const KPI_CARDS = [
     { label: t('kpiRevenue'), val: formatPrice(kpis.totalRevenue), sub: t('kpiRevenueSub', { amount: formatPrice(kpis.revenueThisMonth) }), color: BRAND.green },
@@ -286,7 +287,7 @@ export function AdminDashboardContent({ kpis, vendors, orders, paymentMetrics, o
               const knownStatus = o.status in ORDER_STATUS_COLORS ? o.status : 'pending'
               const colors = ORDER_STATUS_COLORS[knownStatus]
               const label = t(`orderStatus.${knownStatus}` as 'orderStatus.pending')
-              const date = new Date(o.created_at).toLocaleDateString('es-DO', { day: 'numeric', month: 'short' })
+              const date = formatDate(o.created_at, language, { day: 'numeric', month: 'short' })
               return (
                 <div key={o.id} style={{ padding: '12px 18px', borderBottom: '1px solid #f8f8f8', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
                   <div style={{ minWidth: 0 }}>

@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Navbar } from '@/components/shop/Navbar'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { formatDate } from '@/lib/utils'
 import { BRAND } from '@/lib/colors'
 
 interface DisputeRow {
@@ -32,7 +33,7 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
 export default function MyDisputesPage() {
   const router = useRouter()
   const supabase = createClient()
-  const { t } = useTranslation('profile')
+  const { t, language } = useTranslation('profile')
 
   const [disputes, setDisputes] = useState<DisputeRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -94,7 +95,7 @@ export default function MyDisputesPage() {
               const knownStatus = d.status in STATUS_COLORS ? d.status : 'open'
               const statusColors = STATUS_COLORS[knownStatus]
               const statusLabel = t(`disputeStatus.${knownStatus}` as 'disputeStatus.open')
-              const date = new Date(d.created_at).toLocaleDateString('es-DO', {
+              const date = formatDate(d.created_at, language, {
                 day: 'numeric', month: 'long', year: 'numeric',
               })
 

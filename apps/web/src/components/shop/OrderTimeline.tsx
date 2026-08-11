@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { formatDate } from '@/lib/utils'
 import { BRAND } from '@/lib/colors'
 
 interface HistoryRow {
@@ -21,7 +22,7 @@ interface Props {
 const MAIN_STEPS = ['pending', 'confirmed', 'shipped', 'delivered'] as const
 
 export function OrderTimeline({ orderId }: Props) {
-  const { t } = useTranslation('profile')
+  const { t, language } = useTranslation('profile')
   const [history, setHistory] = useState<HistoryRow[] | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -72,9 +73,6 @@ export function OrderTimeline({ orderId }: Props) {
     ? [...MAIN_STEPS.slice(0, lastReachedIndex + 1), 'cancelled' as const]
     : MAIN_STEPS
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleString('es-DO', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
-
   return (
     <div style={{ padding: '12px 4px' }}>
       {steps.map((status, i) => {
@@ -110,7 +108,7 @@ export function OrderTimeline({ orderId }: Props) {
               </p>
               {reachedAt && (
                 <p style={{ fontSize: 11, color: '#999', margin: '2px 0 0' }}>
-                  {formatDate(reachedAt)}
+                  {formatDate(reachedAt, language, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}
                 </p>
               )}
             </div>

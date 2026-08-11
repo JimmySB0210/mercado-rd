@@ -14,6 +14,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Navbar } from '@/components/shop/Navbar'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { formatDate } from '@/lib/utils'
 import { BRAND } from '@/lib/colors'
 
 interface ConversationInfo {
@@ -43,7 +44,7 @@ export default function ChatPage() {
   const router = useRouter()
   const supabase = createClient()
   const bottomRef = useRef<HTMLDivElement>(null)
-  const { t } = useTranslation('chat')
+  const { t, language } = useTranslation('chat')
 
   // Recalcula la duración de membresía localmente y traducida, en vez de
   // usar getMembershipDuration() de lib/utils.ts — esa función también la
@@ -262,7 +263,7 @@ export default function ChatPage() {
                     >
                       <p className="text-sm leading-relaxed whitespace-pre-line">{m.message}</p>
                       <p className="text-[11px] mt-1" style={{ color: isMine ? 'rgba(255,255,255,0.7)' : '#999' }}>
-                        {new Date(m.created_at).toLocaleString('es-DO', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}
+                        {formatDate(m.created_at, language, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}
                       </p>
                     </div>
                   </div>

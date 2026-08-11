@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { DashboardSidebar } from '@/components/vendor/DashboardSidebar'
 import { formatPrice } from '@/types/database.types'
+import { formatDate } from '@/lib/utils'
 import { BRAND } from '@/lib/colors'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 
@@ -26,7 +27,7 @@ interface Coupon {
 }
 
 export default function VendorCouponsPage() {
-  const { t } = useTranslation('dashboard')
+  const { t, language } = useTranslation('dashboard')
   const router = useRouter()
   const supabase = createClient()
 
@@ -211,7 +212,7 @@ export default function VendorCouponsPage() {
                         </td>
                         <td style={{ padding: '10px 12px', fontSize: 12, color: '#666', whiteSpace: 'nowrap' }}>
                           {c.expires_at
-                            ? new Date(c.expires_at).toLocaleDateString('es-DO', { day: 'numeric', month: 'short', year: 'numeric' })
+                            ? formatDate(c.expires_at, language, { day: 'numeric', month: 'short', year: 'numeric' })
                             : t('noExpiration')}
                         </td>
                         <td style={{ padding: '10px 12px' }}>

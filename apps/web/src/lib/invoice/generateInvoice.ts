@@ -11,6 +11,8 @@
 
 import jsPDF from 'jspdf'
 import { formatPrice } from '@/types/database.types'
+import { formatDate } from '@/lib/utils'
+import type { Language } from '@/lib/store/language'
 
 export interface InvoiceData {
   orderId: string
@@ -41,14 +43,14 @@ const PAYMENT_LABELS: Record<string, string> = {
   cash: 'Efectivo contra entrega',
 }
 
-export function generateInvoicePdf(data: InvoiceData): void {
+export function generateInvoicePdf(data: InvoiceData, language: Language): void {
   const doc = new jsPDF({ unit: 'mm', format: 'letter' })
   const pageWidth = doc.internal.pageSize.getWidth()
   const marginX = 18
   let y = 20
 
   const shortId = data.orderId.slice(0, 8).toUpperCase()
-  const date = new Date(data.createdAt).toLocaleDateString('es-DO', {
+  const date = formatDate(data.createdAt, language, {
     day: 'numeric', month: 'long', year: 'numeric',
   })
 

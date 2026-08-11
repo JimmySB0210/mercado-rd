@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { DashboardSidebar } from '@/components/vendor/DashboardSidebar'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { formatDate } from '@/lib/utils'
 
 interface ReviewRow {
   id: string
@@ -20,7 +21,7 @@ interface ReviewRow {
 }
 
 export default function VendorReviewsPage() {
-  const { t } = useTranslation('dashboard')
+  const { t, language } = useTranslation('dashboard')
   const router = useRouter()
   const supabase = createClient()
 
@@ -141,7 +142,7 @@ export default function VendorReviewsPage() {
             {/* Lista de reviews */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {reviews.map(r => {
-                const date = new Date(r.created_at).toLocaleDateString('es-DO', { day: 'numeric', month: 'short', year: 'numeric' })
+                const date = formatDate(r.created_at, language, { day: 'numeric', month: 'short', year: 'numeric' })
                 return (
                   <div key={r.id} style={{ background: '#fff', borderRadius: 12, padding: 18, boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 8 }}>

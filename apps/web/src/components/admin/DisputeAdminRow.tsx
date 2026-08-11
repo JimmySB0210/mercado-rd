@@ -8,6 +8,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { formatDate } from '@/lib/utils'
 import { BRAND } from '@/lib/colors'
 
 interface Props {
@@ -26,7 +27,7 @@ const STATUS_VALUES = ['open', 'reviewing', 'resolved', 'closed'] as const
 export function DisputeAdminRow({ disputeId, orderId, reason, description, status, buyerName, vendorName, createdAt }: Props) {
   const router = useRouter()
   const supabase = createClient()
-  const { t } = useTranslation('admin')
+  const { t, language } = useTranslation('admin')
 
   const [currentStatus, setCurrentStatus] = useState(status)
   const [resolution, setResolution] = useState('')
@@ -34,7 +35,7 @@ export function DisputeAdminRow({ disputeId, orderId, reason, description, statu
   const [error, setError] = useState<string | null>(null)
 
   const shortId = orderId.split('-')[0].toUpperCase()
-  const date = new Date(createdAt).toLocaleDateString('es-DO', { day: 'numeric', month: 'short', year: 'numeric' })
+  const date = formatDate(createdAt, language, { day: 'numeric', month: 'short', year: 'numeric' })
 
   const handleSave = async () => {
     setSaving(true)

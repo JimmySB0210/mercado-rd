@@ -13,6 +13,7 @@ import { DisputeModal } from '@/components/order/DisputeModal'
 import { OrderTimeline } from '@/components/shop/OrderTimeline'
 import { formatPrice } from '@/types/database.types'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { formatDate } from '@/lib/utils'
 import { BRAND } from '@/lib/colors'
 
 interface OrderItem {
@@ -60,7 +61,7 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
 export default function MyOrdersPage() {
   const router = useRouter()
   const supabase = createClient()
-  const { t } = useTranslation('profile')
+  const { t, language } = useTranslation('profile')
 
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
@@ -220,7 +221,7 @@ export default function MyOrdersPage() {
               const knownStatus = order.status in STATUS_COLORS ? order.status : 'pending'
               const statusColors = STATUS_COLORS[knownStatus]
               const statusLabel = t(`orderStatus.${knownStatus}` as 'orderStatus.pending')
-              const date = new Date(order.created_at).toLocaleDateString('es-DO', { day: 'numeric', month: 'long', year: 'numeric' })
+              const date = formatDate(order.created_at, language, { day: 'numeric', month: 'long', year: 'numeric' })
 
               return (
                 <div key={order.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">

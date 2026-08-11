@@ -17,6 +17,7 @@
 // ============================================================
 
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { formatDate } from '@/lib/utils'
 import { ProductCard } from '@/components/product/ProductCard'
 import { VerificationBadge } from '@/components/vendor/VerificationBadge'
 import { VendorOptionLabel } from '@/components/vendor/VendorOptionLabel'
@@ -64,14 +65,15 @@ interface Props {
   targetCustomers: CustomerType[]
   showsManufacturing: boolean
   hasProviderInfo: boolean
-  memberSince: string
+  memberSinceRaw: string
 }
 
 export function VendorStoreContent({
   vendor, productsWithVendor, reviews, reviewCount, businessTypes, vendorCategories,
-  services, targetCustomers, showsManufacturing, hasProviderInfo, memberSince,
+  services, targetCustomers, showsManufacturing, hasProviderInfo, memberSinceRaw,
 }: Props) {
-  const { t } = useTranslation('directory')
+  const { t, language } = useTranslation('directory')
+  const memberSince = formatDate(memberSinceRaw, language, { month: 'long', year: 'numeric' })
 
   const membershipDuration = (() => {
     const created = new Date(vendor.created_at)
@@ -305,7 +307,7 @@ export function VendorStoreContent({
         ) : (
           <div className="flex flex-col gap-3">
             {reviews.map(r => {
-              const date = new Date(r.created_at).toLocaleDateString('es-DO', {
+              const date = formatDate(r.created_at, language, {
                 day: 'numeric', month: 'short', year: 'numeric',
               })
               return (

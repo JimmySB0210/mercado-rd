@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Navbar } from '@/components/shop/Navbar'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { formatDate } from '@/lib/utils'
 import { BRAND } from '@/lib/colors'
 
 interface ConversationRow {
@@ -27,7 +28,7 @@ interface ConversationRow {
 }
 
 function ConversationList({ rows, emptyMessage, defaultName }: { rows: ConversationRow[]; emptyMessage: string; defaultName: string }) {
-  const { t } = useTranslation('chat')
+  const { t, language } = useTranslation('chat')
 
   const timeAgo = (dateStr: string): string => {
     const minutes = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000)
@@ -37,7 +38,7 @@ function ConversationList({ rows, emptyMessage, defaultName }: { rows: Conversat
     if (hours < 24) return t('hoursAgo', { count: hours })
     const days = Math.floor(hours / 24)
     if (days < 7) return t('daysAgo', { count: days })
-    return new Date(dateStr).toLocaleDateString('es-DO', { day: 'numeric', month: 'short' })
+    return formatDate(dateStr, language, { day: 'numeric', month: 'short' })
   }
 
   if (rows.length === 0) {

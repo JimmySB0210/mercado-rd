@@ -12,6 +12,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Bell } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { useLanguageStore, type Language } from '@/lib/store/language'
+import { formatDate } from '@/lib/utils'
 import { BRAND } from '@/lib/colors'
 
 interface NotificationRow {
@@ -23,7 +25,7 @@ interface NotificationRow {
   created_at: string
 }
 
-function timeAgo(dateStr: string): string {
+function timeAgo(dateStr: string, language: Language): string {
   const minutes = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000)
   if (minutes < 1) return 'ahora'
   if (minutes < 60) return `hace ${minutes} min`
@@ -31,12 +33,13 @@ function timeAgo(dateStr: string): string {
   if (hours < 24) return `hace ${hours}h`
   const days = Math.floor(hours / 24)
   if (days < 7) return `hace ${days}d`
-  return new Date(dateStr).toLocaleDateString('es-DO', { day: 'numeric', month: 'short' })
+  return formatDate(dateStr, language, { day: 'numeric', month: 'short' })
 }
 
 export function NotificationBell() {
   const router = useRouter()
   const supabase = createClient()
+  const language = useLanguageStore(s => s.language)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const [userId, setUserId] = useState<string | null>(null)
@@ -219,7 +222,7 @@ export function NotificationBell() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-gray-900 truncate">{n.title}</p>
                     <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">{n.body}</p>
-                    <p className="text-xs text-gray-400 mt-1">{timeAgo(n.created_at)}</p>
+                    <p className="text-xs text-gray-400 mt-1">{timeAgo(n.created_at, language)}</p>
                   </div>
                 </button>
               ))

@@ -9,6 +9,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Navbar } from '@/components/shop/Navbar'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { formatDate } from '@/lib/utils'
 import { BRAND } from '@/lib/colors'
 
 interface DisputeDetail {
@@ -44,7 +45,7 @@ export default function DisputeDetailPage() {
   const router = useRouter()
   const supabase = createClient()
   const bottomRef = useRef<HTMLDivElement>(null)
-  const { t } = useTranslation('profile')
+  const { t, language } = useTranslation('profile')
 
   const [userId, setUserId] = useState<string | null>(null)
   const [dispute, setDispute] = useState<DisputeDetail | null>(null)
@@ -148,7 +149,7 @@ export default function DisputeDetailPage() {
   const statusColors = STATUS_COLORS[knownStatus]
   const statusLabel = t(`disputeStatus.${knownStatus}` as 'disputeStatus.open')
   const isClosed = dispute.status === 'resolved' || dispute.status === 'closed'
-  const date = new Date(dispute.created_at).toLocaleDateString('es-DO', {
+  const date = formatDate(dispute.created_at, language, {
     day: 'numeric', month: 'long', year: 'numeric',
   })
 
@@ -210,7 +211,7 @@ export default function DisputeDetailPage() {
                       )}
                       <p className="text-sm leading-relaxed whitespace-pre-line">{m.message}</p>
                       <p className="text-[11px] mt-1" style={{ color: isMine ? 'rgba(255,255,255,0.7)' : '#999' }}>
-                        {new Date(m.created_at).toLocaleString('es-DO', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}
+                        {formatDate(m.created_at, language, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}
                       </p>
                     </div>
                   </div>

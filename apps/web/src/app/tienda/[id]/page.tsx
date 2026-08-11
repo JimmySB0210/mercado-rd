@@ -83,10 +83,6 @@ export default async function VendorStorePage(
     },
   }))
 
-  const memberSince = new Date(vendor.created_at).toLocaleDateString('es-DO', {
-    month: 'long', year: 'numeric',
-  })
-
   const businessTypes = (businessTypesRaw ?? []).map(r => r.business_type as BusinessType)
   const vendorCategories = (vendorCategoriesRaw ?? [])
     .map(r => r.category as unknown as { id: number; name: string; emoji: string; slug: string } | null)
@@ -113,7 +109,7 @@ export default async function VendorStorePage(
         targetCustomers={targetCustomers}
         showsManufacturing={showsManufacturing}
         hasProviderInfo={hasProviderInfo}
-        memberSince={memberSince}
+        memberSinceRaw={vendor.created_at}
       />
     </div>
   )

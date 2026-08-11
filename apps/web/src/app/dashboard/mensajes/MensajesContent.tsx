@@ -10,6 +10,7 @@
 // ============================================================
 
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { formatDate } from '@/lib/utils'
 import { BRAND } from '@/lib/colors'
 
 interface ConversationRow {
@@ -21,7 +22,7 @@ interface ConversationRow {
 }
 
 export function MensajesContent({ rows }: { rows: ConversationRow[] }) {
-  const { t } = useTranslation('dashboard')
+  const { t, language } = useTranslation('dashboard')
 
   const timeAgo = (dateStr: string): string => {
     const minutes = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000)
@@ -31,7 +32,7 @@ export function MensajesContent({ rows }: { rows: ConversationRow[] }) {
     if (hours < 24) return t('hoursAgo', { count: hours })
     const days = Math.floor(hours / 24)
     if (days < 7) return t('daysAgo', { count: days })
-    return new Date(dateStr).toLocaleDateString('es-DO', { day: 'numeric', month: 'short' })
+    return formatDate(dateStr, language, { day: 'numeric', month: 'short' })
   }
 
   return (
