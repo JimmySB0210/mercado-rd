@@ -24,6 +24,7 @@ export const products = {
   stockAvailable: 'Stock: {count} disponibles',
   selectSize: 'Selecciona talla',
   selectColor: 'Selecciona color',
+  selectOption: 'Selecciona una opción',
   addedToCart: '✓ Añadido al carrito',
   addToCart: 'Añadir al carrito',
 
@@ -49,6 +50,9 @@ export const products = {
   inStockAvailable: '✓ En stock ({count} disponibles)',
   askWhatsapp: 'Preguntar por WhatsApp',
   descriptionHeading: 'Descripción',
+  specsHeading: 'Especificaciones',
+  specYes: 'Sí',
+  specNo: 'No',
   vendorHeading: 'Vendedor',
 
   // HomeProductGrid

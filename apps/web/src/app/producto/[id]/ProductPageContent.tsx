@@ -27,6 +27,26 @@ interface VendorInfo {
   total_sales?: number
 }
 
+export interface ProductSpecItem {
+  label: string
+  type: 'text' | 'number' | 'select' | 'multiselect' | 'boolean'
+  displayValue: string
+  boolValue: boolean | null
+  sortOrder: number
+}
+
+// Dimensión de variante dinámica (ej. Capacidad, Color) resuelta desde
+// category_attributes (applies_to_variant = true) + attribute_options.
+export interface VariantDynamicDimension {
+  attributeId: string
+  key: string
+  label: string
+  options: { value: string; label: string }[]
+}
+
+// variantId -> { attributeId -> value_text (código, no label) }
+export type VariantDynamicValuesMap = Record<string, Record<string, string>>
+
 interface Props {
   product: Product & {
     category: { slug: string; emoji: string; name: string } | null
@@ -39,10 +59,14 @@ interface Props {
   itbis: number
   totalConItbis: number
   whatsappMsg: string
+  specs?: ProductSpecItem[]
+  dynamicDimensions?: VariantDynamicDimension[]
+  variantDynamicValues?: VariantDynamicValuesMap
 }
 
 export function ProductPageContent({
-  product, vendor, variants, hasDiscount, discount, itbis, totalConItbis, whatsappMsg,
+  product, vendor, variants, hasDiscount, discount, itbis, totalConItbis, whatsappMsg, specs = [],
+  dynamicDimensions = [], variantDynamicValues = {},
 }: Props) {
   const { t } = useTranslation('products')
 
@@ -187,6 +211,8 @@ export function ProductPageContent({
               colors: (product as any).colors ?? [],
             } as unknown as Product}
             variants={variants ?? []}
+            dynamicDimensions={dynamicDimensions}
+            variantDynamicValues={variantDynamicValues}
           />
 
           {/* Chat interno */}
@@ -216,6 +242,26 @@ export function ProductPageContent({
               <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
                 {product.description}
               </p>
+            </div>
+          )}
+
+          {/* Especificaciones */}
+          {specs.length > 0 && (
+            <div className="bg-white rounded-xl border border-gray-100 p-4">
+              <h2 className="text-sm font-semibold text-gray-700 mb-2">{t('specsHeading')}</h2>
+              <dl className="text-sm">
+                {specs.map((spec, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between gap-4 py-1.5 border-b border-gray-50 last:border-0"
+                  >
+                    <dt className="text-gray-400">{spec.label}</dt>
+                    <dd className="text-gray-700 font-medium text-right">
+                      {spec.type === 'boolean' ? (spec.boolValue ? t('specYes') : t('specNo')) : spec.displayValue}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
             </div>
           )}
 

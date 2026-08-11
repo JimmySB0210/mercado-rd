@@ -51,7 +51,7 @@ export default function CartPage() {
               const image = item.product.images?.[0]
               return (
                 <div
-                  key={`${item.product.id}-${item.selected_size}-${item.selected_color}`}
+                  key={`${item.product.id}-${item.variant_id ?? `${item.selected_size}-${item.selected_color}`}`}
                   className="cart-item"
                   style={{ background: '#fff', borderRadius: 10, padding: 16, marginBottom: 12, display: 'flex', gap: 14, alignItems: 'center', border: '1px solid #EEE' }}
                 >
@@ -72,9 +72,9 @@ export default function CartPage() {
                     >
                       {item.product.name}
                     </a>
-                    {(item.selected_size || item.selected_color) && (
+                    {(item.variant_label || item.selected_size || item.selected_color) && (
                       <div style={{ fontSize: 12, color: BRAND.gray, marginBottom: 2 }}>
-                        {[item.selected_size, item.selected_color].filter(Boolean).join(' · ')}
+                        {item.variant_label ?? [item.selected_size, item.selected_color].filter(Boolean).join(' · ')}
                       </div>
                     )}
                     <div style={{ fontSize: 12, color: BRAND.blue, fontWeight: 600 }}>
@@ -89,7 +89,7 @@ export default function CartPage() {
                     </div>
                     <div style={{ display: 'flex', border: '1px solid #E0E0E0', borderRadius: 6, overflow: 'hidden' }}>
                       <button
-                        onClick={() => updateQty(item.product.id, item.quantity - 1)}
+                        onClick={() => updateQty(item.product.id, item.quantity - 1, item.variant_id, item.selected_size, item.selected_color)}
                         style={{ width: 26, height: 26, border: 'none', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: BRAND.dark }}
                       >
                         <Minus size={13} />
@@ -98,14 +98,14 @@ export default function CartPage() {
                         {item.quantity}
                       </span>
                       <button
-                        onClick={() => updateQty(item.product.id, item.quantity + 1)}
+                        onClick={() => updateQty(item.product.id, item.quantity + 1, item.variant_id, item.selected_size, item.selected_color)}
                         style={{ width: 26, height: 26, border: 'none', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: BRAND.dark }}
                       >
                         <Plus size={13} />
                       </button>
                     </div>
                     <button
-                      onClick={() => removeItem(item.product.id)}
+                      onClick={() => removeItem(item.product.id, item.variant_id, item.selected_size, item.selected_color)}
                       style={{ background: 'none', border: 'none', color: BRAND.gray, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}
                     >
                       <Trash2 size={13} /> {t('removeItem')}

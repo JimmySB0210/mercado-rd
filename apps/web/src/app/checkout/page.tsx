@@ -520,7 +520,7 @@ export default function CheckoutPage() {
             {/* Items */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 14 }}>
               {items.map(item => (
-                <div key={item.product.id} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <div key={`${item.product.id}-${item.variant_id ?? `${item.selected_size}-${item.selected_color}`}`} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                   <div style={{ width: 44, height: 44, borderRadius: 6, background: BRAND.bg, flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
                     {item.product.images?.[0] ? (
                       <Image src={item.product.images[0]} alt={item.product.name} fill className="object-cover" sizes="44px" />
@@ -534,8 +534,12 @@ export default function CheckoutPage() {
                     </p>
                     <p style={{ fontSize: 11, color: BRAND.gray, margin: '2px 0 0' }}>
                       x{item.quantity}
-                      {item.selected_size && ` · ${item.selected_size}`}
-                      {item.selected_color && ` · ${item.selected_color}`}
+                      {item.variant_label
+                        ? ` · ${item.variant_label}`
+                        : <>
+                            {item.selected_size && ` · ${item.selected_size}`}
+                            {item.selected_color && ` · ${item.selected_color}`}
+                          </>}
                     </p>
                   </div>
                   <span style={{ fontSize: 12, fontWeight: 700, color: BRAND.dark, flexShrink: 0 }}>

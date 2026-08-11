@@ -19,6 +19,7 @@ export const products = {
   stockAvailable: 'Stock: {count} available',
   selectSize: 'Select a size',
   selectColor: 'Select a color',
+  selectOption: 'Select an option',
   addedToCart: '✓ Added to cart',
   addToCart: 'Add to cart',
 
@@ -40,6 +41,9 @@ export const products = {
   inStockAvailable: '✓ In stock ({count} available)',
   askWhatsapp: 'Ask via WhatsApp',
   descriptionHeading: 'Description',
+  specsHeading: 'Specifications',
+  specYes: 'Yes',
+  specNo: 'No',
   vendorHeading: 'Seller',
 
   featuredOffersTitle: 'Featured deals',

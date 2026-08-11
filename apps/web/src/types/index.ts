@@ -56,6 +56,11 @@ export interface CartItem {
   selected_color?: string
   variant_id?: string
   variant_price_rdp?: number
+  // Etiqueta ya armada para variantes con atributos dinámicos (ej.
+  // "Capacidad: 128 GB · Color: Negro") — evita que el carrito tenga
+  // que resolver de nuevo contra la BD. Si no viene, la UI del carrito
+  // sigue mostrando selected_size/selected_color como hasta ahora.
+  variant_label?: string
 }
 
 export interface Cart {

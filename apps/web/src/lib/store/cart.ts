@@ -4,14 +4,34 @@ import type { CartItem, Product } from '@/types'
 
 const ITBIS_RATE = 0.18 // 18% República Dominicana
 
+// Identifica una línea del carrito: por variantId cuando existe (variante
+// real, fija o dinámica), si no por la combinación size+color del sistema
+// viejo. Usado por addItem/removeItem/updateQty para no fusionar ni afectar
+// por error dos variantes distintas del mismo producto (ambas con
+// selected_size/selected_color undefined en el caso dinámico).
+function matchesLine(
+  item: CartItem,
+  productId: string,
+  variantId?: string,
+  size?: string,
+  color?: string
+): boolean {
+  return (
+    item.product.id === productId &&
+    (variantId
+      ? item.variant_id === variantId
+      : item.selected_size === size && item.selected_color === color)
+  )
+}
+
 interface CartState {
   items: CartItem[]
 }
 
 interface CartActions {
-  addItem: (product: Product, qty?: number, size?: string, color?: string, variantId?: string, variantPriceRdp?: number) => void
-  removeItem: (productId: string) => void
-  updateQty: (productId: string, qty: number) => void
+  addItem: (product: Product, qty?: number, size?: string, color?: string, variantId?: string, variantPriceRdp?: number, variantLabel?: string) => void
+  removeItem: (productId: string, variantId?: string, size?: string, color?: string) => void
+  updateQty: (productId: string, qty: number, variantId?: string, size?: string, color?: string) => void
   clearCart: () => void
 }
 
@@ -22,46 +42,37 @@ export const useCartStore = create<CartStore>()(
     (set) => ({
       items: [],
 
-      addItem: (product, qty = 1, size, color, variantId, variantPriceRdp) => {
+      addItem: (product, qty = 1, size, color, variantId, variantPriceRdp, variantLabel) => {
         set((state) => {
-          const exists = state.items.find(
-            (i) =>
-              i.product.id === product.id &&
-              i.selected_size === size &&
-              i.selected_color === color
-          )
+          const exists = state.items.find((i) => matchesLine(i, product.id, variantId, size, color))
           if (exists) {
             return {
               items: state.items.map((i) =>
-                i.product.id === product.id &&
-                i.selected_size === size &&
-                i.selected_color === color
-                  ? { ...i, quantity: i.quantity + qty }
-                  : i
+                matchesLine(i, product.id, variantId, size, color) ? { ...i, quantity: i.quantity + qty } : i
               ),
             }
           }
           return {
             items: [
               ...state.items,
-              { product, quantity: qty, selected_size: size, selected_color: color, variant_id: variantId, variant_price_rdp: variantPriceRdp },
+              { product, quantity: qty, selected_size: size, selected_color: color, variant_id: variantId, variant_price_rdp: variantPriceRdp, variant_label: variantLabel },
             ],
           }
         })
       },
 
-      removeItem: (productId) =>
+      removeItem: (productId, variantId, size, color) =>
         set((state) => ({
-          items: state.items.filter((i) => i.product.id !== productId),
+          items: state.items.filter((i) => !matchesLine(i, productId, variantId, size, color)),
         })),
 
-      updateQty: (productId, qty) =>
+      updateQty: (productId, qty, variantId, size, color) =>
         set((state) => ({
           items:
             qty <= 0
-              ? state.items.filter((i) => i.product.id !== productId)
+              ? state.items.filter((i) => !matchesLine(i, productId, variantId, size, color))
               : state.items.map((i) =>
-                  i.product.id === productId ? { ...i, quantity: qty } : i
+                  matchesLine(i, productId, variantId, size, color) ? { ...i, quantity: qty } : i
                 ),
         })),
 

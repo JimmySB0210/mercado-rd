@@ -10,17 +10,26 @@ import { formatPrice } from '@/types/database.types'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import type { ProductVariant } from '@/types/database.types'
 import type { Product } from '@/types'
+import type { VariantDynamicDimension, VariantDynamicValuesMap } from '@/app/producto/[id]/ProductPageContent'
 
 interface ProductActionProps {
   // Recibe el producto completo para pasarlo íntegro al store
   product: Product
   variants?: ProductVariant[]
+  // Presentes solo si el producto usa atributos dinámicos de variante
+  // (ej. Capacidad + Color). Si vienen vacíos, el selector se comporta
+  // exactamente igual que con el sistema viejo de Talla/Color.
+  dynamicDimensions?: VariantDynamicDimension[]
+  variantDynamicValues?: VariantDynamicValuesMap
 }
 
-export function ProductActions({ product, variants = [] }: ProductActionProps) {
+export function ProductActions({
+  product, variants = [], dynamicDimensions = [], variantDynamicValues = {},
+}: ProductActionProps) {
   const { t } = useTranslation('products')
   const addItem = useCartStore(s => s.addItem)
   const hasVariants = variants.length > 0
+  const hasDynamicDims = dynamicDimensions.length > 0
 
   // Sin variantes: usa los arrays planos del producto (comportamiento de siempre)
   const legacySizes = product.sizes ?? []
@@ -47,23 +56,66 @@ export function ProductActions({ product, variants = [] }: ProductActionProps) {
   const [selectedColor, setSelectedColor] = useState<string | null>(
     colors.length === 1 ? colors[0] : null
   )
+
+  // ─── Selección de dimensiones dinámicas (ej. Capacidad, Color) ───────
+  const [selectedDynamicValues, setSelectedDynamicValues] = useState<Record<string, string | null>>(() => {
+    const init: Record<string, string | null> = {}
+    for (const dim of dynamicDimensions) {
+      init[dim.attributeId] = dim.options.length === 1 ? dim.options[0].value : null
+    }
+    return init
+  })
+
+  const dynamicColorDim = dynamicDimensions.find(d => d.key.toLowerCase() === 'color') ?? null
+  const dynamicColorImageMap = new Map<string, string>()
+  if (dynamicColorDim) {
+    for (const v of variants) {
+      const code = variantDynamicValues[v.id]?.[dynamicColorDim.attributeId]
+      if (code && v.image_url && !dynamicColorImageMap.has(code)) {
+        dynamicColorImageMap.set(code, v.image_url)
+      }
+    }
+  }
+
+  const dynamicSelectionComplete = dynamicDimensions.every(d => !!selectedDynamicValues[d.attributeId])
+  const dynamicMatchedVariant = hasDynamicDims && dynamicSelectionComplete
+    ? variants.find(v =>
+        dynamicDimensions.every(d => (variantDynamicValues[v.id]?.[d.attributeId] ?? null) === selectedDynamicValues[d.attributeId])
+      ) ?? null
+    : null
+
   const [quantity, setQuantity] = useState(1)
   const [added, setAdded] = useState(false)
 
-  const needsSize = sizes.length > 0
-  const needsColor = colors.length > 0
+  const needsSize = !hasDynamicDims && sizes.length > 0
+  const needsColor = !hasDynamicDims && colors.length > 0
   const selectionComplete = (!needsSize || selectedSize) && (!needsColor || selectedColor)
 
-  const matchedVariant = hasVariants && selectionComplete
+  const matchedVariant = !hasDynamicDims && hasVariants && selectionComplete
     ? variants.find(v => (v.size ?? null) === selectedSize && (v.color ?? null) === selectedColor) ?? null
     : null
 
-  const effectiveStock = hasVariants ? (matchedVariant?.stock ?? 0) : product.stock
-  const isOutOfStock = hasVariants ? (matchedVariant !== null && matchedVariant.stock === 0) : product.stock === 0
+  // Variante activa, sea del sistema viejo (Talla/Color) o del dinámico
+  const activeMatchedVariant = hasDynamicDims ? dynamicMatchedVariant : matchedVariant
+
+  const effectiveStock = hasVariants ? (activeMatchedVariant?.stock ?? 0) : product.stock
+  const isOutOfStock = hasVariants ? (activeMatchedVariant !== null && activeMatchedVariant.stock === 0) : product.stock === 0
 
   const canAdd = hasVariants
-    ? !!matchedVariant && matchedVariant.stock > 0
+    ? !!activeMatchedVariant && activeMatchedVariant.stock > 0
     : product.stock > 0 && selectionComplete
+
+  // Etiqueta ya armada para el carrito (ej. "Capacidad: 128 GB · Color: Negro")
+  // — usa las labels de attribute_options, no los códigos guardados.
+  const dynamicVariantLabel = hasDynamicDims && dynamicSelectionComplete
+    ? dynamicDimensions
+        .map(dim => {
+          const value = selectedDynamicValues[dim.attributeId]
+          const label = dim.options.find(o => o.value === value)?.label ?? value
+          return `${dim.label}: ${label}`
+        })
+        .join(' · ')
+    : undefined
 
   const handleAdd = () => {
     if (!canAdd) return
@@ -71,10 +123,11 @@ export function ProductActions({ product, variants = [] }: ProductActionProps) {
     addItem(
       product,
       quantity,
-      selectedSize ?? undefined,
-      selectedColor ?? undefined,
-      matchedVariant?.id,
-      matchedVariant?.price_rdp ?? undefined,
+      hasDynamicDims ? undefined : (selectedSize ?? undefined),
+      hasDynamicDims ? undefined : (selectedColor ?? undefined),
+      activeMatchedVariant?.id,
+      activeMatchedVariant?.price_rdp ?? undefined,
+      dynamicVariantLabel,
     )
 
     setAdded(true)
@@ -165,6 +218,70 @@ export function ProductActions({ product, variants = [] }: ProductActionProps) {
         </div>
       )}
 
+      {/* Selectores de dimensiones dinámicas (ej. Capacidad, Color) */}
+      {hasDynamicDims && dynamicDimensions.map(dim => {
+        const selectedValue = selectedDynamicValues[dim.attributeId] ?? null
+        const selectedLabel = dim.options.find(o => o.value === selectedValue)?.label ?? null
+        const isColorDim = dim.attributeId === dynamicColorDim?.attributeId
+
+        return (
+          <div key={dim.attributeId}>
+            <p className="text-sm font-medium text-gray-700 mb-2">
+              {dim.label}
+              {selectedLabel && <span className="ml-2 text-gray-400 font-normal">{selectedLabel}</span>}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {dim.options.map(opt => {
+                const isSelected = selectedValue === opt.value
+                const select = () => setSelectedDynamicValues(prev => ({ ...prev, [dim.attributeId]: opt.value }))
+                const thumbUrl = isColorDim ? dynamicColorImageMap.get(opt.value) : undefined
+
+                return thumbUrl ? (
+                  <button
+                    key={opt.value}
+                    onClick={select}
+                    title={opt.label}
+                    aria-label={opt.label}
+                    className={`w-10 h-10 rounded-lg overflow-hidden border-2 transition-all ${
+                      isSelected ? 'border-[var(--brand-blue)]' : 'border-transparent hover:border-gray-300'
+                    }`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={thumbUrl} alt={opt.label} className="w-full h-full object-cover" />
+                  </button>
+                ) : (
+                  <button
+                    key={opt.value}
+                    onClick={select}
+                    className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-all ${
+                      isSelected
+                        ? 'border-[var(--brand-blue)] text-[var(--brand-blue)] bg-[color-mix(in_srgb,var(--brand-blue)_8%,transparent)]'
+                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })}
+
+      {/* Info de la variante dinámica seleccionada */}
+      {hasDynamicDims && dynamicMatchedVariant && (
+        <p className="text-xs text-gray-500 -mt-2">
+          {dynamicMatchedVariant.price_rdp !== null && (
+            <span className="font-medium text-gray-700">{formatPrice(dynamicMatchedVariant.price_rdp)} · </span>
+          )}
+          {dynamicMatchedVariant.stock === 0 ? (
+            <span className="font-medium text-red-500">{t('outOfStock')}</span>
+          ) : (
+            <span>{t('stockAvailable', { count: dynamicMatchedVariant.stock })}</span>
+          )}
+        </p>
+      )}
+
       {/* Cantidad */}
       <div>
         <p className="text-sm font-medium text-gray-700 mb-2">{t('quantityLabel')}</p>
@@ -202,7 +319,7 @@ export function ProductActions({ product, variants = [] }: ProductActionProps) {
         {isOutOfStock
           ? (hasVariants ? t('outOfStock') : t('noStock'))
           : !canAdd
-          ? (needsSize && !selectedSize ? t('selectSize') : t('selectColor'))
+          ? (hasDynamicDims ? t('selectOption') : (needsSize && !selectedSize ? t('selectSize') : t('selectColor')))
           : added
           ? t('addedToCart')
           : t('addToCart')}
