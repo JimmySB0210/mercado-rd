@@ -16,8 +16,9 @@ import { createClient } from '@/lib/supabase/client'
 import { validateImageFile, getImageDimensions, uploadProductImage, MIN_PRODUCT_IMAGE_DIMENSION, LOW_RESOLUTION_WARNING } from '@/lib/storage/upload'
 import { DANGEROUS_PATTERN } from '@/lib/validation'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { ProductAttributesSection, type AttributeValue, type AttributeValuesState } from '@/components/dashboard/ProductAttributesSection'
 import { BRAND } from '@/lib/colors'
-import type { Product, ProductVariant } from '@/types/database.types'
+import type { Product, ProductVariant, CategoryAttribute, AttributeOption } from '@/types/database.types'
 
 interface Category {
   id: number
@@ -43,6 +44,16 @@ interface ProductFormProps {
 interface VariantRow {
   size: string
   color: string
+  stock: string
+  price: string
+  imageUrl: string | null
+}
+
+// Fila de variante cuando la categoría define atributos con
+// applies_to_variant = true (ej. Color + Capacidad en Smartphones) — en
+// vez de Talla/Color fijos, cada dimensión es un category_attribute_id.
+interface DynamicVariantRow {
+  values: Record<number, string>
   stock: string
   price: string
   imageUrl: string | null
@@ -176,6 +187,60 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     setVariantRows(prev => prev.map((row, i) => (i === index ? { ...row, imageUrl: null } : row)))
   }
 
+  // ─── Variantes dinámicas (categoría con applies_to_variant) ──────────
+  const [dynamicVariantRows, setDynamicVariantRows] = useState<DynamicVariantRow[]>([
+    { values: {}, stock: '', price: '', imageUrl: null },
+  ])
+  const [uploadingDynamicVariantIndex, setUploadingDynamicVariantIndex] = useState<number | null>(null)
+
+  const addDynamicVariantRow = () => {
+    setDynamicVariantRows(prev => [...prev, { values: {}, stock: '', price: '', imageUrl: null }])
+  }
+
+  const updateDynamicVariantValue = (index: number, attributeId: number, value: string) => {
+    setDynamicVariantRows(prev =>
+      prev.map((row, i) => (i === index ? { ...row, values: { ...row.values, [attributeId]: value } } : row))
+    )
+  }
+
+  const updateDynamicVariantField = (index: number, field: 'stock' | 'price', value: string) => {
+    setDynamicVariantRows(prev => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)))
+  }
+
+  const removeDynamicVariantRow = (index: number) => {
+    setDynamicVariantRows(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const handleDynamicVariantImageSelect = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+
+    const validationError = validateImageFile(file)
+    if (validationError) {
+      setVariantImageError(validationError)
+      return
+    }
+    setVariantImageError(null)
+    setUploadingDynamicVariantIndex(index)
+
+    const { url, error: uploadError } = await uploadProductImage(file, vendorId)
+
+    if (uploadError || !url) {
+      console.error('[handleDynamicVariantImageSelect]', uploadError)
+      setVariantImageError(t('imageUploadError'))
+      setUploadingDynamicVariantIndex(null)
+      return
+    }
+
+    setDynamicVariantRows(prev => prev.map((row, i) => (i === index ? { ...row, imageUrl: url } : row)))
+    setUploadingDynamicVariantIndex(null)
+  }
+
+  const removeDynamicVariantImage = (index: number) => {
+    setDynamicVariantRows(prev => prev.map((row, i) => (i === index ? { ...row, imageUrl: null } : row)))
+  }
+
   // Imágenes principales — existentes (modo editar) + nuevas (ambos modos)
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>(initialData?.existingImages ?? [])
   const [imageFiles, setImageFiles] = useState<File[]>([])
@@ -184,6 +249,198 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
   const [imageWarning, setImageWarning] = useState<string | null>(null)
 
   const totalImageCount = existingImageUrls.length + imageFiles.length
+
+  // Atributos dinámicos de la categoría seleccionada (tipo de producto) —
+  // fixedCategoryAttributes son los que se muestran como campos normales
+  // del producto; variantCategoryAttributes (applies_to_variant = true)
+  // se usan más adelante como dimensiones de la tabla de variantes en vez
+  // de Talla/Color fijos. Si la categoría no tiene ninguno, ambos quedan
+  // vacíos y el formulario se comporta exactamente igual que antes.
+  const [fixedCategoryAttributes, setFixedCategoryAttributes] = useState<CategoryAttribute[]>([])
+  const [variantCategoryAttributes, setVariantCategoryAttributes] = useState<CategoryAttribute[]>([])
+  const [attributeOptionsMap, setAttributeOptionsMap] = useState<Map<number, AttributeOption[]>>(new Map())
+  const [attributeValues, setAttributeValues] = useState<AttributeValuesState>({})
+  const [loadingAttributes, setLoadingAttributes] = useState(false)
+
+  useEffect(() => {
+    if (!form.categoryId) {
+      setFixedCategoryAttributes([])
+      setVariantCategoryAttributes([])
+      setAttributeOptionsMap(new Map())
+      setAttributeValues({})
+      setDynamicVariantRows([{ values: {}, stock: '', price: '', imageUrl: null }])
+      return
+    }
+
+    let active = true
+    setLoadingAttributes(true)
+
+    const categoryIdNum = parseInt(form.categoryId)
+    // Precarga desde product_attribute_values/variant_attribute_values si
+    // la categoría seleccionada sigue siendo la del producto original —
+    // se recalcula en cada corrida del efecto (sin bandera de "una sola
+    // vez") para que sea idempotente: no depende de qué tan tarde resuelva
+    // el fetch, así no hay condición de carrera con el doble-render de
+    // efectos de React 18 en desarrollo.
+    const shouldPrefillFromExisting =
+      mode === 'editar' &&
+      !!initialData &&
+      initialData.product.category_id === categoryIdNum
+
+    supabase
+      .from('category_attributes')
+      .select('id, category_id, attribute_key, attribute_label, attribute_type, unit, is_required, is_recommended, applies_to_variant, sort_order')
+      .eq('category_id', categoryIdNum)
+      .order('sort_order')
+      .then(async ({ data: attrs, error: attrsError }) => {
+        if (!active) return
+
+        if (attrsError) {
+          console.error('[ProductForm categoryAttributes]', attrsError)
+          setFixedCategoryAttributes([])
+          setVariantCategoryAttributes([])
+          setAttributeOptionsMap(new Map())
+          setAttributeValues({})
+          setDynamicVariantRows([{ values: {}, stock: '', price: '', imageUrl: null }])
+          setLoadingAttributes(false)
+          return
+        }
+
+        const allAttrs = (attrs ?? []) as CategoryAttribute[]
+        setFixedCategoryAttributes(allAttrs.filter(a => !a.applies_to_variant))
+        setVariantCategoryAttributes(allAttrs.filter(a => a.applies_to_variant))
+
+        const selectLikeIds = allAttrs
+          .filter(a => a.attribute_type === 'select' || a.attribute_type === 'multiselect')
+          .map(a => a.id)
+
+        if (selectLikeIds.length > 0) {
+          const { data: options, error: optionsError } = await supabase
+            .from('attribute_options')
+            .select('id, category_attribute_id, value, label, sort_order')
+            .in('category_attribute_id', selectLikeIds)
+            .order('sort_order')
+
+          if (!active) return
+
+          if (optionsError) {
+            console.error('[ProductForm attributeOptions]', optionsError)
+            setAttributeOptionsMap(new Map())
+          } else {
+            const map = new Map<number, AttributeOption[]>()
+            for (const opt of (options ?? []) as AttributeOption[]) {
+              const list = map.get(opt.category_attribute_id) ?? []
+              list.push(opt)
+              map.set(opt.category_attribute_id, list)
+            }
+            setAttributeOptionsMap(map)
+          }
+        } else {
+          setAttributeOptionsMap(new Map())
+        }
+
+        if (shouldPrefillFromExisting && initialData) {
+          const { data: existingAttrValues } = await supabase
+            .from('product_attribute_values')
+            .select('category_attribute_id, value_text, value_number, value_boolean')
+            .eq('product_id', initialData.product.id)
+
+          if (!active) return
+
+          const prefilledValues: AttributeValuesState = {}
+          for (const v of existingAttrValues ?? []) {
+            const attr = allAttrs.find(a => a.id === v.category_attribute_id)
+            if (!attr) continue
+            if (attr.attribute_type === 'boolean') prefilledValues[attr.id] = !!v.value_boolean
+            else if (attr.attribute_type === 'multiselect') prefilledValues[attr.id] = v.value_text ? v.value_text.split(',') : []
+            else if (attr.attribute_type === 'number') prefilledValues[attr.id] = v.value_number != null ? String(v.value_number) : ''
+            else prefilledValues[attr.id] = v.value_text ?? ''
+          }
+          setAttributeValues(prefilledValues)
+
+          const variantAttrIds = allAttrs.filter(a => a.applies_to_variant).map(a => a.id)
+          if (variantAttrIds.length > 0 && initialData.variants.length > 0) {
+            const variantIds = initialData.variants.map(v => v.id)
+            const { data: existingVariantAttrValues } = await supabase
+              .from('variant_attribute_values')
+              .select('variant_id, category_attribute_id, value_text')
+              .in('variant_id', variantIds)
+
+            if (!active) return
+
+            const byVariant = new Map<string, Record<number, string>>()
+            for (const v of existingVariantAttrValues ?? []) {
+              const bucket = byVariant.get(v.variant_id) ?? {}
+              bucket[v.category_attribute_id] = v.value_text ?? ''
+              byVariant.set(v.variant_id, bucket)
+            }
+
+            const prefilledDynamicRows: DynamicVariantRow[] = initialData.variants.map(v => ({
+              values: byVariant.get(v.id) ?? {},
+              stock: String(v.stock),
+              price: v.price_rdp !== null ? (v.price_rdp / 100).toString() : '',
+              imageUrl: v.image_url,
+            }))
+
+            setDynamicVariantRows(
+              prefilledDynamicRows.length > 0
+                ? prefilledDynamicRows
+                : [{ values: {}, stock: '', price: '', imageUrl: null }]
+            )
+          }
+        } else {
+          setAttributeValues({})
+          setDynamicVariantRows([{ values: {}, stock: '', price: '', imageUrl: null }])
+        }
+
+        setLoadingAttributes(false)
+      })
+
+    return () => { active = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.categoryId])
+
+  const handleAttributeChange = (attributeId: number, value: AttributeValue) => {
+    setAttributeValues(prev => ({ ...prev, [attributeId]: value }))
+  }
+
+  // Arma las filas de product_attribute_values a partir de attributeValues —
+  // multiselect se guarda como value_text separado por comas (mismo formato
+  // que se lee de vuelta en el prefill de arriba).
+  const buildAttributeValueRows = (productId: string) => {
+    const rows: { product_id: string; category_attribute_id: number; value_text: string | null; value_number: number | null; value_boolean: boolean | null }[] = []
+
+    for (const attr of fixedCategoryAttributes) {
+      const v = attributeValues[attr.id]
+      if (v === undefined) continue
+
+      if (attr.attribute_type === 'boolean') {
+        rows.push({ product_id: productId, category_attribute_id: attr.id, value_text: null, value_number: null, value_boolean: v as boolean })
+        continue
+      }
+
+      if (attr.attribute_type === 'multiselect') {
+        const arr = Array.isArray(v) ? v : []
+        if (arr.length === 0) continue
+        rows.push({ product_id: productId, category_attribute_id: attr.id, value_text: arr.join(','), value_number: null, value_boolean: null })
+        continue
+      }
+
+      const strVal = typeof v === 'string' ? v.trim() : ''
+      if (!strVal) continue
+
+      if (attr.attribute_type === 'number') {
+        const num = parseFloat(strVal)
+        if (isNaN(num)) continue
+        rows.push({ product_id: productId, category_attribute_id: attr.id, value_text: null, value_number: num, value_boolean: null })
+        continue
+      }
+
+      rows.push({ product_id: productId, category_attribute_id: attr.id, value_text: strVal, value_number: null, value_boolean: null })
+    }
+
+    return rows
+  }
 
   // Cargar categorías y provincias al montar
   useEffect(() => {
@@ -280,6 +537,18 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
       return
     }
 
+    const missingRequiredAttribute = fixedCategoryAttributes.find(attr => {
+      if (!attr.is_required) return false
+      const v = attributeValues[attr.id]
+      if (attr.attribute_type === 'boolean') return v === undefined
+      if (attr.attribute_type === 'multiselect') return !Array.isArray(v) || v.length === 0
+      return typeof v !== 'string' || v.trim() === ''
+    })
+    if (missingRequiredAttribute) {
+      setError(t('requiredAttributesMissing'))
+      return
+    }
+
     // Misma lógica que lib/validation.ts validateText() (longitud +
     // DANGEROUS_PATTERN), pero con el mensaje traducido — validateText
     // arma el string completo en español y lo comparten otros
@@ -356,9 +625,12 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
 
         if (updateError) throw updateError
       } else {
+        // status: 'draft' por defecto — el flujo de borrador/preview/publicar
+        // se conecta en un bloque aparte; is_active se calcula solo a partir
+        // de status (columna generada), nunca se envía directamente.
         const { data: newProduct, error: insertError } = await supabase
           .from('products')
-          .insert({ ...productPayload, is_active: true })
+          .insert({ ...productPayload, status: 'draft' })
           .select('id')
           .single()
 
@@ -366,35 +638,27 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
         productId = newProduct.id
       }
 
-      // Propagar la imagen subida en la primera fila de cada color hacia las
-      // demás filas del mismo color (case-insensitive) que no tengan imagen propia
-      const colorImageMap = new Map<string, string>()
-      for (const row of variantRows) {
-        const colorKey = row.color.trim().toLowerCase()
-        if (colorKey && row.imageUrl && !colorImageMap.has(colorKey)) {
-          colorImageMap.set(colorKey, row.imageUrl)
-        }
+      // Atributos fijos de la categoría (product_attribute_values) — en
+      // editar, reemplazar todas es seguro porque el product_id no cambia.
+      if (mode === 'editar') {
+        const { error: deleteAttrError } = await supabase
+          .from('product_attribute_values')
+          .delete()
+          .eq('product_id', productId)
+
+        if (deleteAttrError) console.error('[handleSubmit attribute values delete]', deleteAttrError)
       }
 
-      // Variantes (opcional) — filas sin talla ni color se descartan
-      const variantsPayload = variantRows
-        .filter(row => row.size.trim() || row.color.trim())
-        .map(row => {
-          const colorKey = row.color.trim().toLowerCase()
-          const imageUrl = row.imageUrl ?? (colorKey ? colorImageMap.get(colorKey) ?? null : null)
-          return {
-            product_id: productId,
-            size: row.size.trim() || null,
-            color: row.color.trim() || null,
-            stock: row.stock ? parseInt(row.stock) : 0,
-            price_rdp: row.price ? Math.round(parseFloat(row.price) * 100) : null,
-            image_url: imageUrl,
-            is_active: true,
-          }
-        })
+      const attributeValueRows = buildAttributeValueRows(productId)
+      if (attributeValueRows.length > 0) {
+        const { error: attrInsertError } = await supabase.from('product_attribute_values').insert(attributeValueRows)
+        if (attrInsertError) console.error('[handleSubmit attribute values]', attrInsertError)
+      }
 
       if (mode === 'editar') {
-        // Sin FK externa a product_variants — reemplazar todas es seguro
+        // Reemplazar todas las variantes es seguro — variant_attribute_values
+        // cuelga de variant_id y se limpia sola al borrar la variante (FK
+        // en cascada hacia product_variants.id).
         const { error: deleteError } = await supabase
           .from('product_variants')
           .delete()
@@ -403,9 +667,93 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
         if (deleteError) console.error('[handleSubmit variants delete]', deleteError)
       }
 
-      if (variantsPayload.length > 0) {
-        const { error: variantsError } = await supabase.from('product_variants').insert(variantsPayload)
-        if (variantsError) console.error('[handleSubmit variants]', variantsError)
+      if (variantCategoryAttributes.length > 0) {
+        // Variantes dinámicas — se insertan una por una para poder asociar
+        // el id real de cada fila con sus valores en variant_attribute_values.
+        const rowsToSave = dynamicVariantRows.filter(row =>
+          Object.values(row.values).some(v => v && v.trim())
+        )
+
+        const colorAttr = variantCategoryAttributes.find(a => a.attribute_key.toLowerCase() === 'color')
+        const colorImageMap = new Map<string, string>()
+        if (colorAttr) {
+          for (const row of rowsToSave) {
+            const colorVal = (row.values[colorAttr.id] ?? '').trim().toLowerCase()
+            if (colorVal && row.imageUrl && !colorImageMap.has(colorVal)) {
+              colorImageMap.set(colorVal, row.imageUrl)
+            }
+          }
+        }
+
+        const variantAttributeRows: { variant_id: string; category_attribute_id: number; value_text: string | null }[] = []
+
+        for (const row of rowsToSave) {
+          const colorVal = colorAttr ? (row.values[colorAttr.id] ?? '').trim().toLowerCase() : ''
+          const imageUrl = row.imageUrl ?? (colorVal ? colorImageMap.get(colorVal) ?? null : null)
+
+          const { data: insertedVariant, error: variantInsertError } = await supabase
+            .from('product_variants')
+            .insert({
+              product_id: productId,
+              size: null,
+              color: null,
+              stock: row.stock ? parseInt(row.stock) : 0,
+              price_rdp: row.price ? Math.round(parseFloat(row.price) * 100) : null,
+              image_url: imageUrl,
+              is_active: true,
+            })
+            .select('id')
+            .single()
+
+          if (variantInsertError || !insertedVariant) {
+            console.error('[handleSubmit dynamic variant]', variantInsertError)
+            continue
+          }
+
+          for (const attr of variantCategoryAttributes) {
+            const val = (row.values[attr.id] ?? '').trim()
+            if (!val) continue
+            variantAttributeRows.push({ variant_id: insertedVariant.id, category_attribute_id: attr.id, value_text: val })
+          }
+        }
+
+        if (variantAttributeRows.length > 0) {
+          const { error: variantAttrError } = await supabase.from('variant_attribute_values').insert(variantAttributeRows)
+          if (variantAttrError) console.error('[handleSubmit variant attribute values]', variantAttrError)
+        }
+      } else {
+        // Variantes fijas (Talla/Color) — comportamiento original sin cambios.
+        // Propagar la imagen subida en la primera fila de cada color hacia las
+        // demás filas del mismo color (case-insensitive) que no tengan imagen propia
+        const colorImageMap = new Map<string, string>()
+        for (const row of variantRows) {
+          const colorKey = row.color.trim().toLowerCase()
+          if (colorKey && row.imageUrl && !colorImageMap.has(colorKey)) {
+            colorImageMap.set(colorKey, row.imageUrl)
+          }
+        }
+
+        // Variantes (opcional) — filas sin talla ni color se descartan
+        const variantsPayload = variantRows
+          .filter(row => row.size.trim() || row.color.trim())
+          .map(row => {
+            const colorKey = row.color.trim().toLowerCase()
+            const imageUrl = row.imageUrl ?? (colorKey ? colorImageMap.get(colorKey) ?? null : null)
+            return {
+              product_id: productId,
+              size: row.size.trim() || null,
+              color: row.color.trim() || null,
+              stock: row.stock ? parseInt(row.stock) : 0,
+              price_rdp: row.price ? Math.round(parseFloat(row.price) * 100) : null,
+              image_url: imageUrl,
+              is_active: true,
+            }
+          })
+
+        if (variantsPayload.length > 0) {
+          const { error: variantsError } = await supabase.from('product_variants').insert(variantsPayload)
+          if (variantsError) console.error('[handleSubmit variants]', variantsError)
+        }
       }
 
       router.push('/dashboard/productos')
@@ -548,6 +896,23 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
             </select>
           </div>
 
+          {/* Atributos dinámicos de la categoría — solo aparece si el tipo
+              de producto seleccionado tiene category_attributes definidos */}
+          {loadingAttributes ? (
+            <div className="bg-white rounded-2xl border border-gray-100 p-6">
+              <p className="text-xs text-gray-400">{t('loadingAttributes')}</p>
+            </div>
+          ) : fixedCategoryAttributes.length > 0 && (
+            <div className="bg-white rounded-2xl border border-gray-100 p-6">
+              <ProductAttributesSection
+                attributes={fixedCategoryAttributes}
+                optionsMap={attributeOptionsMap}
+                values={attributeValues}
+                onChange={handleAttributeChange}
+              />
+            </div>
+          )}
+
           {/* Precio y stock */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
             <h2 className="text-sm font-semibold text-gray-700 mb-1">{t('priceInventoryHeading')}</h2>
@@ -603,7 +968,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               <h2 className="text-sm font-semibold text-gray-700">{t('variantsHeading')}</h2>
               <button
                 type="button"
-                onClick={addVariantRow}
+                onClick={variantCategoryAttributes.length > 0 ? addDynamicVariantRow : addVariantRow}
                 style={{ color: BRAND.blue }}
                 className="text-xs font-semibold bg-transparent border-none cursor-pointer"
               >
@@ -614,110 +979,228 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               {t('variantsHint')}
             </p>
 
-            {variantRows.map((row, i) => (
-              <div key={i} className="grid grid-cols-12 gap-2 items-end">
-                <div className="col-span-3">
-                  {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('sizeLabel')}</label>}
-                  <select
-                    value={customSizeIndexes.has(i) ? OTHER_SIZE : (PRESET_SIZES.includes(row.size) ? row.size : '')}
-                    onChange={e => handleSizeSelectChange(i, e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none bg-white"
-                  >
-                    <option value="" disabled>{t('sizeLabel')}</option>
-                    {PRESET_SIZES.map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                    <option value={OTHER_SIZE}>{t('sizeOtherOption')}</option>
-                  </select>
-                  {customSizeIndexes.has(i) && (
-                    <input
-                      value={row.size}
-                      onChange={e => updateVariantRow(i, 'size', e.target.value)}
-                      placeholder={t('sizeOtherPlaceholder')}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none mt-1.5"
-                      autoFocus
-                    />
-                  )}
-                </div>
-                <div className="col-span-3">
-                  {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('colorLabel')}</label>}
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      value={row.color}
-                      onChange={e => updateVariantRow(i, 'color', e.target.value)}
-                      placeholder={t('colorPlaceholder')}
-                      className="flex-1 min-w-0 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
-                    />
-                    {row.imageUrl ? (
-                      <div className="relative flex-shrink-0" style={{ width: 36, height: 36 }}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={row.imageUrl}
-                          alt={row.color || t('colorLabel')}
-                          className="w-full h-full rounded-lg object-cover border border-gray-200"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeVariantImage(i)}
-                          className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-black/60 text-white flex items-center justify-center leading-none"
-                          style={{ fontSize: 10 }}
-                          aria-label={t('removeImageAria')}
+            {variantCategoryAttributes.length > 0 ? (
+              // La categoría define atributos de variante (ej. Color +
+              // Capacidad) — cada uno es una columna en vez de Talla/Color fijos.
+              (() => {
+                const dynamicColSpan = Math.max(2, Math.floor(6 / variantCategoryAttributes.length))
+                const colorVariantAttr = variantCategoryAttributes.find(
+                  a => a.attribute_key.toLowerCase() === 'color'
+                )
+                return dynamicVariantRows.map((row, i) => (
+                  <div key={i} className="grid grid-cols-12 gap-2 items-end">
+                    {variantCategoryAttributes.map(attr => {
+                      const value = row.values[attr.id] ?? ''
+                      const options = attributeOptionsMap.get(attr.id) ?? []
+                      const isColorAttr = colorVariantAttr?.id === attr.id
+
+                      const fieldInput = attr.attribute_type === 'select' ? (
+                        <select
+                          value={value}
+                          onChange={e => updateDynamicVariantValue(i, attr.id, e.target.value)}
+                          className="w-full min-w-0 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none bg-white"
                         >
-                          ×
-                        </button>
-                      </div>
-                    ) : (
-                      <label
-                        className="flex-shrink-0 rounded-lg border border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors"
-                        style={{ width: 36, height: 36, fontSize: 14 }}
-                        title={t('uploadColorPhotoTitle')}
-                      >
-                        {uploadingVariantIndex === i ? '…' : '📷'}
+                          <option value="" disabled>{attr.attribute_label}</option>
+                          {options.map(opt => (
+                            <option key={opt.id} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                      ) : (
                         <input
-                          type="file"
-                          accept="image/*"
-                          onChange={e => handleVariantImageSelect(i, e)}
-                          className="hidden"
-                          disabled={uploadingVariantIndex === i}
+                          type={attr.attribute_type === 'number' ? 'number' : 'text'}
+                          value={value}
+                          onChange={e => updateDynamicVariantValue(i, attr.id, e.target.value)}
+                          placeholder={attr.attribute_label}
+                          className="w-full min-w-0 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
                         />
-                      </label>
+                      )
+
+                      return (
+                        <div key={attr.id} style={{ gridColumn: `span ${dynamicColSpan}` }}>
+                          {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{attr.attribute_label}</label>}
+                          {isColorAttr ? (
+                            <div className="flex items-center gap-1.5">
+                              <div className="flex-1 min-w-0">{fieldInput}</div>
+                              {row.imageUrl ? (
+                                <div className="relative flex-shrink-0" style={{ width: 36, height: 36 }}>
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={row.imageUrl}
+                                    alt={value || attr.attribute_label}
+                                    className="w-full h-full rounded-lg object-cover border border-gray-200"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => removeDynamicVariantImage(i)}
+                                    className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-black/60 text-white flex items-center justify-center leading-none"
+                                    style={{ fontSize: 10 }}
+                                    aria-label={t('removeImageAria')}
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ) : (
+                                <label
+                                  className="flex-shrink-0 rounded-lg border border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors"
+                                  style={{ width: 36, height: 36, fontSize: 14 }}
+                                  title={t('uploadColorPhotoTitle')}
+                                >
+                                  {uploadingDynamicVariantIndex === i ? '…' : '📷'}
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={e => handleDynamicVariantImageSelect(i, e)}
+                                    className="hidden"
+                                    disabled={uploadingDynamicVariantIndex === i}
+                                  />
+                                </label>
+                              )}
+                            </div>
+                          ) : fieldInput}
+                        </div>
+                      )
+                    })}
+                    <div className="col-span-2">
+                      {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('variantStockLabel')}</label>}
+                      <input
+                        type="number"
+                        min="0"
+                        value={row.stock}
+                        onChange={e => updateDynamicVariantField(i, 'stock', e.target.value)}
+                        placeholder="0"
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
+                      />
+                    </div>
+                    <div className="col-span-3">
+                      {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('variantPriceLabel')}</label>}
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={row.price}
+                        onChange={e => updateDynamicVariantField(i, 'price', e.target.value)}
+                        placeholder={t('variantPricePlaceholder')}
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
+                      />
+                    </div>
+                    <div className="col-span-1">
+                      <button
+                        type="button"
+                        onClick={() => removeDynamicVariantRow(i)}
+                        className="w-full h-9 rounded-lg border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-300 transition-colors"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                ))
+              })()
+            ) : (
+              variantRows.map((row, i) => (
+                <div key={i} className="grid grid-cols-12 gap-2 items-end">
+                  <div className="col-span-3">
+                    {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('sizeLabel')}</label>}
+                    <select
+                      value={customSizeIndexes.has(i) ? OTHER_SIZE : (PRESET_SIZES.includes(row.size) ? row.size : '')}
+                      onChange={e => handleSizeSelectChange(i, e.target.value)}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none bg-white"
+                    >
+                      <option value="" disabled>{t('sizeLabel')}</option>
+                      {PRESET_SIZES.map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                      <option value={OTHER_SIZE}>{t('sizeOtherOption')}</option>
+                    </select>
+                    {customSizeIndexes.has(i) && (
+                      <input
+                        value={row.size}
+                        onChange={e => updateVariantRow(i, 'size', e.target.value)}
+                        placeholder={t('sizeOtherPlaceholder')}
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none mt-1.5"
+                        autoFocus
+                      />
                     )}
                   </div>
+                  <div className="col-span-3">
+                    {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('colorLabel')}</label>}
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        value={row.color}
+                        onChange={e => updateVariantRow(i, 'color', e.target.value)}
+                        placeholder={t('colorPlaceholder')}
+                        className="flex-1 min-w-0 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
+                      />
+                      {row.imageUrl ? (
+                        <div className="relative flex-shrink-0" style={{ width: 36, height: 36 }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={row.imageUrl}
+                            alt={row.color || t('colorLabel')}
+                            className="w-full h-full rounded-lg object-cover border border-gray-200"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeVariantImage(i)}
+                            className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-black/60 text-white flex items-center justify-center leading-none"
+                            style={{ fontSize: 10 }}
+                            aria-label={t('removeImageAria')}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ) : (
+                        <label
+                          className="flex-shrink-0 rounded-lg border border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors"
+                          style={{ width: 36, height: 36, fontSize: 14 }}
+                          title={t('uploadColorPhotoTitle')}
+                        >
+                          {uploadingVariantIndex === i ? '…' : '📷'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={e => handleVariantImageSelect(i, e)}
+                            className="hidden"
+                            disabled={uploadingVariantIndex === i}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                  <div className="col-span-2">
+                    {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('variantStockLabel')}</label>}
+                    <input
+                      type="number"
+                      min="0"
+                      value={row.stock}
+                      onChange={e => updateVariantRow(i, 'stock', e.target.value)}
+                      placeholder="0"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
+                    />
+                  </div>
+                  <div className="col-span-3">
+                    {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('variantPriceLabel')}</label>}
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={row.price}
+                      onChange={e => updateVariantRow(i, 'price', e.target.value)}
+                      placeholder={t('variantPricePlaceholder')}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
+                    />
+                  </div>
+                  <div className="col-span-1">
+                    <button
+                      type="button"
+                      onClick={() => removeVariantRow(i)}
+                      className="w-full h-9 rounded-lg border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-300 transition-colors"
+                    >
+                      ×
+                    </button>
+                  </div>
                 </div>
-                <div className="col-span-2">
-                  {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('variantStockLabel')}</label>}
-                  <input
-                    type="number"
-                    min="0"
-                    value={row.stock}
-                    onChange={e => updateVariantRow(i, 'stock', e.target.value)}
-                    placeholder="0"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
-                  />
-                </div>
-                <div className="col-span-3">
-                  {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('variantPriceLabel')}</label>}
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={row.price}
-                    onChange={e => updateVariantRow(i, 'price', e.target.value)}
-                    placeholder={t('variantPricePlaceholder')}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
-                  />
-                </div>
-                <div className="col-span-1">
-                  <button
-                    type="button"
-                    onClick={() => removeVariantRow(i)}
-                    className="w-full h-9 rounded-lg border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-300 transition-colors"
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
             {variantImageError && <p className="text-xs text-red-600">{variantImageError}</p>}
           </div>
 

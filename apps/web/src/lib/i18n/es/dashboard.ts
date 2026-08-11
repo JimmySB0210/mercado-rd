@@ -124,6 +124,16 @@ export const dashboard = {
   descriptionLengthError: 'La descripción debe tener entre {min} y {max} caracteres',
   descriptionInvalidChars: 'La descripción contiene caracteres no permitidos',
 
+  // ─── Atributos dinámicos por categoría (ProductAttributesSection) ──
+  requiredAttributesHeading: 'Requerido',
+  recommendedAttributesHeading: 'Recomendado',
+  optionalAttributesHeading: 'Opcional',
+  selectAttributePlaceholder: 'Selecciona una opción',
+  booleanYes: 'Sí',
+  booleanNo: 'No',
+  loadingAttributes: 'Cargando campos de la categoría...',
+  requiredAttributesMissing: 'Completa los campos requeridos de la categoría (sección "Requerido")',
+
   // ─── pedidos/page.tsx ───────────────────────────────────────
   ordersPageTitle: 'Pedidos',
   orderCountOne: '{count} pedido total',

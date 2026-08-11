@@ -113,6 +113,15 @@ export const dashboard = {
   descriptionLengthError: 'The description must be between {min} and {max} characters',
   descriptionInvalidChars: 'The description contains characters that are not allowed',
 
+  requiredAttributesHeading: 'Required',
+  recommendedAttributesHeading: 'Recommended',
+  optionalAttributesHeading: 'Optional',
+  selectAttributePlaceholder: 'Select an option',
+  booleanYes: 'Yes',
+  booleanNo: 'No',
+  loadingAttributes: 'Loading category fields...',
+  requiredAttributesMissing: 'Complete the required category fields ("Required" section)',
+
   ordersPageTitle: 'Orders',
   orderCountOne: '{count} total order',
   orderCountOther: '{count} total orders',

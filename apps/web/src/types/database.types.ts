@@ -4,6 +4,8 @@
 // ============================================================
 
 export type VendorPlan = 'free' | 'pro' | 'enterprise'
+export type ProductStatus = 'draft' | 'published' | 'paused'
+export type CategoryAttributeType = 'text' | 'number' | 'select' | 'multiselect' | 'boolean'
 export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'shipped' | 'delivered' | 'cancelled'
 export type DeliveryType = 'standard' | 'express' | 'pickup'
 export type PaymentMethod = 'azul' | 'cardnet' | 'transfer' | 'cash'
@@ -127,6 +129,9 @@ export interface Product {
   stock: number
   sizes: string[]
   colors: string[]
+  status: ProductStatus
+  // is_active se calcula solo a partir de status (columna generada) —
+  // nunca se envía directamente desde el frontend, solo se lee.
   is_active: boolean
   rating_avg: number
   rating_count: number
@@ -146,6 +151,47 @@ export interface ProductVariant {
   image_url: string | null
   is_active: boolean
   created_at: string
+}
+
+// ─── Atributos dinámicos por categoría (tipos de producto) ────────────────────
+// Un tipo de producto (ej. Smartphones, Camisetas) define sus propios
+// campos vía category_attributes. Si una categoría no tiene ninguna fila
+// aquí, el formulario de producto se comporta igual que antes (sin
+// campos dinámicos).
+
+export interface CategoryAttribute {
+  id: number
+  category_id: number
+  attribute_key: string
+  attribute_label: string
+  attribute_type: CategoryAttributeType
+  unit: string | null
+  is_required: boolean
+  is_recommended: boolean
+  applies_to_variant: boolean
+  sort_order: number
+}
+
+export interface AttributeOption {
+  id: number
+  category_attribute_id: number
+  value: string
+  label: string
+  sort_order: number
+}
+
+export interface ProductAttributeValue {
+  product_id: string
+  category_attribute_id: number
+  value_text: string | null
+  value_number: number | null
+  value_boolean: boolean | null
+}
+
+export interface VariantAttributeValue {
+  variant_id: string
+  category_attribute_id: number
+  value_text: string | null
 }
 
 export interface Order {
