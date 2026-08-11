@@ -12,17 +12,26 @@ import { FeatureToggleButton } from '@/components/vendor/FeatureToggleButton'
 import { ProductActiveToggle } from '@/components/vendor/ProductActiveToggle'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { formatPrice } from '@/types/database.types'
+import type { ProductStatus } from '@/types/database.types'
+import { qualityTier, QUALITY_TIER_EMOJI, QUALITY_TIER_COLOR } from '@/lib/productQuality'
 import { BRAND } from '@/lib/colors'
 
 interface ProductRow {
   id: string
   name: string
   images: string[] | null
-  is_active: boolean
+  status: ProductStatus
   stock: number
   price_rdp: number
   sold_count: number
   is_featured: boolean | null
+  qualityPercent: number
+}
+
+const STATUS_BADGE_STYLE: Record<ProductStatus, { bg: string; text: string }> = {
+  draft: { bg: '#E0E7FF', text: '#3730a3' },
+  published: { bg: '#DCFCE7', text: '#166534' },
+  paused: { bg: '#F3F4F6', text: '#666' },
 }
 
 interface Props {
@@ -74,11 +83,15 @@ export function ProductosContent({ products, isPro }: Props) {
                 ) : (
                   <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>📦</div>
                 )}
-                {!p.is_active && (
-                  <span style={{ position: 'absolute', top: 8, left: 8, background: '#666', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 4 }}>
-                    {t('inactiveBadge')}
-                  </span>
-                )}
+                <span
+                  style={{
+                    position: 'absolute', top: 8, left: 8,
+                    background: STATUS_BADGE_STYLE[p.status].bg, color: STATUS_BADGE_STYLE[p.status].text,
+                    fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 4,
+                  }}
+                >
+                  {p.status === 'draft' ? t('draftBadge') : p.status === 'published' ? t('publishedBadge') : t('pausedBadge')}
+                </span>
                 {p.stock === 0 && (
                   <span style={{ position: 'absolute', top: 8, right: 8, background: BRAND.red, color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 4 }}>
                     {t('outOfStockBadge')}
@@ -92,9 +105,21 @@ export function ProductosContent({ products, isPro }: Props) {
                 <div style={{ fontWeight: 700, fontSize: 15, color: '#111', marginBottom: 4 }}>
                   {formatPrice(p.price_rdp)}
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#999', marginBottom: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#999', marginBottom: 6 }}>
                   <span>{t('stockCountLabel', { count: p.stock })}</span>
                   <span>{t('soldCountLabel', { count: p.sold_count })}</span>
+                </div>
+                <div style={{ marginBottom: 10 }}>
+                  <span
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                      background: QUALITY_TIER_COLOR[qualityTier(p.qualityPercent)].bg,
+                      color: QUALITY_TIER_COLOR[qualityTier(p.qualityPercent)].text,
+                      fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10,
+                    }}
+                  >
+                    {QUALITY_TIER_EMOJI[qualityTier(p.qualityPercent)]} {t('publishQualityLabel', { percent: p.qualityPercent })}
+                  </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                   <FeatureToggleButton
@@ -109,7 +134,7 @@ export function ProductosContent({ products, isPro }: Props) {
                     >
                       {t('editLink')}
                     </a>
-                    <ProductActiveToggle productId={p.id} initialActive={p.is_active} />
+                    <ProductActiveToggle productId={p.id} status={p.status} />
                   </div>
                 </div>
               </div>

@@ -17,6 +17,8 @@ import { validateImageFile, getImageDimensions, uploadProductImage, MIN_PRODUCT_
 import { DANGEROUS_PATTERN } from '@/lib/validation'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { ProductAttributesSection, type AttributeValue, type AttributeValuesState } from '@/components/dashboard/ProductAttributesSection'
+import { ProductPreviewModal } from '@/components/dashboard/ProductPreviewModal'
+import { computePublishQuality, qualityTier, QUALITY_TIER_EMOJI, QUALITY_TIER_COLOR } from '@/lib/productQuality'
 import { BRAND } from '@/lib/colors'
 import type { Product, ProductVariant, CategoryAttribute, AttributeOption } from '@/types/database.types'
 
@@ -24,6 +26,7 @@ interface Category {
   id: number
   name: string
   emoji: string
+  slug: string
 }
 
 interface Province {
@@ -442,10 +445,119 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     return rows
   }
 
+  // Calidad de publicación en vivo — misma fórmula que la lista
+  // (lib/productQuality.ts), aplicada al estado actual del formulario en
+  // vez de a filas ya guardadas en la BD.
+  const requiredAttrs = fixedCategoryAttributes.filter(a => a.is_required)
+  const recommendedAttrs = fixedCategoryAttributes.filter(a => !a.is_required && a.is_recommended)
+  const isAttrFilled = (attr: CategoryAttribute) => {
+    const v = attributeValues[attr.id]
+    if (attr.attribute_type === 'boolean') return v !== undefined
+    if (attr.attribute_type === 'multiselect') return Array.isArray(v) && v.length > 0
+    return typeof v === 'string' && v.trim() !== ''
+  }
+  const qualityPercent = computePublishQuality({
+    totalRequired: requiredAttrs.length,
+    filledRequired: requiredAttrs.filter(isAttrFilled).length,
+    totalRecommended: recommendedAttrs.length,
+    filledRecommended: recommendedAttrs.filter(isAttrFilled).length,
+    hasPhoto: totalImageCount > 0,
+    hasDescription: form.description.trim() !== '',
+  })
+
+  // ─── Vista previa (sin guardar) ───────────────────────────────────────
+  const [showPreview, setShowPreview] = useState(false)
+  const [previewVendor, setPreviewVendor] = useState<{
+    id: string; business_name: string; is_verified: boolean
+    whatsapp?: string; rating_avg?: number; total_sales?: number
+  } | null>(null)
+  const [loadingPreviewVendor, setLoadingPreviewVendor] = useState(false)
+
+  const canPreview = mode === 'editar' && initialData?.product.status === 'draft'
+
+  const handleOpenPreview = async () => {
+    if (!previewVendor) {
+      setLoadingPreviewVendor(true)
+      const { data } = await supabase
+        .from('vendors')
+        .select('id, business_name, is_verified, whatsapp, rating_avg, total_sales')
+        .eq('id', vendorId)
+        .single()
+      setLoadingPreviewVendor(false)
+      if (data) setPreviewVendor(data)
+    }
+    setShowPreview(true)
+  }
+
+  const buildPreviewData = () => {
+    const selectedCategory = categories.find(c => String(c.id) === form.categoryId)
+    const selectedProvince = provinces.find(p => String(p.id) === form.provinceId)
+    const previewImages = [...existingImageUrls, ...imagePreviews]
+    const priceRdp = form.price ? Math.round(parseFloat(form.price) * 100) : 0
+    const compareRdp = form.comparePrice ? Math.round(parseFloat(form.comparePrice) * 100) : null
+    const previewProductId = initialData?.product.id ?? 'preview'
+
+    const previewProduct = {
+      id: previewProductId,
+      vendor_id: vendorId,
+      category_id: form.categoryId ? parseInt(form.categoryId) : null,
+      province_id: form.provinceId ? parseInt(form.provinceId) : null,
+      name: form.name || t('previewUntitledProduct'),
+      description: form.description || null,
+      price_rdp: priceRdp,
+      compare_rdp: compareRdp,
+      images: previewImages,
+      stock: form.stock ? parseInt(form.stock) : 0,
+      sizes: [],
+      colors: [],
+      status: initialData?.product.status ?? 'draft',
+      is_active: false,
+      rating_avg: 0,
+      rating_count: 0,
+      sold_count: 0,
+      view_count: 0,
+      created_at: initialData?.product.created_at ?? new Date().toISOString(),
+      category: selectedCategory ? { slug: selectedCategory.slug, emoji: selectedCategory.emoji, name: selectedCategory.name } : null,
+      province: selectedProvince ? { name: selectedProvince.name } : null,
+    }
+
+    const previewVariants = variantCategoryAttributes.length > 0
+      ? dynamicVariantRows
+          .filter(row => Object.values(row.values).some(v => v && v.trim()))
+          .map((row, i) => ({
+            id: `preview-dynamic-${i}`,
+            product_id: previewProductId,
+            size: null,
+            color: null,
+            stock: row.stock ? parseInt(row.stock) : 0,
+            price_rdp: row.price ? Math.round(parseFloat(row.price) * 100) : null,
+            sku: null,
+            image_url: row.imageUrl,
+            is_active: true,
+            created_at: new Date().toISOString(),
+          }))
+      : variantRows
+          .filter(row => row.size.trim() || row.color.trim())
+          .map((row, i) => ({
+            id: `preview-fixed-${i}`,
+            product_id: previewProductId,
+            size: row.size.trim() || null,
+            color: row.color.trim() || null,
+            stock: row.stock ? parseInt(row.stock) : 0,
+            price_rdp: row.price ? Math.round(parseFloat(row.price) * 100) : null,
+            sku: null,
+            image_url: row.imageUrl,
+            is_active: true,
+            created_at: new Date().toISOString(),
+          }))
+
+    return { previewProduct, previewVariants }
+  }
+
   // Cargar categorías y provincias al montar
   useEffect(() => {
     Promise.all([
-      supabase.from('categories').select('id, name, emoji').order('sort_order'),
+      supabase.from('categories').select('id, name, emoji, slug').order('sort_order'),
       supabase.from('provinces_rd').select('id, name').order('name'),
     ]).then(([{ data: cats }, { data: provs }]) => {
       setCategories(cats ?? [])
@@ -772,6 +884,37 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     }
   }
 
+  // Publicar directamente (status: draft → published) — acción
+  // independiente de "Guardar cambios", no reenvía el resto del
+  // formulario. Advierte si la calidad de publicación es baja, pero no
+  // bloquea: no todos los campos son obligatorios.
+  const [publishing, setPublishing] = useState(false)
+
+  const handlePublish = async () => {
+    if (!initialData) return
+
+    if (qualityPercent < 40) {
+      const confirmed = window.confirm(t('lowQualityPublishConfirm', { percent: qualityPercent }))
+      if (!confirmed) return
+    }
+
+    setPublishing(true)
+    const { error: publishError } = await supabase
+      .from('products')
+      .update({ status: 'published' })
+      .eq('id', initialData.product.id)
+    setPublishing(false)
+
+    if (publishError) {
+      console.error('[handlePublish]', publishError)
+      setError(t('publishError'))
+      return
+    }
+
+    router.push('/dashboard/productos')
+    router.refresh()
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -785,7 +928,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
       <div className="max-w-2xl mx-auto px-4 py-8">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-start justify-between mb-6 flex-wrap gap-3">
           <div>
             <a
               href={mode === 'editar' ? '/dashboard/productos' : '/dashboard'}
@@ -798,7 +941,45 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               {mode === 'editar' ? t('editProductTitle') : t('newProductTitle')}
             </h1>
           </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                background: QUALITY_TIER_COLOR[qualityTier(qualityPercent)].bg,
+                color: QUALITY_TIER_COLOR[qualityTier(qualityPercent)].text,
+                fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 10,
+              }}
+            >
+              {QUALITY_TIER_EMOJI[qualityTier(qualityPercent)]} {t('publishQualityLabel', { percent: qualityPercent })}
+            </span>
+            {canPreview && (
+              <button
+                type="button"
+                onClick={handleOpenPreview}
+                disabled={loadingPreviewVendor}
+                style={{
+                  fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 10,
+                  background: '#fff', border: `1px solid ${BRAND.blue}`, color: BRAND.blue,
+                  cursor: loadingPreviewVendor ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {t('previewButton')}
+              </button>
+            )}
+          </div>
         </div>
+
+        {showPreview && (() => {
+          const { previewProduct, previewVariants } = buildPreviewData()
+          return (
+            <ProductPreviewModal
+              product={previewProduct as any}
+              vendor={previewVendor ?? undefined}
+              variants={previewVariants as any}
+              onClose={() => setShowPreview(false)}
+            />
+          )
+        })()}
 
         <form onSubmit={handleSubmit} className="space-y-4">
 
@@ -1223,16 +1404,30 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={saving}
-            style={{ background: saving ? '#ccc' : BRAND.blue }}
-            className="w-full text-white font-medium py-3.5 rounded-xl transition-colors"
-          >
-            {mode === 'editar'
-              ? (saving ? t('savingChanges') : t('saveChanges'))
-              : (saving ? t('publishing') : t('publishProduct'))}
-          </button>
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              disabled={saving}
+              style={{ background: saving ? '#ccc' : BRAND.blue }}
+              className="flex-1 text-white font-medium py-3.5 rounded-xl transition-colors"
+            >
+              {mode === 'editar'
+                ? (saving ? t('savingChanges') : t('saveChanges'))
+                : (saving ? t('savingDraft') : t('saveDraftButton'))}
+            </button>
+
+            {canPreview && (
+              <button
+                type="button"
+                onClick={handlePublish}
+                disabled={publishing}
+                style={{ background: publishing ? '#ccc' : BRAND.green }}
+                className="flex-1 text-white font-medium py-3.5 rounded-xl transition-colors"
+              >
+                {publishing ? t('publishing') : t('publishProduct')}
+              </button>
+            )}
+          </div>
 
         </form>
       </div>
