@@ -6,6 +6,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import { PLACEHOLDER_PRODUCT_IMAGE } from '@/lib/utils'
 
 interface Props {
   images: string[]
@@ -13,8 +14,7 @@ interface Props {
 }
 
 export function ProductGallery({ images, name }: Props) {
-  const fallback = '/placeholder-product.png'
-  const all = images.length > 0 ? images : [fallback]
+  const all = images.length > 0 ? images : [PLACEHOLDER_PRODUCT_IMAGE]
   const [selected, setSelected] = useState(0)
 
   return (

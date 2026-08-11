@@ -16,8 +16,7 @@ import Link from 'next/link'
 import { formatPrice, discountPercent, type ProductWithVendor } from '@/types/database.types'
 import { WishlistButton } from '@/components/shop/WishlistButton'
 import { useTranslation } from '@/lib/hooks/useTranslation'
-
-const FALLBACK_IMAGE = '/placeholder-product.png'
+import { PLACEHOLDER_PRODUCT_IMAGE } from '@/lib/utils'
 
 interface Props {
   product: ProductWithVendor
@@ -25,7 +24,7 @@ interface Props {
 
 export function ProductCard({ product }: Props) {
   const { t } = useTranslation('products')
-  const [imgSrc, setImgSrc] = useState(product.images?.[0] ?? FALLBACK_IMAGE)
+  const [imgSrc, setImgSrc] = useState(product.images?.[0] ?? PLACEHOLDER_PRODUCT_IMAGE)
   const hasDiscount = product.compare_rdp && product.compare_rdp > product.price_rdp
   const discount = hasDiscount
     ? discountPercent(product.price_rdp, product.compare_rdp!)
@@ -45,7 +44,7 @@ export function ProductCard({ product }: Props) {
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            onError={() => setImgSrc(FALLBACK_IMAGE)}
+            onError={() => setImgSrc(PLACEHOLDER_PRODUCT_IMAGE)}
           />
           {discount && (
             <span

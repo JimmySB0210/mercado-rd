@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "dev:clean": "rm -rf .next && next dev",
-    "build": "next build",
+    "build": "npm run check-navbar && next build",
+    "check-navbar": "node scripts/check-navbar.js",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit"
