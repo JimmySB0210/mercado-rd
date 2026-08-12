@@ -197,10 +197,25 @@ export const admin = {
     closed: 'Cerrada',
   },
 
+  // app/admin/auditoria/page.tsx
+  auditPageTitle: 'Bitácora de auditoría',
+  auditPageSubtitle: 'Eventos del sistema, más recientes primero',
+  auditTableTitle: 'Eventos ({count})',
+  noAuditLogsMatchFilters: 'Ningún evento coincide con estos filtros.',
+  allEventTypesOption: 'Todos los tipos de evento',
+  dateFromLabel: 'Desde',
+  dateToLabel: 'Hasta',
+  auditActorLabel: 'Actor:',
+  auditTargetLabel: 'Destino:',
+  auditMetadataLabel: 'Ver metadata',
+  systemActorFallback: 'Sistema',
+  unknownActorFallback: 'Usuario desconocido',
+
   // components/admin/AdminSidebar.tsx
   navOverview: 'Resumen',
   navProviders: 'Proveedores',
   navPromotions: 'Promociones',
+  navAudit: 'Auditoría',
   adminPanelLabel: '🛡️ Panel de administración',
   backToVendorPanelLink: '← Mi panel de vendedor',
   openMenuAria: 'Abrir menú del panel',

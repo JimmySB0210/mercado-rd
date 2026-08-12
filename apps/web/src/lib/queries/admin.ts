@@ -369,6 +369,85 @@ export async function getRecentOrders(limit = 20): Promise<AdminOrderRow[]> {
   }))
 }
 
+// ─── Bitácora de auditoría (/admin/auditoria) ────────────────────────────────
+
+export interface AuditLogRow {
+  id: string
+  event_type: string
+  actor_id: string | null
+  actor_name: string | null
+  target_type: string | null
+  target_id: string | null
+  metadata: Record<string, unknown> | null
+  created_at: string
+}
+
+export interface AuditLogFilters {
+  eventType?: string
+  dateFrom?: string // fecha (YYYY-MM-DD), inclusive desde las 00:00
+  dateTo?: string   // fecha (YYYY-MM-DD), inclusive hasta las 23:59:59
+}
+
+export async function getAuditLogs(filters: AuditLogFilters = {}, limit = 200): Promise<AuditLogRow[]> {
+  const supabase = await createServerClient()
+
+  let query = supabase
+    .from('audit_logs')
+    .select('id, event_type, actor_id, target_type, target_id, metadata, created_at')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (filters.eventType) query = query.eq('event_type', filters.eventType)
+  if (filters.dateFrom) query = query.gte('created_at', `${filters.dateFrom}T00:00:00.000Z`)
+  if (filters.dateTo) query = query.lte('created_at', `${filters.dateTo}T23:59:59.999Z`)
+
+  const { data: logs, error } = await query
+
+  if (error || !logs) {
+    console.error('[getAuditLogs]', error)
+    return []
+  }
+
+  // Nombre del actor — consulta separada (no embebida), mismo patrón
+  // seguro usado en el resto del panel admin para evitar problemas de
+  // RLS-embedding contra la tabla users.
+  const actorIds = [...new Set(logs.map(l => l.actor_id).filter((id): id is string => !!id))]
+  const { data: actors } = actorIds.length > 0
+    ? await supabase.from('users').select('id, full_name').in('id', actorIds)
+    : { data: [] as { id: string; full_name: string }[] }
+
+  const actorMap = new Map((actors ?? []).map(a => [a.id, a.full_name]))
+
+  return logs.map(l => ({
+    id: l.id,
+    event_type: l.event_type,
+    actor_id: l.actor_id,
+    actor_name: l.actor_id ? (actorMap.get(l.actor_id) ?? null) : null,
+    target_type: l.target_type,
+    target_id: l.target_id,
+    metadata: l.metadata as Record<string, unknown> | null,
+    created_at: l.created_at,
+  }))
+}
+
+// Valores distintos de event_type ya presentes en la tabla — para poblar
+// el dropdown de filtro. Sin RPC de "distinct": se trae la tabla completa
+// (aceptable para un log de auditoría interno de bajo volumen) y se
+// deduplica en memoria, mismo criterio pragmático que ya usa el resto
+// de este archivo (ej. getAllVendors contando productos en memoria).
+export async function getDistinctAuditEventTypes(): Promise<string[]> {
+  const supabase = await createServerClient()
+
+  const { data, error } = await supabase.from('audit_logs').select('event_type')
+
+  if (error || !data) {
+    console.error('[getDistinctAuditEventTypes]', error)
+    return []
+  }
+
+  return [...new Set(data.map(d => d.event_type))].sort()
+}
+
 export interface AbandonedCartRow {
   id: string
   user_id: string

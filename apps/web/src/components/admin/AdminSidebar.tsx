@@ -14,10 +14,11 @@ import { BRAND } from '@/lib/colors'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { LanguageSwitcher } from '@/components/shop/LanguageSwitcher'
-const NAV_ITEM_KEYS: { icon: string; labelKey: 'navOverview' | 'navProviders' | 'navPromotions'; href: string }[] = [
+const NAV_ITEM_KEYS: { icon: string; labelKey: 'navOverview' | 'navProviders' | 'navPromotions' | 'navAudit'; href: string }[] = [
   { icon: '📊', labelKey: 'navOverview', href: '/admin' },
   { icon: '🏪', labelKey: 'navProviders', href: '/admin/proveedores' },
   { icon: '🖼️', labelKey: 'navPromotions', href: '/admin/promociones' },
+  { icon: '📋', labelKey: 'navAudit', href: '/admin/auditoria' },
 ]
 
 export function AdminSidebar() {
