@@ -90,10 +90,17 @@ export const profile = {
   messagesTitle: 'Messages',
   noMessagesYet: 'There are no messages in this dispute yet.',
   senderVendorLabel: 'Vendor',
+  senderBuyerLabel: 'Buyer',
   disputeClosedNotice: 'This dispute is {status} — no more messages can be sent.',
   messagePlaceholder: 'Write a message...',
   sendButton: 'Send',
   sendMessageError: "Couldn't send the message. Try again.",
+
+  attachPhotoAria: 'Attach photo',
+  removeAttachmentAria: 'Remove photo',
+  viewAttachmentAria: 'View attached photo',
+  uploadingAttachmentsLabel: 'Uploading photos...',
+  attachmentUploadError: "Couldn't upload one of the photos. Try again.",
 
   loadingEvidence: 'Loading evidence...',
   announcedProductHeading: '📦 What was advertised',

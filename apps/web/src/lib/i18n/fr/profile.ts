@@ -90,10 +90,17 @@ export const profile = {
   messagesTitle: 'Messages',
   noMessagesYet: "Il n'y a pas encore de messages dans ce litige.",
   senderVendorLabel: 'Vendeur',
+  senderBuyerLabel: 'Acheteur',
   disputeClosedNotice: 'Ce litige est {status} — plus aucun message ne peut être envoyé.',
   messagePlaceholder: 'Écrivez un message...',
   sendButton: 'Envoyer',
   sendMessageError: "Impossible d'envoyer le message. Réessayez.",
+
+  attachPhotoAria: 'Joindre une photo',
+  removeAttachmentAria: 'Retirer la photo',
+  viewAttachmentAria: 'Voir la photo jointe',
+  uploadingAttachmentsLabel: 'Téléchargement des photos...',
+  attachmentUploadError: "Impossible de télécharger l'une des photos. Réessayez.",
 
   loadingEvidence: 'Chargement des preuves...',
   announcedProductHeading: '📦 Ce qui était annoncé',

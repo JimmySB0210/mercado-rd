@@ -103,10 +103,19 @@ export const profile = {
   messagesTitle: 'Mensajes',
   noMessagesYet: 'Aún no hay mensajes en esta disputa.',
   senderVendorLabel: 'Vendedor',
+  senderBuyerLabel: 'Comprador',
   disputeClosedNotice: 'Esta disputa está {status} — no se pueden enviar más mensajes.',
   messagePlaceholder: 'Escribe un mensaje...',
   sendButton: 'Enviar',
   sendMessageError: 'No se pudo enviar el mensaje. Intenta de nuevo.',
+
+  // components/order/DisputeMessageThread.tsx — hilo + composer, compartido
+  // entre esta página y la vista de admin
+  attachPhotoAria: 'Adjuntar foto',
+  removeAttachmentAria: 'Quitar foto',
+  viewAttachmentAria: 'Ver foto adjunta',
+  uploadingAttachmentsLabel: 'Subiendo fotos...',
+  attachmentUploadError: 'No se pudo subir una de las fotos. Intenta de nuevo.',
 
   // components/order/DisputeEvidenceCard.tsx — evidencia objetiva de la
   // disputa, compartida entre esta página y la vista de admin

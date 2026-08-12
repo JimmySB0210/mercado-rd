@@ -124,6 +124,50 @@ export async function uploadBanner(file: File): Promise<UploadResult> {
   return { url: data.publicUrl, error: null }
 }
 
+// ─── Evidencia de disputa (bucket privado) ──────────────────────────────────
+// dispute-evidence NO es público como products/vendors/avatars/banners — no
+// existe getPublicUrl() aquí. Solo se guarda la ruta relativa
+// ({disputeId}/{filename}); para mostrar la imagen hay que pedir una URL
+// firmada aparte (getDisputeEvidenceSignedUrl) justo antes de renderizarla,
+// porque las firmadas expiran.
+export async function uploadDisputeEvidence(
+  file: File,
+  disputeId: string
+): Promise<{ path: string; error: null } | { path: null; error: string }> {
+  const supabase = createClient()
+  const ext = file.name.split('.').pop()
+  const filename = `${disputeId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+
+  const { error } = await supabase.storage
+    .from('dispute-evidence')
+    .upload(filename, file, { upsert: false })
+
+  if (error) return { path: null, error: error.message }
+  return { path: filename, error: null }
+}
+
+const DISPUTE_EVIDENCE_SIGNED_URL_TTL_SECONDS = 3600
+
+export async function getDisputeEvidenceSignedUrls(paths: string[]): Promise<Map<string, string>> {
+  const map = new Map<string, string>()
+  if (paths.length === 0) return map
+
+  const supabase = createClient()
+  const { data, error } = await supabase.storage
+    .from('dispute-evidence')
+    .createSignedUrls(paths, DISPUTE_EVIDENCE_SIGNED_URL_TTL_SECONDS)
+
+  if (error || !data) {
+    console.error('[getDisputeEvidenceSignedUrls]', error)
+    return map
+  }
+
+  for (const entry of data) {
+    if (entry.signedUrl && !entry.error) map.set(entry.path ?? '', entry.signedUrl)
+  }
+  return map
+}
+
 // ─── Eliminar imagen ────────────────────────────────────────────────────────
 export async function deleteImage(
   bucket: 'products' | 'vendors' | 'avatars' | 'banners',

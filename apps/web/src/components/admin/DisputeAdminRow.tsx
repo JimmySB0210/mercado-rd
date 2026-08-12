@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { formatDate } from '@/lib/utils'
 import { DisputeEvidenceCard } from '@/components/order/DisputeEvidenceCard'
+import { DisputeMessageThread } from '@/components/order/DisputeMessageThread'
 import { BRAND } from '@/lib/colors'
 
 interface Props {
@@ -78,6 +79,10 @@ export function DisputeAdminRow({ disputeId, orderId, vendorId, reason, descript
 
       <div style={{ marginBottom: 10 }}>
         <DisputeEvidenceCard orderId={orderId} vendorId={vendorId} />
+      </div>
+
+      <div style={{ marginBottom: 10 }}>
+        <DisputeMessageThread disputeId={disputeId} senderRole="admin" status={status} />
       </div>
 
       <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>

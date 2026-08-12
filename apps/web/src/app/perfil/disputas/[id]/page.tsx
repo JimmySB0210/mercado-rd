@@ -4,11 +4,12 @@
 // Ruta: src/app/perfil/disputas/[id]/page.tsx
 // ============================================================
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Navbar } from '@/components/shop/Navbar'
 import { DisputeEvidenceCard } from '@/components/order/DisputeEvidenceCard'
+import { DisputeMessageThread } from '@/components/order/DisputeMessageThread'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { formatDate } from '@/lib/utils'
 import { BRAND } from '@/lib/colors'
@@ -21,14 +22,6 @@ interface DisputeDetail {
   description: string
   status: string
   resolution: string | null
-  created_at: string
-}
-
-interface MessageRow {
-  id: string
-  sender_id: string
-  sender_role: string
-  message: string
   created_at: string
 }
 
@@ -46,16 +39,10 @@ export default function DisputeDetailPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
   const supabase = createClient()
-  const bottomRef = useRef<HTMLDivElement>(null)
   const { t, language } = useTranslation('profile')
 
-  const [userId, setUserId] = useState<string | null>(null)
   const [dispute, setDispute] = useState<DisputeDetail | null>(null)
-  const [messages, setMessages] = useState<MessageRow[]>([])
   const [loading, setLoading] = useState(true)
-  const [newMessage, setNewMessage] = useState('')
-  const [sending, setSending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   const load = async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -63,7 +50,6 @@ export default function DisputeDetailPage() {
       router.push(`/login?redirect=/perfil/disputas/${params.id}`)
       return
     }
-    setUserId(user.id)
 
     const { data: disputeData, error: disputeError } = await supabase
       .from('disputes')
@@ -77,14 +63,6 @@ export default function DisputeDetailPage() {
       return
     }
     setDispute(disputeData)
-
-    const { data: messagesData } = await supabase
-      .from('dispute_messages')
-      .select('id, sender_id, sender_role, message, created_at')
-      .eq('dispute_id', params.id)
-      .order('created_at', { ascending: true })
-
-    setMessages(messagesData ?? [])
     setLoading(false)
   }
 
@@ -92,36 +70,6 @@ export default function DisputeDetailPage() {
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id])
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
-  const handleSend = async () => {
-    if (!newMessage.trim() || !userId || !dispute) return
-    setSending(true)
-    setError(null)
-
-    const { error: insertError } = await supabase
-      .from('dispute_messages')
-      .insert({
-        dispute_id: dispute.id,
-        sender_id: userId,
-        sender_role: 'buyer',
-        message: newMessage.trim(),
-      })
-
-    if (insertError) {
-      console.error('[DisputeDetailPage send]', insertError)
-      setError(t('sendMessageError'))
-      setSending(false)
-      return
-    }
-
-    setNewMessage('')
-    setSending(false)
-    load()
-  }
 
   if (loading) {
     return (
@@ -194,73 +142,7 @@ export default function DisputeDetailPage() {
         </div>
 
         {/* Hilo de mensajes */}
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-          <div className="px-5 py-3 border-b border-gray-100">
-            <span className="text-sm font-semibold text-gray-900">{t('messagesTitle')}</span>
-          </div>
-
-          <div className="px-5 py-4 flex flex-col gap-3" style={{ maxHeight: 380, overflowY: 'auto' }}>
-            {messages.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-6">{t('noMessagesYet')}</p>
-            ) : (
-              messages.map(m => {
-                const isMine = m.sender_id === userId
-                return (
-                  <div key={m.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                    <div
-                      className="max-w-[75%] rounded-2xl px-4 py-2.5"
-                      style={{ background: isMine ? BRAND.blue : '#f1f1f1', color: isMine ? '#fff' : '#111' }}
-                    >
-                      {!isMine && (
-                        <p className="text-xs font-semibold mb-0.5" style={{ color: BRAND.blue }}>
-                          {m.sender_role === 'admin' ? 'MercadoRD' : t('senderVendorLabel')}
-                        </p>
-                      )}
-                      <p className="text-sm leading-relaxed whitespace-pre-line">{m.message}</p>
-                      <p className="text-[11px] mt-1" style={{ color: isMine ? 'rgba(255,255,255,0.7)' : '#999' }}>
-                        {formatDate(m.created_at, language, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}
-                      </p>
-                    </div>
-                  </div>
-                )
-              })
-            )}
-            <div ref={bottomRef} />
-          </div>
-
-          {isClosed ? (
-            <div className="px-5 py-4 border-t border-gray-100 bg-gray-50 text-center">
-              <p className="text-sm text-gray-500">
-                {t('disputeClosedNotice', { status: statusLabel.toLowerCase() })}
-              </p>
-            </div>
-          ) : (
-            <div className="px-5 py-4 border-t border-gray-100">
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 mb-2">
-                  {error}
-                </div>
-              )}
-              <div className="flex gap-2">
-                <input
-                  value={newMessage}
-                  onChange={e => setNewMessage(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') handleSend() }}
-                  placeholder={t('messagePlaceholder')}
-                  className="flex-1 border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
-                />
-                <button
-                  onClick={handleSend}
-                  disabled={sending || !newMessage.trim()}
-                  style={{ background: sending || !newMessage.trim() ? '#ccc' : BRAND.blue }}
-                  className="text-white font-medium px-5 rounded-lg text-sm border-none cursor-pointer"
-                >
-                  {t('sendButton')}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+        <DisputeMessageThread disputeId={dispute.id} senderRole="buyer" status={dispute.status} />
       </main>
     </div>
   )
