@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 import { DashboardSidebar } from '@/components/vendor/DashboardSidebar'
 import { OrderStatusSelect } from '@/components/vendor/OrderStatusSelect'
 import { TrackingForm } from '@/components/vendor/TrackingForm'
+import { DeliveryOtpForm } from '@/components/vendor/DeliveryOtpForm'
 import { formatPrice } from '@/types/database.types'
 import { formatDate } from '@/lib/utils'
 import { BRAND } from '@/lib/colors'
@@ -296,6 +297,10 @@ export default function VendorOrdersPage() {
                           initialTracking={order.tracking_number}
                           initialCourier={order.courier}
                         />
+                      )}
+
+                      {order.status === 'shipped' && (
+                        <DeliveryOtpForm orderId={order.order_id} />
                       )}
                     </div>
                   )}

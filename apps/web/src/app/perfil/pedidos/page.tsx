@@ -291,6 +291,17 @@ export default function MyOrdersPage() {
                     </div>
                   )}
 
+                  {order.status === 'shipped' && (
+                    <div className="px-5 py-3 bg-amber-50 border-t border-amber-100">
+                      <p className="text-sm font-semibold" style={{ color: BRAND.dark }}>
+                        {t('deliveryOtpSentTitle')}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {t('deliveryOtpSentHint')}
+                      </p>
+                    </div>
+                  )}
+
                   <div className="px-5 border-t border-gray-50">
                     <button
                       onClick={() => toggleTimeline(order.id)}

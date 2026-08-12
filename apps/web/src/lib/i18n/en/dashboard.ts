@@ -167,6 +167,15 @@ export const dashboard = {
   markAsShippedBtn: 'Mark as shipped',
   courierOtherOption: 'Other',
 
+  confirmDeliveryHeading: 'Confirm delivery',
+  otpCodePlaceholder: '6-digit code',
+  verifyingOtpBtn: 'Verifying...',
+  confirmDeliveryBtn: 'Confirm delivery',
+  otpInvalidFormatError: 'Enter a 6-digit code',
+  otpVerifyGenericError: "Couldn't verify the code. Try again.",
+  otpAttemptsLeft: 'Attempts left: {count}',
+  deliveryConfirmedLabel: 'Delivery confirmed',
+
   justNow: 'just now',
   minutesAgo: '{count} min ago',
   hoursAgo: '{count}h ago',

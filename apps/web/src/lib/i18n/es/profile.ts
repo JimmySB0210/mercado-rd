@@ -40,6 +40,8 @@ export const profile = {
   reviewedLabel: '✓ Reseñado',
   trackingNumberLabel: '📦 Número de seguimiento: {number}',
   trackingHint: 'Contacta a tu courier con este número para rastrear tu paquete.',
+  deliveryOtpSentTitle: '🔐 Código de entrega enviado',
+  deliveryOtpSentHint: 'Revisa tus notificaciones para ver tu código — solo lo necesitas cuando el repartidor tenga tu producto en mano.',
   hideTimelineButton: 'Ocultar seguimiento ▴',
   showTimelineButton: 'Ver seguimiento ▾',
   orderTotalLabel: 'Total del pedido',

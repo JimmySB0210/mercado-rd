@@ -181,6 +181,15 @@ export const dashboard = {
   markAsShippedBtn: 'Marcar como enviado',
   courierOtherOption: 'Otro',
 
+  confirmDeliveryHeading: 'Confirmar entrega',
+  otpCodePlaceholder: 'Código de 6 dígitos',
+  verifyingOtpBtn: 'Verificando...',
+  confirmDeliveryBtn: 'Confirmar entrega',
+  otpInvalidFormatError: 'Ingresa un código de 6 dígitos',
+  otpVerifyGenericError: 'No se pudo verificar el código. Intenta de nuevo.',
+  otpAttemptsLeft: 'Intentos restantes: {count}',
+  deliveryConfirmedLabel: 'Entrega confirmada',
+
   // ─── mensajes/page.tsx ──────────────────────────────────────
   justNow: 'ahora',
   minutesAgo: 'hace {count} min',

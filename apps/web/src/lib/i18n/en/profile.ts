@@ -33,6 +33,8 @@ export const profile = {
   reviewedLabel: '✓ Reviewed',
   trackingNumberLabel: '📦 Tracking number: {number}',
   trackingHint: 'Contact your courier with this number to track your package.',
+  deliveryOtpSentTitle: '🔐 Delivery code sent',
+  deliveryOtpSentHint: 'Check your notifications for your code — you only need it when the courier has your product in hand.',
   hideTimelineButton: 'Hide tracking ▴',
   showTimelineButton: 'View tracking ▾',
   orderTotalLabel: 'Order total',
