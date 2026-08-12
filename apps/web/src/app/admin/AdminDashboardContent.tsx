@@ -179,6 +179,7 @@ export function AdminDashboardContent({ kpis, vendors, orders, paymentMetrics, o
                 key={d.id}
                 disputeId={d.id}
                 orderId={d.order_id}
+                vendorId={d.vendor_id}
                 reason={d.reason}
                 description={d.description}
                 status={d.status}

@@ -95,6 +95,14 @@ export const profile = {
   sendButton: 'Envoyer',
   sendMessageError: "Impossible d'envoyer le message. Réessayez.",
 
+  loadingEvidence: 'Chargement des preuves...',
+  announcedProductHeading: '📦 Ce qui était annoncé',
+  snapshotDateLabel: 'Annonce telle qu\'elle apparaissait le {date}',
+  deliveryStatusHeading: 'État de la livraison',
+  deliveryConfirmedWithCode: '✅ La livraison a été confirmée avec un code le {date}',
+  deliveryNeverConfirmed: '⚠️ La livraison n\'a jamais été confirmée avec un code',
+  deliveryOtpNotGenerated: 'Aucun code de livraison n\'a été généré pour cette commande',
+
   disputeReason: {
     not_received: "Je n'ai pas reçu la commande",
     not_as_described: "Ce n'est pas conforme à la description",

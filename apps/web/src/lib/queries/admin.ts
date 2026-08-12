@@ -270,6 +270,7 @@ export async function getPaymentMetrics(): Promise<PaymentMetrics> {
 export interface AdminDisputeRow {
   id: string
   order_id: string
+  vendor_id: string
   reason: string
   description: string
   status: string
@@ -283,7 +284,7 @@ export async function getOpenDisputes(): Promise<AdminDisputeRow[]> {
 
   const { data: disputes, error } = await supabase
     .from('disputes')
-    .select('id, order_id, buyer_id, reason, description, status, created_at, vendor:vendors(business_name)')
+    .select('id, order_id, buyer_id, vendor_id, reason, description, status, created_at, vendor:vendors(business_name)')
     .in('status', ['open', 'reviewing'])
     .order('created_at', { ascending: false })
 
@@ -306,6 +307,7 @@ export async function getOpenDisputes(): Promise<AdminDisputeRow[]> {
   return disputes.map((d: any) => ({
     id: d.id,
     order_id: d.order_id,
+    vendor_id: d.vendor_id,
     reason: d.reason,
     description: d.description,
     status: d.status,

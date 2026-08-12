@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Navbar } from '@/components/shop/Navbar'
+import { DisputeEvidenceCard } from '@/components/order/DisputeEvidenceCard'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { formatDate } from '@/lib/utils'
 import { BRAND } from '@/lib/colors'
@@ -15,6 +16,7 @@ import { BRAND } from '@/lib/colors'
 interface DisputeDetail {
   id: string
   order_id: string
+  vendor_id: string
   reason: string
   description: string
   status: string
@@ -65,7 +67,7 @@ export default function DisputeDetailPage() {
 
     const { data: disputeData, error: disputeError } = await supabase
       .from('disputes')
-      .select('id, order_id, reason, description, status, resolution, created_at')
+      .select('id, order_id, vendor_id, reason, description, status, resolution, created_at')
       .eq('id', params.id)
       .single()
 
@@ -184,6 +186,11 @@ export default function DisputeDetailPage() {
               <p className="text-sm text-gray-700 leading-relaxed">{dispute.resolution}</p>
             </div>
           )}
+        </div>
+
+        {/* Evidencia objetiva — lo que se anunció + estado de entrega */}
+        <div className="mb-4">
+          <DisputeEvidenceCard orderId={dispute.order_id} vendorId={dispute.vendor_id} />
         </div>
 
         {/* Hilo de mensajes */}

@@ -9,11 +9,13 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { formatDate } from '@/lib/utils'
+import { DisputeEvidenceCard } from '@/components/order/DisputeEvidenceCard'
 import { BRAND } from '@/lib/colors'
 
 interface Props {
   disputeId: string
   orderId: string
+  vendorId: string
   reason: string
   description: string
   status: string
@@ -24,7 +26,7 @@ interface Props {
 
 const STATUS_VALUES = ['open', 'reviewing', 'resolved', 'closed'] as const
 
-export function DisputeAdminRow({ disputeId, orderId, reason, description, status, buyerName, vendorName, createdAt }: Props) {
+export function DisputeAdminRow({ disputeId, orderId, vendorId, reason, description, status, buyerName, vendorName, createdAt }: Props) {
   const router = useRouter()
   const supabase = createClient()
   const { t, language } = useTranslation('admin')
@@ -73,6 +75,10 @@ export function DisputeAdminRow({ disputeId, orderId, reason, description, statu
       </div>
 
       <p style={{ fontSize: 12, color: '#444', marginBottom: 10, lineHeight: 1.5 }}>{description}</p>
+
+      <div style={{ marginBottom: 10 }}>
+        <DisputeEvidenceCard orderId={orderId} vendorId={vendorId} />
+      </div>
 
       <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
         <select

@@ -108,6 +108,16 @@ export const profile = {
   sendButton: 'Enviar',
   sendMessageError: 'No se pudo enviar el mensaje. Intenta de nuevo.',
 
+  // components/order/DisputeEvidenceCard.tsx — evidencia objetiva de la
+  // disputa, compartida entre esta página y la vista de admin
+  loadingEvidence: 'Cargando evidencia...',
+  announcedProductHeading: '📦 Lo que se anunció',
+  snapshotDateLabel: 'Publicación tal como se veía el {date}',
+  deliveryStatusHeading: 'Estado de entrega',
+  deliveryConfirmedWithCode: '✅ La entrega fue confirmada con código el {date}',
+  deliveryNeverConfirmed: '⚠️ La entrega nunca fue confirmada con código',
+  deliveryOtpNotGenerated: 'No se generó ningún código de entrega para este pedido',
+
   // Razones y estados de disputa, compartidos entre disputas/page.tsx,
   // disputas/[id]/page.tsx y DisputeModal.tsx
   disputeReason: {
