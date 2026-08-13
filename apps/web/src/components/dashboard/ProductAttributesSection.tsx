@@ -10,7 +10,9 @@
 // variantes, no como campos fijos aquí.
 // ============================================================
 
+import { useState } from 'react'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { createClient } from '@/lib/supabase/client'
 import type { CategoryAttribute, AttributeOption } from '@/types/database.types'
 
 export type AttributeValue = string | string[] | boolean
@@ -21,12 +23,54 @@ interface Props {
   optionsMap: Map<number, AttributeOption[]>
   values: AttributeValuesState
   onChange: (attributeId: number, value: AttributeValue) => void
+  // Verificación externa (IMEI/VIN) — solo tiene sentido en modo editar,
+  // con un product_id real ya guardado en la base de datos.
+  mode?: 'crear' | 'editar'
+  productId?: string | null
 }
 
 const inputClass = 'w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none'
 
-export function ProductAttributesSection({ attributes, optionsMap, values, onChange }: Props) {
+// Atributos de texto que tienen una verificación externa disponible —
+// arquitectura lista, sin proveedor conectado todavía, así que la RPC
+// siempre responde 'unavailable'. Mapea attribute_key → el valor del
+// enum external_verification_type que espera la función.
+const VERIFIABLE_ATTRIBUTES: Record<string, 'imei' | 'vehicle_vin'> = {
+  imei: 'imei',
+  vin: 'vehicle_vin',
+}
+
+export function ProductAttributesSection({ attributes, optionsMap, values, onChange, mode, productId }: Props) {
   const { t } = useTranslation('dashboard')
+  const [verifying, setVerifying] = useState<Record<number, boolean>>({})
+  const [verifyNotices, setVerifyNotices] = useState<Record<number, string>>({})
+
+  const handleVerify = async (attr: CategoryAttribute) => {
+    const verificationType = VERIFIABLE_ATTRIBUTES[attr.attribute_key]
+    const currentValue = values[attr.id]
+    if (!verificationType || !productId || typeof currentValue !== 'string' || !currentValue.trim()) return
+
+    setVerifying(prev => ({ ...prev, [attr.id]: true }))
+    const supabase = createClient()
+    const { data, error } = await supabase.rpc('request_external_verification', {
+      p_verification_type: verificationType,
+      p_input_data: { [attr.attribute_key]: currentValue.trim() },
+      p_target_type: 'product',
+      p_target_id: productId,
+    })
+    setVerifying(prev => ({ ...prev, [attr.id]: false }))
+
+    if (error) console.error('[ProductAttributesSection verify]', error)
+    const message = !error && data?.message ? data.message : t('verificationRequestError')
+    setVerifyNotices(prev => ({ ...prev, [attr.id]: message }))
+    setTimeout(() => {
+      setVerifyNotices(prev => {
+        const next = { ...prev }
+        delete next[attr.id]
+        return next
+      })
+    }, 6000)
+  }
 
   if (attributes.length === 0) return null
 
@@ -116,15 +160,37 @@ export function ProductAttributesSection({ attributes, optionsMap, values, onCha
       }
 
       case 'text':
-      default:
+      default: {
+        const verificationType = VERIFIABLE_ATTRIBUTES[attr.attribute_key]
+        const showVerifyButton = verificationType && mode === 'editar' && !!productId
+        const currentValue = typeof value === 'string' ? value : ''
+
         return (
-          <input
-            type="text"
-            value={typeof value === 'string' ? value : ''}
-            onChange={e => onChange(attr.id, e.target.value)}
-            className={inputClass}
-          />
+          <div>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={currentValue}
+                onChange={e => onChange(attr.id, e.target.value)}
+                className={inputClass}
+              />
+              {showVerifyButton && (
+                <button
+                  type="button"
+                  onClick={() => handleVerify(attr)}
+                  disabled={verifying[attr.id] || !currentValue.trim()}
+                  className="flex-shrink-0 text-xs font-medium px-3 py-2.5 rounded-lg border border-gray-200 bg-white whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {verifying[attr.id] ? t('verifyingLabel') : t('verifyAttributeButton', { label: attr.attribute_key.toUpperCase() })}
+                </button>
+              )}
+            </div>
+            {verifyNotices[attr.id] && (
+              <p className="text-xs text-blue-600 mt-1.5">{verifyNotices[attr.id]}</p>
+            )}
+          </div>
         )
+      }
     }
   }
 

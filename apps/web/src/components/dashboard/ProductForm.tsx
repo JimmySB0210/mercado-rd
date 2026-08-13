@@ -1090,6 +1090,8 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                 optionsMap={attributeOptionsMap}
                 values={attributeValues}
                 onChange={handleAttributeChange}
+                mode={mode}
+                productId={initialData?.product.id ?? null}
               />
             </div>
           )}

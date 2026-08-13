@@ -23,6 +23,7 @@ import { ManufacturingSection } from '@/components/vendor/settings/Manufacturing
 import { ServicesSection } from '@/components/vendor/settings/ServicesSection'
 import { CustomersSection } from '@/components/vendor/settings/CustomersSection'
 import { PaymentSection } from '@/components/vendor/settings/PaymentSection'
+import { IdentityVerificationSection } from '@/components/vendor/settings/IdentityVerificationSection'
 import type { Vendor, Category, BusinessType, VendorService, CustomerType } from '@/types/database.types'
 
 interface Province {
@@ -183,6 +184,8 @@ export default function VendorSettingsPage() {
             vendorId={vendor.id}
             initial={{ bankName: vendor.bank_name ?? '', bankAccount: vendor.bank_account ?? '' }}
           />
+
+          <IdentityVerificationSection userId={userId} />
         </div>
       </div>
     </div>

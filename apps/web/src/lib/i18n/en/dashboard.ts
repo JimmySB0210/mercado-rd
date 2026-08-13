@@ -132,6 +132,9 @@ export const dashboard = {
   booleanYes: 'Yes',
   booleanNo: 'No',
   loadingAttributes: 'Loading category fields...',
+  verifyAttributeButton: '🔍 Verify {label}',
+  verifyingLabel: 'Verifying...',
+  verificationRequestError: "Couldn't request the verification. Try again.",
   requiredAttributesMissing: 'Complete the required category fields ("Required" section)',
 
   ordersPageTitle: 'Orders',

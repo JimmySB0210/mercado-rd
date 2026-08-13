@@ -168,6 +168,30 @@ export async function getDisputeEvidenceSignedUrls(paths: string[]): Promise<Map
   return map
 }
 
+// ─── Documentos de identidad (bucket privado) ───────────────────────────────
+// identity-documents es privado, RLS permite acceso solo al dueño y a
+// admins. Igual que dispute-evidence: solo se guarda la ruta relativa,
+// nunca una URL — este tipo de documento en particular no se vuelve a
+// mostrar en la interfaz una vez subido, ni siquiera vía URL firmada.
+export type IdentityDocumentKind = 'front' | 'back' | 'selfie'
+
+export async function uploadIdentityDocument(
+  file: File,
+  userId: string,
+  kind: IdentityDocumentKind
+): Promise<{ path: string; error: null } | { path: null; error: string }> {
+  const supabase = createClient()
+  const ext = file.name.split('.').pop()
+  const filename = `${userId}/${kind}-${Date.now()}.${ext}`
+
+  const { error } = await supabase.storage
+    .from('identity-documents')
+    .upload(filename, file, { upsert: false })
+
+  if (error) return { path: null, error: error.message }
+  return { path: filename, error: null }
+}
+
 // ─── Eliminar imagen ────────────────────────────────────────────────────────
 export async function deleteImage(
   bucket: 'products' | 'vendors' | 'avatars' | 'banners',

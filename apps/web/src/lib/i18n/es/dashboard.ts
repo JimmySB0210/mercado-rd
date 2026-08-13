@@ -144,6 +144,9 @@ export const dashboard = {
   booleanYes: 'Sí',
   booleanNo: 'No',
   loadingAttributes: 'Cargando campos de la categoría...',
+  verifyAttributeButton: '🔍 Verificar {label}',
+  verifyingLabel: 'Verificando...',
+  verificationRequestError: 'No se pudo solicitar la verificación. Intenta de nuevo.',
   requiredAttributesMissing: 'Completa los campos requeridos de la categoría (sección "Requerido")',
 
   // ─── pedidos/page.tsx ───────────────────────────────────────
