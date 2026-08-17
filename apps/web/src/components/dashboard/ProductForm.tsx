@@ -320,7 +320,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
         if (selectLikeIds.length > 0) {
           const { data: options, error: optionsError } = await supabase
             .from('attribute_options')
-            .select('id, category_attribute_id, value, label, sort_order')
+            .select('id, category_attribute_id, value, label, sort_order, depends_on_attribute_key, depends_on_value')
             .in('category_attribute_id', selectLikeIds)
             .order('sort_order')
 

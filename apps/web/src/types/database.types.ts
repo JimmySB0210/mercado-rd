@@ -178,6 +178,11 @@ export interface AttributeOption {
   value: string
   label: string
   sort_order: number
+  // Filtrado dependiente (ej. Modelo depende de Marca) — cuando ambos son
+  // null, la opción se muestra siempre sin importar el valor de otros
+  // atributos (así queda "Otro (escribir)", que nunca depende de nada).
+  depends_on_attribute_key: string | null
+  depends_on_value: string | null
 }
 
 export interface ProductAttributeValue {

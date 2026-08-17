@@ -80,10 +80,31 @@ export function ProductAttributesSection({ attributes, optionsMap, values, onCha
     })
   }, [attributes, optionsMap, values])
 
+  // Filtrado dependiente genérico (ej. Modelo depende de Marca): cuando el
+  // valor de `attr` cambia, cualquier otro select cuya opción YA elegida
+  // dependía de `attr.attribute_key` con un depends_on_value distinto al
+  // nuevo valor queda "huérfano" — se limpia en vez de dejarlo elegido
+  // pero invisible en las opciones ya filtradas.
+  const setValueAndClearOrphanedDependents = (attr: CategoryAttribute, newValue: string) => {
+    onChange(attr.id, newValue)
+
+    for (const dependent of attributes) {
+      if (dependent.attribute_type !== 'select' || dependent.id === attr.id) continue
+      const dependentValue = values[dependent.id]
+      if (typeof dependentValue !== 'string' || !dependentValue) continue
+
+      const currentOption = (optionsMap.get(dependent.id) ?? []).find(o => o.value === dependentValue)
+      if (currentOption?.depends_on_attribute_key !== attr.attribute_key) continue
+      if (currentOption.depends_on_value !== newValue) {
+        onChange(dependent.id, '')
+      }
+    }
+  }
+
   const handleSelectChange = (attr: CategoryAttribute, newValue: string) => {
     if (newValue === OTHER_OPTION_VALUE) {
       setCustomModeIds(prev => new Set(prev).add(attr.id))
-      onChange(attr.id, '')
+      setValueAndClearOrphanedDependents(attr, '')
     } else {
       setCustomModeIds(prev => {
         if (!prev.has(attr.id)) return prev
@@ -91,7 +112,7 @@ export function ProductAttributesSection({ attributes, optionsMap, values, onCha
         next.delete(attr.id)
         return next
       })
-      onChange(attr.id, newValue)
+      setValueAndClearOrphanedDependents(attr, newValue)
     }
   }
 
@@ -147,18 +168,41 @@ export function ProductAttributesSection({ attributes, optionsMap, values, onCha
 
       case 'select': {
         const isCustom = customModeIds.has(attr.id)
+        const allOptions = optionsMap.get(attr.id) ?? []
+
+        // Detecta si ESTE atributo depende de otro (ej. Modelo → Marca).
+        // Asume una sola clave controladora por atributo (el caso real
+        // hoy) — si en el futuro hubiera varias, el filtrado por opción
+        // sigue siendo correcto igual, solo no se deshabilita el select.
+        const dependencyKeys = [...new Set(allOptions.map(o => o.depends_on_attribute_key).filter((k): k is string => !!k))]
+        const dependencyKey = dependencyKeys.length === 1 ? dependencyKeys[0] : null
+        const dependencyAttr = dependencyKey ? attributes.find(a => a.attribute_key === dependencyKey) : undefined
+        const dependencyValue = dependencyAttr ? values[dependencyAttr.id] : undefined
+        const dependencyUnmet = !!dependencyAttr && (typeof dependencyValue !== 'string' || !dependencyValue)
+
+        const visibleOptions = allOptions.filter(opt => {
+          if (!opt.depends_on_attribute_key) return true
+          const controllingAttr = attributes.find(a => a.attribute_key === opt.depends_on_attribute_key)
+          const controllingValue = controllingAttr ? values[controllingAttr.id] : undefined
+          return controllingValue === opt.depends_on_value
+        })
+
         return (
           <div>
             <select
               value={isCustom ? OTHER_OPTION_VALUE : (typeof value === 'string' ? value : '')}
               onChange={e => handleSelectChange(attr, e.target.value)}
-              className={`${inputClass} bg-white`}
+              disabled={dependencyUnmet}
+              className={`${inputClass} bg-white ${dependencyUnmet ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''}`}
             >
               <option value="">{t('selectAttributePlaceholder')}</option>
-              {(optionsMap.get(attr.id) ?? []).map(opt => (
+              {visibleOptions.map(opt => (
                 <option key={opt.id} value={opt.value}>{opt.label}</option>
               ))}
             </select>
+            {dependencyUnmet && dependencyAttr && (
+              <p className="text-xs text-gray-400 mt-1">{t('selectDependencyFirstHint', { label: dependencyAttr.attribute_label })}</p>
+            )}
             {isCustom && (
               <input
                 type="text"

@@ -130,6 +130,7 @@ export const dashboard = {
   optionalAttributesHeading: 'Optionnel',
   selectAttributePlaceholder: 'Sélectionnez une option',
   customAttributeValuePlaceholder: 'Écrivez la valeur',
+  selectDependencyFirstHint: "Choisissez d'abord : {label}",
   booleanYes: 'Oui',
   booleanNo: 'Non',
   loadingAttributes: 'Chargement des champs de la catégorie...',
