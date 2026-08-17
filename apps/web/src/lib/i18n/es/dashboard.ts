@@ -141,6 +141,7 @@ export const dashboard = {
   recommendedAttributesHeading: 'Recomendado',
   optionalAttributesHeading: 'Opcional',
   selectAttributePlaceholder: 'Selecciona una opción',
+  customAttributeValuePlaceholder: 'Escribe el valor',
   booleanYes: 'Sí',
   booleanNo: 'No',
   loadingAttributes: 'Cargando campos de la categoría...',

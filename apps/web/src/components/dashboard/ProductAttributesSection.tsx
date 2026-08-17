@@ -10,10 +10,17 @@
 // variantes, no como campos fijos aquí.
 // ============================================================
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { createClient } from '@/lib/supabase/client'
 import type { CategoryAttribute, AttributeOption } from '@/types/database.types'
+
+// Convención de la BD: una option con value 'otro' en un atributo select
+// habilita "escribir tu propio valor" — genérico para cualquier atributo
+// select que la tenga (hoy: Modelo en Smartphones), no solo Talla (que
+// tiene su propio patrón separado, hardcodeado, en ProductForm.tsx para
+// el sistema viejo de variantes fijas).
+const OTHER_OPTION_VALUE = 'otro'
 
 export type AttributeValue = string | string[] | boolean
 export type AttributeValuesState = Record<number, AttributeValue>
@@ -44,6 +51,49 @@ export function ProductAttributesSection({ attributes, optionsMap, values, onCha
   const { t } = useTranslation('dashboard')
   const [verifying, setVerifying] = useState<Record<number, boolean>>({})
   const [verifyNotices, setVerifyNotices] = useState<Record<number, string>>({})
+
+  // Qué atributos select están en modo "escribir mi propio valor" — no se
+  // puede derivar solo de values[attr.id] porque, apenas se elige 'Otro',
+  // el valor real se deja en '' para que el input libre lo llene (así
+  // isAttrFilled en ProductForm.tsx no cuenta 'otro' como un valor real).
+  // Solo agrega (nunca quita) automáticamente, para no pelear con lo que
+  // el vendor ya seleccionó — quitar del modo custom es una acción
+  // explícita en handleSelectChange.
+  const [customModeIds, setCustomModeIds] = useState<Set<number>>(new Set())
+
+  useEffect(() => {
+    setCustomModeIds(prev => {
+      let changed = false
+      const next = new Set(prev)
+      for (const attr of attributes) {
+        if (attr.attribute_type !== 'select' || next.has(attr.id)) continue
+        const val = values[attr.id]
+        if (typeof val !== 'string' || !val) continue
+        const options = optionsMap.get(attr.id) ?? []
+        if (!options.some(o => o.value === OTHER_OPTION_VALUE)) continue
+        if (!options.some(o => o.value === val)) {
+          next.add(attr.id)
+          changed = true
+        }
+      }
+      return changed ? next : prev
+    })
+  }, [attributes, optionsMap, values])
+
+  const handleSelectChange = (attr: CategoryAttribute, newValue: string) => {
+    if (newValue === OTHER_OPTION_VALUE) {
+      setCustomModeIds(prev => new Set(prev).add(attr.id))
+      onChange(attr.id, '')
+    } else {
+      setCustomModeIds(prev => {
+        if (!prev.has(attr.id)) return prev
+        const next = new Set(prev)
+        next.delete(attr.id)
+        return next
+      })
+      onChange(attr.id, newValue)
+    }
+  }
 
   const handleVerify = async (attr: CategoryAttribute) => {
     const verificationType = VERIFIABLE_ATTRIBUTES[attr.attribute_key]
@@ -95,19 +145,32 @@ export function ProductAttributesSection({ attributes, optionsMap, values, onCha
           </div>
         )
 
-      case 'select':
+      case 'select': {
+        const isCustom = customModeIds.has(attr.id)
         return (
-          <select
-            value={typeof value === 'string' ? value : ''}
-            onChange={e => onChange(attr.id, e.target.value)}
-            className={`${inputClass} bg-white`}
-          >
-            <option value="">{t('selectAttributePlaceholder')}</option>
-            {(optionsMap.get(attr.id) ?? []).map(opt => (
-              <option key={opt.id} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
+          <div>
+            <select
+              value={isCustom ? OTHER_OPTION_VALUE : (typeof value === 'string' ? value : '')}
+              onChange={e => handleSelectChange(attr, e.target.value)}
+              className={`${inputClass} bg-white`}
+            >
+              <option value="">{t('selectAttributePlaceholder')}</option>
+              {(optionsMap.get(attr.id) ?? []).map(opt => (
+                <option key={opt.id} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            {isCustom && (
+              <input
+                type="text"
+                value={typeof value === 'string' ? value : ''}
+                onChange={e => onChange(attr.id, e.target.value)}
+                placeholder={t('customAttributeValuePlaceholder')}
+                className={`${inputClass} mt-2`}
+              />
+            )}
+          </div>
         )
+      }
 
       case 'multiselect': {
         const selected = Array.isArray(value) ? value : []

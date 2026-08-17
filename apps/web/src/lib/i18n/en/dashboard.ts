@@ -129,6 +129,7 @@ export const dashboard = {
   recommendedAttributesHeading: 'Recommended',
   optionalAttributesHeading: 'Optional',
   selectAttributePlaceholder: 'Select an option',
+  customAttributeValuePlaceholder: 'Type the value',
   booleanYes: 'Yes',
   booleanNo: 'No',
   loadingAttributes: 'Loading category fields...',
