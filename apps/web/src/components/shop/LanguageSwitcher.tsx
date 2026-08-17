@@ -42,10 +42,9 @@ export function LanguageSwitcher({ compact }: { compact?: boolean }) {
         onClick={() => setOpen((o) => !o)}
         aria-label="Idioma / Language / Langue"
         className="flex items-center gap-1 cursor-pointer border-none bg-transparent"
-        style={{ fontSize: compact ? 12 : 13, fontWeight: 600, color: BRAND.gray, padding: 0 }}
+        style={{ padding: 0 }}
       >
-        <span>{current.flag}</span>
-        <span>{current.label}</span>
+        <span style={{ fontSize: compact ? 20 : 24, lineHeight: 1 }}>{current.flag}</span>
         <ChevronDown size={compact ? 12 : 14} color={BRAND.gray} />
       </button>
 

@@ -18,6 +18,7 @@ export const products = {
   noStock: 'Épuisé',
   stockAvailable: 'Stock : {count} disponibles',
   selectSize: 'Choisissez une taille',
+  selectSizePlaceholder: 'Choisissez une taille',
   selectColor: 'Choisissez une couleur',
   selectOption: 'Choisissez une option',
   addedToCart: '✓ Ajouté au panier',

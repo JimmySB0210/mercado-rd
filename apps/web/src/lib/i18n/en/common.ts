@@ -16,6 +16,8 @@ export const common = {
   allCountryOption: 'Dom. Rep. (whole country)',
 
   // Navbar — menú de cuenta
+  accountGreeting: 'Hi, {name}',
+  myAccountLabel: 'My account',
   myDashboard: 'My dashboard',
   myFavorites: 'My favorites ♡',
   history: 'History 🕐',

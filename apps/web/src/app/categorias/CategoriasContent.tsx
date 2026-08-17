@@ -10,12 +10,14 @@
 // ============================================================
 
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { getCategoryIcon } from '@/lib/categoryIcons'
 
 interface CategoryRow {
   id: number
   name: string
   slug: string
   emoji: string
+  storeCount: number
 }
 
 export function CategoriasContent({ categories }: { categories: CategoryRow[] }) {
@@ -51,22 +53,25 @@ export function CategoriasContent({ categories }: { categories: CategoryRow[] })
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {categories.map(c => (
-            <a
-              key={c.id}
-              href={`/categoria/${c.slug}`}
-              className="bg-[var(--color-card-bg)] [box-shadow:var(--shadow-card)] hover:[box-shadow:var(--shadow-card-hover)] hover:-translate-y-0.5 p-5 flex flex-col items-center text-center gap-3 no-underline"
-              style={{ borderRadius: 'var(--radius-card)', transition: 'box-shadow var(--transition-base), transform var(--transition-base)' }}
-            >
-              <span
-                className="flex items-center justify-center rounded-full flex-shrink-0"
-                style={{ width: 64, height: 64, background: 'var(--color-primary-subtle)' }}
+          {categories.map(c => {
+            const Icon = getCategoryIcon(c.name)
+            return (
+              <a
+                key={c.id}
+                href={`/categoria/${c.slug}`}
+                className="bg-[var(--color-card-bg)] border border-[var(--color-border)] [box-shadow:var(--shadow-card)] hover:[box-shadow:var(--shadow-card-hover)] hover:-translate-y-0.5 p-5 flex flex-col items-center text-center gap-2 no-underline"
+                style={{ borderRadius: 'var(--radius-card)', transition: 'box-shadow var(--transition-base), transform var(--transition-base)' }}
               >
-                <span className="text-3xl">{c.emoji}</span>
-              </span>
-              <span className="text-sm font-semibold text-gray-900">{c.name}</span>
-            </a>
-          ))}
+                <Icon size={40} color="var(--color-primary)" strokeWidth={1.5} style={{ marginBottom: 4 }} />
+                <span className="text-sm font-semibold text-gray-900">{c.name}</span>
+                <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                  {c.storeCount === 1
+                    ? t('storeCountOne', { count: c.storeCount })
+                    : t('storeCountOther', { count: c.storeCount })}
+                </span>
+              </a>
+            )
+          })}
         </div>
       )}
 

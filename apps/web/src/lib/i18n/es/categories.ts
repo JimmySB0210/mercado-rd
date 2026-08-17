@@ -15,6 +15,8 @@ export const categories = {
   categoryCountOne: '{count} categoría',
   categoryCountOther: '{count} categorías',
   noCategoriesEmptyState: 'Todavía no hay categorías para mostrar.',
+  storeCountOne: '{count} tienda',
+  storeCountOther: '{count} tiendas',
 
   // /categoria/[slug] — productos de una categoría
   defaultCategoryTitle: 'Todos los productos',

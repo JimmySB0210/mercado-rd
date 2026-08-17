@@ -237,23 +237,29 @@ export function Navbar() {
             >
               <button
                 onClick={() => setMenuOpen(true)}
-                className="flex items-center gap-2 text-sm font-medium cursor-pointer border-none bg-transparent"
+                className="flex items-center gap-2 cursor-pointer border-none bg-transparent"
                 style={{ color: BRAND.dark }}
               >
                 <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 overflow-hidden"
-                  style={{ background: vendorInfo?.logo_url ? 'transparent' : BRAND.blue }}
+                  className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden"
+                  style={{ border: vendorInfo?.logo_url ? 'none' : '1.5px solid var(--color-border)' }}
                 >
                   {vendorInfo?.logo_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={vendorInfo.logo_url} alt={displayName} className="w-full h-full object-cover" />
                   ) : (
-                    displayName.charAt(0).toUpperCase()
+                    <User size={18} color={BRAND.gray} />
                   )}
                 </div>
-                <span style={{ maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {displayName}
-                </span>
+                <div style={{ lineHeight: 1.25, textAlign: 'left' }}>
+                  <div
+                    className="text-sm font-semibold"
+                    style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                  >
+                    {t('accountGreeting', { name: displayName })}
+                  </div>
+                  <div className="text-xs" style={{ color: BRAND.gray }}>{t('myAccountLabel')}</div>
+                </div>
                 <ChevronDown size={14} color={BRAND.gray} />
               </button>
 

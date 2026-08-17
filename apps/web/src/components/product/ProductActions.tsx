@@ -5,6 +5,8 @@
 // ============================================================
 
 import { useState } from 'react'
+import { ChevronDown, ShoppingCart } from 'lucide-react'
+import { BRAND } from '@/lib/colors'
 import { useCartStore } from '@/lib/store/cart'
 import { formatPrice } from '@/types/database.types'
 import { useTranslation } from '@/lib/hooks/useTranslation'
@@ -67,6 +69,7 @@ export function ProductActions({
   })
 
   const dynamicColorDim = dynamicDimensions.find(d => d.key.toLowerCase() === 'color') ?? null
+  const sizeLikeKeys = ['talla', 'size']
   const dynamicColorImageMap = new Map<string, string>()
   if (dynamicColorDim) {
     for (const v of variants) {
@@ -137,31 +140,27 @@ export function ProductActions({
   return (
     <div className="flex flex-col gap-4">
 
-      {/* Selector de talla */}
+      {/* Selector de talla — dropdown, no pills */}
       {needsSize && (
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">
-            {t('sizeLabel')}
-            {selectedSize && <span className="ml-2 text-gray-400 font-normal">{selectedSize}</span>}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {sizes.map(size => (
-              <button
-                key={size}
-                onClick={() => setSelectedSize(size)}
-                className={`px-4 py-1.5 text-sm font-medium ${
-                  selectedSize === size ? 'text-white' : 'text-gray-600 hover:border-gray-300'
-                }`}
-                style={{
-                  borderRadius: 'var(--radius-pill)',
-                  border: `1px solid ${selectedSize === size ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                  background: selectedSize === size ? 'var(--color-primary)' : 'transparent',
-                  transition: 'all var(--transition-fast)',
-                }}
-              >
-                {size}
-              </button>
-            ))}
+          <p className="text-sm font-medium text-gray-700 mb-2">{t('sizeLabel')}</p>
+          <div className="relative">
+            <select
+              value={selectedSize ?? ''}
+              onChange={e => setSelectedSize(e.target.value || null)}
+              className="w-full appearance-none"
+              style={{
+                border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)',
+                padding: '11px 40px 11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box',
+                background: '#fff', color: selectedSize ? BRAND.dark : BRAND.gray, cursor: 'pointer',
+              }}
+            >
+              <option value="">{t('selectSizePlaceholder')}</option>
+              {sizes.map(size => (
+                <option key={size} value={size}>{size}</option>
+              ))}
+            </select>
+            <ChevronDown size={16} color={BRAND.gray} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
           </div>
         </div>
       )}
@@ -228,6 +227,34 @@ export function ProductActions({
         const selectedValue = selectedDynamicValues[dim.attributeId] ?? null
         const selectedLabel = dim.options.find(o => o.value === selectedValue)?.label ?? null
         const isColorDim = dim.attributeId === dynamicColorDim?.attributeId
+        const isSizeLikeDim = sizeLikeKeys.includes(dim.key.toLowerCase())
+
+        // Talla / Size dinámica — mismo dropdown que el sistema viejo, en vez de pills
+        if (isSizeLikeDim) {
+          return (
+            <div key={dim.attributeId}>
+              <p className="text-sm font-medium text-gray-700 mb-2">{dim.label}</p>
+              <div className="relative">
+                <select
+                  value={selectedValue ?? ''}
+                  onChange={e => setSelectedDynamicValues(prev => ({ ...prev, [dim.attributeId]: e.target.value || null }))}
+                  className="w-full appearance-none"
+                  style={{
+                    border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)',
+                    padding: '11px 40px 11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box',
+                    background: '#fff', color: selectedValue ? BRAND.dark : BRAND.gray, cursor: 'pointer',
+                  }}
+                >
+                  <option value="">{t('selectSizePlaceholder')}</option>
+                  {dim.options.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                <ChevronDown size={16} color={BRAND.gray} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+              </div>
+            </div>
+          )
+        }
 
         return (
           <div key={dim.attributeId}>
@@ -316,7 +343,7 @@ export function ProductActions({
       <button
         onClick={handleAdd}
         disabled={!canAdd}
-        className={`w-full py-3.5 font-semibold text-white ${
+        className={`w-full py-3.5 font-semibold text-white flex items-center justify-center gap-2 ${
           added
             ? 'bg-[var(--color-success)]'
             : canAdd
@@ -329,6 +356,7 @@ export function ProductActions({
           transition: 'background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast)',
         }}
       >
+        {canAdd && !added && <ShoppingCart size={18} />}
         {isOutOfStock
           ? (hasVariants ? t('outOfStock') : t('noStock'))
           : !canAdd

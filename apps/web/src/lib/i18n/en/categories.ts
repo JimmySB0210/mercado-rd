@@ -12,6 +12,8 @@ export const categories = {
   categoryCountOne: '{count} category',
   categoryCountOther: '{count} categories',
   noCategoriesEmptyState: 'No categories to show yet.',
+  storeCountOne: '{count} store',
+  storeCountOther: '{count} stores',
 
   defaultCategoryTitle: 'All products',
   productsFoundCount: '{count} products found',

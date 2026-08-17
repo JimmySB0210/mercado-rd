@@ -18,6 +18,7 @@ export const products = {
   noStock: 'Out of stock',
   stockAvailable: 'Stock: {count} available',
   selectSize: 'Select a size',
+  selectSizePlaceholder: 'Select a size',
   selectColor: 'Select a color',
   selectOption: 'Select an option',
   addedToCart: '✓ Added to cart',

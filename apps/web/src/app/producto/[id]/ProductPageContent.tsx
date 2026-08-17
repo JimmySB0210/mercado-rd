@@ -72,25 +72,6 @@ export function ProductPageContent({
 
   return (
     <>
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-gray-400 mb-6">
-        <a href="/" className="hover:text-gray-600 transition-colors">{t('breadcrumbHome')}</a>
-        <span>/</span>
-        {product.category && (
-          <>
-            <a
-              href={`/categoria/${product.category.slug}`}
-              className="hover:text-gray-600 transition-colors"
-            >
-              {product.category.emoji}{' '}
-              {product.category.name}
-            </a>
-            <span>/</span>
-          </>
-        )}
-        <span className="text-gray-600 truncate max-w-[200px]">{product.name}</span>
-      </nav>
-
       {/* Contenido principal */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
 
