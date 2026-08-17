@@ -98,10 +98,11 @@ export function WishlistButton({ productId }: Props) {
       onClick={handleClick}
       disabled={loading}
       aria-label={isFavorited ? t('removeFromFavoritesAria') : t('addToFavoritesAria')}
-      className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm hover:scale-110 transition-transform disabled:opacity-60 disabled:cursor-wait border-none cursor-pointer"
+      className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-white/70 backdrop-blur-sm flex items-center justify-center hover:bg-white/90 hover:scale-110 disabled:opacity-60 disabled:cursor-wait border-none cursor-pointer"
+      style={{ transition: 'transform var(--transition-fast), background-color var(--transition-fast)' }}
     >
       <Heart
-        size={16}
+        size={14}
         className={isFavorited ? 'text-red-500' : 'text-gray-400'}
         fill={isFavorited ? 'currentColor' : 'none'}
       />

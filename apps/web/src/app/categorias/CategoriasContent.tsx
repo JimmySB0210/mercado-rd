@@ -31,13 +31,21 @@ export function CategoriasContent({ categories }: { categories: CategoryRow[] })
         <span className="text-gray-600">{t('breadcrumbCurrent')}</span>
       </nav>
 
-      <h1 className="text-xl font-bold text-gray-900 mb-1">{t('pageTitle')}</h1>
-      <p className="text-sm text-gray-400 mb-6">
+      <h1
+        className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1"
+        style={{ fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}
+      >
+        {t('pageTitle')}
+      </h1>
+      <p className="text-sm mb-6" style={{ color: 'var(--color-text-secondary)' }}>
         {count === 1 ? t('categoryCountOne', { count }) : t('categoryCountOther', { count })}
       </p>
 
       {categories.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
+        <div
+          className="bg-[var(--color-card-bg)] p-12 text-center"
+          style={{ borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)' }}
+        >
           <div className="text-5xl mb-4">📂</div>
           <p className="text-gray-500">{t('noCategoriesEmptyState')}</p>
         </div>
@@ -47,9 +55,15 @@ export function CategoriasContent({ categories }: { categories: CategoryRow[] })
             <a
               key={c.id}
               href={`/categoria/${c.slug}`}
-              className="bg-white rounded-2xl border border-gray-100 p-5 flex flex-col items-center text-center gap-2 no-underline hover:shadow-md hover:border-gray-200 transition-all"
+              className="bg-[var(--color-card-bg)] [box-shadow:var(--shadow-card)] hover:[box-shadow:var(--shadow-card-hover)] hover:-translate-y-0.5 p-5 flex flex-col items-center text-center gap-3 no-underline"
+              style={{ borderRadius: 'var(--radius-card)', transition: 'box-shadow var(--transition-base), transform var(--transition-base)' }}
             >
-              <span className="text-4xl">{c.emoji}</span>
+              <span
+                className="flex items-center justify-center rounded-full flex-shrink-0"
+                style={{ width: 64, height: 64, background: 'var(--color-primary-subtle)' }}
+              >
+                <span className="text-3xl">{c.emoji}</span>
+              </span>
               <span className="text-sm font-semibold text-gray-900">{c.name}</span>
             </a>
           ))}

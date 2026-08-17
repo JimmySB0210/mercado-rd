@@ -2,6 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   MercadoRD — Sistema de diseño "Caribe Premium Minimal"
+   Fase 1: fundación de tokens únicamente.
+   ============================================================
+   Estos tokens todavía NO están aplicados a ningún componente —
+   el sitio sigue viéndose exactamente igual hasta que empiece la
+   Fase 2. BRAND (lib/colors.ts) y --brand-blue/--brand-red
+   (definidos en <body>, app/layout.tsx) son el sistema de colores
+   ACTUAL y siguen intactos; conviven con estos tokens nuevos hasta
+   que los componentes migren uno por uno.
+
+   Tipografía: --font-heading y --font-body apuntan a
+   --font-plus-jakarta-sans / --font-inter, expuestas por next/font
+   en app/layout.tsx (Plus Jakarta Sans SÍ está disponible en el
+   proyecto — no hizo falta el fallback a Satoshi).
+   ============================================================ */
+:root {
+  /* ── Colores ── */
+  --color-primary: #0F4C81;
+  --color-primary-hover: #0A3A66;
+  --color-primary-subtle: #E8F1F8;
+  --color-accent: #E8B923;
+  --color-success: #10B981;
+  --color-success-subtle: #ECFDF5;
+  --color-badge-orange: #FF6B35;
+  --color-bg: #F8F9FB;
+  --color-card-bg: #FFFFFF;
+  --color-text-primary: #1A1A1A;
+  --color-text-secondary: #6B7280;
+  --color-text-tertiary: #9CA3AF;
+  --color-border: #E5E7EB;
+  --color-divider: #F3F4F6;
+
+  /* ── Tipografía ── */
+  --font-heading: var(--font-plus-jakarta-sans), sans-serif;
+  --font-body: var(--font-inter), sans-serif;
+  --tracking-heading: -0.02em;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ── Border radius ── */
+  --radius-card: 16px;
+  --radius-control: 12px;
+  --radius-pill: 9999px;
+  --radius-product-image: 16px;
+
+  /* ── Sombras ── */
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 8px 30px rgba(0, 0, 0, 0.08);
+  --shadow-button: 0 2px 8px rgba(15, 76, 129, 0.15);
+
+  /* ── Espaciado (escala de 4px) ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* ── Transiciones ── */
+  --transition-fast: 200ms ease;
+  --transition-base: 250ms ease;
+}
+
 * {
   margin: 0;
   padding: 0;

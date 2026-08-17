@@ -181,7 +181,7 @@ export function Navbar() {
   )
 
   return (
-    <header style={{ background: '#fff', borderBottom: '1px solid #EAEAEA' }}>
+    <header style={{ background: '#fff', borderBottom: '1px solid #EAEAEA', fontFamily: 'var(--font-body)' }}>
 
       {/* ─── Desktop row ─────────────────────────────────── */}
       <div
@@ -189,8 +189,7 @@ export function Navbar() {
         style={{ maxWidth: 1400, margin: '0 auto', padding: '16px 24px' }}
       >
         <a href='/' className="no-underline flex-shrink-0">
-          <span style={{ fontWeight: 700, fontSize: 24, color: BRAND.blue }}>Mercado</span>
-          <span style={{ fontWeight: 700, fontSize: 24, color: BRAND.red }}>RD</span>
+          <span style={{ fontWeight: 600, fontSize: 24, color: 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}>MercadoRD</span>
         </a>
 
         {/* Búsqueda centrada */}
@@ -204,12 +203,15 @@ export function Navbar() {
                 onFocus={() => setSearchFocusedDesktop(true)}
                 onBlur={() => setSearchFocusedDesktop(false)}
                 style={{
-                  width: '100%', border: `1.5px solid ${BRAND.blue}`, background: BRAND.bg, borderRadius: 24,
+                  width: '100%',
+                  border: `1px solid ${searchFocusedDesktop ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                  background: BRAND.bg, borderRadius: 'var(--radius-control)',
                   padding: '11px 50px 11px 18px', fontSize: 14, outline: 'none', color: BRAND.dark, boxSizing: 'border-box',
-                  boxShadow: searchFocusedDesktop ? '0 0 0 3px rgba(13,71,161,0.15)' : 'none',
+                  boxShadow: searchFocusedDesktop ? '0 0 0 3px var(--color-primary-subtle)' : 'none',
+                  transition: 'border-color var(--transition-fast), box-shadow var(--transition-fast)',
                 }}
               />
-              <button type='submit' style={{ position: 'absolute', right: 4, top: 4, bottom: 4, width: 38, border: 'none', borderRadius: '50%', background: BRAND.blue, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              <button type='submit' style={{ position: 'absolute', right: 4, top: 4, bottom: 4, width: 38, border: 'none', borderRadius: '50%', background: 'var(--color-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                 <Search size={16} />
               </button>
             </form>
@@ -354,7 +356,8 @@ export function Navbar() {
 
           <a
             href='/vendor/register'
-            style={{ background: BRAND.blue, color: '#fff', textDecoration: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 600, fontSize: 14, whiteSpace: 'nowrap' }}
+            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]"
+            style={{ color: '#fff', textDecoration: 'none', padding: '10px 20px', borderRadius: 'var(--radius-control)', fontWeight: 600, fontSize: 14, whiteSpace: 'nowrap', boxShadow: 'var(--shadow-button)', transition: 'background-color var(--transition-fast)' }}
           >
             {t('sellCta')}
           </a>
@@ -365,8 +368,7 @@ export function Navbar() {
       <div className="block md-860:hidden" style={{ padding: '12px 16px 10px' }}>
         <div className="flex items-center justify-between mb-2.5">
           <a href='/' className="no-underline">
-            <span style={{ fontWeight: 700, fontSize: 20, color: BRAND.blue }}>Mercado</span>
-            <span style={{ fontWeight: 700, fontSize: 20, color: BRAND.red }}>RD</span>
+            <span style={{ fontWeight: 600, fontSize: 20, color: 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}>MercadoRD</span>
           </a>
           <div className="flex items-center gap-4">
             {user ? (
@@ -400,12 +402,15 @@ export function Navbar() {
               onFocus={() => setSearchFocusedMobile(true)}
               onBlur={() => setSearchFocusedMobile(false)}
               style={{
-                width: '100%', border: `1.5px solid ${BRAND.blue}`, background: BRAND.bg, borderRadius: 24,
+                width: '100%',
+                border: `1px solid ${searchFocusedMobile ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                background: BRAND.bg, borderRadius: 'var(--radius-control)',
                 padding: '10px 44px 10px 16px', fontSize: 13, outline: 'none', color: BRAND.dark, boxSizing: 'border-box',
-                boxShadow: searchFocusedMobile ? '0 0 0 3px rgba(13,71,161,0.15)' : 'none',
+                boxShadow: searchFocusedMobile ? '0 0 0 3px var(--color-primary-subtle)' : 'none',
+                transition: 'border-color var(--transition-fast), box-shadow var(--transition-fast)',
               }}
             />
-            <button type='submit' style={{ position: 'absolute', right: 3, top: 3, bottom: 3, width: 32, border: 'none', borderRadius: '50%', background: BRAND.blue, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button type='submit' style={{ position: 'absolute', right: 3, top: 3, bottom: 3, width: 32, border: 'none', borderRadius: '50%', background: 'var(--color-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Search size={14} />
             </button>
           </form>
@@ -415,8 +420,8 @@ export function Navbar() {
             duplica aquí para que "Vender en RD" siga visible en mobile */}
         <a
           href='/vendor/register'
-          className="block text-center"
-          style={{ marginTop: 10, background: BRAND.blue, color: '#fff', textDecoration: 'none', padding: '10px 16px', borderRadius: 8, fontWeight: 600, fontSize: 13 }}
+          className="block text-center bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]"
+          style={{ marginTop: 10, color: '#fff', textDecoration: 'none', padding: '10px 16px', borderRadius: 'var(--radius-control)', fontWeight: 600, fontSize: 13, boxShadow: 'var(--shadow-button)', transition: 'background-color var(--transition-fast)' }}
         >
           {t('sellCta')}
         </a>

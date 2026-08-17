@@ -1,6 +1,6 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { Poppins } from 'next/font/google'
+import { Poppins, Plus_Jakarta_Sans, Inter } from 'next/font/google'
 import { MobileTabBar } from '../components/shop/MobileTabBar'
 import { Footer } from '../components/shop/Footer'
 import { InactivityWarning } from '../components/shop/InactivityWarning'
@@ -11,6 +11,25 @@ const poppins = Poppins({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-poppins',
+  display: 'swap',
+})
+
+// Sistema de diseño "Caribe Premium Minimal" (Fase 1 — fundación): estas
+// dos fuentes quedan disponibles como variables CSS (--font-plus-jakarta-sans,
+// --font-inter) para que lib/design-tokens.css pueda referenciarlas, pero
+// TODAVÍA no se aplican a ningún elemento — Poppins sigue siendo la fuente
+// activa en <body> hasta que empiece la Fase 2.
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-plus-jakarta-sans',
+  display: 'swap',
+})
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-inter',
   display: 'swap',
 })
 
@@ -50,7 +69,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" className={poppins.variable}>
+    <html lang="es" className={`${poppins.variable} ${plusJakartaSans.variable} ${inter.variable}`}>
       <head>
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>

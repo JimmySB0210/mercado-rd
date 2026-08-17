@@ -36,12 +36,12 @@ export default function CartPage() {
           </h1>
 
           {items.length === 0 ? (
-            <div style={{ background: '#fff', borderRadius: 10, padding: 40, textAlign: 'center', border: '1px solid #EEE' }}>
+            <div style={{ background: 'var(--color-card-bg)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)', padding: 40, textAlign: 'center' }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>🛒</div>
               <p style={{ color: BRAND.gray, fontSize: 14, marginBottom: 16 }}>{t('emptyCart')}</p>
               <a
                 href="/"
-                style={{ display: 'inline-block', background: BRAND.blue, color: '#fff', textDecoration: 'none', padding: '10px 24px', borderRadius: 8, fontWeight: 600, fontSize: 14 }}
+                style={{ display: 'inline-block', background: 'var(--color-primary)', color: '#fff', textDecoration: 'none', padding: '10px 24px', borderRadius: 'var(--radius-control)', fontWeight: 600, fontSize: 14, boxShadow: 'var(--shadow-button)' }}
               >
                 {t('exploreProducts')}
               </a>
@@ -53,7 +53,7 @@ export default function CartPage() {
                 <div
                   key={`${item.product.id}-${item.variant_id ?? `${item.selected_size}-${item.selected_color}`}`}
                   className="cart-item"
-                  style={{ background: '#fff', borderRadius: 10, padding: 16, marginBottom: 12, display: 'flex', gap: 14, alignItems: 'center', border: '1px solid #EEE' }}
+                  style={{ background: 'var(--color-card-bg)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)', padding: 16, marginBottom: 12, display: 'flex', gap: 14, alignItems: 'center' }}
                 >
                   {/* Imagen */}
                   <div style={{ width: 64, height: 64, borderRadius: 8, background: BRAND.bg, flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
@@ -129,11 +129,11 @@ export default function CartPage() {
               </div>
 
               {subtotal < FREE_SHIPPING_THRESHOLD_RDP ? (
-                <div style={{ fontSize: 12, color: BRAND.blue, background: '#EFF6FF', borderRadius: 6, padding: '8px 10px', marginBottom: 12 }}>
+                <div style={{ fontSize: 12, color: 'var(--color-primary)', background: 'var(--color-primary-subtle)', borderRadius: 'var(--radius-control)', padding: '8px 10px', marginBottom: 12 }}>
                   {t('freeShippingMissing', { amount: ((FREE_SHIPPING_THRESHOLD_RDP - subtotal) / 100).toLocaleString('es-DO') })}
                 </div>
               ) : (
-                <div style={{ fontSize: 12, color: '#2E7D32', background: '#F0FDF4', borderRadius: 6, padding: '8px 10px', marginBottom: 12, fontWeight: 600 }}>
+                <div style={{ fontSize: 12, color: 'var(--color-success)', background: 'var(--color-success-subtle)', borderRadius: 'var(--radius-control)', padding: '8px 10px', marginBottom: 12, fontWeight: 600 }}>
                   {t('freeShippingApplied')}
                 </div>
               )}
@@ -142,7 +142,7 @@ export default function CartPage() {
                 <span>{t('shippingLabel')}</span>
                 <span>
                   {items.length > 0 && subtotal >= FREE_SHIPPING_THRESHOLD_RDP
-                    ? <span style={{ color: '#2E7D32', fontWeight: 700 }}>{t('freeBadge')}</span>
+                    ? <span style={{ color: 'var(--color-success)', fontWeight: 700 }}>{t('freeBadge')}</span>
                     : `RD$${(ENVIO / 100).toLocaleString('es-DO')}`}
                 </span>
               </div>
@@ -151,14 +151,16 @@ export default function CartPage() {
                 <span>RD${(itbis / 100).toLocaleString('es-DO')}</span>
               </div>
 
-              <div style={{ borderTop: '1px solid #eee', paddingTop: 14, display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 17, marginBottom: 16, color: BRAND.dark }}>
+              <div style={{ borderTop: '1px solid #eee', paddingTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontWeight: 700, fontSize: 15, marginBottom: 16, color: BRAND.dark }}>
                 <span>{t('totalLabel')}</span>
-                <span>RD${((total + ENVIO) / 100).toLocaleString('es-DO')}</span>
+                <span style={{ fontSize: 20, color: 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}>
+                  RD${((total + ENVIO) / 100).toLocaleString('es-DO')}
+                </span>
               </div>
 
               <a
                 href="/checkout"
-                style={{ display: 'block', background: BRAND.red, color: '#fff', textDecoration: 'none', textAlign: 'center', padding: 14, borderRadius: 8, fontWeight: 700, fontSize: 15, marginBottom: 10 }}
+                style={{ display: 'block', background: 'var(--color-primary)', color: '#fff', textDecoration: 'none', textAlign: 'center', padding: 14, borderRadius: 'var(--radius-control)', fontWeight: 700, fontSize: 15, marginBottom: 10, boxShadow: 'var(--shadow-button)' }}
               >
                 {t('proceedToCheckout')}
               </a>
@@ -166,11 +168,11 @@ export default function CartPage() {
                 {t('continueShopping')}
               </a>
 
-              <div style={{ marginTop: 14, padding: 12, background: '#F0FDF4', borderRadius: 8, border: '1px solid #C8E6C9', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                <ShieldCheck size={16} color={BRAND.green} style={{ flexShrink: 0, marginTop: 1 }} />
+              <div style={{ marginTop: 14, padding: 12, background: 'var(--color-success-subtle)', borderRadius: 'var(--radius-control)', display: 'flex', gap: 8, alignItems: 'flex-start', color: 'var(--color-success)' }}>
+                <ShieldCheck size={16} color="currentColor" style={{ flexShrink: 0, marginTop: 1 }} />
                 <div>
-                  <div style={{ fontSize: 12, color: '#1B5E20', fontWeight: 600, marginBottom: 2 }}>{t('protectedPurchaseTitle')}</div>
-                  <div style={{ fontSize: 11, color: '#1B5E20' }}>{t('protectedPurchaseSub')}</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 2 }}>{t('protectedPurchaseTitle')}</div>
+                  <div style={{ fontSize: 11 }}>{t('protectedPurchaseSub')}</div>
                 </div>
               </div>
 

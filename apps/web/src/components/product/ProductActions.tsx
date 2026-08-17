@@ -149,11 +149,15 @@ export function ProductActions({
               <button
                 key={size}
                 onClick={() => setSelectedSize(size)}
-                className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-all ${
-                  selectedSize === size
-                    ? 'border-[var(--brand-blue)] text-[var(--brand-blue)] bg-[color-mix(in_srgb,var(--brand-blue)_8%,transparent)]'
-                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                className={`px-4 py-1.5 text-sm font-medium ${
+                  selectedSize === size ? 'text-white' : 'text-gray-600 hover:border-gray-300'
                 }`}
+                style={{
+                  borderRadius: 'var(--radius-pill)',
+                  border: `1px solid ${selectedSize === size ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                  background: selectedSize === size ? 'var(--color-primary)' : 'transparent',
+                  transition: 'all var(--transition-fast)',
+                }}
               >
                 {size}
               </button>
@@ -178,11 +182,8 @@ export function ProductActions({
                   onClick={() => setSelectedColor(color)}
                   title={color}
                   aria-label={color}
-                  className={`w-10 h-10 rounded-lg overflow-hidden border-2 transition-all ${
-                    selectedColor === color
-                      ? 'border-[var(--brand-blue)]'
-                      : 'border-transparent hover:border-gray-300'
-                  }`}
+                  className="w-10 h-10 rounded-full overflow-hidden border-2 transition-all"
+                  style={{ borderColor: selectedColor === color ? 'var(--color-primary)' : 'var(--color-border)' }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={thumbUrl} alt={color} className="w-full h-full object-cover" />
@@ -191,11 +192,15 @@ export function ProductActions({
                 <button
                   key={color}
                   onClick={() => setSelectedColor(color)}
-                  className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-all ${
-                    selectedColor === color
-                      ? 'border-[var(--brand-blue)] text-[var(--brand-blue)] bg-[color-mix(in_srgb,var(--brand-blue)_8%,transparent)]'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                  className={`px-4 py-1.5 text-sm font-medium ${
+                    selectedColor === color ? 'text-white' : 'text-gray-600 hover:border-gray-300'
                   }`}
+                  style={{
+                    borderRadius: 'var(--radius-pill)',
+                    border: `1px solid ${selectedColor === color ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                    background: selectedColor === color ? 'var(--color-primary)' : 'transparent',
+                    transition: 'all var(--transition-fast)',
+                  }}
                 >
                   {color}
                 </button>
@@ -242,9 +247,8 @@ export function ProductActions({
                     onClick={select}
                     title={opt.label}
                     aria-label={opt.label}
-                    className={`w-10 h-10 rounded-lg overflow-hidden border-2 transition-all ${
-                      isSelected ? 'border-[var(--brand-blue)]' : 'border-transparent hover:border-gray-300'
-                    }`}
+                    className="w-10 h-10 rounded-full overflow-hidden border-2 transition-all"
+                    style={{ borderColor: isSelected ? 'var(--color-primary)' : 'var(--color-border)' }}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={thumbUrl} alt={opt.label} className="w-full h-full object-cover" />
@@ -253,11 +257,15 @@ export function ProductActions({
                   <button
                     key={opt.value}
                     onClick={select}
-                    className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-all ${
-                      isSelected
-                        ? 'border-[var(--brand-blue)] text-[var(--brand-blue)] bg-[color-mix(in_srgb,var(--brand-blue)_8%,transparent)]'
-                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                    className={`px-4 py-1.5 text-sm font-medium ${
+                      isSelected ? 'text-white' : 'text-gray-600 hover:border-gray-300'
                     }`}
+                    style={{
+                      borderRadius: 'var(--radius-pill)',
+                      border: `1px solid ${isSelected ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                      background: isSelected ? 'var(--color-primary)' : 'transparent',
+                      transition: 'all var(--transition-fast)',
+                    }}
                   >
                     {opt.label}
                   </button>
@@ -308,13 +316,18 @@ export function ProductActions({
       <button
         onClick={handleAdd}
         disabled={!canAdd}
-        className={`w-full py-3.5 rounded-xl font-semibold text-white transition-all ${
+        className={`w-full py-3.5 font-semibold text-white ${
           added
-            ? 'bg-green-500'
+            ? 'bg-[var(--color-success)]'
             : canAdd
-            ? 'bg-[var(--brand-red)] hover:brightness-90 active:scale-[0.98]'
+            ? 'bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] active:scale-[0.98]'
             : 'bg-gray-300 cursor-not-allowed text-white'
         }`}
+        style={{
+          borderRadius: 'var(--radius-control)',
+          boxShadow: canAdd && !added ? 'var(--shadow-button)' : 'none',
+          transition: 'background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast)',
+        }}
       >
         {isOutOfStock
           ? (hasVariants ? t('outOfStock') : t('noStock'))

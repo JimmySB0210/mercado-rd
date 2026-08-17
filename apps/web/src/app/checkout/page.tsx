@@ -364,7 +364,7 @@ export default function CheckoutPage() {
           <div style={{ fontSize: 48, marginBottom: 16 }}>🛒</div>
           <h2 style={{ fontSize: 20, fontWeight: 700, color: BRAND.dark, marginBottom: 8 }}>{t('emptyCartTitle')}</h2>
           <p style={{ color: BRAND.gray, fontSize: 14, marginBottom: 24 }}>{t('emptyCartSub')}</p>
-          <a href="/" style={{ display: 'inline-block', background: BRAND.blue, color: '#fff', textDecoration: 'none', padding: '12px 28px', borderRadius: 8, fontWeight: 600 }}>
+          <a href="/" style={{ display: 'inline-block', background: 'var(--color-primary)', color: '#fff', textDecoration: 'none', padding: '12px 28px', borderRadius: 'var(--radius-control)', fontWeight: 600, boxShadow: 'var(--shadow-button)' }}>
             {t('exploreProducts')}
           </a>
         </div>
@@ -382,7 +382,7 @@ export default function CheckoutPage() {
         <div>
 
           {/* Dirección */}
-          <div style={{ background: '#fff', borderRadius: 12, padding: 24, marginBottom: 16, border: '1px solid #EEE' }}>
+          <div style={{ background: 'var(--color-card-bg)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)', padding: 24, marginBottom: 16 }}>
             <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 18, color: BRAND.dark }}>{t('deliveryAddressHeading')}</h2>
             <div style={{ display: 'grid', gap: 12 }}>
               <input
@@ -390,14 +390,14 @@ export default function CheckoutPage() {
                 value={form.fullName}
                 onChange={handleChange}
                 placeholder={t('fullNamePlaceholder')}
-                style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
               />
               <input
                 name="phone"
                 value={form.phone}
                 onChange={handleChange}
                 placeholder={t('phonePlaceholder')}
-                style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
               />
               <div>
                 <input
@@ -405,7 +405,7 @@ export default function CheckoutPage() {
                   value={form.address}
                   onChange={handleChange}
                   placeholder={t('addressPlaceholder')}
-                  style={{ width: '100%', border: `1px solid ${addressError ? '#E53935' : '#E0E0E0'}`, borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', border: `1px solid ${addressError ? '#E53935' : 'var(--color-border)'}`, borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
                 />
                 {addressError && <p style={{ fontSize: 12, color: '#E53935', margin: '4px 0 0' }}>{addressError}</p>}
               </div>
@@ -414,7 +414,7 @@ export default function CheckoutPage() {
                   name="province"
                   value={form.province}
                   onChange={handleChange}
-                  style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box', appearance: 'none', background: '#fff', color: form.province ? BRAND.dark : BRAND.gray }}
+                  style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box', appearance: 'none', background: '#fff', color: form.province ? BRAND.dark : BRAND.gray }}
                 >
                   <option value="">{t('selectProvincePlaceholder')}</option>
                   {provinces.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
@@ -428,7 +428,7 @@ export default function CheckoutPage() {
                   onChange={handleChange}
                   placeholder={t('notesPlaceholder')}
                   rows={2}
-                  style={{ width: '100%', border: `1px solid ${notesError ? '#E53935' : '#E0E0E0'}`, borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }}
+                  style={{ width: '100%', border: `1px solid ${notesError ? '#E53935' : 'var(--color-border)'}`, borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }}
                 />
                 {notesError && <p style={{ fontSize: 12, color: '#E53935', margin: '4px 0 0' }}>{notesError}</p>}
               </div>
@@ -436,7 +436,7 @@ export default function CheckoutPage() {
           </div>
 
           {/* Método de pago */}
-          <div style={{ background: '#fff', borderRadius: 12, padding: 24, border: '1px solid #EEE' }}>
+          <div style={{ background: 'var(--color-card-bg)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)', padding: 24 }}>
             <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 18, color: BRAND.dark }}>{t('paymentMethodHeading')}</h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               {PAYMENT_METHOD_KEYS.map(m => (
@@ -444,10 +444,10 @@ export default function CheckoutPage() {
                   key={m.id}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px',
-                    border: `2px solid ${form.payMethod === m.id ? BRAND.blue : '#E0E0E0'}`,
-                    borderRadius: 8, cursor: 'pointer',
-                    background: form.payMethod === m.id ? `color-mix(in srgb, ${BRAND.blue} 6%, white)` : '#fff',
-                    transition: 'all .15s',
+                    border: `1px solid ${form.payMethod === m.id ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                    borderRadius: 'var(--radius-pill)', cursor: 'pointer',
+                    background: form.payMethod === m.id ? 'var(--color-primary)' : 'transparent',
+                    transition: 'all var(--transition-fast)',
                   }}
                 >
                   <input
@@ -459,7 +459,7 @@ export default function CheckoutPage() {
                     style={{ display: 'none' }}
                   />
                   <span style={{ fontSize: 18 }}>{m.emoji}</span>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: BRAND.dark }}>{t(m.labelKey)}</span>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: form.payMethod === m.id ? '#fff' : BRAND.dark }}>{t(m.labelKey)}</span>
                 </label>
               ))}
             </div>
@@ -472,7 +472,7 @@ export default function CheckoutPage() {
                   onChange={handleChange}
                   placeholder={t('cardNumberPlaceholder')}
                   inputMode="numeric"
-                  style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
                 />
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <input
@@ -482,7 +482,7 @@ export default function CheckoutPage() {
                     placeholder={t('cardExpirationPlaceholder')}
                     maxLength={4}
                     inputMode="numeric"
-                    style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                    style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
                   />
                   <input
                     name="cardCvc"
@@ -491,7 +491,7 @@ export default function CheckoutPage() {
                     placeholder={t('cardCvcPlaceholder')}
                     maxLength={4}
                     inputMode="numeric"
-                    style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                    style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
                   />
                 </div>
                 <p style={{ fontSize: 11, color: BRAND.gray, margin: 0 }}>
@@ -510,7 +510,7 @@ export default function CheckoutPage() {
 
         {/* Resumen lateral */}
         <div style={{ position: 'sticky', top: 20 }}>
-          <div style={{ background: '#fff', borderRadius: 12, padding: 20, border: '1px solid #EEE', marginBottom: 12 }}>
+          <div style={{ background: 'var(--color-card-bg)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)', padding: 20, marginBottom: 12 }}>
             <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 14, color: BRAND.dark }}>
               {items.length === 1
                 ? t('orderItemsCountOne', { count: items.length })
@@ -624,7 +624,7 @@ export default function CheckoutPage() {
                             <span style={{ textDecoration: 'line-through', color: BRAND.gray, marginRight: 6 }}>
                               RD${(rawShipping / 100).toLocaleString('es-DO')}
                             </span>
-                            <span style={{ color: '#2E7D32', fontWeight: 700 }}>{t('freeBadge')}</span>
+                            <span style={{ color: 'var(--color-success)', fontWeight: 700 }}>{t('freeBadge')}</span>
                           </>
                         )
                         : `RD$${(ENVIO / 100).toLocaleString('es-DO')}`}
@@ -634,14 +634,16 @@ export default function CheckoutPage() {
                 <span>{t('itbisLabel')}</span><span>RD${(itbis / 100).toLocaleString('es-DO')}</span>
               </div>
               {appliedCoupon && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#2E7D32', fontWeight: 600 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--color-success)', fontWeight: 600 }}>
                   <span>{t('discountLabel', { code: appliedCoupon.code })}</span>
                   <span>-RD${(discountRdp / 100).toLocaleString('es-DO')}</span>
                 </div>
               )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 16, borderTop: '1px solid #EEE', paddingTop: 10, marginTop: 4, color: BRAND.dark }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontWeight: 700, fontSize: 14, borderTop: '1px solid #EEE', paddingTop: 10, marginTop: 4, color: BRAND.dark }}>
                 <span>{t('totalLabel')}</span>
-                <span>RD${(Math.max(0, total + ENVIO - discountRdp) / 100).toLocaleString('es-DO')}</span>
+                <span style={{ fontSize: 19, color: 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}>
+                  RD${(Math.max(0, total + ENVIO - discountRdp) / 100).toLocaleString('es-DO')}
+                </span>
               </div>
             </div>
           </div>
@@ -667,18 +669,19 @@ export default function CheckoutPage() {
             onClick={handleSubmit}
             disabled={loading || shippingLoading || rateLimited}
             style={{
-              display: 'block', width: '100%', background: (loading || shippingLoading || rateLimited) ? '#ccc' : BRAND.red,
-              color: '#fff', border: 'none', padding: 14, borderRadius: 8,
+              display: 'block', width: '100%', background: (loading || shippingLoading || rateLimited) ? '#ccc' : 'var(--color-primary)',
+              color: '#fff', border: 'none', padding: 14, borderRadius: 'var(--radius-control)',
               fontWeight: 700, fontSize: 15, cursor: (loading || shippingLoading || rateLimited) ? 'not-allowed' : 'pointer',
               marginBottom: 10,
+              boxShadow: (loading || shippingLoading || rateLimited) ? 'none' : 'var(--shadow-button)',
             }}
           >
             {loading ? t('processingPayment') : shippingLoading ? t('calculatingShippingButton') : rateLimited ? t('rateLimitedButton') : t('confirmAndPay')}
           </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 12, background: '#F0FDF4', borderRadius: 8, border: '1px solid #C8E6C9' }}>
-            <ShieldCheck size={15} color={BRAND.green} style={{ flexShrink: 0 }} />
-            <span style={{ fontSize: 11, color: '#1B5E20' }}>{t('securePaymentNotice')}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 12, background: 'var(--color-success-subtle)', borderRadius: 'var(--radius-control)', color: 'var(--color-success)' }}>
+            <ShieldCheck size={15} color="currentColor" style={{ flexShrink: 0 }} />
+            <span style={{ fontSize: 11 }}>{t('securePaymentNotice')}</span>
           </div>
         </div>
       </div>

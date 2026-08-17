@@ -31,13 +31,19 @@ export function ProductCard({ product }: Props) {
     : null
 
   return (
-    <div className="relative group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-md hover:border-gray-200 transition-all duration-200">
+    <div
+      className="relative group overflow-hidden bg-[var(--color-card-bg)] [box-shadow:var(--shadow-card)] hover:[box-shadow:var(--shadow-card-hover)] hover:-translate-y-0.5"
+      style={{ borderRadius: 'var(--radius-card)', transition: 'box-shadow var(--transition-base), transform var(--transition-base)' }}
+    >
       {/* Hermano del Link, no anidado dentro — mismo motivo que el CTA de WhatsApp */}
       <WishlistButton productId={product.id} />
 
       <Link href={`/producto/${product.id}`} className="block">
         {/* Imagen */}
-        <div className="relative aspect-square overflow-hidden bg-gray-50">
+        <div
+          className="relative aspect-square overflow-hidden bg-gray-50"
+          style={{ borderRadius: 'var(--radius-product-image) var(--radius-product-image) 0 0' }}
+        >
           <Image
             src={imgSrc}
             alt={product.name}
@@ -46,17 +52,12 @@ export function ProductCard({ product }: Props) {
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             onError={() => setImgSrc(PLACEHOLDER_PRODUCT_IMAGE)}
           />
-          {discount && (
+          {(discount || (product.stock <= 5 && product.stock > 0)) && (
             <span
-              className="absolute top-2 left-2 text-white text-xs font-bold px-2 py-0.5 rounded-full"
-              style={{ background: 'var(--brand-red)' }}
+              className="absolute top-2 left-2 text-white text-xs font-bold px-2.5 py-1"
+              style={{ background: 'var(--color-badge-orange)', borderRadius: 'var(--radius-pill)' }}
             >
-              -{discount}%
-            </span>
-          )}
-          {product.stock <= 5 && product.stock > 0 && (
-            <span className="absolute top-2 right-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
-              {t('stockLeftBadge', { count: product.stock })}
+              {discount ? `-${discount}%` : t('stockLeftBadge', { count: product.stock })}
             </span>
           )}
         </div>
@@ -65,7 +66,7 @@ export function ProductCard({ product }: Props) {
         <div className="p-3 pb-0">
           {/* Vendor */}
           <div className="flex items-center gap-1 mb-1">
-            <span className="text-xs text-gray-400 truncate">{product.vendor?.business_name}</span>
+            <span className="text-xs truncate" style={{ color: 'var(--color-text-secondary)' }}>{product.vendor?.business_name}</span>
             {product.vendor?.is_verified && (
               <svg
                 className="w-3 h-3 flex-shrink-0"
@@ -79,20 +80,24 @@ export function ProductCard({ product }: Props) {
           </div>
 
           {/* Nombre */}
-          <p className="text-sm font-medium text-gray-900 line-clamp-2 mb-1 leading-snug">
+          <p
+            className="text-sm font-medium text-gray-900 line-clamp-2 mb-1 leading-snug"
+            style={{ fontFamily: 'var(--font-body)' }}
+          >
             {product.name}
           </p>
 
-          {/* Rating */}
-          {product.rating_avg > 0 && (
-            <p className="text-xs text-gray-500 mb-2">
-              ⭐ {product.rating_avg.toFixed(1)} ({product.rating_count})
-            </p>
-          )}
+          {/* Rating — siempre visible */}
+          <p className="text-xs mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+            ⭐ {product.rating_avg.toFixed(1)} ({product.rating_count})
+          </p>
 
           {/* Precio */}
           <div className="flex items-baseline gap-2">
-            <span className="text-base font-bold text-gray-900">
+            <span
+              className="text-lg font-bold"
+              style={{ color: 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}
+            >
               {formatPrice(product.price_rdp)}
             </span>
             {hasDiscount && (

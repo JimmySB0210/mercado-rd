@@ -20,7 +20,10 @@ export function ProductGallery({ images, name }: Props) {
   return (
     <div className="flex flex-col gap-3">
       {/* Imagen principal */}
-      <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 border border-gray-100">
+      <div
+        className="relative aspect-square overflow-hidden bg-gray-100 border border-gray-100"
+        style={{ borderRadius: 'var(--radius-card)' }}
+      >
         <Image
           src={all[selected]}
           alt={name}
