@@ -31,6 +31,9 @@ export const common = {
   sellCta: 'Sell on RD',
   allCategories: 'All categories',
   providers: 'Providers',
+  offers: 'Deals',
+  officialStores: 'Official stores',
+  helpNav: 'Help',
   categoriesDrawerTitle: 'Categories',
   closeCategoriesMenuAria: 'Close categories menu',
 

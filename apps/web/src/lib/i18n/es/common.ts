@@ -31,6 +31,9 @@ export const common = {
   sellCta: 'Vender en RD',
   allCategories: 'Todas las categorías',
   providers: 'Proveedores',
+  offers: 'Ofertas',
+  officialStores: 'Tiendas oficiales',
+  helpNav: 'Ayuda',
   categoriesDrawerTitle: 'Categorías',
   closeCategoriesMenuAria: 'Cerrar menú de categorías',
 

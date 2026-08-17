@@ -31,6 +31,9 @@ export const common = {
   sellCta: 'Vendre sur RD',
   allCategories: 'Toutes les catégories',
   providers: 'Fournisseurs',
+  offers: 'Offres',
+  officialStores: 'Boutiques officielles',
+  helpNav: 'Aide',
   categoriesDrawerTitle: 'Catégories',
   closeCategoriesMenuAria: 'Fermer le menu des catégories',
 

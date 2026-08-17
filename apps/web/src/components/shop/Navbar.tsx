@@ -353,14 +353,6 @@ export function Navbar() {
               {t('login')}
             </a>
           )}
-
-          <a
-            href='/vendor/register'
-            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]"
-            style={{ color: '#fff', textDecoration: 'none', padding: '10px 20px', borderRadius: 'var(--radius-control)', fontWeight: 600, fontSize: 14, whiteSpace: 'nowrap', boxShadow: 'var(--shadow-button)', transition: 'background-color var(--transition-fast)' }}
-          >
-            {t('sellCta')}
-          </a>
         </div>
       </div>
 
@@ -428,29 +420,31 @@ export function Navbar() {
       </div>
 
       {/* ─── Category bar ────────────────────────────────── */}
-      <div style={{ background: BRAND.blue }}>
+      <div style={{ background: 'var(--color-card-bg)', borderBottom: '1px solid var(--color-border)' }}>
         <div
           className="flex items-center justify-between"
           style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px' }}
         >
-          <div
-            onMouseEnter={() => !isMobile && setShowCategoryMenu(true)}
-            onMouseLeave={() => {
-              if (isMobile) return
-              setShowCategoryMenu(false)
-              setHoveredCategoryId(null)
-            }}
-            style={{ position: 'relative' }}
-          >
-            <a
-              href='/categorias'
-              onClick={e => {
-                if (isMobile) { e.preventDefault(); setShowCategoryMenu(true) }
+          <div className="flex items-center" style={{ gap: 28 }}>
+            <div
+              onMouseEnter={() => !isMobile && setShowCategoryMenu(true)}
+              onMouseLeave={() => {
+                if (isMobile) return
+                setShowCategoryMenu(false)
+                setHoveredCategoryId(null)
               }}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 16px', color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, background: 'rgba(255,255,255,0.14)', whiteSpace: 'nowrap' }}
+              style={{ position: 'relative', padding: '11px 0' }}
             >
-              ☰ {t('allCategories')}
-            </a>
+              <a
+                href='/categorias'
+                onClick={e => {
+                  if (isMobile) { e.preventDefault(); setShowCategoryMenu(true) }
+                }}
+                className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]"
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, borderRadius: 'var(--radius-pill)', whiteSpace: 'nowrap', transition: 'background-color var(--transition-fast)' }}
+              >
+                ☰ {t('allCategories')}
+              </a>
 
             {!isMobile && showCategoryMenu && (
               <div style={{ position: 'absolute', top: '100%', left: 0, display: 'flex', zIndex: 50 }}>
@@ -502,9 +496,42 @@ export function Navbar() {
                 )}
               </div>
             )}
+            </div>
+
+            {/* Enlaces de navegación — solo desktop, en mobile no hay espacio
+                junto al botón de categorías */}
+            <div className="hidden md-860:flex items-center" style={{ gap: 24 }}>
+              <a href='/proveedores' className="hover:text-[var(--color-primary)] transition-colors" style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>
+                {t('providers')}
+              </a>
+              <a href='/' className="hover:text-[var(--color-primary)] transition-colors" style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>
+                {t('offers')}
+              </a>
+              <a href='/tiendas' className="hover:text-[var(--color-primary)] transition-colors" style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>
+                {t('officialStores')}
+              </a>
+              <a href='/vendor/register' className="hover:text-[var(--color-primary)] transition-colors" style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>
+                {t('sellCta')}
+              </a>
+              <a href='/soporte' className="hover:text-[var(--color-primary)] transition-colors" style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>
+                {t('helpNav')}
+              </a>
+            </div>
           </div>
 
-          <a href='/proveedores' style={{ padding: '11px 16px', color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>
+          {/* CTA — solo desktop, en mobile ya vive como botón de ancho
+              completo debajo del buscador */}
+          <a
+            href='/vendor/register'
+            className="hidden md-860:block bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]"
+            style={{ color: '#fff', textDecoration: 'none', padding: '9px 20px', borderRadius: 'var(--radius-control)', fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', flexShrink: 0, boxShadow: 'var(--shadow-button)', transition: 'background-color var(--transition-fast)' }}
+          >
+            {t('sellCta')}
+          </a>
+
+          {/* Proveedores — solo mobile, a la derecha del botón de categorías
+              (en desktop ya está incluido en el clúster de enlaces de arriba) */}
+          <a href='/proveedores' className="block md-860:hidden" style={{ padding: '11px 16px', color: BRAND.dark, textDecoration: 'none', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>
             {t('providers')}
           </a>
         </div>
