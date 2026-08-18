@@ -129,6 +129,11 @@ export const admin = {
   bannersPageTitle: 'Banners promocionales',
   bannersPageSubtitle: 'Diapositivas del carrusel en el home, después de la de marca de MercadoRD',
 
+  // components/admin/BrandBannerToggle.tsx
+  brandBannerToggleLabel: 'Mostrar banner de marca de MercadoRD',
+  brandBannerToggleSub: 'Si lo desactivas, el carrusel del home empieza directo con los banners promocionales.',
+  brandBannerToggleError: 'No se pudo actualizar. Intenta de nuevo.',
+
   // components/admin/PromoBannerManager.tsx
   currentBannersTitle: 'Banners actuales ({count})',
   editBannerTitle: 'Editar banner',

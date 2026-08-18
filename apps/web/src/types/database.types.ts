@@ -64,6 +64,13 @@ export interface PromoBanner {
   created_at: string
 }
 
+export interface SiteSetting {
+  key: string
+  value: unknown
+  updated_at: string
+  updated_by: string | null
+}
+
 export interface User {
   id: string
   full_name: string

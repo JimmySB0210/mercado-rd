@@ -193,12 +193,15 @@ function PromoSlide({ banner }: { banner: PromoBanner }) {
 export function HeroBanner() {
   const { t } = useTranslation('home')
   const [banners, setBanners] = useState<PromoBanner[]>([])
+  const [showBrandBanner, setShowBrandBanner] = useState(true)
   const [activeIndex, setActiveIndex] = useState(0)
   const isMobile = useIsMobile(MOBILE_BREAKPOINT)
 
   // Mobile: Bienvenida + Perks (BrandSlide dividido) + promos.
-  // Desktop: BrandSlide entero (sin cambios) + promos.
-  const totalSlides = (isMobile ? 2 : 1) + banners.length
+  // Desktop: BrandSlide entero (sin cambios) + promos. Si el admin
+  // apagó el interruptor en /admin/promociones, la de marca no cuenta.
+  const brandSlideCount = showBrandBanner ? (isMobile ? 2 : 1) : 0
+  const totalSlides = brandSlideCount + banners.length
 
   useEffect(() => {
     const supabase = createPublicClient()
@@ -210,6 +213,15 @@ export function HeroBanner() {
       .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
       .order('sort_order')
       .then(({ data }) => setBanners(data ?? []))
+
+    supabase
+      .from('site_settings')
+      .select('value')
+      .eq('key', 'show_brand_banner')
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.value === false) setShowBrandBanner(false)
+      })
   }, [])
 
   // Auto-avance — usa el updater funcional para no reiniciar el intervalo
@@ -235,19 +247,21 @@ export function HeroBanner() {
           transition: 'transform 0.6s ease',
           transform: `translateX(-${activeIndex * 100}%)`,
         }}>
-          {isMobile ? (
-            <>
+          {showBrandBanner && (
+            isMobile ? (
+              <>
+                <div style={{ flex: '0 0 100%', minWidth: 0, height: '100%' }}>
+                  <WelcomeSlide />
+                </div>
+                <div style={{ flex: '0 0 100%', minWidth: 0, height: '100%' }}>
+                  <PerksSlide />
+                </div>
+              </>
+            ) : (
               <div style={{ flex: '0 0 100%', minWidth: 0, height: '100%' }}>
-                <WelcomeSlide />
+                <BrandSlide />
               </div>
-              <div style={{ flex: '0 0 100%', minWidth: 0, height: '100%' }}>
-                <PerksSlide />
-              </div>
-            </>
-          ) : (
-            <div style={{ flex: '0 0 100%', minWidth: 0, height: '100%' }}>
-              <BrandSlide />
-            </div>
+            )
           )}
           {banners.map(banner => (
             <div key={banner.id} style={{ flex: '0 0 100%', minWidth: 0, height: '100%' }}>

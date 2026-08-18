@@ -110,6 +110,11 @@ export const admin = {
   bannersPageTitle: 'Promotional banners',
   bannersPageSubtitle: 'Home carousel slides, after the MercadoRD brand one',
 
+  // components/admin/BrandBannerToggle.tsx
+  brandBannerToggleLabel: 'Show the MercadoRD brand banner',
+  brandBannerToggleSub: 'If you turn it off, the home carousel starts directly with the promotional banners.',
+  brandBannerToggleError: 'Could not update. Try again.',
+
   currentBannersTitle: 'Current banners ({count})',
   editBannerTitle: 'Edit banner',
   createBannerTitle: 'Create new banner',

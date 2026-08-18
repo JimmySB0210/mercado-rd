@@ -10,6 +10,7 @@ import { PromoBannerManager } from '@/components/admin/PromoBannerManager'
 import { AdminSidebar } from '@/components/admin/AdminSidebar'
 import { RestrictedAccess } from '@/components/admin/RestrictedAccess'
 import { PromoBannerPageHeader } from '@/components/admin/PromoBannerPageHeader'
+import { BrandBannerToggle } from '@/components/admin/BrandBannerToggle'
 import type { PromoBanner } from '@/types/database.types'
 
 export default async function AdminPromocionesPage() {
@@ -28,6 +29,13 @@ export default async function AdminPromocionesPage() {
 
   if (error) console.error('[AdminPromocionesPage]', error)
 
+  const { data: settingRow } = await supabase
+    .from('site_settings')
+    .select('value')
+    .eq('key', 'show_brand_banner')
+    .maybeSingle()
+
+  const showBrandBanner = (settingRow?.value as boolean | undefined) ?? true
   const bannerList = (banners ?? []) as PromoBanner[]
 
   return (
@@ -38,6 +46,7 @@ export default async function AdminPromocionesPage() {
       {/* Contenido */}
       <div style={{ padding: 28, background: '#f5f5f5' }}>
         <PromoBannerPageHeader />
+        <BrandBannerToggle initialValue={showBrandBanner} />
         <PromoBannerManager initialBanners={bannerList} />
       </div>
     </div>

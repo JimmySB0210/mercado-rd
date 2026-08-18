@@ -110,6 +110,11 @@ export const admin = {
   bannersPageTitle: 'Bannières promotionnelles',
   bannersPageSubtitle: "Diapositives du carrousel de l'accueil, après celle de la marque MercadoRD",
 
+  // components/admin/BrandBannerToggle.tsx
+  brandBannerToggleLabel: 'Afficher la bannière de marque MercadoRD',
+  brandBannerToggleSub: "Si vous la désactivez, le carrousel de l'accueil commence directement par les bannières promotionnelles.",
+  brandBannerToggleError: "Impossible de mettre à jour. Réessayez.",
+
   currentBannersTitle: 'Bannières actuelles ({count})',
   editBannerTitle: 'Modifier la bannière',
   createBannerTitle: 'Créer une nouvelle bannière',
