@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { ShieldCheck, Truck, Store, Headset } from 'lucide-react';
-import { BRAND } from '@/lib/colors';
 import { createPublicClient } from '@/lib/supabase/public'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { useTranslation } from '@/lib/hooks/useTranslation'
@@ -29,7 +28,7 @@ function BrandSlide() {
   return (
     <div style={{
       position:'relative',
-      background:`linear-gradient(135deg, ${BRAND.blue} 0%, #082f6e 100%)`,
+      background:`linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%)`,
       padding:'40px',
       display:'flex',
       alignItems:'center',
@@ -51,18 +50,18 @@ function BrandSlide() {
         <div style={{
           position:'absolute',
           inset:0,
-          background:`linear-gradient(to right, ${BRAND.blue} 0%, rgba(13,71,161,0) 100%)`,
+          background:`linear-gradient(to right, var(--color-primary) 0%, rgba(15,76,129,0) 100%)`,
         }} />
       </div>
 
       <div style={{position:'relative',zIndex:1,flex:'1 1 320px',minWidth:280}}>
-        <h1 style={{fontSize:32,fontWeight:700,lineHeight:1.25,margin:'0 0 14px'}}>
+        <h1 style={{fontFamily:'var(--font-heading)',letterSpacing:'var(--tracking-heading)',fontSize:32,fontWeight:700,lineHeight:1.25,margin:'0 0 14px'}}>
           {t('welcomeTitle')}
         </h1>
         <p style={{color:'rgba(255,255,255,0.75)',fontSize:14,margin:'0 0 22px',maxWidth:320}}>
           {t('welcomeSubtitle')}
         </p>
-        <a href='#productos' style={{display:'inline-block',background:BRAND.red,color:'#fff',textDecoration:'none',padding:'13px 26px',borderRadius:8,fontWeight:600,fontSize:14}}>
+        <a href='#productos' style={{display:'inline-block',background:'var(--color-accent)',color:'var(--color-primary)',textDecoration:'none',padding:'13px 26px',borderRadius:'var(--radius-control)',fontWeight:700,fontSize:14,boxShadow:'0 2px 10px rgba(232,185,35,0.35)'}}>
           {t('exploreCta')}
         </a>
       </div>
@@ -95,17 +94,17 @@ function WelcomeSlide() {
   return (
     <div style={{
       position:'relative', width:'100%', height:'100%',
-      background:`linear-gradient(135deg, ${BRAND.blue} 0%, #082f6e 100%)`,
+      background:`linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%)`,
       display:'flex', flexDirection:'column', alignItems:'flex-start', justifyContent:'center',
       padding:'0 20px', color:'#fff', gap:6,
     }}>
-      <h1 style={{fontSize:18,fontWeight:700,lineHeight:1.25,margin:0}}>
+      <h1 style={{fontFamily:'var(--font-heading)',letterSpacing:'var(--tracking-heading)',fontSize:18,fontWeight:700,lineHeight:1.25,margin:0}}>
         {t('welcomeTitle')}
       </h1>
       <p style={{color:'rgba(255,255,255,0.75)',fontSize:11,margin:0,maxWidth:280}}>
         {t('welcomeSubtitle')}
       </p>
-      <a href='#productos' style={{display:'inline-block',background:BRAND.red,color:'#fff',textDecoration:'none',padding:'7px 16px',borderRadius:6,fontWeight:600,fontSize:12,marginTop:4}}>
+      <a href='#productos' style={{display:'inline-block',background:'var(--color-accent)',color:'var(--color-primary)',textDecoration:'none',padding:'7px 16px',borderRadius:'var(--radius-control)',fontWeight:700,fontSize:12,marginTop:4}}>
         {t('exploreCta')}
       </a>
     </div>
@@ -120,7 +119,7 @@ function PerksSlide() {
   return (
     <div style={{
       position:'relative', width:'100%', height:'100%',
-      background:`linear-gradient(135deg, ${BRAND.blue} 0%, #082f6e 100%)`,
+      background:`linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%)`,
       display:'flex', alignItems:'center', justifyContent:'space-around',
       padding:'0 8px', color:'#fff',
     }}>

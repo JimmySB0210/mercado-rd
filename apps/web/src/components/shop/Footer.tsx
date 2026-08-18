@@ -7,8 +7,8 @@
 // ============================================================
 
 import { Instagram, Facebook } from 'lucide-react'
-import { BRAND } from '@/lib/colors'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { Logo } from '@/components/shop/Logo'
 
 // Lucide no incluye los logos de marca de X/Twitter ni TikTok — SVGs inline
 function XIcon({ size }: { size: number }) {
@@ -66,9 +66,8 @@ export function Footer() {
 
           {/* MercadoRD */}
           <div>
-            <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 10 }}>
-              <span style={{ color: '#fff' }}>Mercado</span>
-              <span style={{ color: BRAND.red }}>RD</span>
+            <div style={{ marginBottom: 12 }}>
+              <Logo variant="white" fontSize={22} />
             </div>
             <p style={{ color: '#B0B8C4', fontSize: 13, lineHeight: 1.6, maxWidth: 240 }}>
               {t('footerTagline')}

@@ -20,8 +20,10 @@ import type { Category, Province } from '@/types/database.types'
 import { useLocationStore } from '@/lib/store/location'
 import { NotificationBell } from '@/components/shop/NotificationBell'
 import { LanguageSwitcher } from '@/components/shop/LanguageSwitcher'
+import { Logo } from '@/components/shop/Logo'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { getCategoryIcon } from '@/lib/categoryIcons'
 
 export function Navbar() {
   const { t } = useTranslation('common')
@@ -189,7 +191,7 @@ export function Navbar() {
         style={{ maxWidth: 1400, margin: '0 auto', padding: '16px 24px' }}
       >
         <a href='/' className="no-underline flex-shrink-0">
-          <span style={{ fontWeight: 600, fontSize: 24, color: 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}>MercadoRD</span>
+          <Logo fontSize={26} />
         </a>
 
         {/* Búsqueda centrada */}
@@ -366,7 +368,7 @@ export function Navbar() {
       <div className="block md-860:hidden" style={{ padding: '12px 16px 10px' }}>
         <div className="flex items-center justify-between mb-2.5">
           <a href='/' className="no-underline">
-            <span style={{ fontWeight: 600, fontSize: 20, color: 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}>MercadoRD</span>
+            <Logo fontSize={19} />
           </a>
           <div className="flex items-center gap-4">
             {user ? (
@@ -461,22 +463,25 @@ export function Navbar() {
                   display: 'grid', gridTemplateColumns: '1fr', gap: 2,
                   maxHeight: 480, overflowY: 'auto'
                 }}>
-                  {topCategories.map((cat) => (
-                    <a
-                      key={cat.id}
-                      href={`/categoria/${cat.slug}`}
-                      onClick={() => setShowCategoryMenu(false)}
-                      onPointerEnter={e => e.pointerType === 'mouse' && setHoveredCategoryId(cat.id)}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px',
-                        color: '#333', textDecoration: 'none', fontSize: 13, borderRadius: 6, whiteSpace: 'nowrap',
-                        background: hoveredCategoryId === cat.id ? '#f5f5f5' : 'transparent',
-                      }}
-                    >
-                      <span style={{ filter: 'brightness(0)', fontSize: 15 }}>{cat.emoji}</span>
-                      {cat.name}
-                    </a>
-                  ))}
+                  {topCategories.map((cat) => {
+                    const Icon = getCategoryIcon(cat.name)
+                    return (
+                      <a
+                        key={cat.id}
+                        href={`/categoria/${cat.slug}`}
+                        onClick={() => setShowCategoryMenu(false)}
+                        onPointerEnter={e => e.pointerType === 'mouse' && setHoveredCategoryId(cat.id)}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px',
+                          color: '#333', textDecoration: 'none', fontSize: 13, borderRadius: 6, whiteSpace: 'nowrap',
+                          background: hoveredCategoryId === cat.id ? '#f5f5f5' : 'transparent',
+                        }}
+                      >
+                        <Icon size={17} color="var(--color-primary)" strokeWidth={1.75} />
+                        {cat.name}
+                      </a>
+                    )
+                  })}
                 </div>
 
                 {hoveredCategoryId && (subcategoriesByParent.get(hoveredCategoryId)?.length ?? 0) > 0 && (
@@ -579,17 +584,20 @@ export function Navbar() {
               </button>
             </div>
             <div style={{ padding: 10, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {topCategories.map(cat => (
-                <a
-                  key={cat.id}
-                  href={`/categoria/${cat.slug}`}
-                  onClick={() => setShowCategoryMenu(false)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 10px', color: '#333', textDecoration: 'none', fontSize: 14, borderRadius: 6, whiteSpace: 'nowrap' }}
-                >
-                  <span style={{ filter: 'brightness(0)', fontSize: 16 }}>{cat.emoji}</span>
-                  {cat.name}
-                </a>
-              ))}
+              {topCategories.map(cat => {
+                const Icon = getCategoryIcon(cat.name)
+                return (
+                  <a
+                    key={cat.id}
+                    href={`/categoria/${cat.slug}`}
+                    onClick={() => setShowCategoryMenu(false)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 10px', color: '#333', textDecoration: 'none', fontSize: 14, borderRadius: 6, whiteSpace: 'nowrap' }}
+                  >
+                    <Icon size={18} color="var(--color-primary)" strokeWidth={1.75} />
+                    {cat.name}
+                  </a>
+                )
+              })}
             </div>
           </div>
         </>

@@ -1,6 +1,6 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { Poppins, Plus_Jakarta_Sans, Inter } from 'next/font/google'
+import { Poppins, Plus_Jakarta_Sans, Inter, Playfair_Display } from 'next/font/google'
 import { MobileTabBar } from '../components/shop/MobileTabBar'
 import { Footer } from '../components/shop/Footer'
 import { InactivityWarning } from '../components/shop/InactivityWarning'
@@ -30,6 +30,16 @@ const inter = Inter({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-inter',
+  display: 'swap',
+})
+
+// Wordmark "MercadoRD" — serif elegante para el logo (Navbar, Footer,
+// sidebar del dashboard), separado de --font-heading (Plus Jakarta
+// Sans, sigue usándose para títulos grandes de página/precio).
+const playfairDisplay = Playfair_Display({
+  subsets: ['latin'],
+  weight: ['700'],
+  variable: '--font-playfair-display',
   display: 'swap',
 })
 
@@ -69,7 +79,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" className={`${poppins.variable} ${plusJakartaSans.variable} ${inter.variable}`}>
+    <html lang="es" className={`${poppins.variable} ${plusJakartaSans.variable} ${inter.variable} ${playfairDisplay.variable}`}>
       <head>
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>

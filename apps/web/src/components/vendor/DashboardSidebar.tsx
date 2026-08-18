@@ -11,10 +11,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
-import { BRAND } from '@/lib/colors'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { LanguageSwitcher } from '@/components/shop/LanguageSwitcher'
+import { Logo } from '@/components/shop/Logo'
 import type { DashboardDict } from '@/lib/i18n/es/dashboard'
 
 const NAV_ITEM_KEYS: { icon: string; labelKey: keyof DashboardDict; href: string }[] = [
@@ -54,10 +54,10 @@ export function DashboardSidebar() {
     return (
       <a key={i} href={item.href} onClick={onClick} style={{
         display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px', cursor: 'pointer',
-        background: active ? 'rgba(255,255,255,0.08)' : 'transparent',
+        background: active ? 'rgba(255,255,255,0.12)' : 'transparent',
         borderLeft: active ? '2px solid #fff' : '2px solid transparent',
-        color: active ? '#fff' : '#666', fontSize: 14, fontWeight: active ? 600 : 400,
-        textDecoration: 'none',
+        color: active ? '#fff' : 'rgba(255,255,255,0.65)', fontSize: 14, fontWeight: active ? 600 : 400,
+        fontFamily: 'var(--font-body)', textDecoration: 'none', transition: 'background-color var(--transition-fast), color var(--transition-fast)',
       }}>
         <span>{item.icon}</span>{t(item.labelKey)}
       </a>
@@ -66,17 +66,15 @@ export function DashboardSidebar() {
 
   if (!isMobile) {
     return (
-      <div style={{ background: '#111', padding: '24px 0', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '0 20px 24px', borderBottom: '1px solid #222', marginBottom: 16 }}>
+      <div style={{ background: 'var(--color-primary)', padding: '24px 0', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '0 20px 24px', borderBottom: '1px solid rgba(255,255,255,0.12)', marginBottom: 16 }}>
           <a href="/" style={{ textDecoration: 'none' }}>
-            <div style={{ fontWeight: 900, fontSize: 18, color: '#fff', marginBottom: 4 }}>
-              Mercado<span style={{ color: BRAND.red }}>RD</span>
-            </div>
+            <Logo variant="white" fontSize={18} />
           </a>
-          <div style={{ fontSize: 12, color: '#555' }}>{t('vendorPanelLabel')}</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-body)', marginTop: 6 }}>{t('vendorPanelLabel')}</div>
         </div>
         {NAV_ITEM_KEYS.map((item, i) => navLink(item, i))}
-        <div style={{ marginTop: 'auto', padding: '16px 20px', borderTop: '1px solid #222' }}>
+        <div style={{ marginTop: 'auto', padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.12)' }}>
           <LanguageSwitcher />
         </div>
       </div>
@@ -86,11 +84,9 @@ export function DashboardSidebar() {
   // Mobile — barra compacta + drawer con overlay
   return (
     <>
-      <div style={{ background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
+      <div style={{ background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
         <a href="/" style={{ textDecoration: 'none' }}>
-          <div style={{ fontWeight: 900, fontSize: 16, color: '#fff' }}>
-            Mercado<span style={{ color: BRAND.red }}>RD</span>
-          </div>
+          <Logo variant="white" fontSize={16} />
         </a>
         <button
           type="button"
@@ -108,25 +104,23 @@ export function DashboardSidebar() {
             ref={drawerRef}
             style={{
               position: 'fixed', top: 0, left: 0, bottom: 0, width: 260, maxWidth: '80vw',
-              background: '#111', padding: '20px 0', display: 'flex', flexDirection: 'column',
+              background: 'var(--color-primary)', padding: '20px 0', display: 'flex', flexDirection: 'column',
               overflowY: 'auto',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px 20px', borderBottom: '1px solid #222', marginBottom: 16 }}>
-              <div style={{ fontWeight: 900, fontSize: 18, color: '#fff' }}>
-                Mercado<span style={{ color: BRAND.red }}>RD</span>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px 20px', borderBottom: '1px solid rgba(255,255,255,0.12)', marginBottom: 16 }}>
+              <Logo variant="white" fontSize={18} />
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label={t('closePanelMenuAria')}
-                style={{ background: 'transparent', border: 'none', color: '#888', display: 'flex', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', display: 'flex', cursor: 'pointer' }}
               >
                 <X size={20} />
               </button>
             </div>
             {NAV_ITEM_KEYS.map((item, i) => navLink(item, i, () => setOpen(false)))}
-            <div style={{ marginTop: 'auto', padding: '16px 20px', borderTop: '1px solid #222' }}>
+            <div style={{ marginTop: 'auto', padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.12)' }}>
               <LanguageSwitcher compact />
             </div>
           </div>
