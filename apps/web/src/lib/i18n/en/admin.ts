@@ -114,6 +114,13 @@ export const admin = {
   brandBannerToggleLabel: 'Show the MercadoRD brand banner',
   brandBannerToggleSub: 'If you turn it off, the home carousel starts directly with the promotional banners.',
   brandBannerToggleError: 'Could not update. Try again.',
+  brandDesktopImageLabel: 'Welcome banner background image (optional)',
+  brandDesktopImageHint: 'Replaces the model photo on desktop. If you don\'t upload anything, the default image is used.',
+  brandMobileImageLabel: 'Mobile background image (optional)',
+  brandMobileImageHint: 'Background behind the text on mobile. If you don\'t upload anything, only the gradient shows.',
+  brandImageRemoveButton: 'Remove image',
+  brandImageUploadFailed: 'Could not upload the image. Try again.',
+  brandImageUpdateFailed: 'The image uploaded, but could not be saved. Try again.',
 
   currentBannersTitle: 'Current banners ({count})',
   editBannerTitle: 'Edit banner',

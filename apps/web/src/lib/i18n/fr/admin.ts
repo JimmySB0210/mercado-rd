@@ -114,6 +114,13 @@ export const admin = {
   brandBannerToggleLabel: 'Afficher la bannière de marque MercadoRD',
   brandBannerToggleSub: "Si vous la désactivez, le carrousel de l'accueil commence directement par les bannières promotionnelles.",
   brandBannerToggleError: "Impossible de mettre à jour. Réessayez.",
+  brandDesktopImageLabel: "Image de fond de la bannière de bienvenue (facultatif)",
+  brandDesktopImageHint: "Remplace la photo du modèle sur desktop. Si vous ne téléversez rien, l'image par défaut est utilisée.",
+  brandMobileImageLabel: "Image de fond pour mobile (facultatif)",
+  brandMobileImageHint: "Fond derrière le texte sur mobile. Si vous ne téléversez rien, seul le dégradé s'affiche.",
+  brandImageRemoveButton: "Retirer l'image",
+  brandImageUploadFailed: "Impossible de téléverser l'image. Réessayez.",
+  brandImageUpdateFailed: "L'image a été téléversée, mais n'a pas pu être enregistrée. Réessayez.",
 
   currentBannersTitle: 'Bannières actuelles ({count})',
   editBannerTitle: 'Modifier la bannière',

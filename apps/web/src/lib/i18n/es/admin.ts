@@ -133,6 +133,13 @@ export const admin = {
   brandBannerToggleLabel: 'Mostrar banner de marca de MercadoRD',
   brandBannerToggleSub: 'Si lo desactivas, el carrusel del home empieza directo con los banners promocionales.',
   brandBannerToggleError: 'No se pudo actualizar. Intenta de nuevo.',
+  brandDesktopImageLabel: 'Imagen de fondo del banner de bienvenida (opcional)',
+  brandDesktopImageHint: 'Reemplaza la foto del modelo en desktop. Si no subes nada, se usa la imagen por defecto.',
+  brandMobileImageLabel: 'Imagen de fondo para mobile (opcional)',
+  brandMobileImageHint: 'Fondo detrás del texto en la versión mobile. Si no subes nada, se queda solo el degradado.',
+  brandImageRemoveButton: 'Quitar imagen',
+  brandImageUploadFailed: 'No se pudo subir la imagen. Intenta de nuevo.',
+  brandImageUpdateFailed: 'La imagen se subió, pero no se pudo guardar. Intenta de nuevo.',
 
   // components/admin/PromoBannerManager.tsx
   currentBannersTitle: 'Banners actuales ({count})',

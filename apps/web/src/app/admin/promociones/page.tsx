@@ -29,13 +29,15 @@ export default async function AdminPromocionesPage() {
 
   if (error) console.error('[AdminPromocionesPage]', error)
 
-  const { data: settingRow } = await supabase
+  const { data: settingRows } = await supabase
     .from('site_settings')
-    .select('value')
-    .eq('key', 'show_brand_banner')
-    .maybeSingle()
+    .select('key, value')
+    .in('key', ['show_brand_banner', 'brand_banner_image_url', 'brand_banner_mobile_image_url'])
 
-  const showBrandBanner = (settingRow?.value as boolean | undefined) ?? true
+  const settings = new Map((settingRows ?? []).map(row => [row.key, row.value]))
+  const showBrandBanner = (settings.get('show_brand_banner') as boolean | undefined) ?? true
+  const brandDesktopImageUrl = (settings.get('brand_banner_image_url') as string | null | undefined) ?? null
+  const brandMobileImageUrl = (settings.get('brand_banner_mobile_image_url') as string | null | undefined) ?? null
   const bannerList = (banners ?? []) as PromoBanner[]
 
   return (
@@ -46,7 +48,11 @@ export default async function AdminPromocionesPage() {
       {/* Contenido */}
       <div style={{ padding: 28, background: '#f5f5f5' }}>
         <PromoBannerPageHeader />
-        <BrandBannerToggle initialValue={showBrandBanner} />
+        <BrandBannerToggle
+          initialValue={showBrandBanner}
+          initialDesktopImageUrl={brandDesktopImageUrl}
+          initialMobileImageUrl={brandMobileImageUrl}
+        />
         <PromoBannerManager initialBanners={bannerList} />
       </div>
     </div>

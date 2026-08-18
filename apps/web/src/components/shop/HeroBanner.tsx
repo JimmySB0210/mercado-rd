@@ -22,7 +22,10 @@ const MOBILE_BREAKPOINT = 1010
 // Diapositiva de marca — contenido y estilos sin cambios respecto a la
 // versión original de HeroBanner. Solo se usa en desktop (≥1010px de
 // contenedor); en mobile se reemplaza por WelcomeSlide + PerksSlide.
-function BrandSlide() {
+// imageUrl: foto configurable desde /admin/promociones
+// (site_settings.brand_banner_image_url) — null usa la imagen por
+// defecto, mismo posicionamiento y tratamiento visual en ambos casos.
+function BrandSlide({ imageUrl }: { imageUrl: string | null }) {
   const { t } = useTranslation('home')
 
   return (
@@ -40,10 +43,11 @@ function BrandSlide() {
       {/* Modelo — desktop only, detrás de las feature cards (ver z-index abajo) */}
       <div className="hero-model-image" style={{position:'absolute',top:0,bottom:0,right:0,width:'38%',zIndex:0}}>
         <Image
-          src="/images/hero-model.jpg"
+          src={imageUrl || "/images/hero-model.jpg"}
           alt={t('heroModelAlt')}
           fill
           sizes="45vw"
+          quality={90}
           style={{objectFit:'contain',objectPosition:'center'}}
         />
         {/* Blend con el fondo del hero — del color del banner hacia transparente */}
@@ -88,23 +92,42 @@ function BrandSlide() {
 
 // Mobile — mitad 1 de 2 del BrandSlide dividido: título + CTA, compacto
 // para caber en el aspect-ratio corto del contenedor en mobile.
-function WelcomeSlide() {
+// imageUrl: foto configurable desde /admin/promociones
+// (site_settings.brand_banner_mobile_image_url) — null se queda
+// exactamente como antes (solo el degradado, sin foto).
+function WelcomeSlide({ imageUrl }: { imageUrl: string | null }) {
   const { t } = useTranslation('home')
 
   return (
     <div style={{
-      position:'relative', width:'100%', height:'100%',
-      background:`linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%)`,
+      position:'relative', width:'100%', height:'100%', overflow:'hidden',
+      background: imageUrl ? undefined : `linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%)`,
       display:'flex', flexDirection:'column', alignItems:'flex-start', justifyContent:'center',
       padding:'0 20px', color:'#fff', gap:6,
     }}>
-      <h1 style={{fontFamily:'var(--font-heading)',letterSpacing:'var(--tracking-heading)',fontSize:18,fontWeight:700,lineHeight:1.25,margin:0}}>
+      {imageUrl && (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageUrl}
+            alt=""
+            style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover' }}
+          />
+          {/* Mismo degradado navy de siempre, ahora como wash encima de la foto para que el texto siga legible */}
+          <div style={{
+            position:'absolute', inset:0,
+            background:`linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%)`,
+            opacity: 0.72,
+          }} />
+        </>
+      )}
+      <h1 style={{position:'relative',zIndex:1,fontFamily:'var(--font-heading)',letterSpacing:'var(--tracking-heading)',fontSize:18,fontWeight:700,lineHeight:1.25,margin:0}}>
         {t('welcomeTitle')}
       </h1>
-      <p style={{color:'rgba(255,255,255,0.75)',fontSize:11,margin:0,maxWidth:280}}>
+      <p style={{position:'relative',zIndex:1,color:'rgba(255,255,255,0.75)',fontSize:11,margin:0,maxWidth:280}}>
         {t('welcomeSubtitle')}
       </p>
-      <a href='#productos' style={{display:'inline-block',background:'var(--color-accent)',color:'var(--color-primary)',textDecoration:'none',padding:'7px 16px',borderRadius:'var(--radius-control)',fontWeight:700,fontSize:12,marginTop:4}}>
+      <a href='#productos' style={{position:'relative',zIndex:1,display:'inline-block',background:'var(--color-accent)',color:'var(--color-primary)',textDecoration:'none',padding:'7px 16px',borderRadius:'var(--radius-control)',fontWeight:700,fontSize:12,marginTop:4}}>
         {t('exploreCta')}
       </a>
     </div>
@@ -194,6 +217,8 @@ export function HeroBanner() {
   const { t } = useTranslation('home')
   const [banners, setBanners] = useState<PromoBanner[]>([])
   const [showBrandBanner, setShowBrandBanner] = useState(true)
+  const [brandImageUrl, setBrandImageUrl] = useState<string | null>(null)
+  const [brandMobileImageUrl, setBrandMobileImageUrl] = useState<string | null>(null)
   const [activeIndex, setActiveIndex] = useState(0)
   const isMobile = useIsMobile(MOBILE_BREAKPOINT)
 
@@ -216,11 +241,17 @@ export function HeroBanner() {
 
     supabase
       .from('site_settings')
-      .select('value')
-      .eq('key', 'show_brand_banner')
-      .maybeSingle()
+      .select('key, value')
+      .in('key', ['show_brand_banner', 'brand_banner_image_url', 'brand_banner_mobile_image_url'])
       .then(({ data }) => {
-        if (data?.value === false) setShowBrandBanner(false)
+        const settings = new Map((data ?? []).map(row => [row.key, row.value]))
+        if (settings.get('show_brand_banner') === false) setShowBrandBanner(false)
+
+        const desktopUrl = settings.get('brand_banner_image_url')
+        if (typeof desktopUrl === 'string' && desktopUrl) setBrandImageUrl(desktopUrl)
+
+        const mobileUrl = settings.get('brand_banner_mobile_image_url')
+        if (typeof mobileUrl === 'string' && mobileUrl) setBrandMobileImageUrl(mobileUrl)
       })
   }, [])
 
@@ -251,7 +282,7 @@ export function HeroBanner() {
             isMobile ? (
               <>
                 <div style={{ flex: '0 0 100%', minWidth: 0, height: '100%' }}>
-                  <WelcomeSlide />
+                  <WelcomeSlide imageUrl={brandMobileImageUrl} />
                 </div>
                 <div style={{ flex: '0 0 100%', minWidth: 0, height: '100%' }}>
                   <PerksSlide />
@@ -259,7 +290,7 @@ export function HeroBanner() {
               </>
             ) : (
               <div style={{ flex: '0 0 100%', minWidth: 0, height: '100%' }}>
-                <BrandSlide />
+                <BrandSlide imageUrl={brandImageUrl} />
               </div>
             )
           )}
