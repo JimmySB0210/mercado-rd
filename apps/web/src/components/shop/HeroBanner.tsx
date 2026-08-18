@@ -23,15 +23,21 @@ const MOBILE_BREAKPOINT = 1010
 // versión original de HeroBanner. Solo se usa en desktop (≥1010px de
 // contenedor); en mobile se reemplaza por WelcomeSlide + PerksSlide.
 // imageUrl: foto configurable desde /admin/promociones
-// (site_settings.brand_banner_image_url) — null usa la imagen por
-// defecto, mismo posicionamiento y tratamiento visual en ambos casos.
+// (site_settings.brand_banner_image_url).
+//   - null: comportamiento de siempre — foto del modelo en el recorte
+//     angosto de la derecha (hero-model-image), object-fit: contain.
+//   - con valor: fondo completo del slide (object-fit: cover) con el
+//     mismo degradado navy como wash encima para legibilidad — mismo
+//     tratamiento que WelcomeSlide en mobile, mejor ajuste para fotos
+//     panorámicas (paisajes, playas) que no son un recorte de persona.
 function BrandSlide({ imageUrl }: { imageUrl: string | null }) {
   const { t } = useTranslation('home')
 
   return (
     <div style={{
       position:'relative',
-      background:`linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%)`,
+      overflow:'hidden',
+      background: imageUrl ? undefined : `linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%)`,
       padding:'40px',
       display:'flex',
       alignItems:'center',
@@ -40,23 +46,40 @@ function BrandSlide({ imageUrl }: { imageUrl: string | null }) {
       color:'#fff',
       flexWrap:'wrap',
     }}>
-      {/* Modelo — desktop only, detrás de las feature cards (ver z-index abajo) */}
-      <div className="hero-model-image" style={{position:'absolute',top:0,bottom:0,right:0,width:'38%',zIndex:0}}>
-        <Image
-          src={imageUrl || "/images/hero-model.jpg"}
-          alt={t('heroModelAlt')}
-          fill
-          sizes="45vw"
-          quality={90}
-          style={{objectFit:'contain',objectPosition:'center'}}
-        />
-        {/* Blend con el fondo del hero — del color del banner hacia transparente */}
-        <div style={{
-          position:'absolute',
-          inset:0,
-          background:`linear-gradient(to right, var(--color-primary) 0%, rgba(15,76,129,0) 100%)`,
-        }} />
-      </div>
+      {imageUrl ? (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageUrl}
+            alt=""
+            style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', zIndex:0 }}
+          />
+          {/* Mismo degradado navy de siempre, ahora como wash encima de la foto para que texto/perks sigan legibles */}
+          <div style={{
+            position:'absolute', inset:0,
+            background:`linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%)`,
+            opacity: 0.6,
+          }} />
+        </>
+      ) : (
+        /* Modelo — desktop only, detrás de las feature cards (ver z-index abajo) */
+        <div className="hero-model-image" style={{position:'absolute',top:0,bottom:0,right:0,width:'38%',zIndex:0}}>
+          <Image
+            src="/images/hero-model.jpg"
+            alt={t('heroModelAlt')}
+            fill
+            sizes="45vw"
+            quality={90}
+            style={{objectFit:'contain',objectPosition:'center'}}
+          />
+          {/* Blend con el fondo del hero — del color del banner hacia transparente */}
+          <div style={{
+            position:'absolute',
+            inset:0,
+            background:`linear-gradient(to right, var(--color-primary) 0%, rgba(15,76,129,0) 100%)`,
+          }} />
+        </div>
+      )}
 
       <div style={{position:'relative',zIndex:1,flex:'1 1 320px',minWidth:280}}>
         <h1 style={{fontFamily:'var(--font-heading)',letterSpacing:'var(--tracking-heading)',fontSize:32,fontWeight:700,lineHeight:1.25,margin:'0 0 14px'}}>
