@@ -10,6 +10,7 @@
 
 import { FeatureToggleButton } from '@/components/vendor/FeatureToggleButton'
 import { ProductActiveToggle } from '@/components/vendor/ProductActiveToggle'
+import { DailyDealAction } from '@/components/vendor/DailyDealAction'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { formatPrice } from '@/types/database.types'
 import type { ProductStatus } from '@/types/database.types'
@@ -26,6 +27,7 @@ interface ProductRow {
   sold_count: number
   is_featured: boolean | null
   qualityPercent: number
+  activeDeal: { id: string; deal_price_rdp: number; expires_at: string } | null
 }
 
 const STATUS_BADGE_STYLE: Record<ProductStatus, { bg: string; text: string }> = {
@@ -121,7 +123,7 @@ export function ProductosContent({ products, isPro }: Props) {
                     {QUALITY_TIER_EMOJI[qualityTier(p.qualityPercent)]} {t('publishQualityLabel', { percent: p.qualityPercent })}
                   </span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
                   <FeatureToggleButton
                     productId={p.id}
                     initialFeatured={p.is_featured ?? false}
@@ -137,6 +139,11 @@ export function ProductosContent({ products, isPro }: Props) {
                     <ProductActiveToggle productId={p.id} status={p.status} />
                   </div>
                 </div>
+                <DailyDealAction
+                  productId={p.id}
+                  currentPriceRdp={p.price_rdp}
+                  initialDeal={p.activeDeal}
+                />
               </div>
             </div>
           ))}

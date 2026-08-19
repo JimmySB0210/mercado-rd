@@ -68,4 +68,6 @@ export const products = {
   trustShippingSub: 'Livraison dans tout le pays',
 
   featuredProductsTitle: 'Produits en vedette ⭐',
+
+  dailyDealsTitle: '⚡ Offres du jour',
 } satisfies ProductsDict

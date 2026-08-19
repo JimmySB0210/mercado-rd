@@ -68,4 +68,6 @@ export const products = {
   trustShippingSub: 'Nationwide shipping',
 
   featuredProductsTitle: 'Featured products ⭐',
+
+  dailyDealsTitle: '⚡ Deals of the day',
 } satisfies ProductsDict

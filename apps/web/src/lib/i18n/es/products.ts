@@ -79,6 +79,9 @@ export const products = {
 
   // FeaturedProducts
   featuredProductsTitle: 'Productos destacados ⭐',
+
+  // DailyDeals
+  dailyDealsTitle: '⚡ Ofertas del día',
 }
 
 export type ProductsDict = typeof products

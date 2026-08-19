@@ -18,6 +18,7 @@ import { HomeCategoryStrip } from '../components/shop/HomeCategoryStrip'
 import { ShippingBenefitsStrip } from '../components/shop/ShippingBenefitsStrip'
 import { HomeProductGrid } from '../components/shop/HomeProductGrid'
 import { FeaturedProducts } from '../components/shop/FeaturedProducts'
+import { DailyDeals } from '../components/shop/DailyDeals'
 import { FeaturedProviders } from '../components/shop/FeaturedProviders'
 
 export const revalidate = 300
@@ -38,6 +39,10 @@ export default function HomePage() {
       </div>
       <div className="order-4">
         <FeaturedProducts />
+      </div>
+      {/* "Ofertas del día" — debajo de "Productos destacados" */}
+      <div className="order-4">
+        <DailyDeals />
       </div>
       <div className="order-4">
         <HomeProductGrid />

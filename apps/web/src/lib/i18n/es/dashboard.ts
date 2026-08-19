@@ -90,6 +90,26 @@ export const dashboard = {
   featuredBadge: '✓ Destacado',
   featureButton: '⭐ Destacar',
 
+  // ─── DailyDealAction ────────────────────────────────────────
+  createDealCta: '⚡ Crear oferta del día',
+  dealPriceLabel: 'Precio de oferta',
+  dealDurationLabel: 'Duración',
+  dealDuration6h: '6 horas',
+  dealDuration12h: '12 horas',
+  dealDuration24h: '24 horas',
+  dealDuration3d: '3 días',
+  dealDuration7d: '7 días',
+  dealCreateButton: 'Crear oferta',
+  dealCancelButton: 'Cancelar',
+  dealCreating: 'Creando...',
+  dealActiveLabel: '⚡ Oferta activa',
+  dealDeactivateButton: 'Desactivar',
+  dealDeactivating: 'Desactivando...',
+  dealTimeRemaining: 'Quedan {time}',
+  dealExpired: 'Expiró',
+  dealGenericError: 'No se pudo crear la oferta. Intenta de nuevo.',
+  dealDeactivateError: 'No se pudo desactivar. Intenta de nuevo.',
+
   // ─── ProductForm ────────────────────────────────────────────
   backToProductsLink: '← Volver a mis productos',
   backToDashboardLink: '← Volver al dashboard',

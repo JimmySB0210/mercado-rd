@@ -31,7 +31,7 @@ export default async function VendorProductsPage() {
   const categoryIds = [...new Set(products.map((p: any) => p.category_id).filter((id): id is number => id != null))]
   const productIds = products.map((p: any) => p.id)
 
-  const [{ data: categoryAttrs }, { data: attrValues }] = await Promise.all([
+  const [{ data: categoryAttrs }, { data: attrValues }, { data: activeDeals }] = await Promise.all([
     categoryIds.length > 0
       ? supabase
           .from('category_attributes')
@@ -45,7 +45,21 @@ export default async function VendorProductsPage() {
           .select('product_id, category_attribute_id')
           .in('product_id', productIds)
       : Promise.resolve({ data: [] as any[] }),
+    productIds.length > 0
+      ? supabase
+          .from('daily_deals')
+          .select('id, product_id, deal_price_rdp, expires_at')
+          .in('product_id', productIds)
+          .eq('is_active', true)
+      : Promise.resolve({ data: [] as any[] }),
   ])
+
+  // Oferta activa por producto (RLS de daily_deals ya la restringe a
+  // productos propios del vendor) — a lo sumo una relevante por producto.
+  const dealByProduct = new Map<string, { id: string; deal_price_rdp: number; expires_at: string }>()
+  for (const d of activeDeals ?? []) {
+    dealByProduct.set(d.product_id, { id: d.id, deal_price_rdp: d.deal_price_rdp, expires_at: d.expires_at })
+  }
 
   const attrsByCategory = new Map<number, { id: number; is_required: boolean; is_recommended: boolean }[]>()
   for (const attr of categoryAttrs ?? []) {
@@ -76,7 +90,7 @@ export default async function VendorProductsPage() {
       hasDescription: !!p.description?.trim(),
     })
 
-    return { ...p, qualityPercent }
+    return { ...p, qualityPercent, activeDeal: dealByProduct.get(p.id) ?? null }
   })
 
   return (
