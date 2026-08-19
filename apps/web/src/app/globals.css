@@ -124,22 +124,10 @@ html, body {
   gap: 16px;
 }
 
-.grid-trust {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
 .cart-layout {
   display: grid;
   grid-template-columns: 1fr 340px;
   gap: 24px;
-}
-
-.hero-perks {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px 36px;
 }
 
 .hero-categories {
@@ -200,9 +188,6 @@ html, body {
     width: 100%;
     margin: 0 0 12px;
     break-inside: avoid;
-  }
-  .grid-trust {
-    grid-template-columns: repeat(2, 1fr);
   }
   .cart-layout {
     grid-template-columns: 1fr;

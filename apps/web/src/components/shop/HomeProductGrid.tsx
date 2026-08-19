@@ -7,16 +7,17 @@
 // (no createServerClient(), para no romper el ISR de la homepage)
 // y pagina con un botón "Ver más productos" que acumula resultados.
 // Cuando no hay productos reales usa el mock hardcodeado como fallback.
-// El resto del componente (tiendas, trust bar) no cambia.
+// El trust bar que vivía aquí se eliminó (Fase 2A, reconciliación de
+// franjas de beneficios) — ShippingBenefitsStrip, debajo del hero, es
+// ahora la única fuente de verdad.
 // ============================================================
 
 import { useCallback, useEffect, useState } from 'react'
-import { Star, ShieldCheck, Users, BadgeCheck, Truck } from 'lucide-react'
+import { Star } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
 import { ProductCard } from '@/components/product/ProductCard'
 import { createPublicClient } from '@/lib/supabase/public'
 import { useTranslation } from '@/lib/hooks/useTranslation'
-import type { ProductsDict } from '@/lib/i18n/es/products'
 import type { Product } from '@/types'
 
 const PAGE_SIZE = 12
@@ -51,13 +52,6 @@ async function fetchFeaturedVendors(): Promise<FeaturedVendor[]> {
   if (error) { console.error('[HomeProductGrid] vendors', error); return [] }
   return (data ?? []) as FeaturedVendor[]
 }
-
-const TRUST_KEYS: { icon: typeof ShieldCheck; titleKey: keyof ProductsDict; subKey: keyof ProductsDict }[] = [
-  { icon: ShieldCheck, titleKey: 'trustSecureTitle',   subKey: 'trustSecureSub' },
-  { icon: Users,       titleKey: 'trustBuyersTitle',   subKey: 'trustBuyersSub' },
-  { icon: BadgeCheck,  titleKey: 'trustQualityTitle',  subKey: 'trustQualitySub' },
-  { icon: Truck,       titleKey: 'trustShippingTitle', subKey: 'trustShippingSub' },
-]
 
 const IMAGE_RATIOS = ['1/1', '4/5', '5/4', '1/1', '5/6']
 
@@ -280,22 +274,6 @@ export function HomeProductGrid() {
           ))}
         </div>
       )}
-
-      {/* Trust bar */}
-      <div className="grid-trust" style={{background:'#fff', border:'1px solid #EEE', borderRadius:10, padding:'22px 0'}}>
-        {TRUST_KEYS.map((item,i) => {
-          const Icon = item.icon
-          return (
-            <div key={i} style={{display:'flex', alignItems:'center', gap:10, justifyContent:'center'}}>
-              <Icon size={20} color={BRAND.blue} />
-              <div>
-                <div style={{fontWeight:600, fontSize:13, color:BRAND.dark}}>{t(item.titleKey)}</div>
-                <div style={{fontSize:11, color:BRAND.gray}}>{t(item.subKey)}</div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
 
     </div>
   )

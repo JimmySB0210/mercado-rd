@@ -2,26 +2,17 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { ShieldCheck, Truck, Store, Headset } from 'lucide-react';
 import { createPublicClient } from '@/lib/supabase/public'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import type { PromoBanner } from '@/types/database.types'
-import type { HomeDict } from '@/lib/i18n/es/home'
-
-const PERK_KEYS: { icon: typeof ShieldCheck; titleKey: keyof HomeDict; subKey: keyof HomeDict }[] = [
-  { icon: ShieldCheck, titleKey: 'perkSecurePaymentTitle', subKey: 'perkSecurePaymentSub' },
-  { icon: Truck, titleKey: 'perkShippingTitle', subKey: 'perkShippingSub' },
-  { icon: Store, titleKey: 'perkStoresTitle', subKey: 'perkStoresSub' },
-  { icon: Headset, titleKey: 'perkSupportTitle', subKey: 'perkSupportSub' },
-];
 
 const SLIDE_INTERVAL_MS = 3500
 const MOBILE_BREAKPOINT = 1010
 
 // Diapositiva de marca — contenido y estilos sin cambios respecto a la
 // versión original de HeroBanner. Solo se usa en desktop (≥1010px de
-// contenedor); en mobile se reemplaza por WelcomeSlide + PerksSlide.
+// contenedor); en mobile se reemplaza por WelcomeSlide.
 // imageUrl: foto configurable desde /admin/promociones
 // (site_settings.brand_banner_image_url).
 //   - null: comportamiento de siempre — foto del modelo en el recorte
@@ -81,7 +72,12 @@ function BrandSlide({ imageUrl }: { imageUrl: string | null }) {
         </div>
       )}
 
-      <div style={{position:'relative',zIndex:1,flex:'1 1 320px',minWidth:280}}>
+      {/* flex: '0 1 480px' (antes '1 1 320px') — sin el grid de perks al
+          lado, flex-grow:1 hubiera estirado este bloque a todo el ancho
+          del panel; con basis 480px y sin grow se queda como una
+          columna de texto normal, dejando ver la foto de fondo/modelo
+          a la derecha en vez de un vacío. */}
+      <div style={{position:'relative',zIndex:1,flex:'0 1 480px',minWidth:280}}>
         <h1 style={{fontFamily:'var(--font-heading)',letterSpacing:'var(--tracking-heading)',fontSize:32,fontWeight:700,lineHeight:1.25,margin:'0 0 14px'}}>
           {t('welcomeTitle')}
         </h1>
@@ -91,23 +87,6 @@ function BrandSlide({ imageUrl }: { imageUrl: string | null }) {
         <a href='#productos' style={{display:'inline-block',background:'var(--color-accent)',color:'var(--color-primary)',textDecoration:'none',padding:'13px 26px',borderRadius:'var(--radius-control)',fontWeight:700,fontSize:14,boxShadow:'0 2px 10px rgba(232,185,35,0.35)'}}>
           {t('exploreCta')}
         </a>
-      </div>
-
-      <div className="hero-perks" style={{position:'relative',zIndex:1,flex:'1 1 320px'}}>
-        {PERK_KEYS.map((p,i) => {
-          const Icon = p.icon;
-          return (
-            <div key={i} style={{display:'flex',alignItems:'center',gap:12}}>
-              <div style={{width:38,height:38,borderRadius:10,background:'rgba(255,255,255,0.15)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                <Icon size={18} color='#fff' />
-              </div>
-              <div>
-                <div style={{fontWeight:600,fontSize:13}}>{t(p.titleKey)}</div>
-                <div style={{fontSize:11,color:'rgba(255,255,255,0.65)'}}>{t(p.subKey)}</div>
-              </div>
-            </div>
-          );
-        })}
       </div>
     </div>
   );
@@ -153,33 +132,6 @@ function WelcomeSlide({ imageUrl }: { imageUrl: string | null }) {
       <a href='#productos' style={{position:'relative',zIndex:1,display:'inline-block',background:'var(--color-accent)',color:'var(--color-primary)',textDecoration:'none',padding:'7px 16px',borderRadius:'var(--radius-control)',fontWeight:700,fontSize:12,marginTop:4}}>
         {t('exploreCta')}
       </a>
-    </div>
-  );
-}
-
-// Mobile — mitad 2 de 2: los mismos 4 perks, en fila compacta en vez
-// del grid 2×2 de desktop (no cabría en el alto corto).
-function PerksSlide() {
-  const { t } = useTranslation('home')
-
-  return (
-    <div style={{
-      position:'relative', width:'100%', height:'100%',
-      background:`linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%)`,
-      display:'flex', alignItems:'center', justifyContent:'space-around',
-      padding:'0 8px', color:'#fff',
-    }}>
-      {PERK_KEYS.map((p,i) => {
-        const Icon = p.icon;
-        return (
-          <div key={i} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:5,flex:'1 1 0',minWidth:0}}>
-            <div style={{width:32,height:32,borderRadius:9,background:'rgba(255,255,255,0.15)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-              <Icon size={16} color='#fff' />
-            </div>
-            <div style={{fontSize:10,fontWeight:600,textAlign:'center',lineHeight:1.2}}>{t(p.titleKey)}</div>
-          </div>
-        );
-      })}
     </div>
   );
 }
@@ -245,10 +197,12 @@ export function HeroBanner() {
   const [activeIndex, setActiveIndex] = useState(0)
   const isMobile = useIsMobile(MOBILE_BREAKPOINT)
 
-  // Mobile: Bienvenida + Perks (BrandSlide dividido) + promos.
-  // Desktop: BrandSlide entero (sin cambios) + promos. Si el admin
-  // apagó el interruptor en /admin/promociones, la de marca no cuenta.
-  const brandSlideCount = showBrandBanner ? (isMobile ? 2 : 1) : 0
+  // Una sola diapositiva de marca (WelcomeSlide en mobile, BrandSlide
+  // en desktop) + promos. PerksSlide se eliminó (Fase 2A, reconciliación
+  // de franjas de beneficios — redundante con ShippingBenefitsStrip,
+  // que vive justo debajo del hero). Si el admin apagó el interruptor
+  // en /admin/promociones, la de marca no cuenta.
+  const brandSlideCount = showBrandBanner ? 1 : 0
   const totalSlides = brandSlideCount + banners.length
 
   useEffect(() => {
@@ -293,7 +247,7 @@ export function HeroBanner() {
       <div style={{
         position: 'relative', overflow: 'hidden',
         borderRadius: isMobile ? 0 : 16,
-        // Fase 2A Batch 2: copy más corto en WelcomeSlide/PerksSlide +
+        // Fase 2A Batch 2: copy más corto en WelcomeSlide +
         // proporción más comprimida (antes 2.4/1) para que el hero
         // ocupe notablemente menos alto en mobile — "vende una acción,
         // no explica toda la plataforma". El interruptor/imagen
@@ -307,20 +261,9 @@ export function HeroBanner() {
           transform: `translateX(-${activeIndex * 100}%)`,
         }}>
           {showBrandBanner && (
-            isMobile ? (
-              <>
-                <div style={{ flex: '0 0 100%', minWidth: 0, height: '100%' }}>
-                  <WelcomeSlide imageUrl={brandMobileImageUrl} />
-                </div>
-                <div style={{ flex: '0 0 100%', minWidth: 0, height: '100%' }}>
-                  <PerksSlide />
-                </div>
-              </>
-            ) : (
-              <div style={{ flex: '0 0 100%', minWidth: 0, height: '100%' }}>
-                <BrandSlide imageUrl={brandImageUrl} />
-              </div>
-            )
+            <div style={{ flex: '0 0 100%', minWidth: 0, height: '100%' }}>
+              {isMobile ? <WelcomeSlide imageUrl={brandMobileImageUrl} /> : <BrandSlide imageUrl={brandImageUrl} />}
+            </div>
           )}
           {banners.map(banner => (
             <div key={banner.id} style={{ flex: '0 0 100%', minWidth: 0, height: '100%' }}>
