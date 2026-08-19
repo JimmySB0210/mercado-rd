@@ -13,10 +13,11 @@
    ACTUAL y siguen intactos; conviven con estos tokens nuevos hasta
    que los componentes migren uno por uno.
 
-   Tipografía: --font-heading y --font-body apuntan a
-   --font-plus-jakarta-sans / --font-inter, expuestas por next/font
-   en app/layout.tsx (Plus Jakarta Sans SÍ está disponible en el
-   proyecto — no hizo falta el fallback a Satoshi).
+   Tipografía: --font-heading y --font-body apuntan a --font-manrope
+   (Manrope, pesos 400/500/600/700/800), expuesta por next/font en
+   app/layout.tsx. Plus Jakarta Sans e Inter (--font-plus-jakarta-sans,
+   --font-inter) se dejan cargadas ahí mismo pero sin uso por ahora —
+   no se quitaron por si hace falta revertir.
    ============================================================ */
 :root {
   /* ── Colores ── */
@@ -36,8 +37,8 @@
   --color-divider: #F3F4F6;
 
   /* ── Tipografía ── */
-  --font-heading: var(--font-plus-jakarta-sans), sans-serif;
-  --font-body: var(--font-inter), sans-serif;
+  --font-heading: var(--font-manrope), sans-serif;
+  --font-body: var(--font-manrope), sans-serif;
   --font-logo: var(--font-playfair-display), serif;
   --tracking-heading: -0.02em;
   --font-weight-regular: 400;
@@ -145,6 +146,19 @@ html, body {
   display: flex;
   justify-content: space-between;
   gap: 8px;
+}
+
+/* Fila con scroll horizontal contenido en sí misma (franja de
+   categorías del home, y cualquier otra fila de tarjetas que necesite
+   deslizarse sin generar scroll horizontal en la página completa) —
+   activo en todos los tamaños de pantalla, no solo mobile. */
+.scroll-hide-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.scroll-hide-x::-webkit-scrollbar {
+  display: none;
 }
 
 .hero-model-image {

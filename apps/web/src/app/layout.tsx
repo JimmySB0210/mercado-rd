@@ -1,6 +1,6 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { Poppins, Plus_Jakarta_Sans, Inter, Playfair_Display } from 'next/font/google'
+import { Poppins, Plus_Jakarta_Sans, Inter, Playfair_Display, Manrope } from 'next/font/google'
 import { MobileTabBar } from '../components/shop/MobileTabBar'
 import { Footer } from '../components/shop/Footer'
 import { InactivityWarning } from '../components/shop/InactivityWarning'
@@ -34,12 +34,22 @@ const inter = Inter({
 })
 
 // Wordmark "MercadoRD" — serif elegante para el logo (Navbar, Footer,
-// sidebar del dashboard), separado de --font-heading (Plus Jakarta
-// Sans, sigue usándose para títulos grandes de página/precio).
+// sidebar del dashboard), separado de --font-heading (ahora Manrope,
+// ver más abajo — sigue usándose para títulos grandes de página/precio).
 const playfairDisplay = Playfair_Display({
   subsets: ['latin'],
   weight: ['700'],
   variable: '--font-playfair-display',
+  display: 'swap',
+})
+
+// Nueva tipografía del sistema — --font-heading y --font-body en
+// globals.css apuntan aquí ahora. Plus Jakarta Sans e Inter se dejan
+// cargados (arriba) pero sin uso mientras no haga falta revertir.
+const manrope = Manrope({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-manrope',
   display: 'swap',
 })
 
@@ -79,7 +89,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" className={`${poppins.variable} ${plusJakartaSans.variable} ${inter.variable} ${playfairDisplay.variable}`}>
+    <html lang="es" className={`${poppins.variable} ${plusJakartaSans.variable} ${inter.variable} ${playfairDisplay.variable} ${manrope.variable}`}>
       <head>
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>

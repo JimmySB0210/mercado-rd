@@ -63,6 +63,13 @@ const IMAGE_RATIOS = ['1/1', '4/5', '5/4', '1/1', '5/6']
 
 type ProductsPageResult = { data: Product[]; ok: boolean }
 
+// "Ofertas destacadas" — antes ordenaba el catálogo general por
+// sold_count (no filtraba por descuento real, el nombre no coincidía
+// con el contenido). Ahora filtra a productos con compare_rdp
+// realmente mayor que price_rdp — verificado en la BD que todo
+// compare_rdp existente ya cumple esa condición (sin datos corruptos),
+// así que .not('compare_rdp', 'is', null) es un filtro seguro sin
+// necesidad de comparar dos columnas vía RPC/vista.
 async function fetchProductsPage(offset: number): Promise<ProductsPageResult> {
   const supabase = createPublicClient()
   const { data, error } = await supabase
@@ -74,6 +81,7 @@ async function fetchProductsPage(offset: number): Promise<ProductsPageResult> {
       province:provinces_rd(id, name)
     `)
     .eq('is_active', true)
+    .not('compare_rdp', 'is', null)
     .order('sold_count', { ascending: false })
     .order('id', { ascending: true })
     .range(offset, offset + PAGE_SIZE - 1)
@@ -233,9 +241,9 @@ export function HomeProductGrid() {
         </div>
       )}
 
-      {/* Tiendas destacadas */}
+      {/* Tiendas populares */}
       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', margin:'36px 0 16px'}}>
-        <h2 style={{fontSize:18, fontWeight:700, color:BRAND.dark, margin:0}}>{t('featuredStoresTitle')}</h2>
+        <h2 style={{fontSize:18, fontWeight:700, color:BRAND.dark, margin:0}}>{t('popularStoresTitle')}</h2>
         <a href='/tiendas' style={{color:BRAND.blue, fontSize:13, fontWeight:600, textDecoration:'none'}}>{t('viewAll')}</a>
       </div>
 
