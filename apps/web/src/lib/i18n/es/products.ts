@@ -14,6 +14,8 @@ export const products = {
   viewStore: 'Ver tienda →',
   askWhatsappShort: 'Preguntar',
   verifiedBadge: 'Verificado',
+  cardFreeShipping: 'Envío gratis',
+  cardShippingFrom: 'Envío desde RD${amount}',
 
   // ProductActions
   sizeLabel: 'Talla',

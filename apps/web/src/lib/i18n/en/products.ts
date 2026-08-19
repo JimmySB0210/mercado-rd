@@ -10,6 +10,8 @@ export const products = {
   viewStore: 'View store →',
   askWhatsappShort: 'Ask',
   verifiedBadge: 'Verified',
+  cardFreeShipping: 'Free shipping',
+  cardShippingFrom: 'Shipping from RD${amount}',
 
   sizeLabel: 'Size',
   colorLabel: 'Color',

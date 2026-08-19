@@ -10,6 +10,8 @@ export const products = {
   viewStore: 'Voir la boutique →',
   askWhatsappShort: 'Demander',
   verifiedBadge: 'Vérifié',
+  cardFreeShipping: 'Livraison gratuite',
+  cardShippingFrom: 'Livraison dès RD${amount}',
 
   sizeLabel: 'Taille',
   colorLabel: 'Couleur',

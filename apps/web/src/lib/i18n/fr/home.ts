@@ -9,8 +9,8 @@
 import type { HomeDict } from '@/lib/i18n/es/home'
 
 export const home = {
-  welcomeTitle: 'Achetez et vendez partout en République Dominicaine',
-  welcomeSubtitle: 'Des milliers de produits, boutiques et personnes connectés à vous.',
+  welcomeTitle: 'Achetez et vendez en RD',
+  welcomeSubtitle: 'Des milliers de produits et boutiques près de vous.',
   exploreCta: 'Explorer les produits',
   heroModelAlt: 'Cliente souriante utilisant MercadoRD sur son téléphone',
   slideGoToAria: 'Aller à la diapositive',
@@ -23,4 +23,9 @@ export const home = {
   perkStoresSub: 'Soutenez le commerce local',
   perkSupportTitle: 'Assistance 24/7',
   perkSupportSub: 'Nous sommes là pour vous aider',
+
+  shippingStripMain: '🚚 Livraison GRATUITE dès RD${amount} d\'achats',
+  shippingStripProtected: 'Achat protégé',
+  shippingStripStores: 'Des milliers de boutiques',
+  shippingStripSupport: 'Assistance 24/7',
 } satisfies HomeDict

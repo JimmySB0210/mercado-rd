@@ -9,8 +9,8 @@
 import type { HomeDict } from '@/lib/i18n/es/home'
 
 export const home = {
-  welcomeTitle: 'Buy and sell across the Dominican Republic',
-  welcomeSubtitle: 'Thousands of products, stores and people connected with you.',
+  welcomeTitle: 'Buy and sell in RD',
+  welcomeSubtitle: 'Thousands of products and stores near you.',
   exploreCta: 'Explore products',
   heroModelAlt: 'Customer smiling while using MercadoRD on her phone',
   slideGoToAria: 'Go to slide',
@@ -23,4 +23,9 @@ export const home = {
   perkStoresSub: 'Support local businesses',
   perkSupportTitle: '24/7 support',
   perkSupportSub: 'We\'re here to help',
+
+  shippingStripMain: '🚚 FREE shipping on orders over RD${amount}',
+  shippingStripProtected: 'Protected purchase',
+  shippingStripStores: 'Thousands of stores',
+  shippingStripSupport: '24/7 support',
 } satisfies HomeDict

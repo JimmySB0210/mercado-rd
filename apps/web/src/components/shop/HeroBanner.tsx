@@ -293,7 +293,12 @@ export function HeroBanner() {
       <div style={{
         position: 'relative', overflow: 'hidden',
         borderRadius: isMobile ? 0 : 16,
-        aspectRatio: isMobile ? '2.4 / 1' : undefined,
+        // Fase 2A Batch 2: copy más corto en WelcomeSlide/PerksSlide +
+        // proporción más comprimida (antes 2.4/1) para que el hero
+        // ocupe notablemente menos alto en mobile — "vende una acción,
+        // no explica toda la plataforma". El interruptor/imagen
+        // configurable de BrandSlide y WelcomeSlide no se tocaron.
+        aspectRatio: isMobile ? '3.2 / 1' : undefined,
       }}>
         <div style={{
           display: 'flex',

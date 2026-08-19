@@ -16,11 +16,16 @@ import Link from 'next/link'
 import { formatPrice, discountPercent, type ProductWithVendor } from '@/types/database.types'
 import { WishlistButton } from '@/components/shop/WishlistButton'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { useShippingRateForCurrentProvince } from '@/lib/hooks/useShippingRate'
 import { PLACEHOLDER_PRODUCT_IMAGE } from '@/lib/utils'
 
 interface Props {
   product: ProductWithVendor
 }
+
+// Mismo umbral real que ya usa todo el sitio (cart/page.tsx,
+// checkout/page.tsx, FreeShippingBadge.tsx, ShippingBenefitsStrip.tsx)
+const FREE_SHIPPING_THRESHOLD_RDP = 250000 // RD$2,500
 
 export function ProductCard({ product }: Props) {
   const { t } = useTranslation('products')
@@ -29,6 +34,12 @@ export function ProductCard({ product }: Props) {
   const discount = hasDiscount
     ? discountPercent(product.price_rdp, product.compare_rdp!)
     : null
+
+  // Info de envío — Fase 2A Batch 3. Sin provincia seleccionada
+  // (rate === undefined) no se muestra nada, no se adivina.
+  const shippingRate = useShippingRateForCurrentProvince()
+  const qualifiesFreeShipping = product.price_rdp >= FREE_SHIPPING_THRESHOLD_RDP
+  const showShippingInfo = shippingRate !== undefined && (qualifiesFreeShipping || shippingRate !== null)
 
   return (
     <div
@@ -106,6 +117,16 @@ export function ProductCard({ product }: Props) {
               </span>
             )}
           </div>
+
+          {/* Envío — solo con provincia seleccionada, nunca adivinado */}
+          {showShippingInfo && (
+            <p
+              className="text-xs mt-1"
+              style={{ color: qualifiesFreeShipping ? 'var(--color-success)' : 'var(--color-text-secondary)', fontWeight: qualifiesFreeShipping ? 600 : 400 }}
+            >
+              🚚 {qualifiesFreeShipping ? t('cardFreeShipping') : t('cardShippingFrom', { amount: (shippingRate! / 100).toLocaleString('es-DO') })}
+            </p>
+          )}
         </div>
       </Link>
 
