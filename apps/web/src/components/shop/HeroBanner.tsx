@@ -243,10 +243,10 @@ export function HeroBanner() {
   }, [totalSlides])
 
   return (
-    <div style={{maxWidth:1400, margin:'0 auto', padding: isMobile ? 0 : '24px 24px 0'}}>
+    <div style={{maxWidth:1400, margin:'0 auto', padding: isMobile ? '12px 16px 0' : '24px 24px 0'}}>
       <div style={{
         position: 'relative', overflow: 'hidden',
-        borderRadius: isMobile ? 0 : 16,
+        borderRadius: isMobile ? 12 : 16,
         // Fase 2A Batch 2: copy más corto en WelcomeSlide +
         // proporción más comprimida (antes 2.4/1) para que el hero
         // ocupe notablemente menos alto en mobile — "vende una acción,
