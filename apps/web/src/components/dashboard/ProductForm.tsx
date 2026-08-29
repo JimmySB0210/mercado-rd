@@ -17,6 +17,7 @@ import { validateImageFile, getImageDimensions, uploadProductImage, MIN_PRODUCT_
 import { DANGEROUS_PATTERN } from '@/lib/validation'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { ProductAttributesSection, type AttributeValue, type AttributeValuesState } from '@/components/dashboard/ProductAttributesSection'
+import { PricingTiersSection } from '@/components/vendor/PricingTiersSection'
 import { ProductPreviewModal } from '@/components/dashboard/ProductPreviewModal'
 import { computePublishQuality, qualityTier, QUALITY_TIER_EMOJI, QUALITY_TIER_COLOR } from '@/lib/productQuality'
 import { BRAND } from '@/lib/colors'
@@ -1144,6 +1145,11 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               {stockError && <p className="text-xs text-red-600 mt-1">{stockError}</p>}
             </div>
           </div>
+
+          {/* Precios por cantidad — solo en modo editar (necesita un product_id real) */}
+          {mode === 'editar' && initialData && (
+            <PricingTiersSection productId={initialData.product.id} />
+          )}
 
           {/* Variantes */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">

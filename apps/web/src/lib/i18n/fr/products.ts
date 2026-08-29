@@ -70,4 +70,8 @@ export const products = {
   featuredProductsTitle: 'Produits en vedette ⭐',
 
   dailyDealsTitle: '⚡ Offres du jour',
+
+  pricingTiersTitle: 'Prix par quantité',
+  pricingTiersRangeAndUp: '{min}+ {unit}',
+  pricingTiersRangeBetween: '{min}-{max} {unit}',
 } satisfies ProductsDict

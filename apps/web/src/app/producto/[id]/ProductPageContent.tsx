@@ -47,6 +47,27 @@ export interface VariantDynamicDimension {
 // variantId -> { attributeId -> value_text (código, no label) }
 export type VariantDynamicValuesMap = Record<string, Record<string, string>>
 
+export interface PricingTier {
+  id: string
+  min_quantity: number
+  max_quantity: number | null
+  price_rdp: number
+  unit_label: string
+}
+
+// Los precios por cantidad suelen tener centavos significativos (ej.
+// RD$28.96/unidad en compras al por mayor) — a diferencia de
+// formatPrice(), que redondea a 0 decimales para precios normales de
+// producto, aquí se preservan 2 decimales.
+function formatTierPrice(priceRdp: number): string {
+  return new Intl.NumberFormat('es-DO', {
+    style: 'currency',
+    currency: 'DOP',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(priceRdp / 100)
+}
+
 interface Props {
   product: Product & {
     category: { slug: string; emoji: string; name: string } | null
@@ -62,11 +83,12 @@ interface Props {
   specs?: ProductSpecItem[]
   dynamicDimensions?: VariantDynamicDimension[]
   variantDynamicValues?: VariantDynamicValuesMap
+  pricingTiers?: PricingTier[]
 }
 
 export function ProductPageContent({
   product, vendor, variants, hasDiscount, discount, itbis, totalConItbis, whatsappMsg, specs = [],
-  dynamicDimensions = [], variantDynamicValues = {},
+  dynamicDimensions = [], variantDynamicValues = {}, pricingTiers = [],
 }: Props) {
   const { t } = useTranslation('products')
 
@@ -189,6 +211,29 @@ export function ProductPageContent({
               )}
             </div>
           </div>
+
+          {/* Precios por cantidad — si el producto no tiene filas, no se
+              renderiza nada (cero cambio visual para el resto del catálogo) */}
+          {pricingTiers.length > 0 && (
+            <div
+              className="bg-[var(--color-card-bg)] p-4"
+              style={{ borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)' }}
+            >
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('pricingTiersTitle')}</h3>
+              <div className="divide-y divide-gray-50">
+                {pricingTiers.map(tier => (
+                  <div key={tier.id} className="flex items-center justify-between py-2 text-sm">
+                    <span className="text-gray-500">
+                      {tier.max_quantity !== null
+                        ? t('pricingTiersRangeBetween', { min: tier.min_quantity.toLocaleString('es-DO'), max: tier.max_quantity.toLocaleString('es-DO'), unit: tier.unit_label })
+                        : t('pricingTiersRangeAndUp', { min: tier.min_quantity.toLocaleString('es-DO'), unit: tier.unit_label })}
+                    </span>
+                    <span className="font-semibold text-gray-900">{formatTierPrice(tier.price_rdp)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Selector de talla/color + carrito */}
           <ProductActions

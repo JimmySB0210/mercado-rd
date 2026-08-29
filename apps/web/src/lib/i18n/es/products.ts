@@ -82,6 +82,10 @@ export const products = {
 
   // DailyDeals
   dailyDealsTitle: '⚡ Ofertas del día',
+
+  pricingTiersTitle: 'Precios por cantidad',
+  pricingTiersRangeAndUp: '{min}+ {unit}',
+  pricingTiersRangeBetween: '{min}-{max} {unit}',
 }
 
 export type ProductsDict = typeof products

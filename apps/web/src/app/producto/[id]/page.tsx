@@ -13,7 +13,7 @@ import { RelatedProducts } from '@/components/shop/RelatedProducts'
 import { ProductPageContent } from './ProductPageContent'
 import { discountPercent, formatPrice } from '@/types/database.types'
 import type { Product } from '@/types'
-import type { ProductSpecItem, VariantDynamicDimension, VariantDynamicValuesMap } from './ProductPageContent'
+import type { ProductSpecItem, VariantDynamicDimension, VariantDynamicValuesMap, PricingTier } from './ProductPageContent'
 
 export const revalidate = 600
 
@@ -199,6 +199,17 @@ export default async function ProductPage(
     }
   }
 
+  // Precios por cantidad — si el producto no tiene filas, pricingTiers
+  // queda vacío y la tarjeta simplemente no se renderiza (cero cambio
+  // visual para el catálogo existente).
+  const { data: pricingTiersData } = await supabase
+    .from('product_pricing_tiers')
+    .select('id, min_quantity, max_quantity, price_rdp, unit_label')
+    .eq('product_id', product.id)
+    .order('min_quantity', { ascending: true })
+
+  const pricingTiers: PricingTier[] = pricingTiersData ?? []
+
   const vendor = product.vendor as Product['vendor'] & {
     business_name: string
     is_verified: boolean
@@ -237,6 +248,7 @@ export default async function ProductPage(
           specs={specs}
           dynamicDimensions={dynamicDimensions}
           variantDynamicValues={variantDynamicValues}
+          pricingTiers={pricingTiers}
         />
 
         {/* También te puede interesar */}

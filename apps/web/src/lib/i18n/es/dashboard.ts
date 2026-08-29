@@ -110,6 +110,25 @@ export const dashboard = {
   dealGenericError: 'No se pudo crear la oferta. Intenta de nuevo.',
   dealDeactivateError: 'No se pudo desactivar. Intenta de nuevo.',
 
+  // ─── PricingTiersSection ────────────────────────────────────
+  pricingTiersHeading: 'Precios por cantidad',
+  pricingTiersHint: 'Opcional — ofrece precios especiales según la cantidad comprada.',
+  pricingTiersEmptyHint: 'Aún no has agregado precios por cantidad.',
+  addTierRowBtn: '+ Agregar fila',
+  tierMinQuantityLabel: 'Cantidad mínima',
+  tierMaxQuantityLabel: 'Cantidad máxima',
+  tierMaxQuantityPlaceholder: 'En adelante',
+  tierPriceLabel: 'Precio (RD$)',
+  tierUnitLabel: 'Unidad',
+  tierUnitPlaceholder: 'unidades',
+  tierSaveButton: 'Guardar',
+  tierSaving: 'Guardando...',
+  tierCancelButton: 'Cancelar',
+  tierEditButton: 'Editar',
+  tierRemoveButton: 'Quitar',
+  tierRemoving: 'Quitando...',
+  tierGenericError: 'No se pudo guardar. Intenta de nuevo.',
+
   // ─── ProductForm ────────────────────────────────────────────
   backToProductsLink: '← Volver a mis productos',
   backToDashboardLink: '← Volver al dashboard',
