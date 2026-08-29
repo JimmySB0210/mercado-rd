@@ -33,7 +33,7 @@ export function ShippingBenefitsStrip() {
       <div className="max-w-[1400px] mx-auto px-4 md-860:px-6 scroll-hide-x flex items-center gap-6 md-860:gap-10 whitespace-nowrap py-3">
         <span
           className="flex-shrink-0 text-sm md-860:text-base font-bold"
-          style={{ color: 'var(--color-primary)' }}
+          style={{ color: 'var(--color-success)' }}
         >
           {t('shippingStripMain', { amount })}
         </span>
