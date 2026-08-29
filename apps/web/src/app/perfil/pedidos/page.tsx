@@ -4,12 +4,12 @@
 // Ruta: src/app/perfil/pedidos/page.tsx
 // ============================================================
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Navbar } from '@/components/shop/Navbar'
 import { ReviewModal } from '@/components/product/ReviewModal'
-import { DisputeModal } from '@/components/order/DisputeModal'
+import { DisputeModal, REASON_VALUES } from '@/components/order/DisputeModal'
 import { OrderTimeline } from '@/components/shop/OrderTimeline'
 import { formatPrice } from '@/types/database.types'
 import { useTranslation } from '@/lib/hooks/useTranslation'
@@ -59,9 +59,20 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
 }
 
 export default function MyOrdersPage() {
+  return (
+    <Suspense fallback={null}>
+      <MyOrdersContent />
+    </Suspense>
+  )
+}
+
+function MyOrdersContent() {
   const router = useRouter()
   const supabase = createClient()
   const { t, language } = useTranslation('profile')
+  const searchParams = useSearchParams()
+  const reasonParam = searchParams.get('reason')
+  const validReason = (REASON_VALUES as readonly string[]).includes(reasonParam ?? '') ? reasonParam : null
 
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
@@ -71,6 +82,7 @@ export default function MyOrdersPage() {
     vendorId: string
     refundEligible: boolean
     refundIneligibleReason: string | null
+    initialReason: string | null
   } | null>(null)
   const [expandedTimelines, setExpandedTimelines] = useState<Set<string>>(new Set())
 
@@ -86,7 +98,8 @@ export default function MyOrdersPage() {
   const loadOrders = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
-      router.push('/login?redirect=/perfil/pedidos')
+      const redirectTarget = '/perfil/pedidos' + (validReason ? `?reason=${validReason}` : '')
+      router.push(`/login?redirect=${encodeURIComponent(redirectTarget)}`)
       return
     }
 
@@ -207,6 +220,12 @@ export default function MyOrdersPage() {
         <p className="text-sm text-gray-400 mb-6">
           {orders.length} {orders.length === 1 ? t('orderSingular') : t('orderPlural')}
         </p>
+
+        {validReason && (
+          <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 text-sm text-blue-700 mb-6">
+            {t('selectOrderForDisputeBanner')}
+          </div>
+        )}
 
         {orders.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
@@ -342,6 +361,7 @@ export default function MyOrdersPage() {
                                 vendorId: order.items[0]?.vendor_id,
                                 refundEligible: refundIneligibleReason === null,
                                 refundIneligibleReason,
+                                initialReason: validReason,
                               })
                             }}
                             style={{ color: BRAND.red }}
@@ -380,6 +400,7 @@ export default function MyOrdersPage() {
           vendorId={disputeTarget.vendorId}
           refundEligible={disputeTarget.refundEligible}
           refundIneligibleReason={disputeTarget.refundIneligibleReason}
+          initialReason={disputeTarget.initialReason ?? undefined}
           onClose={() => setDisputeTarget(null)}
           onSuccess={() => {
             setDisputeTarget(null)

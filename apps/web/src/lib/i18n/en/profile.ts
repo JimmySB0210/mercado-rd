@@ -42,6 +42,7 @@ export const profile = {
   openDisputeButton: 'Open dispute',
   refundIneligibleFood: 'Food products are not eligible for return',
   refundIneligibleWindowExpired: 'The 7-day return window has passed',
+  selectOrderForDisputeBanner: 'Select the order with this problem to open your dispute.',
 
   loadingTimeline: 'Loading tracking...',
   timelineStep: {

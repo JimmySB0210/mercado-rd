@@ -42,6 +42,7 @@ export const profile = {
   openDisputeButton: 'Ouvrir un litige',
   refundIneligibleFood: 'Les produits alimentaires ne sont pas éligibles au retour',
   refundIneligibleWindowExpired: 'Le délai de 7 jours pour le retour est dépassé',
+  selectOrderForDisputeBanner: 'Sélectionnez la commande concernée pour ouvrir votre litige.',
 
   loadingTimeline: 'Chargement du suivi...',
   timelineStep: {

@@ -14,16 +14,17 @@ interface Props {
   vendorId: string
   refundEligible?: boolean
   refundIneligibleReason?: string | null
+  initialReason?: string
   onClose: () => void
   onSuccess: () => void
 }
 
-const REASON_VALUES = ['not_received', 'not_as_described', 'damaged', 'wrong_item', 'refund_request', 'other'] as const
+export const REASON_VALUES = ['not_received', 'not_as_described', 'damaged', 'wrong_item', 'refund_request', 'other'] as const
 
-export function DisputeModal({ orderId, vendorId, refundEligible = true, refundIneligibleReason = null, onClose, onSuccess }: Props) {
+export function DisputeModal({ orderId, vendorId, refundEligible = true, refundIneligibleReason = null, initialReason = '', onClose, onSuccess }: Props) {
   const supabase = createClient()
   const { t } = useTranslation('profile')
-  const [reason, setReason] = useState('')
+  const [reason, setReason] = useState(initialReason)
   const [description, setDescription] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)

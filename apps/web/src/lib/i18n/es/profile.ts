@@ -49,6 +49,7 @@ export const profile = {
   openDisputeButton: 'Abrir disputa',
   refundIneligibleFood: 'Los productos de alimentos no son elegibles para devolución',
   refundIneligibleWindowExpired: 'Ya pasaron los 7 días para devolución',
+  selectOrderForDisputeBanner: 'Selecciona el pedido con este problema para abrir tu disputa.',
 
   // components/shop/OrderTimeline.tsx
   loadingTimeline: 'Cargando seguimiento...',

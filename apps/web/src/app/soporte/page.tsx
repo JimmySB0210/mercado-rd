@@ -7,7 +7,9 @@
 // mensaje de WhatsApp pre-llenado y lo abre en wa.me.
 // ============================================================
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { PackageX, ClipboardList, FileWarning, Scale, EyeOff } from 'lucide-react'
 import { Navbar } from '@/components/shop/Navbar'
 import { BRAND } from '@/lib/colors'
 
@@ -20,18 +22,38 @@ const ISSUE_TYPES = [
   'El producto llegó dañado',
   'Quiero cancelar mi pedido',
   'Problema con el pago',
+  'Cargos ocultos en mi pedido',
   'Tengo una pregunta sobre un producto',
   'Otro',
+] as const
+
+const HIDDEN_CHARGES_ISSUE_TYPE: (typeof ISSUE_TYPES)[number] = 'Cargos ocultos en mi pedido'
+
+// Categorías que ya traen el motivo resuelto — llevan a /perfil/pedidos
+// para que la persona elija el pedido correspondiente; el motivo viaja
+// por query param y DisputeModal lo trae pre-seleccionado.
+const DISPUTE_CATEGORIES = [
+  { title: 'Productos dañados o rotos', icon: PackageX, href: '/perfil/pedidos?reason=damaged' },
+  { title: 'Pedidos incompletos o erróneos', icon: ClipboardList, href: '/perfil/pedidos?reason=wrong_item' },
+  { title: 'Diferencias con la descripción', icon: FileWarning, href: '/perfil/pedidos?reason=not_as_described' },
+  { title: 'Presentar una disputa comercial', icon: Scale, href: '/perfil/pedidos' },
 ] as const
 
 const MIN_DESCRIPTION_LENGTH = 20
 
 export default function SoportePage() {
+  const router = useRouter()
+  const formRef = useRef<HTMLDivElement>(null)
   const [fullName, setFullName] = useState('')
   const [orderNumber, setOrderNumber] = useState('')
   const [issueType, setIssueType] = useState<string>(ISSUE_TYPES[0])
   const [description, setDescription] = useState('')
   const [submitted, setSubmitted] = useState(false)
+
+  const handleHiddenChargesClick = () => {
+    setIssueType(HIDDEN_CHARGES_ISSUE_TYPE)
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   const nameValid = fullName.trim().length > 0
   const descriptionValid = description.trim().length >= MIN_DESCRIPTION_LENGTH
@@ -72,12 +94,38 @@ export default function SoportePage() {
           Cuéntanos qué pasó y te ayudamos por WhatsApp.
         </p>
 
+        <p className="text-sm font-medium text-gray-700 mb-3">¿Cuál es tu problema?</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+          {DISPUTE_CATEGORIES.map(category => {
+            const Icon = category.icon
+            return (
+              <button
+                key={category.title}
+                type="button"
+                onClick={() => router.push(category.href)}
+                className="flex items-center gap-3 bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-left hover:border-gray-300 transition-colors cursor-pointer"
+              >
+                <Icon size={20} className="flex-shrink-0" style={{ color: BRAND.blue }} />
+                <span className="text-sm font-medium text-gray-800">{category.title}</span>
+              </button>
+            )
+          })}
+          <button
+            type="button"
+            onClick={handleHiddenChargesClick}
+            className="flex items-center gap-3 bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-left hover:border-gray-300 transition-colors cursor-pointer"
+          >
+            <EyeOff size={20} className="flex-shrink-0" style={{ color: BRAND.blue }} />
+            <span className="text-sm font-medium text-gray-800">Cargos ocultos</span>
+          </button>
+        </div>
+
         {/* Banner de horario */}
         <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 text-sm text-blue-700 mb-6">
           Respondemos de lunes a sábado, 9am–6pm. Tiempo de respuesta: menos de 2 horas en horario hábil.
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+        <div ref={formRef} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

@@ -5,7 +5,7 @@
 // ============================================================
 
 import { Suspense, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { useTranslation } from '@/lib/hooks/useTranslation'
@@ -20,7 +20,6 @@ export default function LoginPage() {
 }
 
 function LoginForm() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const redirect = searchParams.get('redirect') ?? '/'
   const reason = searchParams.get('reason')
@@ -51,8 +50,11 @@ function LoginForm() {
       return
     }
 
-    router.push(redirect)
-    router.refresh()
+    // Navegación completa (no router.push + router.refresh): con un
+    // redirect que trae query string, ambas llamadas competían y a
+    // veces la página se quedaba en /login. window.location.href
+    // fuerza una carga fresca donde el middleware ya ve la cookie.
+    window.location.href = redirect
   }
 
   const handleGoogleSignIn = async () => {
