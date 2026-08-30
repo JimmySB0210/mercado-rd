@@ -97,6 +97,14 @@ export const products = {
   trustResponseUnder24h: '≤24h',
   trustResponse1to2Days: '1-2 días',
   trustResponseOver2Days: '+2 días',
+
+  reviewsHeading: 'Reseñas',
+  defaultReviewerName: 'Cliente',
+  verifiedPurchaseBadge: '✓ Compra verificada',
+  noReviewsYet: 'Aún no hay reseñas para este producto.',
+  showMoreReviewsButton: 'Ver más reseñas',
+  faqPublicHeading: 'Preguntas frecuentes',
+  businessTypeQuestion: '¿Qué tipo de negocio es {vendorName}?',
 }
 
 export type ProductsDict = typeof products

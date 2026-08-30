@@ -85,4 +85,12 @@ export const products = {
   trustResponseUnder24h: '≤24h',
   trustResponse1to2Days: '1-2 days',
   trustResponseOver2Days: '+2 days',
+
+  reviewsHeading: 'Reviews',
+  defaultReviewerName: 'Customer',
+  verifiedPurchaseBadge: '✓ Verified purchase',
+  noReviewsYet: 'No reviews yet for this product.',
+  showMoreReviewsButton: 'Show more reviews',
+  faqPublicHeading: 'Frequently asked questions',
+  businessTypeQuestion: 'What type of business is {vendorName}?',
 } satisfies ProductsDict

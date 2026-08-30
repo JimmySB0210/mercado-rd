@@ -129,6 +129,26 @@ export const dashboard = {
   tierRemoving: 'Quitando...',
   tierGenericError: 'No se pudo guardar. Intenta de nuevo.',
 
+  // ─── FaqSection ─────────────────────────────────────────────
+  faqSectionTitle: 'Preguntas frecuentes',
+  faqSuggestedHeading: 'Sugeridas para tus categorías',
+  faqAddButton: 'Agregar',
+  faqAnswerPlaceholder: 'Escribe la respuesta...',
+  faqSaveButton: 'Guardar',
+  faqCancelButton: 'Cancelar',
+  faqSaving: 'Guardando...',
+  faqAddCustomButton: '+ Agregar pregunta propia',
+  faqCustomQuestionPlaceholder: 'Escribe tu pregunta...',
+  faqAnswerRequiredError: 'Escribe una respuesta.',
+  faqQuestionRequiredError: 'Escribe una pregunta (mínimo 5 caracteres).',
+  faqGenericError: 'No se pudo guardar. Intenta de nuevo.',
+  faqYourQuestionsHeading: 'Tus preguntas',
+  faqEmptyHint: 'Aún no has agregado ninguna pregunta.',
+  faqInactiveLabel: 'Inactiva',
+  faqDeactivateButton: 'Desactivar',
+  faqActivateButton: 'Activar',
+  faqDeleteButton: 'Borrar',
+
   // ─── ProductForm ────────────────────────────────────────────
   backToProductsLink: '← Volver a mis productos',
   backToDashboardLink: '← Volver al dashboard',

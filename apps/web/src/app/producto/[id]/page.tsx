@@ -10,6 +10,8 @@ import { createPublicClient } from '@/lib/supabase/public'
 import { Navbar } from '@/components/shop/Navbar'
 import { ProductViewTracker } from '@/components/product/ProductViewTracker'
 import { RelatedProducts } from '@/components/shop/RelatedProducts'
+import { ProductReviews } from '@/components/shop/ProductReviews'
+import { ProductFaqSection } from '@/components/shop/ProductFaqSection'
 import { ProductPageContent } from './ProductPageContent'
 import { discountPercent, formatPrice } from '@/types/database.types'
 import type { Product } from '@/types'
@@ -250,6 +252,14 @@ export default async function ProductPage(
           variantDynamicValues={variantDynamicValues}
           pricingTiers={pricingTiers}
         />
+
+        {/* Reseñas — primero, nunca existió una lista antes de esto */}
+        <ProductReviews productId={product.id} />
+
+        {/* Preguntas frecuentes — debajo de reseñas */}
+        {vendor && (
+          <ProductFaqSection vendorId={product.vendor_id} vendorName={vendor.business_name} />
+        )}
 
         {/* También te puede interesar */}
         <RelatedProducts
