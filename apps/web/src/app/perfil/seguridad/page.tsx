@@ -9,7 +9,15 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Navbar } from '@/components/shop/Navbar'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { validatePhone } from '@/lib/validation'
 import { BRAND } from '@/lib/colors'
+
+interface DeletionBlockers {
+  can_delete: boolean
+  pending_orders_as_buyer: number
+  pending_orders_as_vendor: number
+  open_disputes: number
+}
 
 export default function SecurityPage() {
   const router = useRouter()
@@ -17,6 +25,7 @@ export default function SecurityPage() {
   const { t } = useTranslation('profile')
 
   const [loading, setLoading] = useState(true)
+  const [userId, setUserId] = useState<string | null>(null)
 
   // Contraseña
   const [passwordNew, setPasswordNew] = useState('')
@@ -24,6 +33,26 @@ export default function SecurityPage() {
   const [passwordSaving, setPasswordSaving] = useState(false)
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [passwordSuccess, setPasswordSuccess] = useState(false)
+
+  // Email
+  const [emailNew, setEmailNew] = useState('')
+  const [emailSaving, setEmailSaving] = useState(false)
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [emailSuccess, setEmailSuccess] = useState(false)
+
+  // Teléfono
+  const [phoneNew, setPhoneNew] = useState('')
+  const [phoneSaving, setPhoneSaving] = useState(false)
+  const [phoneError, setPhoneError] = useState<string | null>(null)
+  const [phoneSuccess, setPhoneSuccess] = useState(false)
+
+  // Eliminar cuenta
+  const [deleteStep, setDeleteStep] = useState<'idle' | 'blocked' | 'confirm'>('idle')
+  const [deleteChecking, setDeleteChecking] = useState(false)
+  const [deleteBlockedMessage, setDeleteBlockedMessage] = useState<string | null>(null)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleteSaving, setDeleteSaving] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   // MFA
   const [mfaFactorId, setMfaFactorId] = useState<string | null>(null)
@@ -51,6 +80,7 @@ export default function SecurityPage() {
         router.push('/login?redirect=/perfil/seguridad')
         return
       }
+      setUserId(user.id)
       await loadMfaStatus()
       setLoading(false)
     }
@@ -100,6 +130,122 @@ export default function SecurityPage() {
         if (notifyError) console.error('[SecurityPage] No se pudo crear la alerta de seguridad:', notifyError)
       })
     }
+  }
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setEmailError(null)
+    setEmailSuccess(false)
+
+    if (!emailNew.trim() || !emailNew.includes('@')) {
+      setEmailError(t('emailInvalid'))
+      return
+    }
+
+    setEmailSaving(true)
+    const { error } = await supabase.auth.updateUser({ email: emailNew.trim() })
+    setEmailSaving(false)
+
+    if (error) {
+      console.error('[SecurityPage updateEmail]', error)
+      setEmailError(error.message)
+      return
+    }
+
+    setEmailSuccess(true)
+    setEmailNew('')
+  }
+
+  const handlePhoneSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setPhoneError(null)
+    setPhoneSuccess(false)
+
+    const validationError = validatePhone(phoneNew)
+    if (validationError) {
+      setPhoneError(validationError)
+      return
+    }
+
+    setPhoneSaving(true)
+    // Validación de formato la repite el propio RPC del lado del
+    // servidor — esto es solo feedback inmediato, no la única barrera.
+    const { error } = await supabase.rpc('update_own_phone', { p_phone: phoneNew.trim() })
+    setPhoneSaving(false)
+
+    if (error) {
+      console.error('[SecurityPage updatePhone]', error)
+      setPhoneError(error.message)
+      return
+    }
+
+    setPhoneSuccess(true)
+    setPhoneNew('')
+  }
+
+  const buildBlockersMessage = (blockers: DeletionBlockers): string => {
+    const pendingOrders = blockers.pending_orders_as_buyer + blockers.pending_orders_as_vendor
+    const parts: string[] = []
+    if (pendingOrders > 0) {
+      parts.push(t(pendingOrders === 1 ? 'deleteBlockerOrdersSingular' : 'deleteBlockerOrdersPlural', { count: pendingOrders }))
+    }
+    if (blockers.open_disputes > 0) {
+      parts.push(t(blockers.open_disputes === 1 ? 'deleteBlockerDisputesSingular' : 'deleteBlockerDisputesPlural', { count: blockers.open_disputes }))
+    }
+    return t('deleteBlockedMessage', { items: parts.join(` ${t('deleteBlockerAnd')} `) })
+  }
+
+  const handleDeleteClick = async () => {
+    if (!userId) return
+    setDeleteError(null)
+    setDeleteChecking(true)
+
+    const { data, error } = await supabase.rpc('check_account_deletion_blockers', { p_user_id: userId })
+    setDeleteChecking(false)
+
+    if (error || !data) {
+      console.error('[SecurityPage checkDeletionBlockers]', error)
+      setDeleteError(t('deleteGenericError'))
+      return
+    }
+
+    if (!data.can_delete) {
+      setDeleteBlockedMessage(buildBlockersMessage(data as DeletionBlockers))
+      setDeleteStep('blocked')
+      return
+    }
+
+    setDeleteStep('confirm')
+  }
+
+  const handleConfirmDelete = async () => {
+    if (deleteConfirmText.trim().toUpperCase() !== t('deleteConfirmPlaceholder').toUpperCase()) {
+      setDeleteError(t('deleteConfirmTextMismatch'))
+      return
+    }
+
+    setDeleteSaving(true)
+    setDeleteError(null)
+
+    const { data, error } = await supabase.rpc('delete_own_account')
+    setDeleteSaving(false)
+
+    if (error) {
+      console.error('[SecurityPage deleteAccount]', error)
+      setDeleteError(t('deleteGenericError'))
+      return
+    }
+
+    // Defensa en profundidad — delete_own_account() vuelve a chequear los
+    // bloqueadores server-side aunque ya los hayamos verificado antes.
+    if (!data?.success) {
+      setDeleteBlockedMessage(data?.blockers ? buildBlockersMessage(data.blockers as DeletionBlockers) : t('deleteGenericError'))
+      setDeleteStep('blocked')
+      return
+    }
+
+    await supabase.auth.signOut()
+    window.location.href = '/'
   }
 
   const handleEnrollStart = async () => {
@@ -238,8 +384,78 @@ export default function SecurityPage() {
           </form>
         </div>
 
+        {/* Cambiar email */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-4">
+          <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('changeEmailTitle')}</h2>
+
+          <form onSubmit={handleEmailSubmit} className="space-y-3">
+            <input
+              type="email"
+              value={emailNew}
+              onChange={e => setEmailNew(e.target.value)}
+              placeholder={t('newEmailPlaceholder')}
+              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
+            />
+
+            {emailError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2">
+                {emailError}
+              </div>
+            )}
+            {emailSuccess && (
+              <div className="bg-green-50 border border-green-200 text-green-700 text-xs rounded-lg px-3 py-2">
+                {t('emailChangeSuccess')}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={emailSaving}
+              style={{ background: emailSaving ? '#ccc' : BRAND.blue }}
+              className="w-full text-white font-medium py-2.5 rounded-lg text-sm border-none cursor-pointer"
+            >
+              {emailSaving ? t('savingButton') : t('updateEmailButton')}
+            </button>
+          </form>
+        </div>
+
+        {/* Cambiar teléfono */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-4">
+          <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('changePhoneTitle')}</h2>
+
+          <form onSubmit={handlePhoneSubmit} className="space-y-3">
+            <input
+              type="tel"
+              value={phoneNew}
+              onChange={e => setPhoneNew(e.target.value)}
+              placeholder={t('newPhonePlaceholder')}
+              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
+            />
+
+            {phoneError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2">
+                {phoneError}
+              </div>
+            )}
+            {phoneSuccess && (
+              <div className="bg-green-50 border border-green-200 text-green-700 text-xs rounded-lg px-3 py-2">
+                {t('phoneChangeSuccess')}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={phoneSaving}
+              style={{ background: phoneSaving ? '#ccc' : BRAND.blue }}
+              className="w-full text-white font-medium py-2.5 rounded-lg text-sm border-none cursor-pointer"
+            >
+              {phoneSaving ? t('savingButton') : t('updatePhoneButton')}
+            </button>
+          </form>
+        </div>
+
         {/* MFA */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-4">
           <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('mfaTitle')}</h2>
 
           {mfaError && (
@@ -312,6 +528,74 @@ export default function SecurityPage() {
               >
                 {mfaBusy ? t('startingButton') : t('activateMfaButton')}
               </button>
+            </div>
+          )}
+        </div>
+
+        {/* Eliminar cuenta — destructivo, separado claramente del resto */}
+        <div className="bg-white rounded-2xl border-2 p-6 mt-8" style={{ borderColor: '#FCA5A5' }}>
+          <h2 className="text-sm font-semibold mb-1" style={{ color: BRAND.red }}>{t('deleteAccountTitle')}</h2>
+          <p className="text-xs text-gray-500 mb-3">{t('deleteAccountHint')}</p>
+
+          {deleteStep === 'idle' && (
+            <button
+              onClick={handleDeleteClick}
+              disabled={deleteChecking}
+              style={{ background: '#fff', border: `1px solid ${BRAND.red}`, color: BRAND.red }}
+              className="font-semibold px-5 py-2.5 rounded-lg text-sm cursor-pointer"
+            >
+              {deleteChecking ? t('checkingButton') : t('deleteAccountButton')}
+            </button>
+          )}
+
+          {deleteStep === 'blocked' && (
+            <div>
+              <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 mb-3">
+                {deleteBlockedMessage}
+              </div>
+              <button
+                onClick={() => setDeleteStep('idle')}
+                className="text-xs text-gray-400 underline bg-transparent border-none cursor-pointer"
+              >
+                {t('cancelButton')}
+              </button>
+            </div>
+          )}
+
+          {deleteStep === 'confirm' && (
+            <div>
+              <p className="text-xs text-gray-600 mb-2">{t('deleteConfirmInstructions')}</p>
+              <input
+                type="text"
+                value={deleteConfirmText}
+                onChange={e => setDeleteConfirmText(e.target.value)}
+                placeholder={t('deleteConfirmPlaceholder')}
+                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none mb-3"
+              />
+
+              {deleteError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 mb-3">
+                  {deleteError}
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <button
+                  onClick={handleConfirmDelete}
+                  disabled={deleteSaving}
+                  style={{ background: deleteSaving ? '#ccc' : BRAND.red }}
+                  className="flex-1 text-white font-medium py-2.5 rounded-lg text-sm border-none cursor-pointer"
+                >
+                  {deleteSaving ? t('deletingButton') : t('confirmDeleteButton')}
+                </button>
+                <button
+                  onClick={() => { setDeleteStep('idle'); setDeleteConfirmText(''); setDeleteError(null) }}
+                  disabled={deleteSaving}
+                  className="px-4 py-2.5 rounded-lg text-sm border border-gray-200 bg-white cursor-pointer"
+                >
+                  {t('cancelButton')}
+                </button>
+              </div>
             </div>
           )}
         </div>

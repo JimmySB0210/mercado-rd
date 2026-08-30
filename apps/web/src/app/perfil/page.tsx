@@ -87,6 +87,9 @@ export default function PerfilPage() {
             >
               {vendorInfo ? t('roleVendor') : t('roleBuyer')}
             </span>
+            {profile?.member_id && (
+              <p className="text-xs text-gray-400 mt-1.5">{t('memberIdLabel', { id: profile.member_id })}</p>
+            )}
             <div className="mt-2">
               <PushNotificationButton />
             </div>

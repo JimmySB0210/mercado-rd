@@ -78,6 +78,8 @@ export interface User {
   province_id: number | null
   avatar_url: string | null
   is_admin: boolean
+  member_id: string
+  is_deleted: boolean
   created_at: string
 }
 

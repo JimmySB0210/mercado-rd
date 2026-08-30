@@ -29,6 +29,7 @@ export const profile = {
   myOrdersLink: 'Mis pedidos',
   sellOnMercadoRD: 'Vender en MercadoRD',
   signOutButton: 'Cerrar sesión',
+  memberIdLabel: 'Member ID: {id}',
 
   // app/perfil/pedidos/page.tsx
   loadingOrders: 'Cargando tus pedidos...',
@@ -185,6 +186,35 @@ export const profile = {
   mfaCodeRequired: 'Ingresa el código de 6 dígitos',
   mfaVerifyError: 'Código incorrecto. Intenta de nuevo.',
   mfaUnenrollError: 'No se pudo desactivar MFA. Intenta de nuevo.',
+
+  // Cambiar email/teléfono
+  changeEmailTitle: 'Cambiar email',
+  newEmailPlaceholder: 'Nuevo email',
+  emailInvalid: 'Ingresa un email válido',
+  emailChangeSuccess: '✓ Revisa tu correo para confirmar el cambio de email',
+  updateEmailButton: 'Actualizar email',
+  changePhoneTitle: 'Cambiar teléfono',
+  newPhonePlaceholder: 'Nuevo teléfono (809/829/849)',
+  phoneChangeSuccess: '✓ Teléfono actualizado correctamente',
+  updatePhoneButton: 'Actualizar teléfono',
+
+  // Eliminar cuenta
+  deleteAccountTitle: 'Eliminar mi cuenta',
+  deleteAccountHint: 'Esta acción es permanente. Tu cuenta quedará anonimizada y no podrás volver a iniciar sesión.',
+  deleteAccountButton: 'Eliminar mi cuenta',
+  checkingButton: 'Verificando...',
+  deleteBlockedMessage: 'Tienes {items} — debes resolverlos antes de eliminar tu cuenta.',
+  deleteBlockerOrdersSingular: '{count} pedido en camino',
+  deleteBlockerOrdersPlural: '{count} pedidos en camino',
+  deleteBlockerDisputesSingular: '{count} disputa abierta',
+  deleteBlockerDisputesPlural: '{count} disputas abiertas',
+  deleteBlockerAnd: 'y',
+  deleteConfirmInstructions: 'Escribe ELIMINAR para confirmar — esta acción no se puede deshacer.',
+  deleteConfirmPlaceholder: 'ELIMINAR',
+  deleteConfirmTextMismatch: 'Escribe ELIMINAR exactamente para confirmar',
+  confirmDeleteButton: 'Sí, eliminar mi cuenta',
+  deletingButton: 'Eliminando...',
+  deleteGenericError: 'No se pudo eliminar la cuenta. Intenta de nuevo.',
 
   // components/shop/WishlistButton.tsx
   removeFromFavoritesAria: 'Quitar de favoritos',

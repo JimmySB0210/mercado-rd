@@ -33,6 +33,28 @@ export async function middleware(request: NextRequest) {
   // Refrescar sesión — imprescindible para que no expire
   const { data: { user } } = await supabase.auth.getUser()
 
+  // Cuenta eliminada (delete_own_account marca is_deleted = true, pero no
+  // borra el usuario de Supabase Auth — SUPABASE_SERVICE_ROLE_KEY sigue
+  // siendo un placeholder). Este chequeo a nivel de app es lo que
+  // realmente bloquea el acceso: fuerza cierre de sesión en cualquier
+  // request posterior a que la cuenta quedó marcada como eliminada.
+  if (user) {
+    const { data: profileRow } = await supabase
+      .from('users')
+      .select('is_deleted')
+      .eq('id', user.id)
+      .single()
+
+    if (profileRow?.is_deleted) {
+      await supabase.auth.signOut()
+      const redirectResponse = NextResponse.redirect(new URL('/', request.url))
+      supabaseResponse.cookies.getAll().forEach(cookie => {
+        redirectResponse.cookies.set(cookie)
+      })
+      return redirectResponse
+    }
+  }
+
   // Rutas protegidas — redirigir a login si no hay sesión
   const protectedPaths = ['/dashboard', '/checkout', '/perfil']
   const isProtected = protectedPaths.some(path =>

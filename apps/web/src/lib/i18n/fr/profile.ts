@@ -23,6 +23,7 @@ export const profile = {
   myOrdersLink: 'Mes commandes',
   sellOnMercadoRD: 'Vendre sur MercadoRD',
   signOutButton: 'Se déconnecter',
+  memberIdLabel: 'Member ID : {id}',
 
   loadingOrders: 'Chargement de vos commandes...',
   ordersPageTitle: 'Mes commandes',
@@ -164,6 +165,35 @@ export const profile = {
   mfaCodeRequired: 'Entrez le code à 6 chiffres',
   mfaVerifyError: 'Code incorrect. Réessayez.',
   mfaUnenrollError: 'Impossible de désactiver le MFA. Réessayez.',
+
+  // Changer email/téléphone
+  changeEmailTitle: "Changer d'email",
+  newEmailPlaceholder: 'Nouvel email',
+  emailInvalid: 'Entrez un email valide',
+  emailChangeSuccess: '✓ Vérifiez votre boîte mail pour confirmer le changement',
+  updateEmailButton: "Mettre à jour l'email",
+  changePhoneTitle: 'Changer de téléphone',
+  newPhonePlaceholder: 'Nouveau téléphone (809/829/849)',
+  phoneChangeSuccess: '✓ Téléphone mis à jour avec succès',
+  updatePhoneButton: 'Mettre à jour le téléphone',
+
+  // Supprimer le compte
+  deleteAccountTitle: 'Supprimer mon compte',
+  deleteAccountHint: 'Cette action est permanente. Votre compte sera anonymisé et vous ne pourrez plus vous reconnecter.',
+  deleteAccountButton: 'Supprimer mon compte',
+  checkingButton: 'Vérification...',
+  deleteBlockedMessage: 'Vous avez {items} — vous devez les résoudre avant de supprimer votre compte.',
+  deleteBlockerOrdersSingular: '{count} commande en cours',
+  deleteBlockerOrdersPlural: '{count} commandes en cours',
+  deleteBlockerDisputesSingular: '{count} litige ouvert',
+  deleteBlockerDisputesPlural: '{count} litiges ouverts',
+  deleteBlockerAnd: 'et',
+  deleteConfirmInstructions: 'Tapez SUPPRIMER pour confirmer — cette action est irréversible.',
+  deleteConfirmPlaceholder: 'SUPPRIMER',
+  deleteConfirmTextMismatch: 'Tapez SUPPRIMER exactement pour confirmer',
+  confirmDeleteButton: 'Oui, supprimer mon compte',
+  deletingButton: 'Suppression...',
+  deleteGenericError: "Impossible de supprimer le compte. Réessayez.",
 
   removeFromFavoritesAria: 'Retirer des favoris',
   addToFavoritesAria: 'Ajouter aux favoris',

@@ -23,6 +23,7 @@ export const profile = {
   myOrdersLink: 'My orders',
   sellOnMercadoRD: 'Sell on MercadoRD',
   signOutButton: 'Log out',
+  memberIdLabel: 'Member ID: {id}',
 
   loadingOrders: 'Loading your orders...',
   ordersPageTitle: 'My orders',
@@ -164,6 +165,35 @@ export const profile = {
   mfaCodeRequired: 'Enter the 6-digit code',
   mfaVerifyError: 'Incorrect code. Try again.',
   mfaUnenrollError: "Couldn't disable MFA. Try again.",
+
+  // Change email/phone
+  changeEmailTitle: 'Change email',
+  newEmailPlaceholder: 'New email',
+  emailInvalid: 'Enter a valid email',
+  emailChangeSuccess: '✓ Check your inbox to confirm the email change',
+  updateEmailButton: 'Update email',
+  changePhoneTitle: 'Change phone',
+  newPhonePlaceholder: 'New phone (809/829/849)',
+  phoneChangeSuccess: '✓ Phone updated successfully',
+  updatePhoneButton: 'Update phone',
+
+  // Delete account
+  deleteAccountTitle: 'Delete my account',
+  deleteAccountHint: 'This action is permanent. Your account will be anonymized and you will not be able to log in again.',
+  deleteAccountButton: 'Delete my account',
+  checkingButton: 'Checking...',
+  deleteBlockedMessage: 'You have {items} — you must resolve them before deleting your account.',
+  deleteBlockerOrdersSingular: '{count} order in progress',
+  deleteBlockerOrdersPlural: '{count} orders in progress',
+  deleteBlockerDisputesSingular: '{count} open dispute',
+  deleteBlockerDisputesPlural: '{count} open disputes',
+  deleteBlockerAnd: 'and',
+  deleteConfirmInstructions: 'Type DELETE to confirm — this action cannot be undone.',
+  deleteConfirmPlaceholder: 'DELETE',
+  deleteConfirmTextMismatch: 'Type DELETE exactly to confirm',
+  confirmDeleteButton: 'Yes, delete my account',
+  deletingButton: 'Deleting...',
+  deleteGenericError: 'Could not delete the account. Try again.',
 
   removeFromFavoritesAria: 'Remove from favorites',
   addToFavoritesAria: 'Add to favorites',
