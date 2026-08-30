@@ -4,7 +4,7 @@
 // Ruta: src/components/product/ProductActions.tsx
 // ============================================================
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ChevronDown, ShoppingCart } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
 import { useCartStore } from '@/lib/store/cart'
@@ -88,7 +88,16 @@ export function ProductActions({
     : null
 
   const [quantity, setQuantity] = useState(1)
+  const [quantityInput, setQuantityInput] = useState('1')
   const [added, setAdded] = useState(false)
+
+  // El input se mantiene en sincronía con quantity cuando este cambia
+  // por los botones +/− — pero mientras la persona escribe, onChange
+  // solo actualiza quantityInput (ver más abajo), nunca quantity
+  // directamente, así el valor no salta ni se corrige a mitad de tecleo.
+  useEffect(() => {
+    setQuantityInput(String(quantity))
+  }, [quantity])
 
   const needsSize = !hasDynamicDims && sizes.length > 0
   const needsColor = !hasDynamicDims && colors.length > 0
@@ -103,6 +112,22 @@ export function ProductActions({
 
   const effectiveStock = hasVariants ? (activeMatchedVariant?.stock ?? 0) : product.stock
   const isOutOfStock = hasVariants ? (activeMatchedVariant !== null && activeMatchedVariant.stock === 0) : product.stock === 0
+  // Aplica el techo de stock y el piso de 1 — solo se llama al perder
+  // el foco, nunca en cada tecla (no interrumpe mientras escribe).
+  // MOQ por producto queda pendiente: hoy min_order_quantity vive en
+  // vendors (info general del wizard de manufactura), no es un campo
+  // por producto — aplicarlo como bloqueo duro es una decisión aparte.
+  const clampQuantity = (raw: number): number => {
+    let next = Number.isFinite(raw) ? Math.trunc(raw) : 1
+    if (next > effectiveStock) next = effectiveStock
+    if (next < 1) next = 1
+    return next
+  }
+
+  const handleQuantityBlur = () => {
+    const parsed = Number(quantityInput)
+    setQuantity(clampQuantity(parsed))
+  }
 
   const canAdd = hasVariants
     ? !!activeMatchedVariant && activeMatchedVariant.stock > 0
@@ -328,7 +353,14 @@ export function ProductActions({
           >
             −
           </button>
-          <span className="w-8 text-center font-medium text-gray-900">{quantity}</span>
+          <input
+            type="number"
+            value={quantityInput}
+            onChange={e => setQuantityInput(e.target.value)}
+            onBlur={handleQuantityBlur}
+            onFocus={e => e.target.select()}
+            className="w-16 text-center font-medium text-gray-900 border border-gray-200 rounded-lg py-1.5 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          />
           <button
             onClick={() => setQuantity(q => Math.min(effectiveStock, q + 1))}
             className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40"
