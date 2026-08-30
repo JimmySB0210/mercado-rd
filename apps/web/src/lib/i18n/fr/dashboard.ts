@@ -209,6 +209,8 @@ export const dashboard = {
   savingTracking: 'Enregistrement...',
   markAsShippedBtn: 'Marquer comme expédiée',
   courierOtherOption: 'Autre',
+  estimatedDeliveryLabel: 'Date de livraison estimée',
+  estimatedDeliveryOptional: 'optionnel',
 
   confirmDeliveryHeading: 'Confirmer la livraison',
   otpCodePlaceholder: 'Code à 6 chiffres',

@@ -21,6 +21,7 @@ import { formatDate } from '@/lib/utils'
 import { ProductCard } from '@/components/product/ProductCard'
 import { VerificationBadge } from '@/components/vendor/VerificationBadge'
 import { VendorOptionLabel } from '@/components/vendor/VendorOptionLabel'
+import { VendorTrustBar } from '@/components/shop/VendorTrustBar'
 import type { BusinessType, CustomerType, VendorService } from '@/types/database.types'
 
 interface ReviewRow {
@@ -192,6 +193,9 @@ export function VendorStoreContent({
           </div>
         </div>
       </div>
+
+      {/* Confianza del vendedor */}
+      <VendorTrustBar vendorId={vendor.id} className="mb-6" />
 
       {/* Información del proveedor — solo si completó el wizard de registro */}
       {hasProviderInfo && (

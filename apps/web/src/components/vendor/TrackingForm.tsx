@@ -21,6 +21,7 @@ export function TrackingForm({ orderId, initialTracking, initialCourier }: Props
   const { t } = useTranslation('dashboard')
   const [trackingNumber, setTrackingNumber] = useState('')
   const [courier, setCourier] = useState(COURIERS[0])
+  const [estimatedDeliveryDate, setEstimatedDeliveryDate] = useState('')
   const [saved, setSaved] = useState<{ tracking_number: string; courier: string } | null>(
     initialTracking ? { tracking_number: initialTracking, courier: initialCourier ?? '' } : null
   )
@@ -40,6 +41,7 @@ export function TrackingForm({ orderId, initialTracking, initialCourier }: Props
       p_order_id: orderId,
       p_tracking_number: trackingNumber.trim(),
       p_courier: courier,
+      p_estimated_delivery_date: estimatedDeliveryDate || null,
     })
 
     setSaving(false)
@@ -89,6 +91,15 @@ export function TrackingForm({ orderId, initialTracking, initialCourier }: Props
           ))}
           <option value="Otro">{t('courierOtherOption')}</option>
         </select>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 2, fontSize: 10, color: '#999' }}>
+          {t('estimatedDeliveryLabel')} <span style={{ fontWeight: 400 }}>({t('estimatedDeliveryOptional')})</span>
+          <input
+            type="date"
+            value={estimatedDeliveryDate}
+            onChange={e => setEstimatedDeliveryDate(e.target.value)}
+            style={{ border: '1px solid #ddd', borderRadius: 6, padding: '6px 10px', fontSize: 13 }}
+          />
+        </label>
         <button
           onClick={handleSubmit}
           disabled={saving}

@@ -74,4 +74,15 @@ export const products = {
   pricingTiersTitle: 'Quantity pricing',
   pricingTiersRangeAndUp: '{min}+ {unit}',
   pricingTiersRangeBetween: '{min}-{max} {unit}',
+
+  trustBarTitle: 'Seller trust',
+  trustRatingLine: 'Rating: {average}/5 ({count})',
+  trustResponseLine: 'Response time: {label}',
+  trustOnTimeLine: 'On-time deliveries: ≥{rate}%',
+  trustResponseUnder1h: '≤1h',
+  trustResponseUnder4h: '≤4h',
+  trustResponseUnder12h: '≤12h',
+  trustResponseUnder24h: '≤24h',
+  trustResponse1to2Days: '1-2 days',
+  trustResponseOver2Days: '+2 days',
 } satisfies ProductsDict

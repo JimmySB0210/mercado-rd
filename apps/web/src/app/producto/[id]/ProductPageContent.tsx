@@ -13,6 +13,7 @@ import { ProductGallery } from '@/components/product/ProductGallery'
 import { ProductActions } from '@/components/product/ProductActions'
 import { FreeShippingBadge } from '@/components/product/FreeShippingBadge'
 import { ContactVendorButton } from '@/components/product/ContactVendorButton'
+import { VendorTrustBar } from '@/components/shop/VendorTrustBar'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { formatPrice } from '@/types/database.types'
 import type { ProductVariant } from '@/types/database.types'
@@ -335,6 +336,9 @@ export function ProductPageContent({
               </div>
             </div>
           )}
+
+          {/* Confianza del vendedor — debajo de "Vendedor" */}
+          {vendor && <VendorTrustBar vendorId={vendor.id} />}
 
         </div>
       </div>
