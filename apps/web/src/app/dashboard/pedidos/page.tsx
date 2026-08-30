@@ -29,6 +29,8 @@ interface OrderRow {
   province_name: string | null
   buyer_name: string
   buyer_phone: string | null
+  recipient_name: string | null
+  recipient_phone: string | null
   items: {
     id: string
     product_name: string
@@ -97,7 +99,7 @@ export default function VendorOrdersPage() {
 
       const { data: ordersData } = await supabase
         .from('orders')
-        .select('id, status, delivery_address, payment_method, notes, created_at, tracking_number, courier, user_id, province:provinces_rd(name)')
+        .select('id, status, delivery_address, payment_method, notes, created_at, tracking_number, courier, user_id, recipient_name, recipient_phone, province:provinces_rd(name)')
         .in('id', orderIds)
         .order('created_at', { ascending: false })
 
@@ -142,6 +144,8 @@ export default function VendorOrdersPage() {
           province_name: order.province?.name ?? null,
           buyer_name: buyer?.full_name ?? 'Cliente',
           buyer_phone: buyer?.phone ?? null,
+          recipient_name: order.recipient_name ?? null,
+          recipient_phone: order.recipient_phone ?? null,
           items: orderItems,
           vendor_subtotal_rdp: orderItems.reduce((acc: number, i: any) => acc + i.price_rdp * i.quantity, 0),
         }
@@ -257,6 +261,12 @@ export default function VendorOrdersPage() {
                           <p style={{ fontSize: 12, color: '#999' }}>{PAYMENT_LABELS[order.payment_method] ?? order.payment_method}</p>
                         </div>
                       </div>
+
+                      {order.recipient_name && (
+                        <div style={{ marginBottom: 16, padding: 10, background: '#EFF6FF', borderRadius: 8, fontSize: 12, color: '#1e3a8a' }}>
+                          👤 {t('recipientBanner', { buyer: order.buyer_name, recipient: order.recipient_name, phone: order.recipient_phone ?? t('notAvailable') })}
+                        </div>
+                      )}
 
                       {order.notes && (
                         <div style={{ marginBottom: 16, padding: 10, background: '#FFF8E1', borderRadius: 8, fontSize: 12, color: '#5D4037' }}>

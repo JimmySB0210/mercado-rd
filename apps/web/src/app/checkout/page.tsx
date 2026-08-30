@@ -43,6 +43,9 @@ export default function CheckoutPage() {
     address:    '',
     province:   '',
     notes:      '',
+    isForSomeoneElse: false,
+    recipientName:  '',
+    recipientPhone: '',
     payMethod:  'azul',
     cardNumber:     '',
     cardExpiration: '',
@@ -147,6 +150,10 @@ export default function CheckoutPage() {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
   }
 
+  const handleForSomeoneElseToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm(f => ({ ...f, isForSomeoneElse: e.target.checked }))
+  }
+
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return
     setCouponApplying(true)
@@ -180,6 +187,16 @@ export default function CheckoutPage() {
     if (!form.fullName || !form.phone || !form.address || !form.province) {
       setError(t('requiredFieldsError'))
       return
+    }
+    if (form.isForSomeoneElse) {
+      if (form.recipientName.trim().length < 3) {
+        setError(t('recipientNameRequiredError'))
+        return
+      }
+      if (!form.recipientPhone.trim()) {
+        setError(t('recipientPhoneRequiredError'))
+        return
+      }
     }
     if (form.payMethod === 'azul' && (!form.cardNumber || !form.cardExpiration || !form.cardCvc)) {
       setError(t('cardDetailsRequired'))
@@ -299,6 +316,8 @@ export default function CheckoutPage() {
         p_items: itemsPayload,
         p_discount_rdp: discountRdp,
         p_coupon_id: appliedCoupon?.coupon_id ?? null,
+        p_recipient_name: form.isForSomeoneElse ? form.recipientName.trim() : null,
+        p_recipient_phone: form.isForSomeoneElse ? form.recipientPhone.trim() : null,
       })
 
       if (rpcError) {
@@ -421,6 +440,36 @@ export default function CheckoutPage() {
                 </select>
                 <ChevronDown size={16} color={BRAND.gray} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
               </div>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: BRAND.dark, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={form.isForSomeoneElse}
+                  onChange={handleForSomeoneElseToggle}
+                  style={{ width: 16, height: 16, cursor: 'pointer' }}
+                />
+                {t('isForSomeoneElseLabel')}
+              </label>
+
+              {form.isForSomeoneElse && (
+                <>
+                  <input
+                    name="recipientName"
+                    value={form.recipientName}
+                    onChange={handleChange}
+                    placeholder={t('recipientNamePlaceholder')}
+                    style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                  />
+                  <input
+                    name="recipientPhone"
+                    value={form.recipientPhone}
+                    onChange={handleChange}
+                    placeholder={t('recipientPhonePlaceholder')}
+                    style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </>
+              )}
+
               <div>
                 <textarea
                   name="notes"

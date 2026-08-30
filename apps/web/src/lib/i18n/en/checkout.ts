@@ -16,6 +16,11 @@ export const checkout = {
   addressPlaceholder: 'Full address *',
   selectProvincePlaceholder: 'Select your province *',
   notesPlaceholder: 'Delivery instructions (optional)',
+  isForSomeoneElseLabel: 'This is for someone else',
+  recipientNamePlaceholder: "Recipient's name *",
+  recipientPhonePlaceholder: "Recipient's phone *",
+  recipientNameRequiredError: "Enter the recipient's name (at least 3 characters)",
+  recipientPhoneRequiredError: "Enter the recipient's phone number",
 
   paymentMethodHeading: 'Payment method',
   paymentAzulLabel: 'Card (Azul)',

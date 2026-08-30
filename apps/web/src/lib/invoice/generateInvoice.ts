@@ -19,6 +19,8 @@ export interface InvoiceData {
   createdAt: string
   buyerName: string
   buyerEmail: string
+  recipientName?: string | null
+  recipientPhone?: string | null
   deliveryAddress: string
   provinceName: string
   paymentMethod: string
@@ -83,6 +85,10 @@ export function generateInvoicePdf(data: InvoiceData, language: Language): void 
   y += 10
 
   // ─── Datos del comprador ──────────────────────────────────
+  // buyerHeaderY fija el ancla para la columna de método de pago —
+  // así se mantiene alineada a "FACTURADO A" sin importar si se agrega
+  // la línea extra de destinatario (comprado por ≠ quien recibe).
+  const buyerHeaderY = y
   doc.setFontSize(9)
   doc.setTextColor(150, 150, 150)
   doc.text('FACTURADO A', marginX, y)
@@ -101,8 +107,20 @@ export function generateInvoicePdf(data: InvoiceData, language: Language): void 
   y += 5
   doc.text(data.provinceName, marginX, y)
 
+  if (data.recipientName) {
+    y += 5
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(30, 30, 30)
+    doc.text(
+      data.recipientPhone ? `Recibe: ${data.recipientName} (${data.recipientPhone})` : `Recibe: ${data.recipientName}`,
+      marginX, y
+    )
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(80, 80, 80)
+  }
+
   // ─── Método de pago (columna derecha) ─────────────────────
-  const rightColY = y - 19
+  const rightColY = buyerHeaderY - 4
   doc.setFontSize(9)
   doc.setTextColor(150, 150, 150)
   doc.text('MÉTODO DE PAGO', pageWidth - marginX, rightColY, { align: 'right' })

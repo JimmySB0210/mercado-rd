@@ -194,6 +194,7 @@ export const dashboard = {
   deliveryLabel: 'Livraison',
   contactLabel: 'Contact',
   notAvailable: 'Non disponible',
+  recipientBanner: 'Acheté par : {buyer} · Destinataire : {recipient} ({phone})',
   paymentAzul: '💳 Azul',
   paymentCardnet: '🏦 CardNet',
   paymentTransfer: '🏧 Virement bancaire',

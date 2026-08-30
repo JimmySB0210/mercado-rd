@@ -22,6 +22,11 @@ export const checkout = {
   addressPlaceholder: 'Dirección completa *',
   selectProvincePlaceholder: 'Selecciona tu provincia *',
   notesPlaceholder: 'Instrucciones de entrega (opcional)',
+  isForSomeoneElseLabel: 'Es para otra persona',
+  recipientNamePlaceholder: 'Nombre de quien recibe *',
+  recipientPhonePlaceholder: 'Teléfono de quien recibe *',
+  recipientNameRequiredError: 'Escribe el nombre de quien va a recibir el pedido (mínimo 3 caracteres)',
+  recipientPhoneRequiredError: 'Escribe el teléfono de quien va a recibir el pedido',
 
   // Método de pago
   paymentMethodHeading: 'Método de pago',

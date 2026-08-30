@@ -71,6 +71,8 @@ export default async function ConfirmPage(
     createdAt: order.created_at,
     buyerName: buyer?.full_name ?? 'Cliente',
     buyerEmail: authUser?.email ?? '',
+    recipientName: order.recipient_name,
+    recipientPhone: order.recipient_phone,
     deliveryAddress: order.delivery_address,
     provinceName: (order.province as { name: string } | null)?.name ?? '',
     paymentMethod: order.payment_method,

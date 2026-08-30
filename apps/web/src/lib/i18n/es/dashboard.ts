@@ -208,6 +208,7 @@ export const dashboard = {
   deliveryLabel: 'Entrega',
   contactLabel: 'Contacto',
   notAvailable: 'No disponible',
+  recipientBanner: 'Comprado por: {buyer} · Recibe: {recipient} ({phone})',
   paymentAzul: '💳 Azul',
   paymentCardnet: '🏦 CardNet',
   paymentTransfer: '🏧 Transferencia',
