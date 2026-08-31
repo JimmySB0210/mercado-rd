@@ -14,7 +14,7 @@ import { useTranslation } from '@/lib/hooks/useTranslation'
 import { ProductCard } from '@/components/product/ProductCard'
 import type { ProductWithVendor } from '@/types/database.types'
 
-type TitleKey = 'recentlyPublishedTitle' | 'bestSellersTitle' | 'lowStockTitle'
+type TitleKey = 'recentlyPublishedTitle' | 'bestSellersTitle' | 'lowStockTitle' | 'trendingTitle' | 'popularTitle' | 'nearbyTitle'
 
 interface Props {
   titleKey: TitleKey

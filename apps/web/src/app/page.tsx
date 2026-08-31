@@ -22,6 +22,10 @@ import { DailyDeals } from '../components/shop/DailyDeals'
 import { RecentlyPublished } from '../components/shop/RecentlyPublished'
 import { BestSellers } from '../components/shop/BestSellers'
 import { LowStock } from '../components/shop/LowStock'
+import { RecentActivity } from '../components/shop/RecentActivity'
+import { Trending } from '../components/shop/Trending'
+import { Popular } from '../components/shop/Popular'
+import { NearbyProducts } from '../components/shop/NearbyProducts'
 import { FeaturedProviders } from '../components/shop/FeaturedProviders'
 
 export const revalidate = 300
@@ -47,8 +51,11 @@ export default function HomePage() {
       <div className="order-4">
         <DailyDeals />
       </div>
-      {/* Fase 1, homepage vivo — cada una se oculta sola si no
+      {/* Fase 1-2, homepage vivo — cada una se oculta sola si no
           califica ningún producto real, nunca se rellena con mock */}
+      <div className="order-4">
+        <RecentActivity />
+      </div>
       <div className="order-4">
         <RecentlyPublished />
       </div>
@@ -57,6 +64,15 @@ export default function HomePage() {
       </div>
       <div className="order-4">
         <LowStock />
+      </div>
+      <div className="order-4">
+        <Trending />
+      </div>
+      <div className="order-4">
+        <Popular />
+      </div>
+      <div className="order-4">
+        <NearbyProducts />
       </div>
       <div className="order-4">
         <HomeProductGrid />
