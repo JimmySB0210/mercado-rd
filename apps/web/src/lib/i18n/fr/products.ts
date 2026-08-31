@@ -84,9 +84,9 @@ export const products = {
   pricingTiersRangeBetween: '{min}-{max} {unit}',
 
   trustBarTitle: 'Confiance du vendeur',
-  trustRatingLine: 'Note : {average}/5 ({count})',
-  trustResponseLine: 'Temps de réponse : {label}',
-  trustOnTimeLine: 'Livraisons à temps : ≥{rate}%',
+  trustRatingLabel: 'Note',
+  trustResponseLabel: 'Réponse',
+  trustOnTimeLabel: 'À temps',
   trustResponseUnder1h: '≤1h',
   trustResponseUnder4h: '≤4h',
   trustResponseUnder12h: '≤12h',

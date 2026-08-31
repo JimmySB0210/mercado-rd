@@ -98,8 +98,39 @@ export function ProductPageContent({
       {/* Contenido principal */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
 
-        {/* Galería */}
-        <ProductGallery images={product.images ?? []} name={product.name} />
+        {/* Galería + info del vendedor (llena el espacio debajo de la imagen) */}
+        <div className="flex flex-col gap-4">
+          <ProductGallery images={product.images ?? []} name={product.name} />
+
+          {vendor && (
+            <div
+              className="bg-[var(--color-card-bg)] p-4"
+              style={{ borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)' }}
+            >
+              <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('vendorHeading')}</h2>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-gray-900">{vendor.business_name}</p>
+                  {vendor.rating_avg && vendor.rating_avg > 0 && (
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      ⭐ {Number(vendor.rating_avg).toFixed(1)} · {vendor.total_sales ?? 0} {t('salesSuffix')}
+                    </p>
+                  )}
+                </div>
+                <a
+                  href={`/tienda/${vendor.id}`}
+                  className="text-xs font-medium hover:underline"
+                  style={{ color: 'var(--brand-blue)' }}
+                >
+                  {t('viewStore')}
+                </a>
+              </div>
+            </div>
+          )}
+
+          {/* Confianza del vendedor — estilo grid de estadísticas */}
+          {vendor && <VendorTrustBar vendorId={vendor.id} />}
+        </div>
 
         {/* Info del producto */}
         <div className="flex flex-col gap-5">
@@ -309,36 +340,6 @@ export function ProductPageContent({
               </dl>
             </div>
           )}
-
-          {/* Info del vendor */}
-          {vendor && (
-            <div
-              className="bg-[var(--color-card-bg)] p-4"
-              style={{ borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)' }}
-            >
-              <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('vendorHeading')}</h2>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-gray-900">{vendor.business_name}</p>
-                  {vendor.rating_avg && vendor.rating_avg > 0 && (
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      ⭐ {Number(vendor.rating_avg).toFixed(1)} · {vendor.total_sales ?? 0} {t('salesSuffix')}
-                    </p>
-                  )}
-                </div>
-                <a
-                  href={`/tienda/${vendor.id}`}
-                  className="text-xs font-medium hover:underline"
-                  style={{ color: 'var(--brand-blue)' }}
-                >
-                  {t('viewStore')}
-                </a>
-              </div>
-            </div>
-          )}
-
-          {/* Confianza del vendedor — debajo de "Vendedor" */}
-          {vendor && <VendorTrustBar vendorId={vendor.id} />}
 
         </div>
       </div>
