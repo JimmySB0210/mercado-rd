@@ -146,7 +146,7 @@ export function HomeProductGrid() {
   const showFeaturedOffers = hasReal || showError
 
   return (
-    <div id="productos" style={{maxWidth:1400, margin:'0 auto', padding:'8px 24px 40px'}}>
+    <div id="productos" style={{maxWidth:1400, margin:'0 auto', padding:'8px 24px 20px'}}>
 
       {/* Ofertas destacadas — si no hay productos reales (y no fue un
           error de carga), la sección entera no se renderiza */}
@@ -200,13 +200,13 @@ export function HomeProductGrid() {
       )}
 
       {/* Tiendas populares */}
-      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', margin:'36px 0 16px'}}>
+      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', margin:'24px 0 16px'}}>
         <h2 style={{fontSize:18, fontWeight:700, color:BRAND.dark, margin:0}}>{t('popularStoresTitle')}</h2>
         <a href='/tiendas' style={{color:BRAND.blue, fontSize:13, fontWeight:600, textDecoration:'none'}}>{t('viewAll')}</a>
       </div>
 
       {vendors.length > 0 && (
-        <div className="grid-stores" style={{marginBottom:36}}>
+        <div className="grid-stores">
           {vendors.map(v => (
             <a
               key={v.id}

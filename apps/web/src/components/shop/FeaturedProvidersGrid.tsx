@@ -20,7 +20,7 @@ export function FeaturedProvidersGrid({ providers }: { providers: Vendor[] }) {
 
   return (
     <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '36px 0 16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '24px 0 16px' }}>
         <h2 style={{ fontSize: 18, fontWeight: 700, color: BRAND.dark, margin: 0 }}>
           {t('featuredProvidersTitle')}
         </h2>
