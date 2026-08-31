@@ -50,6 +50,9 @@ export const products = {
   vendorHeading: 'Vendeur',
 
   featuredOffersTitle: 'Offres en vedette',
+  recentlyPublishedTitle: 'Récemment publiés',
+  bestSellersTitle: 'Meilleures ventes',
+  lowStockTitle: 'Derniers exemplaires',
   viewAll: 'Voir tout →',
   loadError: "Nous n'avons pas pu charger les produits. Essayez de recharger la page.",
   loading: 'Chargement...',

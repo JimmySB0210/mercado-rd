@@ -19,6 +19,9 @@ import { ShippingBenefitsStrip } from '../components/shop/ShippingBenefitsStrip'
 import { HomeProductGrid } from '../components/shop/HomeProductGrid'
 import { FeaturedProducts } from '../components/shop/FeaturedProducts'
 import { DailyDeals } from '../components/shop/DailyDeals'
+import { RecentlyPublished } from '../components/shop/RecentlyPublished'
+import { BestSellers } from '../components/shop/BestSellers'
+import { LowStock } from '../components/shop/LowStock'
 import { FeaturedProviders } from '../components/shop/FeaturedProviders'
 
 export const revalidate = 300
@@ -43,6 +46,17 @@ export default function HomePage() {
       {/* "Ofertas del día" — debajo de "Productos destacados" */}
       <div className="order-4">
         <DailyDeals />
+      </div>
+      {/* Fase 1, homepage vivo — cada una se oculta sola si no
+          califica ningún producto real, nunca se rellena con mock */}
+      <div className="order-4">
+        <RecentlyPublished />
+      </div>
+      <div className="order-4">
+        <BestSellers />
+      </div>
+      <div className="order-4">
+        <LowStock />
       </div>
       <div className="order-4">
         <HomeProductGrid />

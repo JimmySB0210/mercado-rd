@@ -147,6 +147,10 @@ export interface Product {
   sold_count: number
   view_count: number
   created_at: string
+  // Se llena solo la primera vez que status pasa a 'published' — a
+  // diferencia de created_at, no se mueve si el vendor tuvo el
+  // producto en borrador semanas antes de publicarlo.
+  published_at: string | null
 }
 
 export interface ProductVariant {

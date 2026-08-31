@@ -50,6 +50,9 @@ export const products = {
   vendorHeading: 'Seller',
 
   featuredOffersTitle: 'Featured deals',
+  recentlyPublishedTitle: 'Recently published',
+  bestSellersTitle: 'Best sellers',
+  lowStockTitle: 'Almost gone',
   viewAll: 'View all →',
   loadError: "We couldn't load the products. Try reloading the page.",
   loading: 'Loading...',

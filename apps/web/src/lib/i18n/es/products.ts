@@ -60,6 +60,9 @@ export const products = {
 
   // HomeProductGrid
   featuredOffersTitle: 'Ofertas destacadas',
+  recentlyPublishedTitle: 'Recién publicados',
+  bestSellersTitle: 'Más vendidos',
+  lowStockTitle: 'Últimas unidades',
   viewAll: 'Ver todas →',
   loadError: 'No pudimos cargar los productos. Intenta recargar la página.',
   loading: 'Cargando...',

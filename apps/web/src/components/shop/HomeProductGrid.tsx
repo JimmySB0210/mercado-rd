@@ -6,7 +6,9 @@
 // Client Component — carga los productos con createPublicClient()
 // (no createServerClient(), para no romper el ISR de la homepage)
 // y pagina con un botón "Ver más productos" que acumula resultados.
-// Cuando no hay productos reales usa el mock hardcodeado como fallback.
+// Si no hay productos reales, la sección de "Ofertas destacadas" no
+// se renderiza — antes rellenaba con un mock hardcodeado, lo cual
+// violaba la regla de "nunca inventar datos" (Fase 1, homepage vivo).
 // El trust bar que vivía aquí se eliminó (Fase 2A, reconciliación de
 // franjas de beneficios) — ShippingBenefitsStrip, debajo del hero, es
 // ahora la única fuente de verdad.
@@ -21,15 +23,6 @@ import { useTranslation } from '@/lib/hooks/useTranslation'
 import type { Product } from '@/types'
 
 const PAGE_SIZE = 12
-
-// ─── Mock fallback (solo cuando BD no tiene datos) ────────────
-const MOCK_PRODUCTS = [
-  { id:'1', name:'Samsung Galaxy S23', price:32500, old:38500, badge:'-16%', vendor:'TechStore RD', rating:4.8, reviews:124, e:'📱' },
-  { id:'2', name:"Nike Air Force 1 '07", price:5200, badge:'Nuevo', vendor:'SportStore', rating:4.7, reviews:89, e:'👟' },
-  { id:'3', name:'Audífonos Inalámbricos', price:1850, vendor:'TechStore RD', rating:4.6, reviews:72, e:'🎧' },
-  { id:'4', name:'Juego de Sala Moderno', price:28000, vendor:'Hogar Perfecto', rating:4.9, reviews:31, e:'🛋️' },
-  { id:'5', name:'Reloj Curren Elegante', price:2450, old:2900, badge:'-10%', vendor:'AccesoriosRD', rating:4.5, reviews:64, e:'⌚' },
-]
 
 type FeaturedVendor = {
   id: string
@@ -52,8 +45,6 @@ async function fetchFeaturedVendors(): Promise<FeaturedVendor[]> {
   if (error) { console.error('[HomeProductGrid] vendors', error); return [] }
   return (data ?? []) as FeaturedVendor[]
 }
-
-const IMAGE_RATIOS = ['1/1', '4/5', '5/4', '1/1', '5/6']
 
 type ProductsPageResult = { data: Product[]; ok: boolean }
 
@@ -152,64 +143,37 @@ export function HomeProductGrid() {
 
   const hasReal = !loadingInitial && products.length > 0
   const showError = !loadingInitial && !hasReal && fetchError
-  const showMock = !loadingInitial && !hasReal && !fetchError
+  const showFeaturedOffers = hasReal || showError
 
   return (
     <div id="productos" style={{maxWidth:1400, margin:'0 auto', padding:'8px 24px 40px'}}>
 
-      {/* Ofertas destacadas */}
-      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', margin:'20px 0 16px'}}>
-        <h2 style={{fontSize:18, fontWeight:700, color:BRAND.dark, margin:0}}>{t('featuredOffersTitle')}</h2>
-        <a href='/categoria/electronica' style={{color:BRAND.blue, fontSize:13, fontWeight:600, textDecoration:'none'}}>
-          {t('viewAll')}
-        </a>
-      </div>
+      {/* Ofertas destacadas — si no hay productos reales (y no fue un
+          error de carga), la sección entera no se renderiza */}
+      {showFeaturedOffers && (
+        <>
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', margin:'20px 0 16px'}}>
+            <h2 style={{fontSize:18, fontWeight:700, color:BRAND.dark, margin:0}}>{t('featuredOffersTitle')}</h2>
+            <a href='/categoria/electronica' style={{color:BRAND.blue, fontSize:13, fontWeight:600, textDecoration:'none'}}>
+              {t('viewAll')}
+            </a>
+          </div>
 
-      {/* Grid de productos — real o mock */}
-      {hasReal && (
-        <div className="grid-products">
-          {products.map(p => (
-            <ProductCard key={p.id} product={p as any} />
-          ))}
-        </div>
-      )}
-
-      {showError && (
-        <div style={{background:'#fff', border:'1px solid #EEE', borderRadius:10, padding:'40px 20px', textAlign:'center'}}>
-          <div style={{fontSize:40, marginBottom:12}}>⚠️</div>
-          <p style={{color:BRAND.gray, fontSize:14, margin:0}}>{t('loadError')}</p>
-        </div>
-      )}
-
-      {showMock && (
-        <div className="grid-products">
-          {MOCK_PRODUCTS.map((p, idx) => (
-            <div
-              key={p.id}
-              style={{background:'#fff', border:'1px solid #EEE', borderRadius:10, overflow:'hidden', cursor:'pointer'}}
-            >
-              <div style={{aspectRatio:IMAGE_RATIOS[idx % IMAGE_RATIOS.length], background:BRAND.bg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:48, position:'relative'}}>
-                {p.e}
-                {p.badge && (
-                  <span style={{position:'absolute', top:8, left:8, background: p.badge === 'Nuevo' ? BRAND.dark : BRAND.red, color:'#fff', fontSize:10, fontWeight:700, padding:'3px 8px', borderRadius:4}}>
-                    {p.badge}
-                  </span>
-                )}
-              </div>
-              <div style={{padding:14}}>
-                <div style={{fontWeight:600, fontSize:14, color:BRAND.dark, marginBottom:6, lineHeight:1.3}}>{p.name}</div>
-                <div style={{display:'flex', alignItems:'baseline', gap:6, marginBottom:6}}>
-                  <span style={{fontWeight:700, fontSize:15, color:BRAND.dark}}>RD${(p.price || 0).toLocaleString()}</span>
-                  {p.old && <span style={{fontSize:12, color:'#bbb', textDecoration:'line-through'}}>RD${p.old.toLocaleString()}</span>}
-                </div>
-                <div style={{display:'flex', alignItems:'center', gap:4, fontSize:12, color:BRAND.gray}}>
-                  <Star size={12} fill='#F5A623' color='#F5A623' />
-                  {p.rating} ({p.reviews})
-                </div>
-              </div>
+          {hasReal && (
+            <div className="grid-products">
+              {products.map(p => (
+                <ProductCard key={p.id} product={p as any} />
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+
+          {showError && (
+            <div style={{background:'#fff', border:'1px solid #EEE', borderRadius:10, padding:'40px 20px', textAlign:'center'}}>
+              <div style={{fontSize:40, marginBottom:12}}>⚠️</div>
+              <p style={{color:BRAND.gray, fontSize:14, margin:0}}>{t('loadError')}</p>
+            </div>
+          )}
+        </>
       )}
 
       {/* Ver más productos — solo si hay productos reales y quedan más por cargar */}
