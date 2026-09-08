@@ -6,10 +6,8 @@
 // paginación viven en HomeProductGrid (Client Component), que
 // usa createPublicClient() para no romper el ISR de esta página.
 //
-// Orden responsivo (Fase 2A Batch 2): en mobile las categorías van
-// antes del hero, en desktop se mantiene hero primero — mismo árbol
-// de componentes en ambos casos, solo cambia el `order` de flexbox
-// según el breakpoint, así no hace falta duplicar/condicionar nada.
+// Orden fijo en todos los breakpoints: Hero siempre primero, seguido
+// de "Productos destacados" y luego "Explora por categoría".
 // ============================================================
 
 import { Navbar } from '../components/shop/Navbar'
@@ -34,18 +32,18 @@ export default function HomePage() {
   return (
     <div className="flex flex-col">
       <Navbar />
-      <div className="order-2 md-860:order-1">
+      <div>
         <HeroBanner />
       </div>
       {/* Justo debajo del hero en ambos breakpoints */}
-      <div className="order-3 md-860:order-2">
+      <div>
         <ShippingBenefitsStrip />
       </div>
-      <div className="order-1 md-860:order-3">
-        <HomeCategoryStrip />
-      </div>
-      <div className="order-4">
+      <div>
         <FeaturedProducts />
+      </div>
+      <div>
+        <HomeCategoryStrip />
       </div>
       {/* "Ofertas del día" — debajo de "Productos destacados" */}
       <div className="order-4">
