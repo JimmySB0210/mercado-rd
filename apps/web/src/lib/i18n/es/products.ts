@@ -67,6 +67,19 @@ export const products = {
   specNo: 'No',
   vendorHeading: 'Vendedor',
 
+  // SearchFiltersBar (buscar/page.tsx)
+  filterAllCategories: 'Todas las categorías',
+  filterMinPricePlaceholder: 'Mín',
+  filterMaxPricePlaceholder: 'Máx',
+  filterAnyRating: 'Cualquier calificación',
+  sortRelevance: 'Relevancia',
+  sortPriceAsc: 'Precio: menor a mayor',
+  sortPriceDesc: 'Precio: mayor a menor',
+  sortRating: 'Mejor calificados',
+  sortNewest: 'Más nuevos',
+  sortSales: 'Más vendidos',
+  sortPopularity: 'Más populares',
+
   // HomeProductGrid
   featuredOffersTitle: 'Ofertas destacadas',
   recentlyPublishedTitle: 'Recién publicados',

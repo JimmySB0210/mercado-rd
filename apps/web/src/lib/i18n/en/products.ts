@@ -57,6 +57,18 @@ export const products = {
   specNo: 'No',
   vendorHeading: 'Seller',
 
+  filterAllCategories: 'All categories',
+  filterMinPricePlaceholder: 'Min',
+  filterMaxPricePlaceholder: 'Max',
+  filterAnyRating: 'Any rating',
+  sortRelevance: 'Relevance',
+  sortPriceAsc: 'Price: low to high',
+  sortPriceDesc: 'Price: high to low',
+  sortRating: 'Top rated',
+  sortNewest: 'Newest',
+  sortSales: 'Best selling',
+  sortPopularity: 'Most popular',
+
   featuredOffersTitle: 'Featured deals',
   recentlyPublishedTitle: 'Recently published',
   bestSellersTitle: 'Best sellers',

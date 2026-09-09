@@ -15,10 +15,11 @@ import type { ProductWithVendor } from '@/types/database.types'
 interface Props {
   title: string | null
   emoji: string
+  categoryId: number | null
   products: ProductWithVendor[]
 }
 
-export function CategoryContent({ title, emoji, products }: Props) {
+export function CategoryContent({ title, emoji, categoryId, products }: Props) {
   const { t } = useTranslation('categories')
   const resolvedTitle = title ?? t('defaultCategoryTitle')
 
@@ -37,9 +38,20 @@ export function CategoryContent({ title, emoji, products }: Props) {
       >
         {emoji} {resolvedTitle}
       </h1>
-      <p className="text-sm mb-6" style={{ color: 'var(--color-text-secondary)' }}>
-        {t('productsFoundCount', { count: products.length })}
-      </p>
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
+        <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+          {t('productsFoundCount', { count: products.length })}
+        </p>
+        {categoryId !== null && (
+          <a
+            href={`/buscar?category=${categoryId}`}
+            className="text-sm font-medium hover:underline"
+            style={{ color: 'var(--brand-blue)' }}
+          >
+            {t('searchInCategoryLink')}
+          </a>
+        )}
+      </div>
 
       {products.length === 0 ? (
         <div

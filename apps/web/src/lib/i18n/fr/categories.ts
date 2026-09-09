@@ -17,6 +17,7 @@ export const categories = {
 
   defaultCategoryTitle: 'Tous les produits',
   productsFoundCount: '{count} produits trouvés',
+  searchInCategoryLink: 'Rechercher dans cette catégorie →',
   noProductsEmptyState: 'Aucun produit dans cette catégorie pour le moment.',
   backToHome: "Retour à l'accueil",
 } satisfies CategoriesDict

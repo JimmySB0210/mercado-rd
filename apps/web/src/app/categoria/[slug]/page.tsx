@@ -84,7 +84,7 @@ export default async function CategoryPage(
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <CategoryContent title={title} emoji={emoji} products={(products ?? []) as any} />
+      <CategoryContent title={title} emoji={emoji} categoryId={category?.id ?? null} products={(products ?? []) as any} />
     </div>
   )
 }

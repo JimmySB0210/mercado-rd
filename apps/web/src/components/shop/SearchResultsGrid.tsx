@@ -3,11 +3,14 @@
 // MercadoRD — SearchResultsGrid
 // Ruta: src/components/shop/SearchResultsGrid.tsx
 // ============================================================
-// Client Component — recibe del server el primer lote (12) ya
-// hidratado y la lista completa de ids en orden de relevancia
-// (search_products no soporta paginación, así que el orden ya
-// viene resuelto). "Ver más resultados" hidrata el siguiente lote
-// de ids con createPublicClient() y lo acumula al estado existente.
+// Client Component — recibe del server el primer lote (24, ya
+// hidratado) más el estado de búsqueda/filtros/orden vigente.
+// search_products ahora pagina de verdad en el servidor
+// (p_limit/p_offset) — "Ver más resultados" vuelve a llamar el RPC
+// con el offset siguiente y luego hidrata (vendor/category/province)
+// solo esos ids, en vez de re-hidratar una lista de ids que ya tenía
+// guardada de la carga inicial (así funcionaba antes, cuando el RPC
+// devolvía todos los matches de una sola llamada).
 // ============================================================
 
 import { useCallback, useState } from 'react'
@@ -15,29 +18,56 @@ import { ProductCard } from '@/components/product/ProductCard'
 import { createPublicClient } from '@/lib/supabase/public'
 import { BRAND } from '@/lib/colors'
 
-const PAGE_SIZE = 12
+const PAGE_SIZE = 24
+
+export interface SearchState {
+  query: string | null
+  categoryId: number | null
+  minPrice: number | null // RD$, se convierte a centavos antes de llamar el RPC
+  maxPrice: number | null
+  minRating: number | null
+  sort: string
+}
 
 interface Props {
   initialProducts: any[]
-  orderedIds: string[]
+  initialHasMore: boolean
+  searchState: SearchState
 }
 
-export function SearchResultsGrid({ initialProducts, orderedIds }: Props) {
+export function SearchResultsGrid({ initialProducts, initialHasMore, searchState }: Props) {
   const [products, setProducts] = useState<any[]>(initialProducts)
+  const [offset, setOffset] = useState(PAGE_SIZE)
+  const [hasMore, setHasMore] = useState(initialHasMore)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [nextOffset, setNextOffset] = useState(Math.min(PAGE_SIZE, orderedIds.length))
-
-  const hasMore = nextOffset < orderedIds.length
 
   const handleLoadMore = useCallback(async () => {
     if (loadingMore || !hasMore) return
-
     setLoadingMore(true)
 
-    const nextIds = orderedIds.slice(nextOffset, nextOffset + PAGE_SIZE)
-
     const supabase = createPublicClient()
-    const { data, error } = await supabase
+    const { data: rawProducts, error } = await supabase.rpc('search_products', {
+      p_query: searchState.query,
+      p_category_id: searchState.categoryId,
+      p_vendor_id: null,
+      p_min_price: searchState.minPrice !== null ? searchState.minPrice * 100 : null,
+      p_max_price: searchState.maxPrice !== null ? searchState.maxPrice * 100 : null,
+      p_min_rating: searchState.minRating,
+      p_sort_by: searchState.sort,
+      p_limit: PAGE_SIZE,
+      p_offset: offset,
+    })
+
+    if (error || !rawProducts) {
+      console.error('[SearchResultsGrid]', error)
+      setLoadingMore(false)
+      return
+    }
+
+    setHasMore(rawProducts.length === PAGE_SIZE)
+
+    const ids = rawProducts.map((p: any) => p.id)
+    const { data: hydrated } = await supabase
       .from('products')
       .select(`
         *,
@@ -45,27 +75,17 @@ export function SearchResultsGrid({ initialProducts, orderedIds }: Props) {
         category:categories(id, name, slug, emoji),
         province:provinces_rd(id, name)
       `)
-      .in('id', nextIds)
+      .in('id', ids)
 
-    if (error) {
-      console.error('[SearchResultsGrid]', error)
-      setLoadingMore(false)
-      return
-    }
-
-    // Mantener el orden de relevancia que trajo search_products
-    const orderMap = new Map(nextIds.map((id, i) => [id, i]))
-    const sorted = (data ?? []).sort(
+    const orderMap = new Map<string, number>(ids.map((id: string, i: number) => [id, i]))
+    const sorted = (hydrated ?? []).sort(
       (a: any, b: any) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0)
     )
 
-    setProducts(prev => {
-      const seen = new Set(prev.map(p => p.id))
-      return [...prev, ...sorted.filter(p => !seen.has(p.id))]
-    })
-    setNextOffset(prev => Math.min(prev + nextIds.length, orderedIds.length))
+    setProducts(prev => [...prev, ...sorted])
+    setOffset(prev => prev + PAGE_SIZE)
     setLoadingMore(false)
-  }, [hasMore, loadingMore, nextOffset, orderedIds])
+  }, [loadingMore, hasMore, offset, searchState])
 
   return (
     <>

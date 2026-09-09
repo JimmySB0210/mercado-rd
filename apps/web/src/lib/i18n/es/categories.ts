@@ -21,6 +21,7 @@ export const categories = {
   // /categoria/[slug] — productos de una categoría
   defaultCategoryTitle: 'Todos los productos',
   productsFoundCount: '{count} productos encontrados',
+  searchInCategoryLink: 'Buscar dentro de esta categoría →',
   noProductsEmptyState: 'Todavía no hay productos en esta categoría.',
   backToHome: 'Volver al inicio',
 }
