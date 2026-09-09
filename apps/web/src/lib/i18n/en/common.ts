@@ -11,6 +11,9 @@ import type { CommonDict } from '@/lib/i18n/es/common'
 export const common = {
   // Navbar — búsqueda y ubicación
   searchPlaceholder: 'Search products, stores...',
+  searchHistoryHeading: 'Recent searches',
+  clearSearchHistoryButton: 'Clear history',
+  removeSearchHistoryItemAria: 'Remove from your history',
   shipTo: 'Ship to',
   countryShort: 'Dom. Rep.',
   allCountryOption: 'Dom. Rep. (whole country)',

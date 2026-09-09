@@ -10,7 +10,7 @@
 //   - Breakpoint unificado: md = 860px en tailwind.config.js
 // ============================================================
 
-import { Search, ChevronDown, ShoppingCart, User, LogOut, LayoutDashboard, ShieldCheck, Heart, MessageCircle, Lock, HelpCircle, History, Gift, X } from 'lucide-react'
+import { ChevronDown, ShoppingCart, User, LogOut, LayoutDashboard, ShieldCheck, Heart, MessageCircle, Lock, HelpCircle, History, Gift, X } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
 import { useCartStore, useCartItemCount } from '@/lib/store/cart'
 import { useAuth } from '@/lib/hooks/useAuth'
@@ -19,6 +19,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Category, Province } from '@/types/database.types'
 import { useLocationStore } from '@/lib/store/location'
 import { NotificationBell } from '@/components/shop/NotificationBell'
+import { SearchBar } from '@/components/shop/SearchBar'
 import { LanguageSwitcher } from '@/components/shop/LanguageSwitcher'
 import { Logo } from '@/components/shop/Logo'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
@@ -62,8 +63,6 @@ export function Navbar() {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
-  const [searchFocusedDesktop, setSearchFocusedDesktop] = useState(false)
-  const [searchFocusedMobile, setSearchFocusedMobile] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -197,26 +196,7 @@ export function Navbar() {
         {/* Búsqueda centrada */}
         <div className="flex-1 flex items-center justify-center gap-6 min-w-0">
           <div className="relative" style={{ flex: '0 1 560px', minWidth: 200 }}>
-            <form action="/buscar" method="GET">
-              <input
-                type='text'
-                name='q'
-                placeholder={t('searchPlaceholder')}
-                onFocus={() => setSearchFocusedDesktop(true)}
-                onBlur={() => setSearchFocusedDesktop(false)}
-                style={{
-                  width: '100%',
-                  border: `1px solid ${searchFocusedDesktop ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                  background: BRAND.bg, borderRadius: 'var(--radius-control)',
-                  padding: '11px 50px 11px 18px', fontSize: 14, outline: 'none', color: BRAND.dark, boxSizing: 'border-box',
-                  boxShadow: searchFocusedDesktop ? '0 0 0 3px var(--color-primary-subtle)' : 'none',
-                  transition: 'border-color var(--transition-fast), box-shadow var(--transition-fast)',
-                }}
-              />
-              <button type='submit' style={{ position: 'absolute', right: 4, top: 4, bottom: 4, width: 38, border: 'none', borderRadius: '50%', background: 'var(--color-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                <Search size={16} />
-              </button>
-            </form>
+            <SearchBar variant="desktop" />
           </div>
 
           <LocationSelector />
@@ -403,26 +383,7 @@ export function Navbar() {
           </div>
         </div>
         <div className="relative">
-          <form action="/buscar" method="GET">
-            <input
-              type='text'
-              name='q'
-              placeholder={t('searchPlaceholder')}
-              onFocus={() => setSearchFocusedMobile(true)}
-              onBlur={() => setSearchFocusedMobile(false)}
-              style={{
-                width: '100%',
-                border: `1px solid ${searchFocusedMobile ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                background: BRAND.bg, borderRadius: 'var(--radius-control)',
-                padding: '10px 44px 10px 16px', fontSize: 13, outline: 'none', color: BRAND.dark, boxSizing: 'border-box',
-                boxShadow: searchFocusedMobile ? '0 0 0 3px var(--color-primary-subtle)' : 'none',
-                transition: 'border-color var(--transition-fast), box-shadow var(--transition-fast)',
-              }}
-            />
-            <button type='submit' style={{ position: 'absolute', right: 3, top: 3, bottom: 3, width: 32, border: 'none', borderRadius: '50%', background: 'var(--color-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Search size={14} />
-            </button>
-          </form>
+          <SearchBar variant="mobile" />
         </div>
 
         {/* Mismo CTA que el "Desktop row" (oculto en este breakpoint) — se

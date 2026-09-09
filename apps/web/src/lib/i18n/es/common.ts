@@ -11,6 +11,9 @@
 export const common = {
   // Navbar — búsqueda y ubicación
   searchPlaceholder: 'Buscar productos, tiendas...',
+  searchHistoryHeading: 'Búsquedas recientes',
+  clearSearchHistoryButton: 'Borrar historial',
+  removeSearchHistoryItemAria: 'Quitar de tu historial',
   shipTo: 'Enviar a',
   countryShort: 'Rep. Dom.',
   allCountryOption: 'Rep. Dom. (todo el país)',
