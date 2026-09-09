@@ -15,6 +15,14 @@
 // category/minPrice/maxPrice/minRating solos (sin texto) también
 // disparan una búsqueda — así funciona el link "Buscar dentro de esta
 // categoría" desde categoria/[slug].
+//
+// Corrección ortográfica: suggest_search_correction() compara contra
+// categorías/sinónimos, no contra nombres de producto — puede sugerir
+// algo aunque la búsqueda original YA tenga resultados reales (ej.
+// "camiseta" encuentra 1 producto pero igual sugiere "camisetas" por
+// similitud). Por eso solo se llama y se muestra cuando la búsqueda
+// original trajo pocos resultados (<3) — nunca solo porque la función
+// devolvió algo.
 // ============================================================
 
 import { createServerClient } from '@/lib/supabase/server'
@@ -114,6 +122,18 @@ export default async function SearchPage(
     }
   }
 
+  // Solo se consulta con pocos resultados (<3) para la búsqueda de
+  // texto original — ver nota arriba sobre por qué no basta con que
+  // la función tenga algo que sugerir.
+  let suggestion: string | null = null
+  if (hasQuery && initialProducts.length < 3) {
+    const { data: suggestionData, error: suggestionError } = await supabase
+      .rpc('suggest_search_correction', { p_query: query })
+
+    if (suggestionError) console.error('[SearchPage] suggest_search_correction', suggestionError)
+    else if (typeof suggestionData === 'string' && suggestionData.trim()) suggestion = suggestionData
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -138,10 +158,24 @@ export default async function SearchPage(
             <h1 className="text-xl font-bold text-gray-900 mb-1">
               {hasQuery ? <>Resultados para &ldquo;{query}&rdquo;</> : 'Resultados de búsqueda'}
             </h1>
-            <p className="text-sm text-gray-400 mb-6">
+            <p className={`text-sm text-gray-400 ${suggestion ? 'mb-1' : 'mb-6'}`}>
               {initialProducts.length}{hasMore ? '+' : ''}{' '}
               {initialProducts.length === 1 && !hasMore ? 'producto encontrado' : 'productos encontrados'}
             </p>
+
+            {suggestion && (
+              <p className="text-sm text-gray-500 mb-6">
+                ¿Quisiste decir:{' '}
+                <a
+                  href={`/buscar?q=${encodeURIComponent(suggestion)}`}
+                  className="font-medium hover:underline"
+                  style={{ color: 'var(--brand-blue)' }}
+                >
+                  {suggestion}
+                </a>
+                ?
+              </p>
+            )}
 
             {initialProducts.length === 0 ? (
               <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
