@@ -138,6 +138,8 @@ export interface Product {
   stock: number
   sizes: string[]
   colors: string[]
+  sku: string | null
+  barcode: string | null
   status: ProductStatus
   // is_active se calcula solo a partir de status (columna generada) —
   // nunca se envía directamente desde el frontend, solo se lee.

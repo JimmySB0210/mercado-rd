@@ -95,9 +95,11 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
         price: (p.price_rdp / 100).toString(),
         comparePrice: p.compare_rdp !== null ? (p.compare_rdp / 100).toString() : '',
         stock: String(p.stock),
+        sku: p.sku ?? '',
+        barcode: p.barcode ?? '',
       }
     }
-    return { name: '', description: '', categoryId: '', provinceId: '', price: '', comparePrice: '', stock: '' }
+    return { name: '', description: '', categoryId: '', provinceId: '', price: '', comparePrice: '', stock: '', sku: '', barcode: '' }
   })
 
   const [variantRows, setVariantRows] = useState<VariantRow[]>(() => {
@@ -511,6 +513,8 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
       stock: form.stock ? parseInt(form.stock) : 0,
       sizes: [],
       colors: [],
+      sku: form.sku || null,
+      barcode: form.barcode || null,
       status: initialData?.product.status ?? 'draft',
       is_active: false,
       rating_avg: 0,
@@ -725,6 +729,8 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
         compare_rdp: form.comparePrice ? Math.round(parseFloat(form.comparePrice) * 100) : null,
         stock: stockNum,
         images: finalImages,
+        sku: form.sku.trim() || null,
+        barcode: form.barcode.trim() || null,
       }
 
       let productId: string
@@ -1143,6 +1149,31 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                 className={`w-full border rounded-lg px-4 py-2.5 text-sm outline-none ${stockError ? 'border-red-400' : 'border-gray-200'}`}
               />
               {stockError && <p className="text-xs text-red-600 mt-1">{stockError}</p>}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">{t('skuLabel')}</label>
+                <input
+                  name="sku"
+                  type="text"
+                  value={form.sku}
+                  onChange={handleChange}
+                  placeholder={t('skuPlaceholder')}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">{t('barcodeLabel')}</label>
+                <input
+                  name="barcode"
+                  type="text"
+                  value={form.barcode}
+                  onChange={handleChange}
+                  placeholder={t('barcodePlaceholder')}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
+                />
+              </div>
             </div>
           </div>
 
