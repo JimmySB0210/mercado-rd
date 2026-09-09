@@ -32,6 +32,14 @@ export const products = {
   askVendorButton: 'Demander au vendeur',
   openingChat: 'Ouverture du chat...',
 
+  addToGiftListButton: '🎁 Ajouter à ma liste de cadeaux',
+  addingToGiftList: 'Ajout en cours...',
+  choosePriorityLabel: 'À quel point ce cadeau compte pour vous ?',
+  giftPriorityHigh: 'Haute',
+  giftPriorityMedium: 'Moyenne',
+  giftPriorityLow: 'Basse',
+  addedToGiftListButton: '✓ Sur votre liste de cadeaux',
+
   relatedProductsTitle: 'Vous pourriez aussi aimer',
 
   breadcrumbHome: 'Accueil',

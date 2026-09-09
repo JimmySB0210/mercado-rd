@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Navbar } from '@/components/shop/Navbar'
 import { PushNotificationButton } from '@/components/shop/PushNotificationButton'
-import { User, Mail, Phone, MapPin, ShoppingBag, LogOut } from 'lucide-react'
+import { User, Mail, Phone, MapPin, ShoppingBag, Gift, LogOut } from 'lucide-react'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
 
@@ -144,6 +144,16 @@ export default function PerfilPage() {
             <div className="flex items-center gap-3">
               <ShoppingBag size={18} color={BRAND.blue} />
               <span className="text-sm font-medium text-gray-900">{t('myOrdersLink')}</span>
+            </div>
+            <span className="text-gray-300 text-lg">›</span>
+          </a>
+          <a
+            href="/perfil/lista-regalos"
+            className="flex items-center justify-between px-6 py-4 no-underline hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <Gift size={18} color={BRAND.blue} />
+              <span className="text-sm font-medium text-gray-900">{t('giftListsPageTitle')}</span>
             </div>
             <span className="text-gray-300 text-lg">›</span>
           </a>

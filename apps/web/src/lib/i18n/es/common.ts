@@ -20,6 +20,7 @@ export const common = {
   myAccountLabel: 'Mi cuenta',
   myDashboard: 'Mi dashboard',
   myFavorites: 'Mis favoritos ♡',
+  giftLists: 'Lista de regalos 🎁',
   history: 'Historial 🕐',
   messages: 'Mensajes',
   myProfile: 'Mi perfil',

@@ -10,7 +10,7 @@
 //   - Breakpoint unificado: md = 860px en tailwind.config.js
 // ============================================================
 
-import { Search, ChevronDown, ShoppingCart, User, LogOut, LayoutDashboard, ShieldCheck, Heart, MessageCircle, Lock, HelpCircle, History, X } from 'lucide-react'
+import { Search, ChevronDown, ShoppingCart, User, LogOut, LayoutDashboard, ShieldCheck, Heart, MessageCircle, Lock, HelpCircle, History, Gift, X } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
 import { useCartStore, useCartItemCount } from '@/lib/store/cart'
 import { useAuth } from '@/lib/hooks/useAuth'
@@ -287,6 +287,15 @@ export function Navbar() {
                   >
                     <Heart size={15} color={BRAND.gray} />
                     {t('myFavorites')}
+                  </a>
+                  <a
+                    href='/perfil/lista-regalos'
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm no-underline hover:bg-gray-50 transition-colors"
+                    style={{ color: BRAND.dark }}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <Gift size={15} color={BRAND.gray} />
+                    {t('giftLists')}
                   </a>
                   <a
                     href='/perfil/historial'

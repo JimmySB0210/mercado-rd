@@ -32,6 +32,14 @@ export const products = {
   askVendorButton: 'Ask the seller',
   openingChat: 'Opening chat...',
 
+  addToGiftListButton: '🎁 Add to my gift list',
+  addingToGiftList: 'Adding...',
+  choosePriorityLabel: 'How important is this gift to you?',
+  giftPriorityHigh: 'High',
+  giftPriorityMedium: 'Medium',
+  giftPriorityLow: 'Low',
+  addedToGiftListButton: '✓ On your gift list',
+
   relatedProductsTitle: 'You might also like',
 
   breadcrumbHome: 'Home',

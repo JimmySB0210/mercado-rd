@@ -13,6 +13,7 @@ import { ProductGallery } from '@/components/product/ProductGallery'
 import { ProductActions } from '@/components/product/ProductActions'
 import { FreeShippingBadge } from '@/components/product/FreeShippingBadge'
 import { ContactVendorButton } from '@/components/product/ContactVendorButton'
+import { GiftListButton } from '@/components/product/GiftListButton'
 import { VendorTrustBar } from '@/components/shop/VendorTrustBar'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { formatPrice } from '@/types/database.types'
@@ -283,6 +284,9 @@ export function ProductPageContent({
           {vendor?.id && (
             <ContactVendorButton vendorId={vendor.id} productId={product.id} productName={product.name} />
           )}
+
+          {/* Lista de regalos */}
+          <GiftListButton productId={product.id} />
 
           {/* WhatsApp */}
           {vendor?.whatsapp && (
