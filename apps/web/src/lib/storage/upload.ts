@@ -196,14 +196,19 @@ export async function uploadIdentityDocument(
 // chat-attachments, igual que dispute-evidence: privado, RLS restringe a los
 // 2 participantes de la conversación (o admin) — ver
 // supabase/migrations/007_chat_attachments.sql. A diferencia de
-// dispute-evidence (solo fotos), acá se aceptan 3 tipos — el "tipo" se
-// detecta por MIME type al elegir el archivo, no por 3 botones separados.
+// dispute-evidence (solo fotos), acá se aceptan 4 tipos — el "tipo" se
+// detecta por MIME type al elegir el archivo, no por botones separados.
 export const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/quicktime']
 export const MAX_VIDEO_SIZE_BYTES = 20 * 1024 * 1024
 export const ALLOWED_DOCUMENT_TYPES = ['application/pdf']
 export const MAX_DOCUMENT_SIZE_BYTES = 10 * 1024 * 1024
+// MediaRecorder produce audio/webm (Chrome/Firefox) o audio/mp4 (Safari),
+// casi siempre con un ";codecs=..." pegado al mimeType — se normaliza antes
+// de comparar (ver baseMimeType). Mismo límite de tamaño que documentos.
+export const ALLOWED_AUDIO_TYPES = ['audio/webm', 'audio/ogg', 'audio/mp4', 'audio/mpeg', 'audio/wav']
+export const MAX_AUDIO_SIZE_BYTES = 10 * 1024 * 1024
 
-export type ChatAttachmentType = 'image' | 'video' | 'document'
+export type ChatAttachmentType = 'image' | 'video' | 'document' | 'audio'
 
 export interface ChatAttachment {
   path: string
@@ -211,10 +216,16 @@ export interface ChatAttachment {
   filename: string
 }
 
+function baseMimeType(type: string): string {
+  return type.split(';')[0].trim()
+}
+
 export function detectChatAttachmentType(file: File): ChatAttachmentType | null {
-  if (ALLOWED_IMAGE_TYPES.includes(file.type)) return 'image'
-  if (ALLOWED_VIDEO_TYPES.includes(file.type)) return 'video'
-  if (ALLOWED_DOCUMENT_TYPES.includes(file.type)) return 'document'
+  const type = baseMimeType(file.type)
+  if (ALLOWED_IMAGE_TYPES.includes(type)) return 'image'
+  if (ALLOWED_VIDEO_TYPES.includes(type)) return 'video'
+  if (ALLOWED_DOCUMENT_TYPES.includes(type)) return 'document'
+  if (ALLOWED_AUDIO_TYPES.includes(type)) return 'audio'
   return null
 }
 
@@ -222,15 +233,17 @@ export function detectChatAttachmentType(file: File): ChatAttachmentType | null 
 // que la regla (JPG/PNG/WebP, 5MB) es la misma que en el resto del sitio.
 export function validateChatFile(file: File): { type: ChatAttachmentType; error: null } | { type: null; error: string } {
   const type = detectChatAttachmentType(file)
-  if (!type) return { type: null, error: 'Solo se permiten imágenes (JPG/PNG/WebP), videos (MP4/MOV) o documentos PDF' }
+  if (!type) return { type: null, error: 'Solo se permiten imágenes (JPG/PNG/WebP), videos (MP4/MOV), documentos PDF o audio' }
 
   if (type === 'image') {
     const err = validateImageFile(file)
     if (err) return { type: null, error: err }
   } else if (type === 'video') {
     if (file.size > MAX_VIDEO_SIZE_BYTES) return { type: null, error: 'El video no puede superar 20MB' }
-  } else {
+  } else if (type === 'document') {
     if (file.size > MAX_DOCUMENT_SIZE_BYTES) return { type: null, error: 'El documento no puede superar 10MB' }
+  } else {
+    if (file.size > MAX_AUDIO_SIZE_BYTES) return { type: null, error: 'El audio no puede superar 10MB' }
   }
 
   return { type, error: null }

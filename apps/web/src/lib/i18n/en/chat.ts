@@ -82,4 +82,9 @@ export const chat = {
   translatingButton: 'Translating...',
   hideTranslationButton: 'Hide translation',
   translateError: "We couldn't translate the message. Please try again.",
+
+  recordVoiceMessageAria: 'Record voice message',
+  micPermissionError: 'You need to grant microphone permission to record a voice message.',
+  recordingLabel: 'Recording',
+  stopRecordingButton: 'Stop',
 } satisfies ChatDict

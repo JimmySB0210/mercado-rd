@@ -101,6 +101,12 @@ export const chat = {
   translatingButton: 'Traduciendo...',
   hideTranslationButton: 'Ocultar traducción',
   translateError: 'No se pudo traducir el mensaje. Intenta de nuevo.',
+
+  // Mensajes de voz
+  recordVoiceMessageAria: 'Grabar mensaje de voz',
+  micPermissionError: 'Necesitas dar permiso de micrófono para grabar un mensaje de voz.',
+  recordingLabel: 'Grabando',
+  stopRecordingButton: 'Detener',
 }
 
 export type ChatDict = typeof chat

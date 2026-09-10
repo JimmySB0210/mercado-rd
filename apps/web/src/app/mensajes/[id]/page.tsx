@@ -30,6 +30,14 @@ interface ProvinceOption {
   name: string
 }
 
+const MAX_RECORDING_SECONDS = 180 // 3 minutos
+
+function formatRecordingTime(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes}:${String(seconds).padStart(2, '0')}`
+}
+
 interface ConversationInfo {
   id: string
   buyer_id: string
@@ -88,6 +96,18 @@ export default function ChatPage() {
   const [pendingFiles, setPendingFiles] = useState<{ file: File; type: ChatAttachmentType }[]>([])
   const [attachError, setAttachError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Mensajes de voz — reusa por completo el flujo de adjuntos (mismo
+  // bucket, mismo RLS, mismo jsonb) agregando 'audio' como un tipo
+  // más. El audio grabado termina en pendingFiles como cualquier otro
+  // adjunto, no tiene un camino de subida aparte.
+  const [recording, setRecording] = useState(false)
+  const [recordingSeconds, setRecordingSeconds] = useState(0)
+  const [micError, setMicError] = useState<string | null>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const recordedChunksRef = useRef<Blob[]>([])
+  const mediaStreamRef = useRef<MediaStream | null>(null)
+  const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Cotizaciones (Solicitar cotización)
   const [quotes, setQuotes] = useState<Map<string, ChatQuote>>(new Map())
@@ -282,6 +302,90 @@ export default function ChatPage() {
   const removePendingFile = (index: number) => {
     setPendingFiles(prev => prev.filter((_, i) => i !== index))
   }
+
+  const pickSupportedAudioMimeType = (): string | undefined => {
+    if (typeof MediaRecorder === 'undefined') return undefined
+    const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus']
+    return candidates.find(candidate => MediaRecorder.isTypeSupported(candidate))
+  }
+
+  const stopRecordingTimer = () => {
+    if (recordingIntervalRef.current) {
+      clearInterval(recordingIntervalRef.current)
+      recordingIntervalRef.current = null
+    }
+  }
+
+  const handleStopRecording = () => {
+    stopRecordingTimer()
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop()
+    }
+    setRecording(false)
+  }
+
+  const handleStartRecording = async () => {
+    setMicError(null)
+
+    let stream: MediaStream
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    } catch (error) {
+      console.error('[ChatPage recording] getUserMedia', error)
+      setMicError(t('micPermissionError'))
+      return
+    }
+
+    mediaStreamRef.current = stream
+    recordedChunksRef.current = []
+    const mimeType = pickSupportedAudioMimeType()
+    const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream)
+
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) recordedChunksRef.current.push(e.data)
+    }
+
+    recorder.onstop = () => {
+      mediaStreamRef.current?.getTracks().forEach(track => track.stop())
+      mediaStreamRef.current = null
+
+      const blobType = recorder.mimeType || 'audio/webm'
+      const blob = new Blob(recordedChunksRef.current, { type: blobType })
+      const ext = blobType.split(';')[0].split('/')[1] || 'webm'
+      const file = new File([blob], `mensaje-de-voz-${Date.now()}.${ext}`, { type: blobType })
+
+      const result = validateChatFile(file)
+      if (result.type === null) {
+        setAttachError(result.error)
+        return
+      }
+      const type = result.type
+      setPendingFiles(prev => [...prev, { file, type }])
+    }
+
+    mediaRecorderRef.current = recorder
+    recorder.start()
+    setRecording(true)
+    setRecordingSeconds(0)
+
+    let elapsed = 0
+    recordingIntervalRef.current = setInterval(() => {
+      elapsed += 1
+      setRecordingSeconds(elapsed)
+      if (elapsed >= MAX_RECORDING_SECONDS) {
+        handleStopRecording()
+      }
+    }, 1000)
+  }
+
+  // Libera el micrófono si el usuario sale de la conversación a media grabación
+  useEffect(() => {
+    return () => {
+      stopRecordingTimer()
+      mediaStreamRef.current?.getTracks().forEach(track => track.stop())
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleSend = async () => {
     if ((!newMessage.trim() && pendingFiles.length === 0) || !conversation || sending) return
@@ -564,6 +668,12 @@ export default function ChatPage() {
                                 <video key={a.path} src={a.url} controls className="w-56 rounded-lg" />
                               )
                             }
+                            if (a.type === 'audio') {
+                              return (
+                                // eslint-disable-next-line jsx-a11y/media-has-caption
+                                <audio key={a.path} src={a.url} controls className="max-w-full" style={{ height: 32 }} />
+                              )
+                            }
                             return (
                               <a
                                 key={a.path}
@@ -645,6 +755,29 @@ export default function ChatPage() {
               </div>
             )}
 
+            {micError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 mb-2">
+                {micError}
+              </div>
+            )}
+
+            {recording && (
+              <div className="mb-2 flex items-center gap-2 px-3 py-2 rounded-lg border" style={{ borderColor: BRAND.red, background: '#fef2f2' }}>
+                <span className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: BRAND.red }} />
+                <span className="text-sm font-medium" style={{ color: BRAND.red }}>
+                  {t('recordingLabel')} {formatRecordingTime(recordingSeconds)}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleStopRecording}
+                  className="ml-auto text-xs font-medium px-3 py-1.5 rounded-lg text-white border-none cursor-pointer"
+                  style={{ background: BRAND.red }}
+                >
+                  {t('stopRecordingButton')}
+                </button>
+              </div>
+            )}
+
             {pendingFiles.length > 0 && (
               <div className="flex gap-2 flex-wrap mb-2">
                 {pendingFiles.map((pf, i) => (
@@ -654,7 +787,7 @@ export default function ChatPage() {
                       <img src={URL.createObjectURL(pf.file)} alt={pf.file.name} className="w-14 h-14 rounded-lg object-cover border border-gray-200" />
                     ) : (
                       <div className="w-14 h-14 rounded-lg border border-gray-200 flex flex-col items-center justify-center text-[10px] text-gray-500 px-1 text-center">
-                        <span>{pf.type === 'video' ? '🎬' : '📄'}</span>
+                        <span>{pf.type === 'video' ? '🎬' : pf.type === 'audio' ? '🎤' : '📄'}</span>
                         <span className="truncate w-full">{pf.file.name}</span>
                       </div>
                     )}
@@ -687,6 +820,15 @@ export default function ChatPage() {
                 className="flex-shrink-0 w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center text-lg bg-white cursor-pointer"
               >
                 📎
+              </button>
+              <button
+                type="button"
+                onClick={recording ? handleStopRecording : handleStartRecording}
+                aria-label={recording ? t('stopRecordingButton') : t('recordVoiceMessageAria')}
+                className="flex-shrink-0 w-10 h-10 rounded-lg border flex items-center justify-center text-lg bg-white cursor-pointer"
+                style={{ borderColor: recording ? BRAND.red : 'var(--color-border, #e5e7eb)', color: recording ? BRAND.red : undefined }}
+              >
+                {recording ? '⏹️' : '🎤'}
               </button>
               <input
                 value={newMessage}
