@@ -62,6 +62,39 @@ export const chat = {
   // Presence — estado en línea del otro participante (efímero, nunca se persiste)
   onlineStatusLabel: '🟢 En línea',
   offlineStatusLabel: '⚫ Desconectado',
+
+  // Solicitar cotización
+  requestQuoteButton: 'Solicitar cotización',
+  quoteQuantityInputLabel: 'Cantidad',
+  sendQuoteRequestButton: 'Enviar solicitud',
+  invalidQuantityError: 'Ingresa una cantidad válida',
+  sendingButton: 'Enviando...',
+  cancelButton: 'Cancelar',
+  deliveryAddressLabel: 'La dirección de entrega',
+  deliveryAddressPlaceholder: 'Calle, número, sector, referencia...',
+  selectProvincePlaceholder: 'Selecciona una provincia',
+  paymentCashLabel: 'Efectivo',
+  paymentTransferLabel: 'Transferencia',
+  paymentAzulLabel: 'Tarjeta (Azul)',
+  paymentCardnetLabel: 'Tarjeta (CardNet)',
+
+  // QuoteCard
+  quoteCardTitle: 'Cotización',
+  quoteQuantityLine: 'Cantidad: {count} unidades',
+  catalogPriceLine: 'Precio de catálogo: {price}',
+  waitingVendorResponse: 'Esperando respuesta del vendedor...',
+  unitPriceInputLabel: 'Precio por unidad (RD$)',
+  sendQuoteButton: 'Enviar',
+  invalidPriceError: 'Ingresa un precio válido',
+  quoteActionError: 'No se pudo procesar la cotización. Intenta de nuevo.',
+  perUnitSuffix: '/ unidad',
+  subtotalLine: 'Subtotal: {amount}',
+  acceptQuoteButton: 'Aceptar cotización',
+  confirmAcceptButton: 'Confirmar pedido',
+  waitingBuyerAccept: 'Esperando que el comprador acepte...',
+  adjustPriceLabel: 'Ajustar precio',
+  quoteAcceptedLabel: 'Cotización aceptada — pedido creado',
+  viewOrderLink: 'Ver pedido →',
 }
 
 export type ChatDict = typeof chat

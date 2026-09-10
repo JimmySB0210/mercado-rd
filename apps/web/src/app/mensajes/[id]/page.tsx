@@ -23,6 +23,12 @@ import {
   type ChatAttachment,
   type ChatAttachmentType,
 } from '@/lib/storage/upload'
+import { QuoteCard, type ChatQuote } from '@/components/chat/QuoteCard'
+
+interface ProvinceOption {
+  id: number
+  name: string
+}
 
 interface ConversationInfo {
   id: string
@@ -44,6 +50,7 @@ interface MessageRow {
   sender_id: string
   message: string
   attachments: ChatAttachment[] | null
+  chat_quote_id: string | null
   created_at: string
 }
 
@@ -82,12 +89,21 @@ export default function ChatPage() {
   const [attachError, setAttachError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Cotizaciones (Solicitar cotización)
+  const [quotes, setQuotes] = useState<Map<string, ChatQuote>>(new Map())
+  const [productInfo, setProductInfo] = useState<{ name: string; price_rdp: number } | null>(null)
+  const [provinces, setProvinces] = useState<ProvinceOption[]>([])
+  const [showQuoteRequestForm, setShowQuoteRequestForm] = useState(false)
+  const [quoteQuantity, setQuoteQuantity] = useState('1')
+  const [requestingQuote, setRequestingQuote] = useState(false)
+  const [quoteRequestError, setQuoteRequestError] = useState<string | null>(null)
+
   const isBuyer = !!userId && !!conversation && conversation.buyer_id === userId
 
   const fetchMessages = async () => {
     const { data } = await supabase
       .from('chat_messages')
-      .select('id, sender_id, message, attachments, created_at')
+      .select('id, sender_id, message, attachments, chat_quote_id, created_at')
       .eq('conversation_id', params.id)
       .order('created_at', { ascending: true })
 
@@ -99,6 +115,15 @@ export default function ChatPage() {
       const urls = await getChatAttachmentSignedUrls(allPaths)
       setSignedUrls(prev => new Map([...prev, ...urls]))
     }
+  }
+
+  const fetchQuotes = async () => {
+    const { data } = await supabase
+      .from('chat_quotes')
+      .select('*')
+      .eq('conversation_id', params.id)
+
+    setQuotes(new Map((data ?? []).map((q: any) => [q.id as string, q as ChatQuote])))
   }
 
   const load = async () => {
@@ -134,6 +159,19 @@ export default function ChatPage() {
       setBuyerCreatedAt(buyer?.created_at ?? null)
     }
 
+    if (conv.product_id) {
+      const { data: product } = await supabase
+        .from('products')
+        .select('name, price_rdp')
+        .eq('id', conv.product_id)
+        .maybeSingle()
+      setProductInfo(product ?? null)
+    }
+
+    const { data: provinceRows } = await supabase.from('provinces_rd').select('id, name').order('name')
+    setProvinces(provinceRows ?? [])
+
+    await fetchQuotes()
     await fetchMessages()
     await supabase.rpc('mark_conversation_read', { p_conversation_id: params.id })
     setLoading(false)
@@ -199,6 +237,24 @@ export default function ChatPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id])
 
+  // chat_quotes se actualiza por POLLING (cada 4s), no Realtime —
+  // decisión tomada tras verificar en vivo, con varios intentos
+  // reales (canal separado del de mensajes/presence, y también
+  // REPLICA IDENTITY FULL en la tabla, necesaria para que Realtime
+  // pueda evaluar RLS en eventos UPDATE), que la entrega de eventos
+  // postgres_changes para esta tabla es inconsistente en este
+  // proyecto — a veces llega, a veces no, sin un patrón 100%
+  // reproducible. chat_messages con Realtime sí es sólido (probado
+  // repetidas veces) y se queda como está. Para el precio de una
+  // cotización, una actualización dentro de ~4s es "en vivo" para
+  // efectos prácticos y evita depender de un mecanismo que demostró
+  // no ser confiable acá.
+  useEffect(() => {
+    const interval = setInterval(fetchQuotes, 4000)
+    return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.id])
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
@@ -255,6 +311,39 @@ export default function ChatPage() {
     setPendingFiles([])
     await fetchMessages()
     setSending(false)
+  }
+
+  const handleRequestQuote = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!conversation?.product_id || requestingQuote) return
+
+    const qty = parseInt(quoteQuantity, 10)
+    if (isNaN(qty) || qty <= 0) {
+      setQuoteRequestError(t('invalidQuantityError'))
+      return
+    }
+
+    setRequestingQuote(true)
+    setQuoteRequestError(null)
+
+    const { error } = await supabase.rpc('request_chat_quote', {
+      p_conversation_id: conversation.id,
+      p_product_id: conversation.product_id,
+      p_quantity: qty,
+    })
+
+    if (error) {
+      console.error('[ChatPage requestQuote]', error)
+      setQuoteRequestError(t('quoteActionError'))
+      setRequestingQuote(false)
+      return
+    }
+
+    setQuoteQuantity('1')
+    setShowQuoteRequestForm(false)
+    setRequestingQuote(false)
+    await fetchQuotes()
+    await fetchMessages()
   }
 
   if (loading) {
@@ -345,6 +434,27 @@ export default function ChatPage() {
             ) : (
               messages.map(m => {
                 const isMine = m.sender_id === userId
+
+                // Tarjeta de cotización en vez de burbuja de texto —
+                // los datos vivos vienen del state `quotes` (mantenido
+                // por la suscripción realtime a chat_quotes), no del
+                // mensaje en sí.
+                if (m.chat_quote_id) {
+                  const quote = quotes.get(m.chat_quote_id)
+                  if (!quote) return null
+                  return (
+                    <div key={m.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                      <QuoteCard
+                        quote={quote}
+                        productName={productInfo?.name ?? ''}
+                        catalogPriceRdp={productInfo?.price_rdp ?? 0}
+                        isBuyer={isBuyer}
+                        provinces={provinces}
+                      />
+                    </div>
+                  )
+                }
+
                 const attachments = (m.attachments ?? [])
                   .map(a => ({ ...a, url: signedUrls.get(a.path) }))
                   .filter(a => !!a.url)
@@ -412,6 +522,48 @@ export default function ChatPage() {
 
           {/* Input */}
           <div className="px-5 py-4 border-t border-gray-100">
+            {isBuyer && conversation.product_id && (
+              showQuoteRequestForm ? (
+                <form onSubmit={handleRequestQuote} className="mb-2 p-3 rounded-lg border border-gray-200 flex flex-col gap-1.5">
+                  <label className="text-xs text-gray-500">{t('quoteQuantityInputLabel')}</label>
+                  <div className="flex gap-1.5">
+                    <input
+                      type="number"
+                      min={1}
+                      value={quoteQuantity}
+                      onChange={e => setQuoteQuantity(e.target.value)}
+                      className="flex-1 border border-gray-200 rounded-lg px-2 py-1.5 text-sm outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowQuoteRequestForm(false)}
+                      className="px-3 py-1.5 rounded-lg text-xs border border-gray-200 bg-white cursor-pointer"
+                    >
+                      {t('cancelButton')}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={requestingQuote}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium text-white border-none cursor-pointer disabled:opacity-60"
+                      style={{ background: BRAND.blue }}
+                    >
+                      {requestingQuote ? t('sendingButton') : t('sendQuoteRequestButton')}
+                    </button>
+                  </div>
+                  {quoteRequestError && <p className="text-xs" style={{ color: BRAND.red }}>{quoteRequestError}</p>}
+                </form>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowQuoteRequestForm(true)}
+                  className="mb-2 text-xs font-medium hover:underline border-none bg-transparent cursor-pointer p-0"
+                  style={{ color: BRAND.blue }}
+                >
+                  💰 {t('requestQuoteButton')}
+                </button>
+              )
+            )}
+
             {attachError && (
               <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 mb-2">
                 {attachError}
