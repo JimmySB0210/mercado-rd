@@ -95,6 +95,12 @@ export const chat = {
   adjustPriceLabel: 'Ajustar precio',
   quoteAcceptedLabel: 'Cotización aceptada — pedido creado',
   viewOrderLink: 'Ver pedido →',
+
+  // Traducción de mensajes
+  translateButton: 'Traducir',
+  translatingButton: 'Traduciendo...',
+  hideTranslationButton: 'Ocultar traducción',
+  translateError: 'No se pudo traducir el mensaje. Intenta de nuevo.',
 }
 
 export type ChatDict = typeof chat

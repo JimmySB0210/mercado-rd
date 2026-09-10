@@ -77,4 +77,9 @@ export const chat = {
   adjustPriceLabel: 'Adjust price',
   quoteAcceptedLabel: 'Quote accepted — order created',
   viewOrderLink: 'View order →',
+
+  translateButton: 'Translate',
+  translatingButton: 'Translating...',
+  hideTranslationButton: 'Hide translation',
+  translateError: "We couldn't translate the message. Please try again.",
 } satisfies ChatDict

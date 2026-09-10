@@ -98,6 +98,12 @@ export default function ChatPage() {
   const [requestingQuote, setRequestingQuote] = useState(false)
   const [quoteRequestError, setQuoteRequestError] = useState<string | null>(null)
 
+  // Traducción de mensajes — nunca se guarda, se recalcula cada vez
+  // que alguien pide traducir ese mensaje específico.
+  const [translations, setTranslations] = useState<Map<string, string>>(new Map())
+  const [translatingIds, setTranslatingIds] = useState<Set<string>>(new Set())
+  const [translateErrors, setTranslateErrors] = useState<Map<string, string>>(new Map())
+
   const isBuyer = !!userId && !!conversation && conversation.buyer_id === userId
 
   const fetchMessages = async () => {
@@ -346,6 +352,37 @@ export default function ChatPage() {
     await fetchMessages()
   }
 
+  const handleTranslate = async (messageId: string, text: string) => {
+    setTranslatingIds(prev => new Set(prev).add(messageId))
+    setTranslateErrors(prev => { const next = new Map(prev); next.delete(messageId); return next })
+
+    try {
+      const res = await fetch('/api/ai/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, target_language: language }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        setTranslateErrors(prev => new Map(prev).set(messageId, data?.error ?? t('translateError')))
+        return
+      }
+
+      setTranslations(prev => new Map(prev).set(messageId, data.text))
+    } catch (error) {
+      console.error('[ChatPage translate]', error)
+      setTranslateErrors(prev => new Map(prev).set(messageId, t('translateError')))
+    } finally {
+      setTranslatingIds(prev => { const next = new Set(prev); next.delete(messageId); return next })
+    }
+  }
+
+  const handleHideTranslation = (messageId: string) => {
+    setTranslations(prev => { const next = new Map(prev); next.delete(messageId); return next })
+    setTranslateErrors(prev => { const next = new Map(prev); next.delete(messageId); return next })
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -466,6 +503,44 @@ export default function ChatPage() {
                       style={{ background: isMine ? BRAND.blue : '#f1f1f1', color: isMine ? '#fff' : '#111' }}
                     >
                       {m.message && <p className="text-sm leading-relaxed whitespace-pre-line">{m.message}</p>}
+
+                      {/* Traducción — nunca reemplaza el original, se
+                          agrega al lado. Nunca se guarda: se recalcula
+                          cada vez que se pide. Solo en mensajes ajenos
+                          con texto (no aplica a burbujas propias ni a
+                          mensajes solo-adjunto/solo-cotización). */}
+                      {!isMine && m.message && (
+                        <div className="mt-1">
+                          {translations.has(m.id) ? (
+                            <>
+                              <p className="text-sm leading-relaxed whitespace-pre-line italic mt-1" style={{ color: '#444' }}>
+                                {translations.get(m.id)}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => handleHideTranslation(m.id)}
+                                className="text-[11px] underline mt-0.5 border-none bg-transparent cursor-pointer p-0"
+                                style={{ color: '#999' }}
+                              >
+                                {t('hideTranslationButton')}
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleTranslate(m.id, m.message)}
+                              disabled={translatingIds.has(m.id)}
+                              className="text-[11px] underline border-none bg-transparent cursor-pointer p-0 disabled:opacity-60"
+                              style={{ color: '#999' }}
+                            >
+                              {translatingIds.has(m.id) ? t('translatingButton') : `🌐 ${t('translateButton')}`}
+                            </button>
+                          )}
+                          {translateErrors.has(m.id) && (
+                            <p className="text-[11px] mt-0.5" style={{ color: BRAND.red }}>{translateErrors.get(m.id)}</p>
+                          )}
+                        </div>
+                      )}
 
                       {attachments.length > 0 && (
                         <div className="flex flex-col gap-1.5 mt-1.5">
