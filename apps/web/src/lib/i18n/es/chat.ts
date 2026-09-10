@@ -58,6 +58,10 @@ export const chat = {
   downloadAttachmentLabel: 'Descargar',
   uploadingAttachmentsLabel: 'Subiendo adjuntos...',
   attachmentUploadError: 'No se pudo subir uno de los adjuntos. Intenta de nuevo.',
+
+  // Presence — estado en línea del otro participante (efímero, nunca se persiste)
+  onlineStatusLabel: '🟢 En línea',
+  offlineStatusLabel: '⚫ Desconectado',
 }
 
 export type ChatDict = typeof chat

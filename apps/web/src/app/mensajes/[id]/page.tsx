@@ -76,6 +76,7 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(true)
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
+  const [otherOnline, setOtherOnline] = useState(false)
   const [signedUrls, setSignedUrls] = useState<Map<string, string>>(new Map())
   const [pendingFiles, setPendingFiles] = useState<{ file: File; type: ChatAttachmentType }[]>([])
   const [attachError, setAttachError] = useState<string | null>(null)
@@ -143,8 +144,15 @@ export default function ChatPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id])
 
-  // Realtime — nuevos mensajes llegan vía Supabase Realtime en vez de polling
+  // Realtime — nuevos mensajes llegan vía Supabase Realtime en vez de
+  // polling. Presence comparte este mismo canal (misma conexión
+  // WebSocket, scopeado por conversación vía el nombre del canal) en
+  // vez de abrir uno aparte — es estado efímero, nunca se persiste en
+  // una tabla.
   useEffect(() => {
+    let cancelled = false
+    let myUserId: string | null = null
+
     const channel = supabase
       .channel(`chat-${params.id}`)
       .on(
@@ -167,9 +175,25 @@ export default function ChatPage() {
           }
         }
       )
-      .subscribe()
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState<{ user_id: string }>()
+        const someoneElse = Object.values(state).some(presences =>
+          presences.some(p => p.user_id && p.user_id !== myUserId)
+        )
+        setOtherOnline(someoneElse)
+      })
+      .subscribe(async (status) => {
+        if (status !== 'SUBSCRIBED') return
+        const { data: { user } } = await supabase.auth.getUser()
+        if (cancelled || !user) return
+        myUserId = user.id
+        await channel.track({ user_id: user.id, online_at: new Date().toISOString() })
+      })
 
     return () => {
+      cancelled = true
+      // removeChannel ya hace untrack + cierra la conexión — no hace
+      // falta un channel.untrack() manual antes.
       supabase.removeChannel(channel)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -295,13 +319,18 @@ export default function ChatPage() {
             )}
           </div>
           <div className="min-w-0">
-            {otherLink ? (
-              <a href={otherLink} className="text-sm font-semibold no-underline" style={{ color: BRAND.dark }}>
-                {otherName}
-              </a>
-            ) : (
-              <span className="text-sm font-semibold" style={{ color: BRAND.dark }}>{otherName}</span>
-            )}
+            <div className="flex items-center gap-2 flex-wrap">
+              {otherLink ? (
+                <a href={otherLink} className="text-sm font-semibold no-underline" style={{ color: BRAND.dark }}>
+                  {otherName}
+                </a>
+              ) : (
+                <span className="text-sm font-semibold" style={{ color: BRAND.dark }}>{otherName}</span>
+              )}
+              <span className="text-xs" style={{ color: otherOnline ? 'var(--color-success)' : BRAND.gray }}>
+                {otherOnline ? t('onlineStatusLabel') : t('offlineStatusLabel')}
+              </span>
+            </div>
             {otherTrustLine && (
               <p className="text-xs text-gray-400 mt-0.5">{otherTrustLine}</p>
             )}

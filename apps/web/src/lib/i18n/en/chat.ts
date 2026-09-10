@@ -43,4 +43,7 @@ export const chat = {
   downloadAttachmentLabel: 'Download',
   uploadingAttachmentsLabel: 'Uploading attachments...',
   attachmentUploadError: "We couldn't upload one of the attachments. Please try again.",
+
+  onlineStatusLabel: '🟢 Online',
+  offlineStatusLabel: '⚫ Offline',
 } satisfies ChatDict

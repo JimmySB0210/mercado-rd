@@ -43,4 +43,7 @@ export const chat = {
   downloadAttachmentLabel: 'Télécharger',
   uploadingAttachmentsLabel: 'Envoi des pièces jointes...',
   attachmentUploadError: "Impossible d'envoyer une des pièces jointes. Réessayez.",
+
+  onlineStatusLabel: '🟢 En ligne',
+  offlineStatusLabel: '⚫ Hors ligne',
 } satisfies ChatDict
