@@ -16,6 +16,13 @@ import { Navbar } from '@/components/shop/Navbar'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { formatDate } from '@/lib/utils'
 import { BRAND } from '@/lib/colors'
+import {
+  validateChatFile,
+  uploadChatAttachment,
+  getChatAttachmentSignedUrls,
+  type ChatAttachment,
+  type ChatAttachmentType,
+} from '@/lib/storage/upload'
 
 interface ConversationInfo {
   id: string
@@ -36,6 +43,7 @@ interface MessageRow {
   id: string
   sender_id: string
   message: string
+  attachments: ChatAttachment[] | null
   created_at: string
 }
 
@@ -68,17 +76,28 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(true)
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
+  const [signedUrls, setSignedUrls] = useState<Map<string, string>>(new Map())
+  const [pendingFiles, setPendingFiles] = useState<{ file: File; type: ChatAttachmentType }[]>([])
+  const [attachError, setAttachError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const isBuyer = !!userId && !!conversation && conversation.buyer_id === userId
 
   const fetchMessages = async () => {
     const { data } = await supabase
       .from('chat_messages')
-      .select('id, sender_id, message, created_at')
+      .select('id, sender_id, message, attachments, created_at')
       .eq('conversation_id', params.id)
       .order('created_at', { ascending: true })
 
-    setMessages(data ?? [])
+    const rows = (data ?? []) as MessageRow[]
+    setMessages(rows)
+
+    const allPaths = rows.flatMap(m => (m.attachments ?? []).map(a => a.path))
+    if (allPaths.length > 0) {
+      const urls = await getChatAttachmentSignedUrls(allPaths)
+      setSignedUrls(prev => new Map([...prev, ...urls]))
+    }
   }
 
   const load = async () => {
@@ -136,10 +155,16 @@ export default function ChatPage() {
           table: 'chat_messages',
           filter: `conversation_id=eq.${params.id}`,
         },
-        (payload) => {
-          const newMessage = payload.new as MessageRow
+        async (payload) => {
+          const incoming = payload.new as MessageRow
           // Evita duplicados si fetchMessages() ya trajo este mensaje
-          setMessages(prev => (prev.some(m => m.id === newMessage.id) ? prev : [...prev, newMessage]))
+          setMessages(prev => (prev.some(m => m.id === incoming.id) ? prev : [...prev, incoming]))
+
+          const paths = (incoming.attachments ?? []).map(a => a.path)
+          if (paths.length > 0) {
+            const urls = await getChatAttachmentSignedUrls(paths)
+            setSignedUrls(prev => new Map([...prev, ...urls]))
+          }
         }
       )
       .subscribe()
@@ -154,20 +179,56 @@ export default function ChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  const handleFilesSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? [])
+    e.target.value = ''
+    for (const file of files) {
+      const result = validateChatFile(file)
+      if (result.type === null) {
+        setAttachError(result.error)
+        continue
+      }
+      const type = result.type
+      setPendingFiles(prev => [...prev, { file, type }])
+    }
+  }
+
+  const removePendingFile = (index: number) => {
+    setPendingFiles(prev => prev.filter((_, i) => i !== index))
+  }
+
   const handleSend = async () => {
-    if (!newMessage.trim() || !conversation || sending) return
+    if ((!newMessage.trim() && pendingFiles.length === 0) || !conversation || sending) return
     setSending(true)
+    setAttachError(null)
+
+    let attachments: ChatAttachment[] | null = null
+    if (pendingFiles.length > 0) {
+      const uploads = await Promise.all(
+        pendingFiles.map(pf => uploadChatAttachment(pf.file, conversation.id, pf.type))
+      )
+      const failedUpload = uploads.find(u => u.error)
+      if (failedUpload) {
+        console.error('[ChatPage send] upload', failedUpload.error)
+        setAttachError(t('attachmentUploadError'))
+        setSending(false)
+        return
+      }
+      attachments = uploads.map(u => u.attachment).filter((a): a is ChatAttachment => !!a)
+    }
 
     const { error } = await supabase.rpc('send_chat_message', {
       p_vendor_id: conversation.vendor_id,
       p_product_id: conversation.product_id,
       p_message: newMessage.trim(),
       p_conversation_id: conversation.id,
+      p_attachments: attachments,
     })
 
     if (error) console.error('[ChatPage send]', error)
 
     setNewMessage('')
+    setPendingFiles([])
     await fetchMessages()
     setSending(false)
   }
@@ -255,13 +316,60 @@ export default function ChatPage() {
             ) : (
               messages.map(m => {
                 const isMine = m.sender_id === userId
+                const attachments = (m.attachments ?? [])
+                  .map(a => ({ ...a, url: signedUrls.get(a.path) }))
+                  .filter(a => !!a.url)
+
                 return (
                   <div key={m.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
                     <div
                       className="max-w-[75%] rounded-2xl px-4 py-2.5"
                       style={{ background: isMine ? BRAND.blue : '#f1f1f1', color: isMine ? '#fff' : '#111' }}
                     >
-                      <p className="text-sm leading-relaxed whitespace-pre-line">{m.message}</p>
+                      {m.message && <p className="text-sm leading-relaxed whitespace-pre-line">{m.message}</p>}
+
+                      {attachments.length > 0 && (
+                        <div className="flex flex-col gap-1.5 mt-1.5">
+                          {attachments.map(a => {
+                            if (a.type === 'image') {
+                              return (
+                                <a key={a.path} href={a.url} target="_blank" rel="noopener noreferrer">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={a.url}
+                                    alt={t('viewAttachmentAria')}
+                                    className="w-32 h-32 rounded-lg object-cover"
+                                    style={{ border: isMine ? '1px solid rgba(255,255,255,0.3)' : '1px solid #e5e7eb' }}
+                                  />
+                                </a>
+                              )
+                            }
+                            if (a.type === 'video') {
+                              return (
+                                // eslint-disable-next-line jsx-a11y/media-has-caption
+                                <video key={a.path} src={a.url} controls className="w-56 rounded-lg" />
+                              )
+                            }
+                            return (
+                              <a
+                                key={a.path}
+                                href={a.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm no-underline"
+                                style={{
+                                  background: isMine ? 'rgba(255,255,255,0.15)' : '#fff',
+                                  color: isMine ? '#fff' : '#111',
+                                  border: isMine ? '1px solid rgba(255,255,255,0.3)' : '1px solid #e5e7eb',
+                                }}
+                              >
+                                📄 <span className="truncate flex-1">{a.filename}</span> {t('downloadAttachmentLabel')}
+                              </a>
+                            )
+                          })}
+                        </div>
+                      )}
+
                       <p className="text-[11px] mt-1" style={{ color: isMine ? 'rgba(255,255,255,0.7)' : '#999' }}>
                         {formatDate(m.created_at, language, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}
                       </p>
@@ -274,22 +382,72 @@ export default function ChatPage() {
           </div>
 
           {/* Input */}
-          <div className="px-5 py-4 border-t border-gray-100 flex gap-2">
-            <input
-              value={newMessage}
-              onChange={e => setNewMessage(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') handleSend() }}
-              placeholder={t('messagePlaceholder')}
-              className="flex-1 border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
-            />
-            <button
-              onClick={handleSend}
-              disabled={sending || !newMessage.trim()}
-              style={{ background: sending || !newMessage.trim() ? '#ccc' : BRAND.blue }}
-              className="text-white font-medium px-5 rounded-lg text-sm border-none cursor-pointer"
-            >
-              {t('sendButton')}
-            </button>
+          <div className="px-5 py-4 border-t border-gray-100">
+            {attachError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 mb-2">
+                {attachError}
+              </div>
+            )}
+
+            {pendingFiles.length > 0 && (
+              <div className="flex gap-2 flex-wrap mb-2">
+                {pendingFiles.map((pf, i) => (
+                  <div key={i} className="relative">
+                    {pf.type === 'image' ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={URL.createObjectURL(pf.file)} alt={pf.file.name} className="w-14 h-14 rounded-lg object-cover border border-gray-200" />
+                    ) : (
+                      <div className="w-14 h-14 rounded-lg border border-gray-200 flex flex-col items-center justify-center text-[10px] text-gray-500 px-1 text-center">
+                        <span>{pf.type === 'video' ? '🎬' : '📄'}</span>
+                        <span className="truncate w-full">{pf.file.name}</span>
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removePendingFile(i)}
+                      aria-label={t('removeAttachmentAria')}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gray-800 text-white text-xs flex items-center justify-center border-none cursor-pointer"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,application/pdf"
+                multiple
+                onChange={handleFilesSelected}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                aria-label={t('attachFileAria')}
+                className="flex-shrink-0 w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center text-lg bg-white cursor-pointer"
+              >
+                📎
+              </button>
+              <input
+                value={newMessage}
+                onChange={e => setNewMessage(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleSend() }}
+                placeholder={t('messagePlaceholder')}
+                className="flex-1 border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
+              />
+              <button
+                onClick={handleSend}
+                disabled={sending || (!newMessage.trim() && pendingFiles.length === 0)}
+                style={{ background: sending || (!newMessage.trim() && pendingFiles.length === 0) ? '#ccc' : BRAND.blue }}
+                className="text-white font-medium px-5 rounded-lg text-sm border-none cursor-pointer"
+              >
+                {sending && pendingFiles.length > 0 ? t('uploadingAttachmentsLabel') : t('sendButton')}
+              </button>
+            </div>
           </div>
         </div>
       </main>

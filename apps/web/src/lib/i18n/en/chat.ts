@@ -36,4 +36,11 @@ export const chat = {
   membershipMonthsPlural: '{count} months ago',
   membershipYearsSingular: '{count} year ago',
   membershipYearsPlural: '{count} years ago',
+
+  attachFileAria: 'Attach file',
+  removeAttachmentAria: 'Remove attachment',
+  viewAttachmentAria: 'View attachment',
+  downloadAttachmentLabel: 'Download',
+  uploadingAttachmentsLabel: 'Uploading attachments...',
+  attachmentUploadError: "We couldn't upload one of the attachments. Please try again.",
 } satisfies ChatDict

@@ -192,6 +192,89 @@ export async function uploadIdentityDocument(
   return { path: filename, error: null }
 }
 
+// ─── Adjuntos de chat (bucket privado) ──────────────────────────────────────
+// chat-attachments, igual que dispute-evidence: privado, RLS restringe a los
+// 2 participantes de la conversación (o admin) — ver
+// supabase/migrations/007_chat_attachments.sql. A diferencia de
+// dispute-evidence (solo fotos), acá se aceptan 3 tipos — el "tipo" se
+// detecta por MIME type al elegir el archivo, no por 3 botones separados.
+export const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/quicktime']
+export const MAX_VIDEO_SIZE_BYTES = 20 * 1024 * 1024
+export const ALLOWED_DOCUMENT_TYPES = ['application/pdf']
+export const MAX_DOCUMENT_SIZE_BYTES = 10 * 1024 * 1024
+
+export type ChatAttachmentType = 'image' | 'video' | 'document'
+
+export interface ChatAttachment {
+  path: string
+  type: ChatAttachmentType
+  filename: string
+}
+
+export function detectChatAttachmentType(file: File): ChatAttachmentType | null {
+  if (ALLOWED_IMAGE_TYPES.includes(file.type)) return 'image'
+  if (ALLOWED_VIDEO_TYPES.includes(file.type)) return 'video'
+  if (ALLOWED_DOCUMENT_TYPES.includes(file.type)) return 'document'
+  return null
+}
+
+// Valida por tipo detectado — reusa validateImageFile() para imágenes, ya
+// que la regla (JPG/PNG/WebP, 5MB) es la misma que en el resto del sitio.
+export function validateChatFile(file: File): { type: ChatAttachmentType; error: null } | { type: null; error: string } {
+  const type = detectChatAttachmentType(file)
+  if (!type) return { type: null, error: 'Solo se permiten imágenes (JPG/PNG/WebP), videos (MP4/MOV) o documentos PDF' }
+
+  if (type === 'image') {
+    const err = validateImageFile(file)
+    if (err) return { type: null, error: err }
+  } else if (type === 'video') {
+    if (file.size > MAX_VIDEO_SIZE_BYTES) return { type: null, error: 'El video no puede superar 20MB' }
+  } else {
+    if (file.size > MAX_DOCUMENT_SIZE_BYTES) return { type: null, error: 'El documento no puede superar 10MB' }
+  }
+
+  return { type, error: null }
+}
+
+export async function uploadChatAttachment(
+  file: File,
+  conversationId: string,
+  type: ChatAttachmentType
+): Promise<{ attachment: ChatAttachment; error: null } | { attachment: null; error: string }> {
+  const supabase = createClient()
+  const ext = file.name.split('.').pop()
+  const path = `${conversationId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+
+  const { error } = await supabase.storage
+    .from('chat-attachments')
+    .upload(path, file, { upsert: false })
+
+  if (error) return { attachment: null, error: error.message }
+  return { attachment: { path, type, filename: file.name }, error: null }
+}
+
+const CHAT_ATTACHMENT_SIGNED_URL_TTL_SECONDS = 3600
+
+export async function getChatAttachmentSignedUrls(paths: string[]): Promise<Map<string, string>> {
+  const map = new Map<string, string>()
+  if (paths.length === 0) return map
+
+  const supabase = createClient()
+  const { data, error } = await supabase.storage
+    .from('chat-attachments')
+    .createSignedUrls(paths, CHAT_ATTACHMENT_SIGNED_URL_TTL_SECONDS)
+
+  if (error || !data) {
+    console.error('[getChatAttachmentSignedUrls]', error)
+    return map
+  }
+
+  for (const entry of data) {
+    if (entry.signedUrl && !entry.error) map.set(entry.path ?? '', entry.signedUrl)
+  }
+  return map
+}
+
 // ─── Eliminar imagen ────────────────────────────────────────────────────────
 export async function deleteImage(
   bucket: 'products' | 'vendors' | 'avatars' | 'banners',

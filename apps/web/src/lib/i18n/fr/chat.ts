@@ -36,4 +36,11 @@ export const chat = {
   membershipMonthsPlural: 'il y a {count} mois',
   membershipYearsSingular: 'il y a {count} an',
   membershipYearsPlural: 'il y a {count} ans',
+
+  attachFileAria: 'Joindre un fichier',
+  removeAttachmentAria: 'Retirer la pièce jointe',
+  viewAttachmentAria: 'Voir la pièce jointe',
+  downloadAttachmentLabel: 'Télécharger',
+  uploadingAttachmentsLabel: 'Envoi des pièces jointes...',
+  attachmentUploadError: "Impossible d'envoyer une des pièces jointes. Réessayez.",
 } satisfies ChatDict

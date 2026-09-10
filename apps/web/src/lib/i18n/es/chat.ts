@@ -50,6 +50,14 @@ export const chat = {
   membershipMonthsPlural: 'hace {count} meses',
   membershipYearsSingular: 'hace {count} año',
   membershipYearsPlural: 'hace {count} años',
+
+  // Adjuntos (imagen/video/documento) en el composer del chat
+  attachFileAria: 'Adjuntar archivo',
+  removeAttachmentAria: 'Quitar adjunto',
+  viewAttachmentAria: 'Ver adjunto',
+  downloadAttachmentLabel: 'Descargar',
+  uploadingAttachmentsLabel: 'Subiendo adjuntos...',
+  attachmentUploadError: 'No se pudo subir uno de los adjuntos. Intenta de nuevo.',
 }
 
 export type ChatDict = typeof chat
