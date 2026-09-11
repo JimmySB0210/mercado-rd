@@ -101,7 +101,7 @@ export function ProductPageContent({
 
         {/* Galería + info del vendedor (llena el espacio debajo de la imagen) */}
         <div className="flex flex-col gap-4">
-          <ProductGallery images={product.images ?? []} name={product.name} />
+          <ProductGallery images={product.images ?? []} name={product.name} videoUrl={product.video_url} />
 
           {vendor && (
             <div

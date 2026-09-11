@@ -13,7 +13,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { validateImageFile, getImageDimensions, uploadProductImage, MIN_PRODUCT_IMAGE_DIMENSION, LOW_RESOLUTION_WARNING } from '@/lib/storage/upload'
+import { validateImageFile, getImageDimensions, uploadProductImage, MIN_PRODUCT_IMAGE_DIMENSION, LOW_RESOLUTION_WARNING, validateProductVideoFile, uploadProductVideo } from '@/lib/storage/upload'
 import { DANGEROUS_PATTERN } from '@/lib/validation'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { ProductAttributesSection, type AttributeValue, type AttributeValuesState } from '@/components/dashboard/ProductAttributesSection'
@@ -255,6 +255,12 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
   const [imageWarning, setImageWarning] = useState<string | null>(null)
 
   const totalImageCount = existingImageUrls.length + imageFiles.length
+
+  // Video principal — opcional, uno solo (no es una galería como images)
+  const [existingVideoUrl, setExistingVideoUrl] = useState<string | null>(initialData?.product.video_url ?? null)
+  const [videoFile, setVideoFile] = useState<File | null>(null)
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null)
+  const [videoError, setVideoError] = useState<string | null>(null)
 
   // Atributos dinámicos de la categoría seleccionada (tipo de producto) —
   // fixedCategoryAttributes son los que se muestran como campos normales
@@ -513,6 +519,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
       stock: form.stock ? parseInt(form.stock) : 0,
       sizes: [],
       colors: [],
+      video_url: videoPreviewUrl ?? existingVideoUrl,
       sku: form.sku || null,
       barcode: form.barcode || null,
       status: initialData?.product.status ?? 'draft',
@@ -572,6 +579,15 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Libera el object URL del preview de video al desmontar o al reemplazarlo
+  // — a diferencia de las fotos (FileReader → data URL), un video puede
+  // pesar hasta 50MB y no conviene mantenerlo en memoria como base64.
+  useEffect(() => {
+    return () => {
+      if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl)
+    }
+  }, [videoPreviewUrl])
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
   }
@@ -625,6 +641,31 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     setExistingImageUrls(prev => prev.filter((_, i) => i !== index))
   }
 
+  // "Reemplazar" es simplemente quitar + subir uno nuevo (mismo patrón que
+  // las fotos, que tampoco tienen un botón de reemplazo dedicado)
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+
+    const validationError = validateProductVideoFile(file)
+    if (validationError) {
+      setVideoError(validationError)
+      return
+    }
+
+    setVideoError(null)
+    setVideoFile(file)
+    setVideoPreviewUrl(URL.createObjectURL(file))
+    setExistingVideoUrl(null)
+  }
+
+  const removeVideo = () => {
+    setVideoFile(null)
+    setVideoPreviewUrl(null)
+    setExistingVideoUrl(null)
+  }
+
   const uploadImages = async (): Promise<string[]> => {
     const urls: string[] = []
 
@@ -638,6 +679,20 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     }
 
     return urls
+  }
+
+  // Best-effort igual que uploadImages() — si falla la subida, se guarda el
+  // producto sin video en vez de bloquear todo el guardado por esto
+  const uploadVideo = async (): Promise<string | null> => {
+    if (!videoFile) return existingVideoUrl
+
+    const { url, error: uploadError } = await uploadProductVideo(videoFile, vendorId)
+    if (uploadError || !url) {
+      console.error('[uploadVideo]', uploadError)
+      setVideoError(t('videoUploadError'))
+      return existingVideoUrl
+    }
+    return url
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -718,6 +773,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     try {
       const uploadedUrls = await uploadImages()
       const finalImages = [...existingImageUrls, ...uploadedUrls]
+      const finalVideoUrl = await uploadVideo()
 
       const productPayload = {
         vendor_id: vendorId,
@@ -729,6 +785,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
         compare_rdp: form.comparePrice ? Math.round(parseFloat(form.comparePrice) * 100) : null,
         stock: stockNum,
         images: finalImages,
+        video_url: finalVideoUrl,
         sku: form.sku.trim() || null,
         barcode: form.barcode.trim() || null,
       }
@@ -1030,6 +1087,37 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
             <p className="text-xs text-gray-400">{t('photosHint')}</p>
             {imageError && <p className="text-xs text-red-600 mt-2">{imageError}</p>}
             {imageWarning && <p className="text-xs text-amber-600 mt-2">{imageWarning}</p>}
+          </div>
+
+          {/* Video (opcional) — complementa la galería de fotos, no la reemplaza */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6">
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('videoHeading')}</h2>
+            <div className="mb-3">
+              {(videoPreviewUrl || existingVideoUrl) ? (
+                <div className="relative w-48 aspect-video rounded-lg overflow-hidden border border-gray-200 bg-black">
+                  <video
+                    src={videoPreviewUrl ?? existingVideoUrl ?? undefined}
+                    controls
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeVideo}
+                    aria-label={t('removeVideoAria')}
+                    className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/60 text-white text-xs flex items-center justify-center"
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <label className="w-48 aspect-video rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors">
+                  <span className="text-2xl text-gray-300">+</span>
+                  <input type="file" accept="video/mp4,video/quicktime" onChange={handleVideoSelect} className="hidden" />
+                </label>
+              )}
+            </div>
+            <p className="text-xs text-gray-400">{t('videoHint')}</p>
+            {videoError && <p className="text-xs text-red-600 mt-2">{videoError}</p>}
           </div>
 
           {/* Info básica */}

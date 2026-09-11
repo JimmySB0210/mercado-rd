@@ -61,6 +61,43 @@ export async function uploadProductImage(
   return { url: data.publicUrl, error: null }
 }
 
+// ─── Video de producto (mismo bucket público "products" que las fotos) ────────
+// Un solo video por producto, opcional (products.video_url, nullable) — no es
+// una galería como "images". Límite de 50MB, más conservador que los 20MB de
+// video en el chat (bucket privado, 007_chat_attachments.sql): este bucket es
+// público y lo carga cualquiera al ver la página de producto, así que pesa
+// más en el rendimiento.
+export const ALLOWED_PRODUCT_VIDEO_TYPES = ['video/mp4', 'video/quicktime']
+export const MAX_PRODUCT_VIDEO_SIZE_BYTES = 50 * 1024 * 1024
+
+export function validateProductVideoFile(file: File): string | null {
+  if (!ALLOWED_PRODUCT_VIDEO_TYPES.includes(file.type)) {
+    return 'Solo se permiten videos MP4 o MOV'
+  }
+  if (file.size > MAX_PRODUCT_VIDEO_SIZE_BYTES) {
+    return 'El video no puede superar 50MB'
+  }
+  return null
+}
+
+export async function uploadProductVideo(
+  file: File,
+  vendorId: string
+): Promise<UploadResult> {
+  const supabase = createClient()
+  const ext = file.name.split('.').pop()
+  const filename = `${vendorId}/video-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+
+  const { error } = await supabase.storage
+    .from('products')
+    .upload(filename, file, { upsert: false })
+
+  if (error) return { url: null, error: error.message }
+
+  const { data } = supabase.storage.from('products').getPublicUrl(filename)
+  return { url: data.publicUrl, error: null }
+}
+
 // ─── Logo de vendor ─────────────────────────────────────────────────────────
 export async function uploadVendorLogo(
   file: File,

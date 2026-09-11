@@ -135,6 +135,9 @@ export interface Product {
   price_rdp: number        // precio en centavos de RD$
   compare_rdp: number | null
   images: string[]
+  // Un solo video opcional, a diferencia de images (galería) — no lo
+  // reemplaza, la complementa. Sube al mismo bucket público "products".
+  video_url: string | null
   stock: number
   sizes: string[]
   colors: string[]
