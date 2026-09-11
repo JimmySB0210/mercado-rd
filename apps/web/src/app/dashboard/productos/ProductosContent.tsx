@@ -23,6 +23,7 @@ interface ProductRow {
   images: string[] | null
   status: ProductStatus
   stock: number
+  low_stock_threshold: number | null
   price_rdp: number
   sold_count: number
   is_featured: boolean | null
@@ -94,9 +95,13 @@ export function ProductosContent({ products, isPro }: Props) {
                 >
                   {p.status === 'draft' ? t('draftBadge') : p.status === 'published' ? t('publishedBadge') : t('pausedBadge')}
                 </span>
-                {p.stock === 0 && (
+                {p.stock === 0 ? (
                   <span style={{ position: 'absolute', top: 8, right: 8, background: BRAND.red, color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 4 }}>
                     {t('outOfStockBadge')}
+                  </span>
+                ) : p.low_stock_threshold != null && p.stock <= p.low_stock_threshold && (
+                  <span style={{ position: 'absolute', top: 8, right: 8, background: '#F59E0B', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 4 }}>
+                    {t('lowStockBadge')}
                   </span>
                 )}
               </div>

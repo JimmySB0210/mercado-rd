@@ -139,6 +139,10 @@ export interface Product {
   // reemplaza, la complementa. Sube al mismo bucket público "products".
   video_url: string | null
   stock: number
+  // null = sin alerta configurada. Un trigger en Supabase notifica al
+  // vendor solo al cruzar este umbral hacia abajo (nunca se repite en
+  // ventas subsiguientes mientras el stock ya está por debajo).
+  low_stock_threshold: number | null
   sizes: string[]
   colors: string[]
   sku: string | null

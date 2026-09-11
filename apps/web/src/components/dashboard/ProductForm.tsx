@@ -83,6 +83,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
   const [descriptionError, setDescriptionError] = useState<string | null>(null)
   const [priceError, setPriceError] = useState<string | null>(null)
   const [stockError, setStockError] = useState<string | null>(null)
+  const [lowStockThresholdError, setLowStockThresholdError] = useState<string | null>(null)
 
   const [form, setForm] = useState(() => {
     if (initialData) {
@@ -95,11 +96,12 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
         price: (p.price_rdp / 100).toString(),
         comparePrice: p.compare_rdp !== null ? (p.compare_rdp / 100).toString() : '',
         stock: String(p.stock),
+        lowStockThreshold: p.low_stock_threshold != null ? String(p.low_stock_threshold) : '',
         sku: p.sku ?? '',
         barcode: p.barcode ?? '',
       }
     }
-    return { name: '', description: '', categoryId: '', provinceId: '', price: '', comparePrice: '', stock: '', sku: '', barcode: '' }
+    return { name: '', description: '', categoryId: '', provinceId: '', price: '', comparePrice: '', stock: '', lowStockThreshold: '', sku: '', barcode: '' }
   })
 
   const [variantRows, setVariantRows] = useState<VariantRow[]>(() => {
@@ -715,6 +717,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     setDescriptionError(null)
     setPriceError(null)
     setStockError(null)
+    setLowStockThresholdError(null)
 
     if (!form.name || !form.price || !form.categoryId) {
       setError(t('fillRequiredFields'))
@@ -780,6 +783,17 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
       return
     }
 
+    // Vacío = sin alerta configurada (null) — no requerido, a diferencia
+    // de stock. Si el vendor sí escribe algo, debe ser un entero >= 0.
+    let lowStockThresholdNum: number | null = null
+    if (form.lowStockThreshold.trim() !== '') {
+      lowStockThresholdNum = parseInt(form.lowStockThreshold)
+      if (isNaN(lowStockThresholdNum) || lowStockThresholdNum < 0 || lowStockThresholdNum > 9999) {
+        setLowStockThresholdError(t('lowStockThresholdError'))
+        return
+      }
+    }
+
     setSaving(true)
 
     try {
@@ -796,6 +810,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
         price_rdp: priceCents,
         compare_rdp: form.comparePrice ? Math.round(parseFloat(form.comparePrice) * 100) : null,
         stock: stockNum,
+        low_stock_threshold: lowStockThresholdNum,
         images: finalImages,
         video_url: finalVideoUrl,
         sku: form.sku.trim() || null,
@@ -1259,6 +1274,20 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                 className={`w-full border rounded-lg px-4 py-2.5 text-sm outline-none ${stockError ? 'border-red-400' : 'border-gray-200'}`}
               />
               {stockError && <p className="text-xs text-red-600 mt-1">{stockError}</p>}
+            </div>
+
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">{t('lowStockThresholdLabel')}</label>
+              <input
+                name="lowStockThreshold"
+                type="number"
+                min="0"
+                value={form.lowStockThreshold}
+                onChange={handleChange}
+                placeholder={t('lowStockThresholdPlaceholder')}
+                className={`w-full border rounded-lg px-4 py-2.5 text-sm outline-none ${lowStockThresholdError ? 'border-red-400' : 'border-gray-200'}`}
+              />
+              {lowStockThresholdError && <p className="text-xs text-red-600 mt-1">{lowStockThresholdError}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
