@@ -10,6 +10,7 @@
 // ============================================================
 
 import { ProductGallery } from '@/components/product/ProductGallery'
+import { AgeConfirmationModal } from '@/components/shop/AgeConfirmationModal'
 import { ProductActions } from '@/components/product/ProductActions'
 import { FreeShippingBadge } from '@/components/product/FreeShippingBadge'
 import { ContactVendorButton } from '@/components/product/ContactVendorButton'
@@ -72,7 +73,7 @@ function formatTierPrice(priceRdp: number): string {
 
 interface Props {
   product: Product & {
-    category: { slug: string; emoji: string; name: string } | null
+    category: { slug: string; emoji: string; name: string; requires_age_confirmation: boolean } | null
     province: { name: string } | null
   }
   vendor: VendorInfo | undefined
@@ -96,6 +97,8 @@ export function ProductPageContent({
 
   return (
     <>
+      <AgeConfirmationModal requiresConfirmation={product.category?.requires_age_confirmation ?? false} />
+
       {/* Contenido principal */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
 

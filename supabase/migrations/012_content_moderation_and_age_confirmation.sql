@@ -1,0 +1,25 @@
+-- ═══════════════════════════════════════════════════════════
+-- MercadoRD — Moderación de contenido + aviso de mayoría de edad
+-- Base de datos: PostgreSQL 15 (Supabase)
+-- ═══════════════════════════════════════════════════════════
+-- NOTA: este cambio ya se aplicó directamente en Supabase por el
+-- usuario -- no se ejecutó desde este archivo. Se agrega aquí solo
+-- para que quede rastro en el repo (mismo motivo que 003/004/005/
+-- 006/010/011).
+--
+-- content_flag_terms (term, category) -- lista libre, editable solo
+-- por admin desde /admin/moderacion.
+--
+-- flagged_content (content_type, content_id, matched_terms, reviewed,
+-- reviewed_by, reviewed_at) -- se llena sola vía trigger al publicar
+-- un producto o enviar un mensaje de chat que contenga algún término
+-- de content_flag_terms. content_type es 'product' o 'chat_message'
+-- (exacto, minúsculas). Nunca bloquea nada -- el producto/mensaje se
+-- publica/envía normal, solo queda marcado para revisión.
+--
+-- categories.requires_age_confirmation (boolean, default false) --
+-- si es true, la categoría/sus productos muestran el aviso de
+-- confirmación de mayoría de edad (AgeConfirmationModal), confirmado
+-- por sesión (sessionStorage, no localStorage -- se repregunta en
+-- cada sesión nueva del navegador).
+-- ═══════════════════════════════════════════════════════════

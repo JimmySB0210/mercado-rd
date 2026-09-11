@@ -57,4 +57,9 @@ export const common = {
   privacyPolicy: 'Privacy policy',
   copyright: '© 2026 MercadoRD. All rights reserved.',
   securePayments: 'Secure payments with Visa, Mastercard and Azul',
+
+  ageConfirmationTitle: 'Age-restricted content',
+  ageConfirmationBody: 'This content is for adults 18 and over. Do you confirm you are 18 or older?',
+  ageConfirmationContinue: 'Continue',
+  ageConfirmationBack: 'Go back',
 } satisfies CommonDict

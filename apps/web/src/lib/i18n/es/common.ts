@@ -57,6 +57,12 @@ export const common = {
   privacyPolicy: 'Política de privacidad',
   copyright: '© 2026 MercadoRD. Todos los derechos reservados.',
   securePayments: 'Pagos seguros con Visa, Mastercard y Azul',
+
+  // AgeConfirmationModal — categorías/productos con requires_age_confirmation
+  ageConfirmationTitle: 'Contenido para mayores de edad',
+  ageConfirmationBody: 'Este contenido es para mayores de 18 años. ¿Confirmas que tienes 18 años o más?',
+  ageConfirmationContinue: 'Continuar',
+  ageConfirmationBack: 'Volver',
 }
 
 export type CommonDict = typeof common

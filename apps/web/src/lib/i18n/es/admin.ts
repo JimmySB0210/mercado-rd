@@ -223,10 +223,36 @@ export const admin = {
   systemActorFallback: 'Sistema',
   unknownActorFallback: 'Usuario desconocido',
 
+  // app/admin/moderacion/page.tsx
+  moderationPageTitle: 'Moderación de contenido',
+  moderationPageSubtitle: 'Términos marcados y contenido pendiente de revisión',
+
+  // components/admin/ContentFlagTermsManager.tsx
+  flagTermsTitle: 'Términos marcados ({count})',
+  flagTermPlaceholder: 'Término a marcar',
+  flagCategoryPlaceholder: 'Categoría (opcional)',
+  addTermButton: '+ Agregar término',
+  noFlagTermsYet: 'Todavía no hay términos configurados.',
+  deleteTermConfirm: '¿Quitar el término "{term}"? Esta acción no se puede deshacer.',
+  addTermFailed: 'No se pudo agregar el término. Intenta de nuevo.',
+  termRequiredError: 'Escribe un término',
+
+  // components/admin/FlaggedContentQueue.tsx
+  flaggedQueueTitle: 'Contenido sin revisar ({count})',
+  noFlaggedContent: 'No hay contenido pendiente de revisión. 🎉',
+  flaggedTypeProduct: 'Producto',
+  flaggedTypeMessage: 'Mensaje de chat',
+  matchedTermsLabel: 'Términos: {terms}',
+  viewContentLink: 'Ver contenido →',
+  markReviewedButton: 'Marcar como revisado',
+  markReviewedFailed: 'No se pudo marcar como revisado. Intenta de nuevo.',
+  deletedContentFallback: '(contenido no encontrado — puede haber sido eliminado)',
+
   // components/admin/AdminSidebar.tsx
   navOverview: 'Resumen',
   navProviders: 'Proveedores',
   navPromotions: 'Promociones',
+  navModeration: 'Moderación',
   navAudit: 'Auditoría',
   adminPanelLabel: '🛡️ Panel de administración',
   backToVendorPanelLink: '← Mi panel de vendedor',

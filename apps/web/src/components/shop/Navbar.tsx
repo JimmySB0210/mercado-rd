@@ -68,7 +68,7 @@ export function Navbar() {
     const supabase = createClient()
     supabase
       .from('categories')
-      .select('id, name, slug, emoji, sort_order, parent_id')
+      .select('id, name, slug, emoji, sort_order, parent_id, requires_age_confirmation')
       .order('sort_order')
       .then(({ data }) => setCategories(data ?? []))
     supabase

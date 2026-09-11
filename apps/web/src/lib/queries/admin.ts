@@ -4,7 +4,7 @@
 // ============================================================
 
 import { createServerClient } from '@/lib/supabase/server'
-import type { Vendor, BusinessType, VendorService, CustomerType } from '@/types/database.types'
+import type { Vendor, BusinessType, VendorService, CustomerType, ContentFlagTerm, FlaggedContent } from '@/types/database.types'
 
 export async function isCurrentUserAdmin(): Promise<boolean> {
   const supabase = await createServerClient()
@@ -500,4 +500,68 @@ export async function getAbandonedCarts(): Promise<AbandonedCartsSummary> {
   }))
 
   return { totalUnrecovered, totalPotentialValueRdp, recent }
+}
+
+// ─── Moderación de contenido ────────────────────────────────────────────────
+export async function getContentFlagTerms(): Promise<ContentFlagTerm[]> {
+  const supabase = await createServerClient()
+
+  const { data, error } = await supabase
+    .from('content_flag_terms')
+    .select('*')
+    .order('term')
+
+  if (error || !data) {
+    console.error('[getContentFlagTerms]', error)
+    return []
+  }
+  return data
+}
+
+export interface FlaggedContentRow extends FlaggedContent {
+  // Resueltos por separado (no embebidos), mismo patrón seguro del resto
+  // del panel admin — nombre del producto, o texto del mensaje de chat.
+  preview_text: string | null
+  // /producto/{content_id} para productos; /mensajes/{conversation_id}
+  // para mensajes (content_id ahí es el id del mensaje, no el de la
+  // conversación, así que hace falta resolverlo con un join aparte).
+  link: string | null
+}
+
+export async function getUnreviewedFlaggedContent(): Promise<FlaggedContentRow[]> {
+  const supabase = await createServerClient()
+
+  const { data: flags, error } = await supabase
+    .from('flagged_content')
+    .select('id, content_type, content_id, matched_terms, reviewed, reviewed_by, reviewed_at, created_at')
+    .eq('reviewed', false)
+    .order('created_at', { ascending: false })
+
+  if (error || !flags) {
+    console.error('[getUnreviewedFlaggedContent]', error)
+    return []
+  }
+
+  const productIds = flags.filter(f => f.content_type === 'product').map(f => f.content_id)
+  const messageIds = flags.filter(f => f.content_type === 'chat_message').map(f => f.content_id)
+
+  const [{ data: products }, { data: messages }] = await Promise.all([
+    productIds.length > 0
+      ? supabase.from('products').select('id, name').in('id', productIds)
+      : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+    messageIds.length > 0
+      ? supabase.from('chat_messages').select('id, message, conversation_id').in('id', messageIds)
+      : Promise.resolve({ data: [] as { id: string; message: string; conversation_id: string }[] }),
+  ])
+
+  const productMap = new Map((products ?? []).map(p => [p.id, p.name]))
+  const messageMap = new Map((messages ?? []).map(m => [m.id, m]))
+
+  return flags.map((f): FlaggedContentRow => {
+    if (f.content_type === 'product') {
+      return { ...f, preview_text: productMap.get(f.content_id) ?? null, link: `/producto/${f.content_id}` }
+    }
+    const msg = messageMap.get(f.content_id)
+    return { ...f, preview_text: msg?.message ?? null, link: msg ? `/mensajes/${msg.conversation_id}` : null }
+  })
 }

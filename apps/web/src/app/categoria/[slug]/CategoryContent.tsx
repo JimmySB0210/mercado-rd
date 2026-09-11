@@ -10,21 +10,25 @@
 
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { ProductCard } from '@/components/product/ProductCard'
+import { AgeConfirmationModal } from '@/components/shop/AgeConfirmationModal'
 import type { ProductWithVendor } from '@/types/database.types'
 
 interface Props {
   title: string | null
   emoji: string
   categoryId: number | null
+  requiresAgeConfirmation: boolean
   products: ProductWithVendor[]
 }
 
-export function CategoryContent({ title, emoji, categoryId, products }: Props) {
+export function CategoryContent({ title, emoji, categoryId, requiresAgeConfirmation, products }: Props) {
   const { t } = useTranslation('categories')
   const resolvedTitle = title ?? t('defaultCategoryTitle')
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+      <AgeConfirmationModal requiresConfirmation={requiresAgeConfirmation} />
 
       <nav className="text-sm text-gray-400 mb-4">
         <a href="/" className="hover:text-gray-600 transition-colors no-underline">{t('breadcrumbHome')}</a>

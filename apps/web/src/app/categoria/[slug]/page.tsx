@@ -40,7 +40,7 @@ export default async function CategoryPage(
   // Buscar la categoría por slug (case-insensitive, tolera acentos simples)
   const { data: categories } = await supabase
     .from('categories')
-    .select('id, name, slug, emoji, parent_id')
+    .select('id, name, slug, emoji, parent_id, requires_age_confirmation')
 
   const category = categories?.find(
     c => c.slug?.toLowerCase() === slug.toLowerCase() ||
@@ -84,7 +84,13 @@ export default async function CategoryPage(
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <CategoryContent title={title} emoji={emoji} categoryId={category?.id ?? null} products={(products ?? []) as any} />
+      <CategoryContent
+        title={title}
+        emoji={emoji}
+        categoryId={category?.id ?? null}
+        requiresAgeConfirmation={category?.requires_age_confirmation ?? false}
+        products={(products ?? []) as any}
+      />
     </div>
   )
 }

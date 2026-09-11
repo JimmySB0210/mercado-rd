@@ -49,6 +49,32 @@ export interface Category {
   emoji: string
   sort_order: number
   parent_id: number | null
+  // Si es true, la categoría/sus productos muestran el aviso de
+  // confirmación de mayoría de edad (ver AgeConfirmationModal).
+  requires_age_confirmation: boolean
+}
+
+// ─── Moderación de contenido ────────────────────────────────────────────────
+// content_flag_terms es editable solo por admin; flagged_content se llena
+// solo (automáticamente) vía trigger al publicar un producto o enviar un
+// mensaje de chat que contenga algún término de la lista — nunca bloquea
+// nada, solo queda marcado para revisión en /admin/moderacion.
+export interface ContentFlagTerm {
+  id: string
+  term: string
+  category: string | null
+  created_at: string
+}
+
+export interface FlaggedContent {
+  id: string
+  content_type: 'product' | 'chat_message'
+  content_id: string
+  matched_terms: string[]
+  reviewed: boolean
+  reviewed_by: string | null
+  reviewed_at: string | null
+  created_at: string
 }
 
 export interface PromoBanner {
