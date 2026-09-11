@@ -10,10 +10,10 @@
 // externa a product_variants, así que reemplazarlas es seguro).
 // ============================================================
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { validateImageFile, getImageDimensions, uploadProductImage, MIN_PRODUCT_IMAGE_DIMENSION, LOW_RESOLUTION_WARNING, validateProductVideoFile, uploadProductVideo } from '@/lib/storage/upload'
+import { validateImageFile, getImageDimensions, uploadProductImage, MIN_PRODUCT_IMAGE_DIMENSION, LOW_RESOLUTION_WARNING, validateProductVideoFile, uploadProductVideo, deleteImage } from '@/lib/storage/upload'
 import { DANGEROUS_PATTERN } from '@/lib/validation'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { ProductAttributesSection, type AttributeValue, type AttributeValuesState } from '@/components/dashboard/ProductAttributesSection'
@@ -637,8 +637,20 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     setImagePreviews(prev => prev.filter((_, i) => i !== index))
   }
 
+  // URLs de fotos ya existentes que el vendor quitó en esta sesión de edición
+  // — el archivo real en Storage solo se borra si el guardado se confirma
+  // (ver handleSubmit); si el vendor navega fuera sin guardar, esta lista se
+  // descarta con el resto del estado del formulario y el archivo no se toca.
+  // Es un ref, no un state, porque no necesita provocar un re-render — la UI
+  // ya refleja el "quitar" al instante a través de existingImageUrls.
+  const removedExistingImagesRef = useRef<string[]>([])
+
   const removeExistingImage = (index: number) => {
-    setExistingImageUrls(prev => prev.filter((_, i) => i !== index))
+    setExistingImageUrls(prev => {
+      const removed = prev[index]
+      if (removed) removedExistingImagesRef.current.push(removed)
+      return prev.filter((_, i) => i !== index)
+    })
   }
 
   // "Reemplazar" es simplemente quitar + subir uno nuevo (mismo patrón que
@@ -813,6 +825,16 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
         if (insertError) throw insertError
         productId = newProduct.id
       }
+
+      // Recién ahora que el guardado fue exitoso se borran de Storage las
+      // fotos que el vendor quitó — mismo patrón de extracción de path que
+      // PromoBannerList.tsx (split por el nombre del bucket en la URL
+      // pública), best-effort y no bloquea el resto del guardado si falla.
+      for (const url of removedExistingImagesRef.current) {
+        const path = url.split('/products/')[1]
+        if (path) deleteImage('products', path)
+      }
+      removedExistingImagesRef.current = []
 
       // Atributos fijos de la categoría (product_attribute_values) — en
       // editar, reemplazar todas es seguro porque el product_id no cambia.
