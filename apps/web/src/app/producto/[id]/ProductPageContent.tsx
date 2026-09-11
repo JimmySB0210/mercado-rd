@@ -183,7 +183,7 @@ export function ProductPageContent({
                 {[1, 2, 3, 4, 5].map(star => (
                   <svg
                     key={star}
-                    className={`w-4 h-4 ${star <= Math.round(product.rating_avg) ? 'text-amber-400' : 'text-gray-200'}`}
+                    className={`w-4 h-4 ${star <= Math.round(product.rating_avg!) ? 'text-amber-400' : 'text-gray-200'}`}
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -192,7 +192,7 @@ export function ProductPageContent({
                 ))}
               </div>
               <span className="text-sm text-gray-500">
-                {product.rating_avg.toFixed(1)} ({product.rating_count} {t('reviewsSuffix')})
+                {product.rating_avg!.toFixed(1)} ({product.rating_count} {t('reviewsSuffix')})
               </span>
               <span className="text-gray-300">·</span>
               <span className="text-sm text-gray-400">{product.sold_count} {t('soldSuffix')}</span>

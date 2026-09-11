@@ -23,9 +23,13 @@ const PAGE_SIZE = 24
 export interface SearchState {
   query: string | null
   categoryId: number | null
+  vendorId: string | null
+  provinceId: number | null
+  verifiedOnly: boolean
   minPrice: number | null // RD$, se convierte a centavos antes de llamar el RPC
   maxPrice: number | null
   minRating: number | null
+  minReviews: number | null
   sort: string
 }
 
@@ -46,17 +50,24 @@ export function SearchResultsGrid({ initialProducts, initialHasMore, searchState
     setLoadingMore(true)
 
     const supabase = createPublicClient()
-    const { data: rawProducts, error } = await supabase.rpc('search_products', {
+    // p_verified_only solo se manda cuando es true -- ver nota en
+    // buscar/page.tsx sobre por qué un null explícito rompe el RPC.
+    const rpcParams: Record<string, unknown> = {
       p_query: searchState.query,
       p_category_id: searchState.categoryId,
-      p_vendor_id: null,
+      p_vendor_id: searchState.vendorId,
       p_min_price: searchState.minPrice !== null ? searchState.minPrice * 100 : null,
       p_max_price: searchState.maxPrice !== null ? searchState.maxPrice * 100 : null,
       p_min_rating: searchState.minRating,
       p_sort_by: searchState.sort,
       p_limit: PAGE_SIZE,
       p_offset: offset,
-    })
+      p_province_id: searchState.provinceId,
+      p_min_reviews: searchState.minReviews,
+    }
+    if (searchState.verifiedOnly) rpcParams.p_verified_only = true
+
+    const { data: rawProducts, error } = await supabase.rpc('search_products', rpcParams)
 
     if (error || !rawProducts) {
       console.error('[SearchResultsGrid]', error)

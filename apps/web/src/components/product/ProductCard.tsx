@@ -98,9 +98,13 @@ export function ProductCard({ product }: Props) {
             {product.name}
           </p>
 
-          {/* Rating — siempre visible */}
+          {/* Rating — siempre visible, aunque no haya reseñas todavía
+              (rating_avg es null cuando rating_count es 0 — se
+              recalculan juntos vía trigger, nunca uno sin el otro) */}
           <p className="text-xs mb-2" style={{ color: 'var(--color-text-secondary)' }}>
-            ⭐ {product.rating_avg.toFixed(1)} ({product.rating_count})
+            {product.rating_count > 0
+              ? <>⭐ {product.rating_avg!.toFixed(1)} ({product.rating_count})</>
+              : t('cardNoRatingsYet')}
           </p>
 
           {/* Precio */}

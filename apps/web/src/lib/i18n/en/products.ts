@@ -12,6 +12,7 @@ export const products = {
   verifiedBadge: 'Verified',
   cardFreeShipping: 'Free shipping',
   cardShippingFrom: 'Shipping from RD${amount}',
+  cardNoRatingsYet: 'No reviews yet',
 
   sizeLabel: 'Size',
   colorLabel: 'Color',
@@ -58,9 +59,12 @@ export const products = {
   vendorHeading: 'Seller',
 
   filterAllCategories: 'All categories',
+  filterAllProvinces: 'All of RD',
   filterMinPricePlaceholder: 'Min',
   filterMaxPricePlaceholder: 'Max',
   filterAnyRating: 'Any rating',
+  filterAnyReviews: 'Any number of reviews',
+  filterVerifiedOnlyLabel: 'Verified only ✓',
   sortRelevance: 'Relevance',
   sortPriceAsc: 'Price: low to high',
   sortPriceDesc: 'Price: high to low',

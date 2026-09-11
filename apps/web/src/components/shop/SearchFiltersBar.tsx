@@ -32,8 +32,14 @@ interface CategoryOption {
   emoji: string
 }
 
+interface ProvinceOption {
+  id: number
+  name: string
+}
+
 interface Props {
   categories: CategoryOption[]
+  provinces: ProvinceOption[]
 }
 
 const SORT_OPTIONS = [
@@ -50,14 +56,17 @@ const selectStyle: React.CSSProperties = {
   border: '1px solid #ddd', borderRadius: 8, padding: '8px 12px', fontSize: 13, background: '#fff',
 }
 
-export function SearchFiltersBar({ categories }: Props) {
+export function SearchFiltersBar({ categories, provinces }: Props) {
   const { t } = useTranslation('products')
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
   const category = searchParams.get('category') ?? ''
+  const province = searchParams.get('province') ?? ''
   const minRating = searchParams.get('minRating') ?? ''
+  const minReviews = searchParams.get('minReviews') ?? ''
+  const verifiedOnly = searchParams.get('verifiedOnly') === '1'
   const sort = searchParams.get('sort') ?? 'relevance'
 
   const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') ?? '')
@@ -86,6 +95,17 @@ export function SearchFiltersBar({ categories }: Props) {
         <option value="">{t('filterAllCategories')}</option>
         {categories.map(c => (
           <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>
+        ))}
+      </select>
+
+      <select
+        value={province}
+        onChange={e => updateParams({ province: e.target.value })}
+        style={selectStyle}
+      >
+        <option value="">{t('filterAllProvinces')}</option>
+        {provinces.map(p => (
+          <option key={p.id} value={p.id}>{p.name}</option>
         ))}
       </select>
 
@@ -126,6 +146,26 @@ export function SearchFiltersBar({ categories }: Props) {
         <option value="2">⭐ 2+</option>
         <option value="1">⭐ 1+</option>
       </select>
+
+      <select
+        value={minReviews}
+        onChange={e => updateParams({ minReviews: e.target.value })}
+        style={selectStyle}
+      >
+        <option value="">{t('filterAnyReviews')}</option>
+        <option value="1">1+</option>
+        <option value="5">5+</option>
+        <option value="10">10+</option>
+      </select>
+
+      <label className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={verifiedOnly}
+          onChange={e => updateParams({ verifiedOnly: e.target.checked ? '1' : '' })}
+        />
+        {t('filterVerifiedOnlyLabel')}
+      </label>
 
       <select
         value={sort}

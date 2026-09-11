@@ -177,7 +177,10 @@ export interface Product {
   // is_active se calcula solo a partir de status (columna generada) —
   // nunca se envía directamente desde el frontend, solo se lee.
   is_active: boolean
-  rating_avg: number
+  // null cuando rating_count es 0 -- se recalculan juntos vía trigger en
+  // Supabase (nunca fue null antes de ese fix; el dato sembrado viejo
+  // era 0 falso, no reflejaba reseñas reales)
+  rating_avg: number | null
   rating_count: number
   sold_count: number
   view_count: number

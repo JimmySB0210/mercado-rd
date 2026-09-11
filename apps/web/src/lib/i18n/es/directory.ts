@@ -76,6 +76,7 @@ export const directory = {
   targetCustomersLabel: 'Clientes que atiende',
   productsTitle: 'Productos',
   noProductsYet: 'Esta tienda aún no tiene productos publicados.',
+  viewAllStoreProductsLink: 'Ver todos los productos de esta tienda →',
   recentReviewsTitle: 'Reseñas recientes',
   noReviewsYet: 'Esta tienda aún no tiene reseñas.',
   reviewCountSingular: 'reseña',

@@ -62,6 +62,7 @@ export const directory = {
   targetCustomersLabel: 'Clientèle desservie',
   productsTitle: 'Produits',
   noProductsYet: "Cette boutique n'a pas encore de produits publiés.",
+  viewAllStoreProductsLink: 'Voir tous les produits de cette boutique →',
   recentReviewsTitle: 'Avis récents',
   noReviewsYet: "Cette boutique n'a pas encore d'avis.",
   reviewCountSingular: 'avis',

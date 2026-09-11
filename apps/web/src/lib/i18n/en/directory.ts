@@ -62,6 +62,7 @@ export const directory = {
   targetCustomersLabel: 'Customers served',
   productsTitle: 'Products',
   noProductsYet: "This store doesn't have any published products yet.",
+  viewAllStoreProductsLink: 'View all products from this store →',
   recentReviewsTitle: 'Recent reviews',
   noReviewsYet: "This store doesn't have any reviews yet.",
   reviewCountSingular: 'review',

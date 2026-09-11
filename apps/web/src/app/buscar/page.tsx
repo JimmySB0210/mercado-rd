@@ -49,9 +49,13 @@ function parseIntParam(raw: string | undefined): number | null {
 interface SearchPageParams {
   q?: string
   category?: string
+  vendor?: string
+  province?: string
+  verifiedOnly?: string
   minPrice?: string
   maxPrice?: string
   minRating?: string
+  minReviews?: string
   sort?: string
 }
 
@@ -66,36 +70,51 @@ export default async function SearchPage(
   const hasQuery = query.length >= 2
 
   const categoryId = parseIntParam(sp.category)
+  const vendorId = sp.vendor?.trim() || null
+  const provinceId = parseIntParam(sp.province)
+  const verifiedOnly = sp.verifiedOnly === '1'
   const minPrice = parseIntParam(sp.minPrice) // RD$, se convierte a centavos solo al llamar el RPC
   const maxPrice = parseIntParam(sp.maxPrice)
   const minRating = parseIntParam(sp.minRating)
+  const minReviews = parseIntParam(sp.minReviews)
   const sort = sp.sort && VALID_SORTS.has(sp.sort) ? sp.sort : 'relevance'
 
-  const hasFilters = categoryId !== null || minPrice !== null || maxPrice !== null || minRating !== null
+  const hasFilters = categoryId !== null || minPrice !== null || maxPrice !== null || minRating !== null ||
+    vendorId !== null || provinceId !== null || verifiedOnly || minReviews !== null
   const shouldSearch = hasQuery || hasFilters
 
   const supabase = await createServerClient()
 
-  const { data: categories } = await supabase
-    .from('categories')
-    .select('id, name, slug, emoji')
-    .order('sort_order')
+  const [{ data: categories }, { data: provinces }] = await Promise.all([
+    supabase.from('categories').select('id, name, slug, emoji').order('sort_order'),
+    supabase.from('provinces_rd').select('id, name').order('name'),
+  ])
 
   let initialProducts: any[] = []
   let hasMore = false
 
   if (shouldSearch) {
-    const { data: rawProducts, error } = await supabase.rpc('search_products', {
+    // p_verified_only solo se manda cuando es true -- el RPC trata un
+    // p_verified_only: null EXPLÍCITO como "is_verified = null" (0
+    // resultados siempre) en vez de "sin filtro" como los demás
+    // parámetros opcionales. Reportado al backend; mientras tanto, se
+    // evita mandar la clave del todo cuando el checkbox no está marcado.
+    const rpcParams: Record<string, unknown> = {
       p_query: hasQuery ? query : null,
       p_category_id: categoryId,
-      p_vendor_id: null,
+      p_vendor_id: vendorId,
       p_min_price: minPrice !== null ? minPrice * 100 : null,
       p_max_price: maxPrice !== null ? maxPrice * 100 : null,
       p_min_rating: minRating,
       p_sort_by: sort,
       p_limit: PAGE_SIZE,
       p_offset: 0,
-    })
+      p_province_id: provinceId,
+      p_min_reviews: minReviews,
+    }
+    if (verifiedOnly) rpcParams.p_verified_only = true
+
+    const { data: rawProducts, error } = await supabase.rpc('search_products', rpcParams)
 
     if (error) {
       console.error('[SearchPage]', error)
@@ -146,7 +165,7 @@ export default async function SearchPage(
           <span className="text-gray-600">Búsqueda</span>
         </nav>
 
-        <SearchFiltersBar categories={categories ?? []} />
+        <SearchFiltersBar categories={categories ?? []} provinces={provinces ?? []} />
 
         {!shouldSearch ? (
           <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
@@ -192,15 +211,19 @@ export default async function SearchPage(
                 // initialProducts nuevos pero el grid se queda con el estado
                 // viejo (verificado en vivo: el <select> cambiaba la URL pero
                 // el grid no se actualizaba hasta un reload manual).
-                key={`${query}-${categoryId}-${minPrice}-${maxPrice}-${minRating}-${sort}`}
+                key={`${query}-${categoryId}-${vendorId}-${provinceId}-${verifiedOnly}-${minPrice}-${maxPrice}-${minRating}-${minReviews}-${sort}`}
                 initialProducts={initialProducts}
                 initialHasMore={hasMore}
                 searchState={{
                   query: hasQuery ? query : null,
                   categoryId,
+                  vendorId,
+                  provinceId,
+                  verifiedOnly,
                   minPrice,
                   maxPrice,
                   minRating,
+                  minReviews,
                   sort,
                 }}
               />

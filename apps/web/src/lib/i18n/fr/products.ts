@@ -12,6 +12,7 @@ export const products = {
   verifiedBadge: 'Vérifié',
   cardFreeShipping: 'Livraison gratuite',
   cardShippingFrom: 'Livraison dès RD${amount}',
+  cardNoRatingsYet: "Pas encore d'avis",
 
   sizeLabel: 'Taille',
   colorLabel: 'Couleur',
@@ -58,9 +59,12 @@ export const products = {
   vendorHeading: 'Vendeur',
 
   filterAllCategories: 'Toutes les catégories',
+  filterAllProvinces: 'Toute la RD',
   filterMinPricePlaceholder: 'Min',
   filterMaxPricePlaceholder: 'Max',
   filterAnyRating: 'Toutes les notes',
+  filterAnyReviews: "N'importe quel nombre d'avis",
+  filterVerifiedOnlyLabel: 'Vérifiés uniquement ✓',
   sortRelevance: 'Pertinence',
   sortPriceAsc: 'Prix : croissant',
   sortPriceDesc: 'Prix : décroissant',

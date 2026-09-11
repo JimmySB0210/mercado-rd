@@ -283,9 +283,20 @@ export function VendorStoreContent({
 
       {/* Productos */}
       <div className="mb-8">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">
-          {t('productsTitle')} {productsWithVendor.length > 0 && `(${productsWithVendor.length})`}
-        </h2>
+        <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+          <h2 className="text-lg font-bold text-gray-900">
+            {t('productsTitle')} {productsWithVendor.length > 0 && `(${productsWithVendor.length})`}
+          </h2>
+          {productsWithVendor.length > 0 && (
+            <a
+              href={`/buscar?vendor=${vendor.id}`}
+              className="text-sm font-medium hover:underline"
+              style={{ color: 'var(--brand-blue)' }}
+            >
+              {t('viewAllStoreProductsLink')}
+            </a>
+          )}
+        </div>
         {productsWithVendor.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
             <div className="text-4xl mb-3">📦</div>

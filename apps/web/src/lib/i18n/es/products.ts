@@ -16,6 +16,7 @@ export const products = {
   verifiedBadge: 'Verificado',
   cardFreeShipping: 'Envío gratis',
   cardShippingFrom: 'Envío desde RD${amount}',
+  cardNoRatingsYet: 'Sin reseñas todavía',
 
   // ProductActions
   sizeLabel: 'Talla',
@@ -69,9 +70,12 @@ export const products = {
 
   // SearchFiltersBar (buscar/page.tsx)
   filterAllCategories: 'Todas las categorías',
+  filterAllProvinces: 'Toda RD',
   filterMinPricePlaceholder: 'Mín',
   filterMaxPricePlaceholder: 'Máx',
   filterAnyRating: 'Cualquier calificación',
+  filterAnyReviews: 'Cualquier cantidad de reseñas',
+  filterVerifiedOnlyLabel: 'Solo verificados ✓',
   sortRelevance: 'Relevancia',
   sortPriceAsc: 'Precio: menor a mayor',
   sortPriceDesc: 'Precio: mayor a menor',
