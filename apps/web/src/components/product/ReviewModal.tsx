@@ -50,7 +50,12 @@ export function ReviewModal({ orderId, productId, vendorId, productName, onClose
 
     if (insertError) {
       console.error('[ReviewModal]', insertError)
-      setError('No se pudo enviar tu reseña. Intenta de nuevo.')
+      // validate_real_review() en Supabase ya devuelve mensajes pensados
+      // para el usuario final (ej. "Solo puedes dejar una reseña de un
+      // producto que hayas comprado y recibido realmente") — se muestran
+      // tal cual en vez de un genérico. Solo se cae al genérico si por
+      // algún motivo no viene mensaje (ej. error de red).
+      setError(insertError.message || 'No se pudo enviar tu reseña. Intenta de nuevo.')
       setSaving(false)
       return
     }
