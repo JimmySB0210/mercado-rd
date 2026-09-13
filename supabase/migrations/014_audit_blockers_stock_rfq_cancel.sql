@@ -1,0 +1,31 @@
+-- ═══════════════════════════════════════════════════════════
+-- MercadoRD — Bloqueadores críticos de la auditoría pre-lanzamiento
+-- Base de datos: PostgreSQL 15 (Supabase)
+-- ═══════════════════════════════════════════════════════════
+-- NOTA: estos 4 cambios ya se aplicaron directamente en Supabase
+-- por el usuario -- no se ejecutaron desde este archivo. Se agregan
+-- aquí solo para que quede rastro en el repo (mismo patrón que
+-- 003/004/.../013).
+--
+-- #6 — create_order_from_cart ahora bloquea con FOR UPDATE + chequeo
+-- de stock real ANTES de crear order_items, en vez de solo hacer
+-- GREATEST(0, stock - cantidad) sin validar nada. Antes de esto, un
+-- pedido por más unidades de las que existen se creaba igual, sin
+-- error -- verificado en vivo (999 unidades sobre 25 en stock, orden
+-- creada, stock clavado en 0, sold_count corrompido a 1018). Con el
+-- fix: rechaza con "Stock insuficiente: solo quedan X unidades
+-- disponibles", y una compra normal sigue funcionando exactamente
+-- igual (verificado con producto_snapshot + audit_logs intactos).
+--
+-- #13/#14 — accept_chat_quote (RFQ) ahora también valida stock real
+-- con el mismo patrón FOR UPDATE, y guarda product_snapshot con
+-- negotiated_via_chat: true para distinguir un pedido nacido de una
+-- cotización negociada por chat de uno comprado directo. request_
+-- chat_quote/respond_chat_quote ahora rechazan cantidad/precio <= 0.
+--
+-- #10 — trigger_restore_stock_on_cancellation (AFTER UPDATE OF
+-- status ON orders) devuelve stock/corrige sold_count cuando un
+-- pedido pasa a 'cancelled' -- antes esto no existía y el stock
+-- quedaba perdido para siempre. Verificado en vivo desde la propia
+-- interfaz de /dashboard/productos (Stock: 39 → 40 al cancelar).
+-- ═══════════════════════════════════════════════════════════

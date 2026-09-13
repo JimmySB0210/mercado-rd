@@ -235,6 +235,8 @@ export const dashboard = {
   filterCancelledLabel: '❌ Cancelado',
   selectDeliveredLabel: '✓ Entregado',
   selectCancelledLabel: '✗ Cancelado',
+  statusUpdateFailed: 'No se pudo actualizar el estado del pedido. Intenta de nuevo.',
+  dismissErrorButton: 'Cerrar',
   ordersEmptyAll: 'Aún no tienes pedidos.',
   ordersEmptyFiltered: 'No hay pedidos con este estado.',
   deliveryLabel: 'Entrega',

@@ -30,12 +30,14 @@ export function OrderStatusSelect({ orderId, currentStatus }: Props) {
   const { t } = useTranslation('dashboard')
   const [status, setStatus] = useState(currentStatus)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   const current = STATUS_OPTION_KEYS.find(s => s.value === status) ?? STATUS_OPTION_KEYS[0]
 
   const handleChange = async (newStatus: string) => {
     setLoading(true)
+    setError(null)
     const supabase = createClient()
 
     const { error } = await supabase
@@ -66,31 +68,58 @@ export function OrderStatusSelect({ orderId, currentStatus }: Props) {
       }
     } else {
       console.error('[OrderStatusSelect]', error)
+      // Los guardrails de la BD (ej. trigger_enforce_otp_before_delivered)
+      // devuelven mensajes pensados para el usuario final — se muestran tal
+      // cual, mismo patrón que ReviewModal.tsx, en vez de fallar en
+      // silencio dejando que el <select> "vuelva solo" sin explicación.
+      setError(error.message || t('statusUpdateFailed'))
     }
     setLoading(false)
   }
 
   return (
-    <select
-      value={status}
-      onChange={(e) => handleChange(e.target.value)}
-      disabled={loading}
-      style={{
-        background: current.bg,
-        color: current.text,
-        border: 'none',
-        borderRadius: 20,
-        padding: '4px 10px',
-        fontSize: 11,
-        fontWeight: 700,
-        cursor: loading ? 'wait' : 'pointer',
-        appearance: 'none',
-        opacity: loading ? 0.6 : 1,
-      }}
-    >
-      {STATUS_OPTION_KEYS.map(opt => (
-        <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
-      ))}
-    </select>
+    <div style={{ position: 'relative' }}>
+      <select
+        value={status}
+        onChange={(e) => handleChange(e.target.value)}
+        disabled={loading}
+        style={{
+          background: current.bg,
+          color: current.text,
+          border: 'none',
+          borderRadius: 20,
+          padding: '4px 10px',
+          fontSize: 11,
+          fontWeight: 700,
+          cursor: loading ? 'wait' : 'pointer',
+          appearance: 'none',
+          opacity: loading ? 0.6 : 1,
+        }}
+      >
+        {STATUS_OPTION_KEYS.map(opt => (
+          <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
+        ))}
+      </select>
+      {error && (
+        <div
+          role="alert"
+          style={{
+            position: 'absolute', top: '100%', right: 0, marginTop: 6, zIndex: 10,
+            background: '#FEE2E2', color: '#991B1B', fontSize: 11, fontWeight: 500,
+            padding: '8px 12px', borderRadius: 8, width: 220, textAlign: 'left',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)', lineHeight: 1.4,
+          }}
+        >
+          {error}
+          <button
+            type="button"
+            onClick={() => setError(null)}
+            style={{ display: 'block', marginTop: 4, background: 'none', border: 'none', color: '#991B1B', fontWeight: 700, fontSize: 11, cursor: 'pointer', padding: 0 }}
+          >
+            {t('dismissErrorButton')}
+          </button>
+        </div>
+      )}
+    </div>
   )
 }

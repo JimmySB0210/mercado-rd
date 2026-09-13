@@ -221,6 +221,8 @@ export const dashboard = {
   filterCancelledLabel: '❌ Annulée',
   selectDeliveredLabel: '✓ Livrée',
   selectCancelledLabel: '✗ Annulée',
+  statusUpdateFailed: "Impossible de mettre à jour l'état de la commande. Réessayez.",
+  dismissErrorButton: 'Fermer',
   ordersEmptyAll: "Vous n'avez pas encore de commandes.",
   ordersEmptyFiltered: 'Aucune commande avec ce statut.',
   deliveryLabel: 'Livraison',

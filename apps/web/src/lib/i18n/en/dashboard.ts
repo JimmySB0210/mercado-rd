@@ -221,6 +221,8 @@ export const dashboard = {
   filterCancelledLabel: '❌ Cancelled',
   selectDeliveredLabel: '✓ Delivered',
   selectCancelledLabel: '✗ Cancelled',
+  statusUpdateFailed: "The order status couldn't be updated. Try again.",
+  dismissErrorButton: 'Dismiss',
   ordersEmptyAll: "You don't have orders yet.",
   ordersEmptyFiltered: 'No orders with this status.',
   deliveryLabel: 'Delivery',
