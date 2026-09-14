@@ -38,10 +38,15 @@ const NOTIFICATION_TEMPLATES: Record<Language, NotificationsDict> = {
   fr: notificationsFr,
 }
 
+// Los montos (new_price_rdp, old_price_rdp, savings_rdp) se formatean
+// con separador de miles vía es-DO — mismo locale que usa el resto del
+// sitio para precios (RD$) sin importar el idioma activo de la UI.
 function interpolate(template: string, data: Record<string, string | number>): string {
-  return template.replace(/\{(\w+)\}/g, (match, key) =>
-    Object.prototype.hasOwnProperty.call(data, key) ? String(data[key]) : match
-  )
+  return template.replace(/\{(\w+)\}/g, (match, key) => {
+    if (!Object.prototype.hasOwnProperty.call(data, key)) return match
+    const value = data[key]
+    return typeof value === 'number' ? value.toLocaleString('es-DO') : String(value)
+  })
 }
 
 // Si hay data Y una plantilla para este type en el idioma activo,

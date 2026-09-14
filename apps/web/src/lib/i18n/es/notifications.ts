@@ -27,6 +27,14 @@ export const notifications = {
     title: '⚠️ Stock bajo',
     body: '{product_name} tiene solo {current_stock} unidades restantes (tu alerta estaba configurada en {threshold}).',
   },
+  price_drop: {
+    title: '🎉 ¡Bajó de precio!',
+    body: '{product_name} ahora cuesta RD${new_price_rdp} (antes RD${old_price_rdp}) — ahorras RD${savings_rdp}',
+  },
+  back_in_stock: {
+    title: '📦 ¡Ya está disponible!',
+    body: '{product_name}, que guardaste en favoritos, ya está disponible de nuevo — quedan {current_stock} unidades.',
+  },
 }
 
 export type NotificationsDict = typeof notifications
