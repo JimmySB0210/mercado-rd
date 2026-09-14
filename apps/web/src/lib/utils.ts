@@ -39,6 +39,23 @@ export const PLACEHOLDER_PRODUCT_IMAGE =
 </svg>
 `.trim())
 
+// Centraliza cuál columna de categories mostrar según el idioma activo
+// (name/name_en/name_fr, las 3 NOT NULL — nunca hace falta fallback).
+// Acepta cualquier objeto con esas 3 columnas, no solo el tipo Category
+// completo, porque varios call sites solo seleccionan un subset de
+// columnas de la fila real.
+interface CategoryNameFields {
+  name: string
+  name_en: string
+  name_fr: string
+}
+
+export function getCategoryName(category: CategoryNameFields, language: Language): string {
+  if (language === 'en') return category.name_en
+  if (language === 'fr') return category.name_fr
+  return category.name
+}
+
 export function getMembershipDuration(createdAt: string): string {
   const created = new Date(createdAt)
   const now = new Date()

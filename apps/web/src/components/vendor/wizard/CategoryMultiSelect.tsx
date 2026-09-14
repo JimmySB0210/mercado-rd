@@ -10,6 +10,8 @@
 
 import { useMemo } from 'react'
 import { BRAND } from '@/lib/colors'
+import { useLanguageStore } from '@/lib/store/language'
+import { getCategoryName } from '@/lib/utils'
 import type { Category } from '@/types/database.types'
 
 interface Props {
@@ -19,6 +21,7 @@ interface Props {
 }
 
 export function CategoryMultiSelect({ categories, selectedIds, onChange }: Props) {
+  const language = useLanguageStore(s => s.language)
   const topCategories = useMemo(() => categories.filter(c => !c.parent_id), [categories])
   const subcategoriesByParent = useMemo(() => {
     const map = new Map<number, Category[]>()
@@ -45,14 +48,14 @@ export function CategoryMultiSelect({ categories, selectedIds, onChange }: Props
         <div key={cat.id} style={{ marginBottom: 10 }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', color: BRAND.dark }}>
             <input type="checkbox" checked={selectedIds.includes(cat.id)} onChange={() => toggle(cat.id)} />
-            {cat.emoji} {cat.name}
+            {cat.emoji} {getCategoryName(cat, language)}
           </label>
           {(subcategoriesByParent.get(cat.id) ?? []).length > 0 && (
             <div style={{ marginLeft: 24, marginTop: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
               {subcategoriesByParent.get(cat.id)!.map(sub => (
                 <label key={sub.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: BRAND.gray, cursor: 'pointer' }}>
                   <input type="checkbox" checked={selectedIds.includes(sub.id)} onChange={() => toggle(sub.id)} />
-                  {sub.name}
+                  {getCategoryName(sub, language)}
                 </label>
               ))}
             </div>

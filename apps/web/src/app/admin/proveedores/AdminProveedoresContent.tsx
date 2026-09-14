@@ -15,6 +15,7 @@ import { VerificationBadge } from '@/components/vendor/VerificationBadge'
 import { VendorOptionLabel } from '@/components/vendor/VendorOptionLabel'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
+import { getCategoryName } from '@/lib/utils'
 
 interface Props {
   vendors: any[]
@@ -25,7 +26,7 @@ interface Props {
 }
 
 export function AdminProveedoresContent({ vendors, selectedVendor, selectedVendorId, levelFilter, businessTypeFilter }: Props) {
-  const { t } = useTranslation('admin')
+  const { t, language } = useTranslation('admin')
 
   const buildFilterQuery = (extra: Record<string, string>) => {
     const params = new URLSearchParams()
@@ -154,7 +155,7 @@ export function AdminProveedoresContent({ vendors, selectedVendor, selectedVendo
               <div>
                 <p style={sectionLabelStyle}>{t('categoriesSectionLabel')}</p>
                 {selectedVendor.categories.length > 0 ? (
-                  <ChipList items={selectedVendor.categories.map((c: any) => ({ key: String(c.id), content: `${c.emoji} ${c.name}` }))} />
+                  <ChipList items={selectedVendor.categories.map((c: any) => ({ key: String(c.id), content: `${c.emoji} ${getCategoryName(c, language)}` }))} />
                 ) : <EmptyNote text={t('emptyNote')} />}
               </div>
 

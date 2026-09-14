@@ -198,7 +198,7 @@ export async function getVendorDetailForAdmin(vendorId: string): Promise<AdminVe
     { data: businessTypesRaw }, { data: categoriesRaw }, { data: servicesRaw }, { data: targetCustomersRaw }, { count: productCount },
   ] = await Promise.all([
     supabase.from('vendor_business_types').select('business_type').eq('vendor_id', vendorId),
-    supabase.from('vendor_categories').select('category_id, category:categories(id, name, emoji, slug)').eq('vendor_id', vendorId),
+    supabase.from('vendor_categories').select('category_id, category:categories(id, name, name_en, name_fr, emoji, slug)').eq('vendor_id', vendorId),
     supabase.from('vendor_services').select('service').eq('vendor_id', vendorId),
     supabase.from('vendor_target_customers').select('customer_type').eq('vendor_id', vendorId),
     supabase.from('products').select('*', { count: 'exact', head: true }).eq('vendor_id', vendorId),

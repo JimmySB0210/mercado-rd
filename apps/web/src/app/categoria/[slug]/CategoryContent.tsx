@@ -11,19 +11,21 @@
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { ProductCard } from '@/components/product/ProductCard'
 import { AgeConfirmationModal } from '@/components/shop/AgeConfirmationModal'
+import { getCategoryName } from '@/lib/utils'
 import type { ProductWithVendor } from '@/types/database.types'
 
 interface Props {
-  title: string | null
+  categoryNames: { name: string; name_en: string; name_fr: string } | null
+  fallbackTitle: string | null
   emoji: string
   categoryId: number | null
   requiresAgeConfirmation: boolean
   products: ProductWithVendor[]
 }
 
-export function CategoryContent({ title, emoji, categoryId, requiresAgeConfirmation, products }: Props) {
-  const { t } = useTranslation('categories')
-  const resolvedTitle = title ?? t('defaultCategoryTitle')
+export function CategoryContent({ categoryNames, fallbackTitle, emoji, categoryId, requiresAgeConfirmation, products }: Props) {
+  const { t, language } = useTranslation('categories')
+  const resolvedTitle = categoryNames ? getCategoryName(categoryNames, language) : (fallbackTitle ?? t('defaultCategoryTitle'))
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

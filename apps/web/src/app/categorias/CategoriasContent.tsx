@@ -11,17 +11,20 @@
 
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { getCategoryIcon } from '@/lib/categoryIcons'
+import { getCategoryName } from '@/lib/utils'
 
 interface CategoryRow {
   id: number
   name: string
+  name_en: string
+  name_fr: string
   slug: string
   emoji: string
   storeCount: number
 }
 
 export function CategoriasContent({ categories }: { categories: CategoryRow[] }) {
-  const { t } = useTranslation('categories')
+  const { t, language } = useTranslation('categories')
   const count = categories.length
 
   return (
@@ -63,7 +66,7 @@ export function CategoriasContent({ categories }: { categories: CategoryRow[] })
                 style={{ borderRadius: 'var(--radius-card)', transition: 'box-shadow var(--transition-base), transform var(--transition-base)' }}
               >
                 <Icon size={40} color="var(--color-primary)" strokeWidth={1.5} style={{ marginBottom: 4 }} />
-                <span className="text-sm font-semibold text-gray-900">{c.name}</span>
+                <span className="text-sm font-semibold text-gray-900">{getCategoryName(c, language)}</span>
                 <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                   {c.storeCount === 1
                     ? t('storeCountOne', { count: c.storeCount })

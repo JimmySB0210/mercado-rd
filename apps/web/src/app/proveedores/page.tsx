@@ -43,7 +43,7 @@ export default function ProvidersDirectoryPage() {
     supabase.from('provinces_rd').select('id, name').order('name').then(({ data }) => setProvinces(data ?? []))
     supabase
       .from('categories')
-      .select('id, name, slug, emoji, sort_order, parent_id, requires_age_confirmation')
+      .select('id, name, name_en, name_fr, slug, emoji, sort_order, parent_id, requires_age_confirmation')
       .order('sort_order')
       .then(({ data }) => setCategories(data ?? []))
   }, [])

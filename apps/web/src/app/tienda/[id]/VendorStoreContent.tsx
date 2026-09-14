@@ -17,7 +17,7 @@
 // ============================================================
 
 import { useTranslation } from '@/lib/hooks/useTranslation'
-import { formatDate } from '@/lib/utils'
+import { formatDate, getCategoryName } from '@/lib/utils'
 import { ProductCard } from '@/components/product/ProductCard'
 import { VerificationBadge } from '@/components/vendor/VerificationBadge'
 import { VendorOptionLabel } from '@/components/vendor/VendorOptionLabel'
@@ -32,7 +32,7 @@ interface ReviewRow {
   buyer_name: string | null
 }
 
-interface CategoryRow { id: number; name: string; emoji: string; slug: string }
+interface CategoryRow { id: number; name: string; name_en: string; name_fr: string; emoji: string; slug: string }
 
 interface VendorRow {
   id: string
@@ -213,7 +213,7 @@ export function VendorStoreContent({
                       href={`/categoria/${cat.slug}`}
                       className="text-xs px-2.5 py-1 rounded-full bg-gray-50 border border-gray-100 text-gray-700 font-medium no-underline hover:bg-gray-100 transition-colors"
                     >
-                      {cat.emoji} {cat.name}
+                      {cat.emoji} {getCategoryName(cat, language)}
                     </a>
                   ))}
                 </div>

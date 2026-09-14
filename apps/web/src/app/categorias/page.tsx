@@ -18,7 +18,7 @@ export default async function CategoriasPage() {
 
   const { data: categories, error } = await supabase
     .from('categories')
-    .select('id, name, slug, emoji')
+    .select('id, name, name_en, name_fr, slug, emoji')
     .order('name')
 
   if (error) console.error('[CategoriasPage]', error)

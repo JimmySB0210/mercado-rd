@@ -47,7 +47,7 @@ export default async function VendorStorePage(
       .select('*', { count: 'exact', head: true })
       .eq('vendor_id', id),
     supabase.from('vendor_business_types').select('business_type').eq('vendor_id', id),
-    supabase.from('vendor_categories').select('category_id, category:categories(id, name, emoji, slug)').eq('vendor_id', id),
+    supabase.from('vendor_categories').select('category_id, category:categories(id, name, name_en, name_fr, emoji, slug)').eq('vendor_id', id),
     supabase.from('vendor_services').select('service').eq('vendor_id', id),
     supabase.from('vendor_target_customers').select('customer_type').eq('vendor_id', id),
   ])
@@ -85,8 +85,8 @@ export default async function VendorStorePage(
 
   const businessTypes = (businessTypesRaw ?? []).map(r => r.business_type as BusinessType)
   const vendorCategories = (vendorCategoriesRaw ?? [])
-    .map(r => r.category as unknown as { id: number; name: string; emoji: string; slug: string } | null)
-    .filter((c): c is { id: number; name: string; emoji: string; slug: string } => !!c)
+    .map(r => r.category as unknown as { id: number; name: string; name_en: string; name_fr: string; emoji: string; slug: string } | null)
+    .filter((c): c is { id: number; name: string; name_en: string; name_fr: string; emoji: string; slug: string } => !!c)
   const services = (servicesRaw ?? []).map(r => r.service as VendorService)
   const targetCustomers = (targetCustomersRaw ?? []).map(r => r.customer_type as CustomerType)
 

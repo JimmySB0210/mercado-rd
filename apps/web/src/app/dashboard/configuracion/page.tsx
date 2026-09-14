@@ -73,7 +73,7 @@ export default function VendorSettingsPage() {
 
       const [provsRes, categoriesRes, businessTypesRes, categoryIdsRes, servicesRes, targetCustomersRes] = await Promise.all([
         supabase.from('provinces_rd').select('id, name').order('name'),
-        supabase.from('categories').select('id, name, slug, emoji, sort_order, parent_id, requires_age_confirmation').order('sort_order'),
+        supabase.from('categories').select('id, name, name_en, name_fr, slug, emoji, sort_order, parent_id, requires_age_confirmation').order('sort_order'),
         supabase.from('vendor_business_types').select('business_type').eq('vendor_id', vendorData.id),
         supabase.from('vendor_categories').select('category_id').eq('vendor_id', vendorData.id),
         supabase.from('vendor_services').select('service').eq('vendor_id', vendorData.id),

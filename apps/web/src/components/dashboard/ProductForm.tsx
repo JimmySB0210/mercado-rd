@@ -16,6 +16,7 @@ import { createClient } from '@/lib/supabase/client'
 import { validateImageFile, getImageDimensions, uploadProductImage, MIN_PRODUCT_IMAGE_DIMENSION, LOW_RESOLUTION_WARNING, validateProductVideoFile, uploadProductVideo, deleteImage } from '@/lib/storage/upload'
 import { DANGEROUS_PATTERN } from '@/lib/validation'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { getCategoryName } from '@/lib/utils'
 import { ProductAttributesSection, type AttributeValue, type AttributeValuesState } from '@/components/dashboard/ProductAttributesSection'
 import { PricingTiersSection } from '@/components/vendor/PricingTiersSection'
 import { ProductPreviewModal } from '@/components/dashboard/ProductPreviewModal'
@@ -26,6 +27,8 @@ import type { Product, ProductVariant, CategoryAttribute, AttributeOption } from
 interface Category {
   id: number
   name: string
+  name_en: string
+  name_fr: string
   emoji: string
   slug: string
 }
@@ -69,7 +72,7 @@ const PRESET_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 const OTHER_SIZE = '__otra__'
 
 export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
-  const { t } = useTranslation('dashboard')
+  const { t, language } = useTranslation('dashboard')
   const router = useRouter()
   const supabase = createClient()
 
@@ -571,7 +574,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
   // Cargar categorías y provincias al montar
   useEffect(() => {
     Promise.all([
-      supabase.from('categories').select('id, name, emoji, slug').order('sort_order'),
+      supabase.from('categories').select('id, name, name_en, name_fr, emoji, slug').order('sort_order'),
       supabase.from('provinces_rd').select('id, name').order('name'),
     ]).then(([{ data: cats }, { data: provs }]) => {
       setCategories(cats ?? [])
@@ -1192,7 +1195,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
             >
               <option value="">{t('selectCategoryPlaceholder')}</option>
               {categories.map(c => (
-                <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>
+                <option key={c.id} value={c.id}>{c.emoji} {getCategoryName(c, language)}</option>
               ))}
             </select>
 

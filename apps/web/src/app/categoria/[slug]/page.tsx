@@ -40,7 +40,7 @@ export default async function CategoryPage(
   // Buscar la categoría por slug (case-insensitive, tolera acentos simples)
   const { data: categories } = await supabase
     .from('categories')
-    .select('id, name, slug, emoji, parent_id, requires_age_confirmation')
+    .select('id, name, name_en, name_fr, slug, emoji, parent_id, requires_age_confirmation')
 
   const category = categories?.find(
     c => c.slug?.toLowerCase() === slug.toLowerCase() ||
@@ -77,15 +77,24 @@ export default async function CategoryPage(
     console.error('[CategoryPage]', error)
   }
 
-  // null = usa el fallback traducido ("Todos los productos") en CategoryContent
-  const title = category?.name ?? CATEGORY_LABELS[slug.toLowerCase()] ?? null
+  // categoryNames viaja completo (los 3 idiomas) para que CategoryContent
+  // (Client Component) resuelva cuál mostrar según el idioma activo —
+  // este Server Component no tiene acceso al store de idioma (vive solo
+  // en el cliente). Si no hay fila real en categories, fallbackTitle usa
+  // CATEGORY_LABELS tal cual (ninguna de esas claves tiene traducción en
+  // Supabase, es un mapa aparte para slugs que no son categorías reales).
+  const categoryNames = category
+    ? { name: category.name, name_en: category.name_en, name_fr: category.name_fr }
+    : null
+  const fallbackTitle = category ? null : (CATEGORY_LABELS[slug.toLowerCase()] ?? null)
   const emoji = category?.emoji ?? '🛍️'
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <CategoryContent
-        title={title}
+        categoryNames={categoryNames}
+        fallbackTitle={fallbackTitle}
         emoji={emoji}
         categoryId={category?.id ?? null}
         requiresAgeConfirmation={category?.requires_age_confirmation ?? false}

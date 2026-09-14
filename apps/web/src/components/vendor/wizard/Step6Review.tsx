@@ -6,6 +6,7 @@
 
 import { BRAND } from '@/lib/colors'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { getCategoryName } from '@/lib/utils'
 import type { Category } from '@/types/database.types'
 import type { VendorWizardFormData } from './vendorWizardTypes'
 import { SaveErrorBox } from './sharedUI'
@@ -53,7 +54,7 @@ const sectionStyle: React.CSSProperties = {
 }
 
 export function Step6Review({ data, provinces, categories, onEditStep, onSubmit, saving, error }: Props) {
-  const { t } = useTranslation('vendorOptions')
+  const { t, language } = useTranslation('vendorOptions')
   const provinceName = provinces.find(p => String(p.id) === data.provinceId)?.name ?? '—'
 
   const businessTypeLabels = data.businessTypes
@@ -61,7 +62,10 @@ export function Step6Review({ data, provinces, categories, onEditStep, onSubmit,
     .join(', ') || '—'
 
   const categoryNames = data.categoryIds
-    .map(id => categories.find(c => c.id === id)?.name)
+    .map(id => {
+      const cat = categories.find(c => c.id === id)
+      return cat ? getCategoryName(cat, language) : null
+    })
     .filter(Boolean)
     .join(', ') || '—'
 

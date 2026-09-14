@@ -15,24 +15,27 @@ import { LayoutGrid } from 'lucide-react'
 import { createPublicClient } from '@/lib/supabase/public'
 import { getCategoryIcon } from '@/lib/categoryIcons'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { getCategoryName } from '@/lib/utils'
 
 interface CategoryRow {
   id: number
   name: string
+  name_en: string
+  name_fr: string
   slug: string
 }
 
 const DISPLAY_COUNT = 10
 
 export function HomeCategoryStrip() {
-  const { t } = useTranslation('products')
+  const { t, language } = useTranslation('products')
   const [categories, setCategories] = useState<CategoryRow[]>([])
 
   useEffect(() => {
     const supabase = createPublicClient()
     supabase
       .from('categories')
-      .select('id, name, slug')
+      .select('id, name, name_en, name_fr, slug')
       .is('parent_id', null)
       .order('sort_order')
       .limit(DISPLAY_COUNT)
@@ -79,7 +82,7 @@ export function HomeCategoryStrip() {
               <Icon size={20} className="md-860:hidden" color="var(--color-primary)" strokeWidth={1.5} />
               <Icon size={32} className="hidden md-860:block" color="var(--color-primary)" strokeWidth={1.5} />
               <span className="text-[10px] md-860:text-sm font-semibold text-gray-900 line-clamp-2 leading-snug">
-                {cat.name}
+                {getCategoryName(cat, language)}
               </span>
             </a>
           )

@@ -12,6 +12,7 @@
 
 import { ChevronDown, ShoppingCart, User, LogOut, LayoutDashboard, ShieldCheck, Heart, MessageCircle, Lock, HelpCircle, History, Gift, X } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
+import { getCategoryName } from '@/lib/utils'
 import { useCartStore, useCartItemCount } from '@/lib/store/cart'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -27,7 +28,7 @@ import { useTranslation } from '@/lib/hooks/useTranslation'
 import { getCategoryIcon } from '@/lib/categoryIcons'
 
 export function Navbar() {
-  const { t } = useTranslation('common')
+  const { t, language } = useTranslation('common')
   const itemCount       = useCartItemCount()
   const { user, profile, signOut } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -68,7 +69,7 @@ export function Navbar() {
     const supabase = createClient()
     supabase
       .from('categories')
-      .select('id, name, slug, emoji, sort_order, parent_id, requires_age_confirmation')
+      .select('id, name, name_en, name_fr, slug, emoji, sort_order, parent_id, requires_age_confirmation')
       .order('sort_order')
       .then(({ data }) => setCategories(data ?? []))
     supabase
@@ -448,7 +449,7 @@ export function Navbar() {
                         }}
                       >
                         <Icon size={17} color="var(--color-primary)" strokeWidth={1.75} />
-                        {cat.name}
+                        {getCategoryName(cat, language)}
                       </a>
                     )
                   })}
@@ -470,7 +471,7 @@ export function Navbar() {
                         onClick={() => setShowCategoryMenu(false)}
                         style={{ display: 'flex', alignItems: 'center', padding: '9px 10px', color: '#555', textDecoration: 'none', fontSize: 13, borderRadius: 6, whiteSpace: 'nowrap' }}
                       >
-                        {sub.name}
+                        {getCategoryName(sub, language)}
                       </a>
                     ))}
                   </div>
@@ -564,7 +565,7 @@ export function Navbar() {
                     style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 10px', color: '#333', textDecoration: 'none', fontSize: 14, borderRadius: 6, whiteSpace: 'nowrap' }}
                   >
                     <Icon size={18} color="var(--color-primary)" strokeWidth={1.75} />
-                    {cat.name}
+                    {getCategoryName(cat, language)}
                   </a>
                 )
               })}

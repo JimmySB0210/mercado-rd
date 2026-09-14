@@ -86,7 +86,7 @@ export default async function SearchPage(
   const supabase = await createServerClient()
 
   const [{ data: categories }, { data: provinces }] = await Promise.all([
-    supabase.from('categories').select('id, name, slug, emoji').order('sort_order'),
+    supabase.from('categories').select('id, name, name_en, name_fr, slug, emoji').order('sort_order'),
     supabase.from('provinces_rd').select('id, name').order('name'),
   ])
 

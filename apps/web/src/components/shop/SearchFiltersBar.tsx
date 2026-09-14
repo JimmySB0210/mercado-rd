@@ -24,10 +24,13 @@
 import { useState } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { getCategoryName } from '@/lib/utils'
 
 interface CategoryOption {
   id: number
   name: string
+  name_en: string
+  name_fr: string
   slug: string
   emoji: string
 }
@@ -57,7 +60,7 @@ const selectStyle: React.CSSProperties = {
 }
 
 export function SearchFiltersBar({ categories, provinces }: Props) {
-  const { t } = useTranslation('products')
+  const { t, language } = useTranslation('products')
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -94,7 +97,7 @@ export function SearchFiltersBar({ categories, provinces }: Props) {
       >
         <option value="">{t('filterAllCategories')}</option>
         {categories.map(c => (
-          <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>
+          <option key={c.id} value={c.id}>{c.emoji} {getCategoryName(c, language)}</option>
         ))}
       </select>
 

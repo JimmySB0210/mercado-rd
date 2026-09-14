@@ -45,6 +45,11 @@ export interface Province {
 export interface Category {
   id: number
   name: string
+  // Traducciones reales (no generadas en vivo), ambas NOT NULL — usar
+  // getCategoryName() de lib/utils.ts en vez de leer `name` directo en
+  // cualquier lugar donde el idioma activo pueda no ser español.
+  name_en: string
+  name_fr: string
   slug: string
   emoji: string
   sort_order: number
