@@ -18,6 +18,9 @@ import { BRAND } from '@/lib/colors'
 import { notifications as notificationsEs, type NotificationsDict } from '@/lib/i18n/es/notifications'
 import { notifications as notificationsEn } from '@/lib/i18n/en/notifications'
 import { notifications as notificationsFr } from '@/lib/i18n/fr/notifications'
+import { vendorOptions as vendorOptionsEs } from '@/lib/i18n/es/vendorOptions'
+import { vendorOptions as vendorOptionsEn } from '@/lib/i18n/en/vendorOptions'
+import { vendorOptions as vendorOptionsFr } from '@/lib/i18n/fr/vendorOptions'
 
 interface NotificationRow {
   id: string
@@ -36,6 +39,14 @@ const NOTIFICATION_TEMPLATES: Record<Language, NotificationsDict> = {
   es: notificationsEs,
   en: notificationsEn,
   fr: notificationsFr,
+}
+
+// verification_update reusa esta misma etiqueta (la que ya muestra
+// ProductForm/wizard/etc.) en vez de traducir el nivel de nuevo acá.
+const VERIFICATION_LEVEL_LABELS: Record<Language, Record<string, string>> = {
+  es: vendorOptionsEs.verificationLevel,
+  en: vendorOptionsEn.verificationLevel,
+  fr: vendorOptionsFr.verificationLevel,
 }
 
 // Los montos (new_price_rdp, old_price_rdp, savings_rdp) se formatean
@@ -60,16 +71,53 @@ function renderNotification(n: NotificationRow, language: Language): { title: st
   if (!template) return { title: n.title, body: n.body }
 
   const data = n.data as Record<string, string | number | boolean>
-  const templateWithVariant = template as { title: string; body: string; titleFromVendor?: string }
+  const t = template as {
+    title: string; body: string
+    titleFromVendor?: string
+    titleAdmin?: string; bodyAdmin?: string
+    titleGift?: string; giftPrefix?: string; recipientSuffix?: string
+  }
 
-  // new_message tiene 2 títulos posibles según quién escribe — la
-  // frase entera cambia de estructura, no es un simple placeholder.
-  const titleTemplate = (data.is_from_vendor && templateWithVariant.titleFromVendor)
-    || templateWithVariant.title
+  // new_message: título distinto según quién escribe — la frase entera
+  // cambia de estructura, no es un simple placeholder.
+  if (n.type === 'new_message') {
+    const titleTemplate = (data.is_from_vendor && t.titleFromVendor) || t.title
+    return { title: interpolate(titleTemplate, data), body: interpolate(t.body, data) }
+  }
+
+  // dispute_opened: misma notificación, título Y cuerpo distintos si
+  // el destinatario es el admin en vez del vendor.
+  if (n.type === 'dispute_opened') {
+    const isAdmin = data.recipient_role === 'admin'
+    const titleTemplate = (isAdmin && t.titleAdmin) || t.title
+    const bodyTemplate = (isAdmin && t.bodyAdmin) || t.body
+    return { title: interpolate(titleTemplate, data), body: interpolate(bodyTemplate, data) }
+  }
+
+  // delivery_otp: 3 escenarios bajo un solo type. El cuerpo se arma en
+  // 3 partes — prefijo de regalo + base + sufijo de destinatario —
+  // según cuál de los dos (o ninguno) aplique.
+  if (n.type === 'delivery_otp') {
+    const isGift = data.scenario === 'gift'
+    const isRecipient = data.scenario === 'recipient'
+    const titleTemplate = (isGift && t.titleGift) || t.title
+    const prefix = isGift && t.giftPrefix ? t.giftPrefix : ''
+    const suffix = isRecipient && t.recipientSuffix ? interpolate(t.recipientSuffix, data) : ''
+    return { title: interpolate(titleTemplate, data), body: prefix + interpolate(t.body, data) + suffix }
+  }
+
+  // verification_update: verification_level llega crudo — se resuelve
+  // contra el mismo diccionario que usa el resto del sitio en vez de
+  // traducir el nombre del nivel de nuevo acá.
+  if (n.type === 'verification_update') {
+    const level = String(data.verification_level)
+    const levelLabel = VERIFICATION_LEVEL_LABELS[language][level] ?? VERIFICATION_LEVEL_LABELS[language]['1']
+    return { title: interpolate(t.title, data), body: interpolate(t.body, { ...data, level_label: levelLabel }) }
+  }
 
   return {
-    title: interpolate(titleTemplate, data),
-    body: interpolate(template.body, data),
+    title: interpolate(t.title, data),
+    body: interpolate(t.body, data),
   }
 }
 

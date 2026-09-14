@@ -51,4 +51,29 @@ export const notifications = {
     titleFromVendor: '{vendor_business_name} replied 💬',
     body: '{message_preview}',
   },
+  review_received: {
+    title: 'New review received ⭐',
+    body: 'You received a {rating}-star review on "{product_name}".',
+  },
+  gift_purchased: {
+    title: '🎁 Someone bought you a gift!',
+    body: '{buyer_name} bought you "{product_name}" from your gift list.',
+  },
+  verification_update: {
+    title: 'Your verification level changed!',
+    body: 'Your store now has the status: {level_label}',
+  },
+  dispute_opened: {
+    title: 'New dispute opened ⚠️',
+    body: 'A buyer opened a dispute on order {order_short_id}. Review the details.',
+    titleAdmin: 'New dispute to review ⚠️',
+    bodyAdmin: 'A dispute was opened on order {order_short_id}. It needs your attention.',
+  },
+  delivery_otp: {
+    title: '🔐 Your delivery code',
+    titleGift: '🎁 You have a gift on the way!',
+    body: 'Your code to confirm delivery is: {otp_code}. Share it with the courier ONLY once you have the product in hand.',
+    giftPrefix: 'You have a gift on the way! ',
+    recipientSuffix: ' Remember to share this code with {recipient_name}, who will receive the order.',
+  },
 } satisfies NotificationsDict

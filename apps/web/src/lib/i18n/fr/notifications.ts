@@ -51,4 +51,29 @@ export const notifications = {
     titleFromVendor: '{vendor_business_name} vous a répondu 💬',
     body: '{message_preview}',
   },
+  review_received: {
+    title: 'Nouvel avis reçu ⭐',
+    body: 'Vous avez reçu un avis {rating} étoiles sur « {product_name} ».',
+  },
+  gift_purchased: {
+    title: "🎁 Quelqu'un vous a acheté un cadeau !",
+    body: '{buyer_name} vous a acheté « {product_name} » de votre liste de cadeaux.',
+  },
+  verification_update: {
+    title: 'Votre niveau de vérification a changé !',
+    body: 'Votre boutique a maintenant le statut : {level_label}',
+  },
+  dispute_opened: {
+    title: 'Nouveau litige ouvert ⚠️',
+    body: 'Un acheteur a ouvert un litige sur la commande {order_short_id}. Consultez les détails.',
+    titleAdmin: 'Nouveau litige à examiner ⚠️',
+    bodyAdmin: 'Un litige a été ouvert sur la commande {order_short_id}. Il nécessite votre attention.',
+  },
+  delivery_otp: {
+    title: '🔐 Votre code de livraison',
+    titleGift: '🎁 Un cadeau est en route pour vous !',
+    body: 'Votre code pour confirmer la livraison est : {otp_code}. Partagez-le avec le livreur SEULEMENT une fois le produit en main.',
+    giftPrefix: 'Un cadeau est en route pour vous ! ',
+    recipientSuffix: " N'oubliez pas de partager ce code avec {recipient_name}, qui recevra la commande.",
+  },
 } satisfies NotificationsDict

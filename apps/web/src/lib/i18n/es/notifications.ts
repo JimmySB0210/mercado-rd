@@ -72,6 +72,43 @@ export const notifications = {
     titleFromVendor: '{vendor_business_name} te respondió 💬',
     body: '{message_preview}',
   },
+  review_received: {
+    title: 'Nueva reseña recibida ⭐',
+    body: 'Recibiste una reseña de {rating} estrellas en "{product_name}".',
+  },
+  gift_purchased: {
+    title: '🎁 ¡Alguien te compró un regalo!',
+    body: '{buyer_name} te compró "{product_name}" de tu lista de regalos.',
+  },
+  // verification_level llega crudo (2/3/4/otro) — NotificationBell lo
+  // resuelve contra vendorOptions.verificationLevel (mismo diccionario
+  // que usa el resto del sitio) y lo pasa como level_label, para no
+  // traducir "Fabricante verificado" de nuevo en un lugar aparte.
+  verification_update: {
+    title: '¡Tu nivel de verificación cambió!',
+    body: 'Tu tienda ahora tiene el estado: {level_label}',
+  },
+  // La misma notificación tiene textos distintos para el vendor (title/
+  // body, el caso base) y el admin (titleAdmin/bodyAdmin) — mismo patrón
+  // que titleFromVendor en new_message. NotificationBell elige según
+  // data.recipient_role.
+  dispute_opened: {
+    title: 'Nueva disputa abierta ⚠️',
+    body: 'Un comprador abrió una disputa sobre el pedido {order_short_id}. Revisa los detalles.',
+    titleAdmin: 'Nueva disputa para revisar ⚠️',
+    bodyAdmin: 'Se abrió una disputa sobre el pedido {order_short_id}. Requiere tu atención.',
+  },
+  // 3 escenarios bajo un solo type (scenario: normal/recipient/gift).
+  // El cuerpo se arma en 3 partes — NotificationBell concatena
+  // giftPrefix (si scenario=gift) + body + recipientSuffix interpolado
+  // (si scenario=recipient) — no es una sola interpolación simple.
+  delivery_otp: {
+    title: '🔐 Tu código de entrega',
+    titleGift: '🎁 ¡Tienes un regalo en camino!',
+    body: 'Tu código para confirmar la entrega es: {otp_code}. Compártelo con el repartidor SOLO cuando tengas el producto en tus manos.',
+    giftPrefix: '¡Tienes un regalo en camino! ',
+    recipientSuffix: ' Recuerda compartir este código con {recipient_name}, quien recibirá el pedido.',
+  },
 }
 
 export type NotificationsDict = typeof notifications
