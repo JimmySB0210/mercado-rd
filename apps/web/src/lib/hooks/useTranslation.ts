@@ -75,6 +75,9 @@ import { admin as adminFr } from '@/lib/i18n/fr/admin'
 import { giftLists as giftListsEs, type GiftListsDict } from '@/lib/i18n/es/giftLists'
 import { giftLists as giftListsEn } from '@/lib/i18n/en/giftLists'
 import { giftLists as giftListsFr } from '@/lib/i18n/fr/giftLists'
+import { support as supportEs, type SupportDict } from '@/lib/i18n/es/support'
+import { support as supportEn } from '@/lib/i18n/en/support'
+import { support as supportFr } from '@/lib/i18n/fr/support'
 
 const NAMESPACES = {
   common: { es: commonEs, en: commonEn, fr: commonFr },
@@ -91,6 +94,7 @@ const NAMESPACES = {
   chat: { es: chatEs, en: chatEn, fr: chatFr },
   admin: { es: adminEs, en: adminEn, fr: adminFr },
   giftLists: { es: giftListsEs, en: giftListsEn, fr: giftListsFr },
+  support: { es: supportEs, en: supportEn, fr: supportFr },
 } as const
 
 // Genera 'businessType.manufacturer' | 'verificationLevel.1' | ... para
@@ -143,6 +147,7 @@ export function useTranslation(namespace: 'directory'): TranslationResult<keyof 
 export function useTranslation(namespace: 'chat'): TranslationResult<keyof ChatDict>
 export function useTranslation(namespace: 'admin'): TranslationResult<DotPaths<AdminDict>>
 export function useTranslation(namespace: 'giftLists'): TranslationResult<keyof GiftListsDict>
+export function useTranslation(namespace: 'support'): TranslationResult<keyof SupportDict>
 export function useTranslation(namespace: Namespace): TranslationResult<string> {
   const language = useLanguageStore((s) => s.language)
 

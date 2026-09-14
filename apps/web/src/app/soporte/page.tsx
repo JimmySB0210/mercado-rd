@@ -10,43 +10,51 @@
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { PackageX, ClipboardList, FileWarning, Scale, EyeOff } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { Navbar } from '@/components/shop/Navbar'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
+import type { SupportDict } from '@/lib/i18n/es/support'
 
 // Número de WhatsApp Business — PLACEHOLDER, Jimmy lo cambiará
 // cuando tenga el número real.
 const WHATSAPP_NUMBER = '18091234567'
 
-const ISSUE_TYPES = [
-  'No recibí mi pedido',
-  'El producto llegó dañado',
-  'Quiero cancelar mi pedido',
-  'Problema con el pago',
-  'Cargos ocultos en mi pedido',
-  'Tengo una pregunta sobre un producto',
-  'Otro',
-] as const
+// El value real que guarda el estado es la key del diccionario (ej.
+// "issueNotReceived"), nunca el texto traducido — así nunca se
+// compara ni se envía a WhatsApp un string que depende del idioma
+// activo en el momento en que se seleccionó.
+const ISSUE_TYPE_KEYS: (keyof SupportDict)[] = [
+  'issueNotReceived',
+  'issueDamaged',
+  'issueCancelOrder',
+  'issuePaymentProblem',
+  'issueHiddenCharges',
+  'issueProductQuestion',
+  'issueOther',
+]
 
-const HIDDEN_CHARGES_ISSUE_TYPE: (typeof ISSUE_TYPES)[number] = 'Cargos ocultos en mi pedido'
+const HIDDEN_CHARGES_ISSUE_TYPE: keyof SupportDict = 'issueHiddenCharges'
 
 // Categorías que ya traen el motivo resuelto — llevan a /perfil/pedidos
 // para que la persona elija el pedido correspondiente; el motivo viaja
 // por query param y DisputeModal lo trae pre-seleccionado.
-const DISPUTE_CATEGORIES = [
-  { title: 'Productos dañados o rotos', icon: PackageX, href: '/perfil/pedidos?reason=damaged' },
-  { title: 'Pedidos incompletos o erróneos', icon: ClipboardList, href: '/perfil/pedidos?reason=wrong_item' },
-  { title: 'Diferencias con la descripción', icon: FileWarning, href: '/perfil/pedidos?reason=not_as_described' },
-  { title: 'Presentar una disputa comercial', icon: Scale, href: '/perfil/pedidos' },
-] as const
+const DISPUTE_CATEGORIES: { titleKey: keyof SupportDict; icon: LucideIcon; href: string }[] = [
+  { titleKey: 'categoryDamagedTitle', icon: PackageX, href: '/perfil/pedidos?reason=damaged' },
+  { titleKey: 'categoryWrongItemTitle', icon: ClipboardList, href: '/perfil/pedidos?reason=wrong_item' },
+  { titleKey: 'categoryNotAsDescribedTitle', icon: FileWarning, href: '/perfil/pedidos?reason=not_as_described' },
+  { titleKey: 'categoryDisputeTitle', icon: Scale, href: '/perfil/pedidos' },
+]
 
 const MIN_DESCRIPTION_LENGTH = 20
 
 export default function SoportePage() {
+  const { t } = useTranslation('support')
   const router = useRouter()
   const formRef = useRef<HTMLDivElement>(null)
   const [fullName, setFullName] = useState('')
   const [orderNumber, setOrderNumber] = useState('')
-  const [issueType, setIssueType] = useState<string>(ISSUE_TYPES[0])
+  const [issueType, setIssueType] = useState<keyof SupportDict>(ISSUE_TYPE_KEYS[0])
   const [description, setDescription] = useState('')
   const [submitted, setSubmitted] = useState(false)
 
@@ -66,11 +74,11 @@ export default function SoportePage() {
     if (!formValid) return
 
     const message = [
-      'Hola MercadoRD, necesito ayuda 🛒',
-      `Nombre: ${fullName.trim()}`,
-      `Orden: ${orderNumber.trim() || 'Sin número de orden'}`,
-      `Problema: ${issueType}`,
-      `Descripción: ${description.trim()}`,
+      t('whatsappGreeting'),
+      `${t('whatsappNameLabel')}: ${fullName.trim()}`,
+      `${t('whatsappOrderLabel')}: ${orderNumber.trim() || t('whatsappNoOrderNumber')}`,
+      `${t('whatsappIssueLabel')}: ${t(issueType)}`,
+      `${t('whatsappDescriptionLabel')}: ${description.trim()}`,
     ].join('\n')
 
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
@@ -84,29 +92,29 @@ export default function SoportePage() {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         <nav className="text-sm text-gray-400 mb-4">
-          <a href="/" className="hover:text-gray-600 transition-colors no-underline">Inicio</a>
+          <a href="/" className="hover:text-gray-600 transition-colors no-underline">{t('breadcrumbHome')}</a>
           <span className="mx-2">/</span>
-          <span className="text-gray-600">Soporte</span>
+          <span className="text-gray-600">{t('breadcrumbCurrent')}</span>
         </nav>
 
-        <h1 className="text-xl font-bold text-gray-900 mb-1">Soporte al cliente</h1>
+        <h1 className="text-xl font-bold text-gray-900 mb-1">{t('pageTitle')}</h1>
         <p className="text-sm text-gray-400 mb-6">
-          Cuéntanos qué pasó y te ayudamos por WhatsApp.
+          {t('pageSubtitle')}
         </p>
 
-        <p className="text-sm font-medium text-gray-700 mb-3">¿Cuál es tu problema?</p>
+        <p className="text-sm font-medium text-gray-700 mb-3">{t('whatIsYourProblemLabel')}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
           {DISPUTE_CATEGORIES.map(category => {
             const Icon = category.icon
             return (
               <button
-                key={category.title}
+                key={category.titleKey}
                 type="button"
                 onClick={() => router.push(category.href)}
                 className="flex items-center gap-3 bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-left hover:border-gray-300 transition-colors cursor-pointer"
               >
                 <Icon size={20} className="flex-shrink-0" style={{ color: BRAND.blue }} />
-                <span className="text-sm font-medium text-gray-800">{category.title}</span>
+                <span className="text-sm font-medium text-gray-800">{t(category.titleKey)}</span>
               </button>
             )
           })}
@@ -116,43 +124,43 @@ export default function SoportePage() {
             className="flex items-center gap-3 bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-left hover:border-gray-300 transition-colors cursor-pointer"
           >
             <EyeOff size={20} className="flex-shrink-0" style={{ color: BRAND.blue }} />
-            <span className="text-sm font-medium text-gray-800">Cargos ocultos</span>
+            <span className="text-sm font-medium text-gray-800">{t('categoryHiddenChargesTitle')}</span>
           </button>
         </div>
 
         {/* Banner de horario */}
         <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 text-sm text-blue-700 mb-6">
-          Respondemos de lunes a sábado, 9am–6pm. Tiempo de respuesta: menos de 2 horas en horario hábil.
+          {t('scheduleBanner')}
         </div>
 
         <div ref={formRef} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nombre completo
+                {t('fullNameLabel')}
               </label>
               <input
                 type="text"
                 value={fullName}
                 onChange={e => setFullName(e.target.value)}
-                placeholder="Tu nombre completo"
+                placeholder={t('fullNamePlaceholder')}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)] focus:border-transparent"
                 style={{ '--brand-blue': BRAND.blue } as React.CSSProperties}
               />
               {submitted && !nameValid && (
-                <p className="mt-1 text-xs text-red-600">Escribe tu nombre completo.</p>
+                <p className="mt-1 text-xs text-red-600">{t('fullNameRequiredError')}</p>
               )}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Número de orden <span className="text-gray-400 font-normal">(opcional)</span>
+                {t('orderNumberLabel')} <span className="text-gray-400 font-normal">{t('orderNumberOptionalSuffix')}</span>
               </label>
               <input
                 type="text"
                 value={orderNumber}
                 onChange={e => setOrderNumber(e.target.value)}
-                placeholder="#RD-XXXXXXXX"
+                placeholder={t('orderNumberPlaceholder')}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)] focus:border-transparent"
                 style={{ '--brand-blue': BRAND.blue } as React.CSSProperties}
               />
@@ -160,38 +168,38 @@ export default function SoportePage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tipo de problema
+                {t('issueTypeLabel')}
               </label>
               <select
                 value={issueType}
-                onChange={e => setIssueType(e.target.value)}
+                onChange={e => setIssueType(e.target.value as keyof SupportDict)}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)] focus:border-transparent"
                 style={{ '--brand-blue': BRAND.blue } as React.CSSProperties}
               >
-                {ISSUE_TYPES.map(type => (
-                  <option key={type} value={type}>{type}</option>
+                {ISSUE_TYPE_KEYS.map(key => (
+                  <option key={key} value={key}>{t(key)}</option>
                 ))}
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Descripción del problema
+                {t('descriptionLabel')}
               </label>
               <textarea
                 value={description}
                 onChange={e => setDescription(e.target.value)}
-                placeholder="Cuéntanos con detalle qué pasó (mínimo 20 caracteres)"
+                placeholder={t('descriptionPlaceholder', { min: MIN_DESCRIPTION_LENGTH })}
                 rows={5}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)] focus:border-transparent resize-none"
                 style={{ '--brand-blue': BRAND.blue } as React.CSSProperties}
               />
               <p className="mt-1 text-xs text-gray-400">
-                {description.trim().length}/{MIN_DESCRIPTION_LENGTH} caracteres mínimos
+                {t('descriptionCounter', { count: description.trim().length, min: MIN_DESCRIPTION_LENGTH })}
               </p>
               {submitted && !descriptionValid && (
                 <p className="mt-1 text-xs text-red-600">
-                  Describe tu problema con al menos {MIN_DESCRIPTION_LENGTH} caracteres.
+                  {t('descriptionRequiredError', { min: MIN_DESCRIPTION_LENGTH })}
                 </p>
               )}
             </div>
@@ -200,7 +208,7 @@ export default function SoportePage() {
               type="submit"
               className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:brightness-95 text-white font-medium py-3 rounded-lg transition-all"
             >
-              Enviar por WhatsApp
+              {t('submitButton')}
             </button>
           </form>
         </div>
