@@ -7,11 +7,18 @@
 // NotificationBell. Cambia el idioma al instante — el store de
 // Zustand re-renderiza cualquier componente que use useTranslation,
 // sin recargar la página.
+//
+// También sincroniza el idioma a users.preferred_language vía el RPC
+// update_own_language — fire and forget, no bloquea el cambio local.
+// Para visitantes anónimos el RPC lanza "No autenticado" (SECURITY
+// DEFINER con auth.uid() null); se ignora ese error a propósito, el
+// idioma local ya cambió igual.
 // ============================================================
 
 import { useEffect, useRef, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
+import { createClient } from '@/lib/supabase/client'
 import { useLanguageStore, type Language } from '@/lib/store/language'
 
 const LANGUAGES: { code: Language; flag: string; label: string }[] = [
@@ -24,6 +31,18 @@ export function LanguageSwitcher({ compact }: { compact?: boolean }) {
   const { language, setLanguage } = useLanguageStore()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const supabase = createClient()
+
+  const handleSelect = (code: Language) => {
+    setLanguage(code)
+    setOpen(false)
+    supabase.rpc('update_own_language', { p_language: code }).then(({ error }) => {
+      // "No autenticado" es esperado para visitantes anónimos — no es un error real
+      if (error && !error.message.includes('No autenticado')) {
+        console.error('[LanguageSwitcher] update_own_language falló:', error.message)
+      }
+    })
+  }
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -57,7 +76,7 @@ export function LanguageSwitcher({ compact }: { compact?: boolean }) {
             <button
               key={l.code}
               type="button"
-              onClick={() => { setLanguage(l.code); setOpen(false) }}
+              onClick={() => handleSelect(l.code)}
               className="flex items-center w-full gap-2 px-4 py-2 text-sm text-left border-none bg-transparent cursor-pointer hover:bg-gray-50 transition-colors"
               style={{ color: l.code === language ? BRAND.blue : BRAND.dark, fontWeight: l.code === language ? 700 : 400 }}
             >

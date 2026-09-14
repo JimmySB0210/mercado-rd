@@ -15,14 +15,49 @@ import { createClient } from '@/lib/supabase/client'
 import { useLanguageStore, type Language } from '@/lib/store/language'
 import { formatDate } from '@/lib/utils'
 import { BRAND } from '@/lib/colors'
+import { notifications as notificationsEs, type NotificationsDict } from '@/lib/i18n/es/notifications'
+import { notifications as notificationsEn } from '@/lib/i18n/en/notifications'
+import { notifications as notificationsFr } from '@/lib/i18n/fr/notifications'
 
 interface NotificationRow {
   id: string
+  type: string
   title: string
   body: string
   link: string | null
   is_read: boolean
   created_at: string
+  data: Record<string, string | number> | null
+}
+
+// Namespace "notifications" fuera de useTranslation()/NAMESPACES a
+// propósito — ver el comentario en lib/i18n/es/notifications.ts.
+const NOTIFICATION_TEMPLATES: Record<Language, NotificationsDict> = {
+  es: notificationsEs,
+  en: notificationsEn,
+  fr: notificationsFr,
+}
+
+function interpolate(template: string, data: Record<string, string | number>): string {
+  return template.replace(/\{(\w+)\}/g, (match, key) =>
+    Object.prototype.hasOwnProperty.call(data, key) ? String(data[key]) : match
+  )
+}
+
+// Si hay data Y una plantilla para este type en el idioma activo,
+// interpola y muestra eso. Si no (type sin migrar, o data null),
+// respalda al title/body guardado tal cual — nunca vacío, nunca roto.
+function renderNotification(n: NotificationRow, language: Language): { title: string; body: string } {
+  const template = n.data
+    ? NOTIFICATION_TEMPLATES[language][n.type as keyof NotificationsDict]
+    : undefined
+
+  if (!template) return { title: n.title, body: n.body }
+
+  return {
+    title: interpolate(template.title, n.data as Record<string, string | number>),
+    body: interpolate(template.body, n.data as Record<string, string | number>),
+  }
 }
 
 function timeAgo(dateStr: string, language: Language): string {
@@ -83,14 +118,21 @@ export function NotificationBell() {
           setNotifications(prev => [newNotification, ...prev])
           setUnreadCount(c => c + 1)
 
+          // El INSERT llega antes de que el trigger corra el UPDATE que
+          // rellena `data` (ver notify_low_stock), así que acá `data`
+          // normalmente todavía es null y renderNotification respalda al
+          // title/body en español — se corrige solo al abrir la campana,
+          // que trae la fila ya completa.
+          const rendered = renderNotification(newNotification, language)
+
           // También la mandamos como push — fire and forget, no bloquea la UI
           fetch('/api/push/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               userId,
-              title: newNotification.title,
-              body: newNotification.body,
+              title: rendered.title,
+              body: rendered.body,
               url: newNotification.link,
             }),
           }).catch(err => console.error('[NotificationBell] Push send falló:', err))
@@ -101,7 +143,7 @@ export function NotificationBell() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [userId, supabase])
+  }, [userId, supabase, language])
 
   // Cerrar al hacer clic afuera
   useEffect(() => {
@@ -124,7 +166,7 @@ export function NotificationBell() {
     if (userId) {
       const { data } = await supabase
         .from('notifications')
-        .select('id, title, body, link, is_read, created_at')
+        .select('id, type, title, body, link, is_read, created_at, data')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(10)
@@ -207,7 +249,9 @@ export function NotificationBell() {
                 No tienes notificaciones todavía.
               </div>
             ) : (
-              notifications.map(n => (
+              notifications.map(n => {
+                const rendered = renderNotification(n, language)
+                return (
                 <button
                   key={n.id}
                   type="button"
@@ -220,12 +264,13 @@ export function NotificationBell() {
                     <span className="w-2 flex-shrink-0" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{n.title}</p>
-                    <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">{n.body}</p>
+                    <p className="text-sm font-semibold text-gray-900 truncate">{rendered.title}</p>
+                    <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">{rendered.body}</p>
                     <p className="text-xs text-gray-400 mt-1">{timeAgo(n.created_at, language)}</p>
                   </div>
                 </button>
-              ))
+                )
+              })
             )}
           </div>
         </div>
