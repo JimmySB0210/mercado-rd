@@ -7,8 +7,17 @@
 // puede usar useTranslation. Este componente recibe el producto ya
 // resuelto (+ valores derivados) como props y renderiza breadcrumb +
 // columna de info completa, con todo el texto traducido.
+//
+// Nombre y descripción del producto en sí (texto libre del vendor, no
+// una key de i18n) se traducen aparte, bajo demanda, contra
+// /api/ai/translate-product — automático al cambiar el idioma del
+// sitio, sin botón (a diferencia del chat). Mientras no haya idioma
+// distinto de español, o mientras la traducción todavía no llega,
+// displayName/displayDescription son el texto original — nunca un
+// estado vacío.
 // ============================================================
 
+import { useEffect, useState } from 'react'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { AgeConfirmationModal } from '@/components/shop/AgeConfirmationModal'
 import { ProductActions } from '@/components/product/ProductActions'
@@ -93,7 +102,43 @@ export function ProductPageContent({
   product, vendor, variants, hasDiscount, discount, itbis, totalConItbis, whatsappMsg, specs = [],
   dynamicDimensions = [], variantDynamicValues = {}, pricingTiers = [],
 }: Props) {
-  const { t } = useTranslation('products')
+  const { t, language } = useTranslation('products')
+
+  const [displayName, setDisplayName] = useState(product.name)
+  const [displayDescription, setDisplayDescription] = useState(product.description)
+
+  useEffect(() => {
+    if (language === 'es') {
+      setDisplayName(product.name)
+      setDisplayDescription(product.description)
+      return
+    }
+
+    // Mientras llega la traducción (si no había caché) se muestra el
+    // original — nunca un estado vacío.
+    setDisplayName(product.name)
+    setDisplayDescription(product.description)
+
+    let cancelled = false
+    fetch('/api/ai/translate-product', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product_id: product.id, target_language: language }),
+    })
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => {
+        if (cancelled || !data) return
+        setDisplayName(data.name)
+        setDisplayDescription(data.description)
+      })
+      .catch(() => {
+        // Silencioso — se queda con el texto original en español
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [language, product.id, product.name, product.description])
 
   return (
     <>
@@ -104,7 +149,7 @@ export function ProductPageContent({
 
         {/* Galería + info del vendedor (llena el espacio debajo de la imagen) */}
         <div className="flex flex-col gap-4">
-          <ProductGallery images={product.images ?? []} name={product.name} videoUrl={product.video_url} />
+          <ProductGallery images={product.images ?? []} name={displayName} videoUrl={product.video_url} />
 
           {vendor && (
             <div
@@ -173,7 +218,7 @@ export function ProductPageContent({
 
           {/* Nombre */}
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
-            {product.name}
+            {displayName}
           </h1>
 
           {/* Rating */}
@@ -313,14 +358,14 @@ export function ProductPageContent({
           )}
 
           {/* Descripción */}
-          {product.description && (
+          {displayDescription && (
             <div
               className="bg-[var(--color-card-bg)] p-4"
               style={{ borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)' }}
             >
               <h2 className="text-sm font-semibold text-gray-700 mb-2">{t('descriptionHeading')}</h2>
               <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
-                {product.description}
+                {displayDescription}
               </p>
             </div>
           )}
