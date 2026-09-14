@@ -27,7 +27,7 @@ interface NotificationRow {
   link: string | null
   is_read: boolean
   created_at: string
-  data: Record<string, string | number> | null
+  data: Record<string, string | number | boolean> | null
 }
 
 // Namespace "notifications" fuera de useTranslation()/NAMESPACES a
@@ -41,7 +41,7 @@ const NOTIFICATION_TEMPLATES: Record<Language, NotificationsDict> = {
 // Los montos (new_price_rdp, old_price_rdp, savings_rdp) se formatean
 // con separador de miles vía es-DO — mismo locale que usa el resto del
 // sitio para precios (RD$) sin importar el idioma activo de la UI.
-function interpolate(template: string, data: Record<string, string | number>): string {
+function interpolate(template: string, data: Record<string, string | number | boolean>): string {
   return template.replace(/\{(\w+)\}/g, (match, key) => {
     if (!Object.prototype.hasOwnProperty.call(data, key)) return match
     const value = data[key]
@@ -59,9 +59,17 @@ function renderNotification(n: NotificationRow, language: Language): { title: st
 
   if (!template) return { title: n.title, body: n.body }
 
+  const data = n.data as Record<string, string | number | boolean>
+  const templateWithVariant = template as { title: string; body: string; titleFromVendor?: string }
+
+  // new_message tiene 2 títulos posibles según quién escribe — la
+  // frase entera cambia de estructura, no es un simple placeholder.
+  const titleTemplate = (data.is_from_vendor && templateWithVariant.titleFromVendor)
+    || templateWithVariant.title
+
   return {
-    title: interpolate(template.title, n.data as Record<string, string | number>),
-    body: interpolate(template.body, n.data as Record<string, string | number>),
+    title: interpolate(titleTemplate, data),
+    body: interpolate(template.body, data),
   }
 }
 

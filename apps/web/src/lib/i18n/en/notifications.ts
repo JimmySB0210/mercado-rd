@@ -34,4 +34,21 @@ export const notifications = {
     title: 'New order received! 🛒',
     body: 'You have a new order {order_short_id} waiting for confirmation.',
   },
+  quote_requested: {
+    title: 'New quote request 💰',
+    body: 'You were asked to quote {quantity} units',
+  },
+  quote_responded: {
+    title: '{vendor_business_name} sent you a price 💰',
+    body: 'New price: RD${price_rdp} per unit',
+  },
+  quote_accepted: {
+    title: 'Quote accepted! 🎉',
+    body: 'The buyer accepted your price and placed an order',
+  },
+  new_message: {
+    title: 'New message from a buyer 💬',
+    titleFromVendor: '{vendor_business_name} replied 💬',
+    body: '{message_preview}',
+  },
 } satisfies NotificationsDict

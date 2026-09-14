@@ -51,6 +51,27 @@ export const notifications = {
     title: '¡Nuevo pedido recibido! 🛒',
     body: 'Tienes un nuevo pedido {order_short_id} esperando confirmación.',
   },
+  quote_requested: {
+    title: 'Nueva solicitud de cotización 💰',
+    body: 'Te pidieron cotizar {quantity} unidades',
+  },
+  quote_responded: {
+    title: '{vendor_business_name} te envió un precio 💰',
+    body: 'Nuevo precio: RD${price_rdp} por unidad',
+  },
+  quote_accepted: {
+    title: '¡Cotización aceptada! 🎉',
+    body: 'El comprador aceptó tu precio y generó un pedido',
+  },
+  // El chat genérico tiene 2 títulos posibles según quién escribe —
+  // no es un simple placeholder, cambia la estructura entera de la
+  // frase. NotificationBell elige title vs titleFromVendor según
+  // data.is_from_vendor antes de interpolar.
+  new_message: {
+    title: 'Nuevo mensaje de un comprador 💬',
+    titleFromVendor: '{vendor_business_name} te respondió 💬',
+    body: '{message_preview}',
+  },
 }
 
 export type NotificationsDict = typeof notifications
