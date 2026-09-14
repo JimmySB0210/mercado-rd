@@ -35,6 +35,22 @@ export const notifications = {
     title: '📦 ¡Ya está disponible!',
     body: '{product_name}, que guardaste en favoritos, ya está disponible de nuevo — quedan {current_stock} unidades.',
   },
+  order_confirmed: {
+    title: '¡Pedido confirmado! 🎉',
+    body: 'Tu pedido {order_short_id} fue confirmado y está siendo preparado.',
+  },
+  order_shipped: {
+    title: 'Tu pedido está en camino 🚚',
+    body: 'Tu pedido {order_short_id} fue enviado y llegará pronto.',
+  },
+  order_delivered: {
+    title: '¡Pedido entregado! ✅',
+    body: 'Tu pedido {order_short_id} fue entregado. ¿Todo bien? Deja tu reseña.',
+  },
+  new_order: {
+    title: '¡Nuevo pedido recibido! 🛒',
+    body: 'Tienes un nuevo pedido {order_short_id} esperando confirmación.',
+  },
 }
 
 export type NotificationsDict = typeof notifications

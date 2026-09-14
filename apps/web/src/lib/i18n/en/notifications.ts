@@ -18,4 +18,20 @@ export const notifications = {
     title: '📦 Back in stock!',
     body: '{product_name}, which you saved to your favorites, is back in stock — {current_stock} units left.',
   },
+  order_confirmed: {
+    title: 'Order confirmed! 🎉',
+    body: 'Your order {order_short_id} was confirmed and is being prepared.',
+  },
+  order_shipped: {
+    title: 'Your order is on its way 🚚',
+    body: 'Your order {order_short_id} has shipped and will arrive soon.',
+  },
+  order_delivered: {
+    title: 'Order delivered! ✅',
+    body: 'Your order {order_short_id} was delivered. Everything good? Leave a review.',
+  },
+  new_order: {
+    title: 'New order received! 🛒',
+    body: 'You have a new order {order_short_id} waiting for confirmation.',
+  },
 } satisfies NotificationsDict

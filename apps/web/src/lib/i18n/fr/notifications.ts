@@ -18,4 +18,20 @@ export const notifications = {
     title: '📦 De retour en stock !',
     body: '{product_name}, que vous avez ajouté à vos favoris, est de nouveau disponible — il reste {current_stock} unités.',
   },
+  order_confirmed: {
+    title: 'Commande confirmée ! 🎉',
+    body: 'Votre commande {order_short_id} a été confirmée et est en préparation.',
+  },
+  order_shipped: {
+    title: 'Votre commande est en route 🚚',
+    body: 'Votre commande {order_short_id} a été expédiée et arrivera bientôt.',
+  },
+  order_delivered: {
+    title: 'Commande livrée ! ✅',
+    body: 'Votre commande {order_short_id} a été livrée. Tout va bien ? Laissez un avis.',
+  },
+  new_order: {
+    title: 'Nouvelle commande reçue ! 🛒',
+    body: 'Vous avez une nouvelle commande {order_short_id} en attente de confirmation.',
+  },
 } satisfies NotificationsDict
