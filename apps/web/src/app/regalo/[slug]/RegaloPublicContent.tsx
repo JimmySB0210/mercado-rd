@@ -160,7 +160,7 @@ export function RegaloPublicContent({ slug, displayName, provinceName, isUnavail
                   {isPurchased ? (
                     <span
                       className="text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0"
-                      style={{ background: 'color-mix(in srgb, var(--color-success) 12%, transparent)', color: 'var(--color-success)' }}
+                      style={{ background: 'color-mix(in srgb, var(--color-green) 12%, transparent)', color: 'var(--color-green)' }}
                     >
                       {t('alreadyGiftedBadge')}
                     </span>

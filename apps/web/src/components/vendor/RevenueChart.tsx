@@ -11,6 +11,7 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { formatPrice } from '@/types/database.types'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { BRAND } from '@/lib/colors'
 
 interface Props {
   data: { month: string; revenue: number }[]
@@ -52,7 +53,7 @@ export function RevenueChart({ data }: Props) {
             labelStyle={{ color: '#111', fontWeight: 700 }}
             contentStyle={{ borderRadius: 8, border: '1px solid #eee', fontSize: 13 }}
           />
-          <Bar dataKey="revenue" fill="#0D47A1" radius={[6, 6, 0, 0]} />
+          <Bar dataKey="revenue" fill={BRAND.blue} radius={[6, 6, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

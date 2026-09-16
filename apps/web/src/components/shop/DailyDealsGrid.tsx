@@ -76,7 +76,7 @@ function DealCard({ deal, onExpire }: { deal: DealViewModel; onExpire: () => voi
         />
         <span
           className="absolute top-2 left-2 text-white text-xs font-bold px-2.5 py-1"
-          style={{ background: 'var(--color-badge-orange)', borderRadius: 'var(--radius-pill)' }}
+          style={{ background: 'var(--color-orange)', borderRadius: 'var(--radius-pill)' }}
         >
           -{deal.discountPercent}%
         </span>
@@ -128,11 +128,19 @@ export function DailyDealsGrid({ deals }: { deals: DealViewModel[] }) {
   }
 
   return (
-    <div style={{ maxWidth: 1400, margin: '0 auto', padding: '24px 24px 0' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 0 16px' }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text-primary)', margin: 0 }}>
-          {t('dailyDealsTitle')}
-        </h2>
+    <div id="ofertas" style={{ maxWidth: 1400, margin: '0 auto', padding: '24px 24px 0' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', margin: '20px 0 16px' }}>
+        <div>
+          <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-text-primary)', fontFamily: 'var(--font-heading)', margin: '0 0 4px' }}>
+            {t('dailyDealsTitle')}
+          </h2>
+          <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', margin: 0 }}>
+            {t('dailyDealsSubtitle')}
+          </p>
+        </div>
+        <a href="#ofertas" style={{ color: 'var(--color-primary)', fontSize: 13, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+          {t('viewOffersCta')}
+        </a>
       </div>
       <div className="grid-products">
         {visibleDeals.map(deal => (

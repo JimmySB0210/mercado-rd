@@ -15,7 +15,10 @@ interface LogoProps {
 }
 
 export function Logo({ variant = 'navy', fontSize = 26 }: LogoProps) {
-  const color = variant === 'white' ? '#fff' : 'var(--color-primary)'
+  // var(--color-blue-dark), no --color-primary — el logo tiene su
+  // propio azul dedicado (paleta oficial, app/globals.css), no el
+  // botón/acento del rediseño del home.
+  const color = variant === 'white' ? '#fff' : 'var(--color-blue-dark)'
 
   return (
     <div style={{ lineHeight: 1.2 }}>

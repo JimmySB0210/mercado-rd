@@ -80,9 +80,12 @@ export default function RecuperarPasswordPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
             <span className="text-3xl font-bold">
-              <span className="text-white bg-[var(--brand-blue)] px-2 py-1 rounded">Mercado</span>
+              {/* var(--color-blue-dark) — azul dedicado del logo (paleta oficial), no
+                  var(--brand-blue) (sigue usándose en esta página para
+                  otros elementos) */}
+              <span className="text-white bg-[var(--color-blue-dark)] px-2 py-1 rounded">Mercado</span>
               <span className="text-[var(--brand-red)]">R</span>
-              <span className="text-[var(--brand-blue)]">D</span>
+              <span className="text-[var(--color-blue-dark)]">D</span>
             </span>
           </Link>
           <p className="mt-2 text-gray-500 text-sm">{t('forgotPasswordSubtitle')}</p>

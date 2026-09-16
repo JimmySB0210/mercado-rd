@@ -45,9 +45,7 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
     <li>
       <a
         href={href}
-        // hover:text-[#FFC107] — Tailwind necesita el literal en build time,
-        // debe coincidir con BRAND.gold en lib/colors.ts
-        className="hover:text-[#FFC107] hover:underline transition-colors"
+        className="hover:text-[var(--color-yellow-cta)] hover:underline transition-colors"
         style={{ color: '#B0B8C4', textDecoration: 'none', fontSize: 13 }}
       >
         {children}

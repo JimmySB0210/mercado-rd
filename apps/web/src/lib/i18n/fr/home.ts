@@ -9,19 +9,21 @@
 import type { HomeDict } from '@/lib/i18n/es/home'
 
 export const home = {
-  welcomeTitle: 'Achetez et vendez en RD',
-  welcomeSubtitle: 'Des milliers de produits et boutiques près de vous.',
-  exploreCta: 'Explorer les produits',
+  heroKicker: 'Votre marketplace de confiance',
+  heroTagline: 'Ce dont vous avez besoin, ici même',
+  welcomeTitle: 'Des produits uniques, du monde entier',
+  welcomeSubtitle: 'Connectez-vous à des milliers de fournisseurs et trouvez ce dont vous avez besoin, sans quitter la République dominicaine.',
+  exploreCta: 'Explorer les catégories →',
   heroModelAlt: 'Cliente souriante utilisant MercadoRD sur son téléphone',
   slideGoToAria: 'Aller à la diapositive',
 
-  perkSecurePaymentTitle: 'Paiement sécurisé',
+  perkSecurePaymentTitle: 'Achat sûr et protégé',
   perkSecurePaymentSub: 'Nous protégeons votre achat',
-  perkShippingTitle: 'Livraison dans tout le pays',
+  perkShippingTitle: 'Livraison rapide dans tout le pays',
   perkShippingSub: 'Rapide et fiable',
   perkStoresTitle: 'Des milliers de boutiques',
   perkStoresSub: 'Soutenez le commerce local',
-  perkSupportTitle: 'Assistance 24/7',
+  perkSupportTitle: 'Assistance 24/7 en espagnol',
   perkSupportSub: 'Nous sommes là pour vous aider',
 
   shippingStripMain: '🚚 Livraison GRATUITE dès RD${amount} d\'achats',

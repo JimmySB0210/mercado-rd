@@ -342,11 +342,11 @@ export function ProductPageContent({
               href={`https://wa.me/${vendor.whatsapp}?text=${whatsappMsg}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-3 font-medium hover:bg-[var(--color-success-subtle)]"
+              className="flex items-center justify-center gap-2 w-full py-3 font-medium hover:bg-[var(--color-green-subtle)]"
               style={{
                 borderRadius: 'var(--radius-control)',
-                border: '2px solid var(--color-success)',
-                color: 'var(--color-success)',
+                border: '2px solid var(--color-green)',
+                color: 'var(--color-green)',
                 transition: 'background-color var(--transition-fast)',
               }}
             >

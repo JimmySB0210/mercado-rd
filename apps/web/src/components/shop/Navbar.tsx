@@ -10,7 +10,7 @@
 //   - Breakpoint unificado: md = 860px en tailwind.config.js
 // ============================================================
 
-import { ChevronDown, ShoppingCart, User, LogOut, LayoutDashboard, ShieldCheck, Heart, MessageCircle, Lock, HelpCircle, History, Gift, X } from 'lucide-react'
+import { ChevronDown, ShoppingCart, User, LogOut, LayoutDashboard, ShieldCheck, Heart, MessageCircle, Lock, HelpCircle, History, Gift, X, BadgeCheck, Truck } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
 import { getCategoryName } from '@/lib/utils'
 import { useCartStore, useCartItemCount } from '@/lib/store/cart'
@@ -29,6 +29,11 @@ import { getCategoryIcon } from '@/lib/categoryIcons'
 
 export function Navbar() {
   const { t, language } = useTranslation('common')
+  // trustSecureTitle/trustQualityTitle/trustShippingTitle ya existían en
+  // el namespace products (copy real, traducida en los 3 idiomas) pero
+  // quedaron huérfanas cuando se retiró el trust bar viejo de
+  // HomeProductGrid — se reutilizan acá en vez de duplicar texto nuevo.
+  const { t: tp } = useTranslation('products')
   const itemCount       = useCartItemCount()
   const { user, profile, signOut } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -37,6 +42,7 @@ export function Navbar() {
   const [locationOpen, setLocationOpen] = useState(false)
   const { province, setProvince } = useLocationStore()
   const [vendorInfo, setVendorInfo] = useState<{ business_name: string; logo_url: string | null } | null>(null)
+  const [favoritesCount, setFavoritesCount] = useState(0)
   const [showCategoryMenu, setShowCategoryMenu] = useState(false)
   const [hoveredCategoryId, setHoveredCategoryId] = useState<number | null>(null)
   const accountMenuRef = useRef<HTMLDivElement>(null)
@@ -90,6 +96,22 @@ export function Navbar() {
       .eq('user_id', user.id)
       .single()
       .then(({ data }) => setVendorInfo(data ?? null))
+  }, [user])
+
+  // Conteo de favoritos para el ícono del header — igual que el badge de
+  // notificaciones, se pide una vez al montar (no hay store compartido
+  // como el del carrito; wishlists vive solo en Supabase, sin caché
+  // local). No se re-sincroniza en vivo si el usuario agrega/quita un
+  // favorito en la misma sesión sin navegar — mismo alcance que ya
+  // tenía WishlistButton, no se tocó su lógica.
+  useEffect(() => {
+    if (!user) { setFavoritesCount(0); return }
+    const supabase = createClient()
+    supabase
+      .from('wishlists')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .then(({ count }) => setFavoritesCount(count ?? 0))
   }, [user])
 
   const locationLabel = province?.name ?? t('countryShort')
@@ -182,8 +204,59 @@ export function Navbar() {
     </a>
   )
 
+  const FavoritesBadge = ({ size }: { size: number }) => (
+    <a href='/perfil/favoritos' className="relative flex text-gray-800">
+      <Heart size={size} />
+      {favoritesCount > 0 && (
+        <span
+          className="absolute -top-1.5 -right-2 text-white rounded-full flex items-center justify-center"
+          style={{ background: BRAND.red, width: 17, height: 17, fontSize: 10, fontWeight: 700 }}
+        >
+          {favoritesCount > 9 ? '9+' : favoritesCount}
+        </span>
+      )}
+    </a>
+  )
+
   return (
     <header style={{ background: '#fff', borderBottom: '1px solid #EAEAEA', fontFamily: 'var(--font-body)' }}>
+
+      {/* ─── Barra de confianza — top utility bar, no una sección
+          centrada. Beneficios a la izquierda, contexto (ubicación,
+          idioma) a la derecha — solo desktop, para no sumar alto al
+          header en mobile (crítico, "header excesivamente alto" es un
+          no-no explícito). Texto real, no inventado: mismas 3 frases que
+          ya vivían traducidas en products.ts (trustSecure/Quality/
+          Shipping), reutilizadas en vez de duplicadas. ────────────── */}
+      <div className="hidden md-860:block" style={{ background: 'var(--color-primary)', color: '#fff' }}>
+        <div
+          className="flex items-center justify-between"
+          style={{ maxWidth: 1400, margin: '0 auto', padding: '7px 24px', fontSize: 12, fontWeight: 500 }}
+        >
+          <div className="flex items-center" style={{ gap: 20 }}>
+            <span className="flex items-center gap-1.5">
+              <ShieldCheck size={13} />
+              {tp('trustSecureTitle')}
+            </span>
+            <span style={{ opacity: 0.35 }}>|</span>
+            <span className="flex items-center gap-1.5">
+              <BadgeCheck size={13} />
+              {tp('trustQualityTitle')}
+            </span>
+            <span style={{ opacity: 0.35 }}>|</span>
+            <span className="flex items-center gap-1.5">
+              <Truck size={13} />
+              {tp('trustShippingTitle')}
+            </span>
+          </div>
+
+          <div className="flex items-center" style={{ gap: 16, opacity: 0.9 }}>
+            <span>{t('countryShort')}</span>
+            <span style={{ opacity: 0.35 }}>|</span>
+            <span>{language.toUpperCase()}</span>
+          </div>
+        </div>
+      </div>
 
       {/* ─── Desktop row ─────────────────────────────────── */}
       <div
@@ -194,23 +267,24 @@ export function Navbar() {
           <Logo fontSize={26} />
         </a>
 
-        {/* Búsqueda centrada */}
-        <div className="flex-1 flex items-center justify-center gap-6 min-w-0">
-          <div className="relative" style={{ flex: '0 1 560px', minWidth: 200 }}>
+        {/* Búsqueda — único elemento del centro, protagonista */}
+        <div className="flex-1 flex items-center justify-center min-w-0">
+          <div className="relative w-full" style={{ maxWidth: 640, minWidth: 200 }}>
             <SearchBar variant="desktop" />
           </div>
+        </div>
 
+        {/* Ubicación / idioma / cuenta / favoritos / carrito — un solo
+            grupo a la derecha, mismo orden pedido explícitamente, para
+            que se lean como "las acciones del usuario" en vez de piezas
+            sueltas repartidas por el header. */}
+        <div className="flex items-center gap-4 flex-shrink-0">
           <LocationSelector />
 
           <LanguageSwitcher />
 
           <NotificationBell />
 
-          <CartBadge size={22} />
-        </div>
-
-        {/* Auth + CTA */}
-        <div className="flex items-center gap-3 flex-shrink-0">
           {user ? (
             <div
               ref={accountMenuRef}
@@ -351,6 +425,10 @@ export function Navbar() {
               {t('login')}
             </a>
           )}
+
+          <FavoritesBadge size={22} />
+
+          <CartBadge size={22} />
         </div>
       </div>
 
@@ -486,7 +564,7 @@ export function Navbar() {
               <a href='/proveedores' className="hover:text-[var(--color-primary)] transition-colors" style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>
                 {t('providers')}
               </a>
-              <a href='/' className="hover:text-[var(--color-primary)] transition-colors" style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>
+              <a href='/#ofertas' className="hover:text-[var(--color-primary)] transition-colors" style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>
                 {t('offers')}
               </a>
               <a href='/tiendas' className="hover:text-[var(--color-primary)] transition-colors" style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>

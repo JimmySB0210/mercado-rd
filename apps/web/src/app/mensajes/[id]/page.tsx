@@ -557,7 +557,7 @@ export default function ChatPage() {
               ) : (
                 <span className="text-sm font-semibold" style={{ color: BRAND.dark }}>{otherName}</span>
               )}
-              <span className="text-xs" style={{ color: otherOnline ? 'var(--color-success)' : BRAND.gray }}>
+              <span className="text-xs" style={{ color: otherOnline ? 'var(--color-green)' : BRAND.gray }}>
                 {otherOnline ? t('onlineStatusLabel') : t('offlineStatusLabel')}
               </span>
             </div>

@@ -7,6 +7,9 @@ import type { ProductsDict } from '@/lib/i18n/es/products'
 
 export const products = {
   stockLeftBadge: 'Il en reste {count}',
+  newBadge: 'Nouveau',
+  bestSellerBadge: 'Meilleure vente',
+  localBadge: 'Local',
   viewStore: 'Voir la boutique →',
   askWhatsappShort: 'Demander',
   verifiedBadge: 'Vérifié',
@@ -86,7 +89,8 @@ export const products = {
   loadError: "Nous n'avons pas pu charger les produits. Essayez de recharger la page.",
   loading: 'Chargement...',
   loadMore: 'Voir plus de produits',
-  popularStoresTitle: 'Boutiques populaires',
+  popularStoresTitle: 'Boutiques en vedette',
+  popularStoresSubtitle: 'Découvrez des boutiques de confiance partout en République dominicaine.',
   featuredProvidersTitle: 'Fournisseurs en vedette',
   exploreCategoriesTitle: 'Explorer par catégorie',
   moreCategoriesLabel: 'Plus de catégories',
@@ -100,8 +104,20 @@ export const products = {
   trustShippingSub: 'Livraison dans tout le pays',
 
   featuredProductsTitle: 'Produits en vedette ⭐',
+  featuredProductsSubtitle: 'Une sélection spéciale de produits pour vous.',
 
   dailyDealsTitle: '⚡ Offres du jour',
+  dailyDealsSubtitle: 'Réductions pour une durée limitée sur une sélection de produits.',
+  viewOffersCta: 'Voir les offres →',
+
+  sellerCtaTitle: 'Vendez vos produits\nsur MercadoRD',
+  sellerCtaSubtitle: 'Atteignez des milliers d\'acheteurs\npartout en République dominicaine.',
+  sellerCtaButton: 'Commencer à vendre →',
+  shippingCardTitle: 'Livraison fiable\net rapide',
+  shippingCardSubtitle: 'Vos produits arrivent en sécurité\npartout dans le pays.',
+  moreInfoCta: 'En savoir plus →',
+  offersCardTitle: 'Offres spéciales',
+  offersCardSubtitle: 'Les meilleurs prix en\ntechnologie, mode et plus.',
 
   pricingTiersTitle: 'Prix par quantité',
   pricingTiersRangeAndUp: '{min}+ {unit}',

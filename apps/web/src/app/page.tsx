@@ -6,16 +6,26 @@
 // paginación viven en HomeProductGrid (Client Component), que
 // usa createPublicClient() para no romper el ISR de esta página.
 //
-// Orden fijo en todos los breakpoints: Hero siempre primero, seguido
-// de "Productos destacados" y luego "Explora por categoría".
+// Narrativa fija del home (rediseño visual, misma lógica/funcionalidad
+// de siempre — cada sección se oculta sola si no califica ningún
+// producto real, nunca se rellena con mock), pedida explícitamente en
+// este orden:
+//   Hero → Categorías → Destacados → 3 banners promocionales →
+//   Proveedores destacados → Recién publicados → el resto de
+//   descubrimiento (ofertas del día, actividad reciente, más vendidos,
+//   últimas unidades, tendencias, populares, cerca de ti, catálogo
+//   paginado — que también trae "Tiendas destacadas" al final).
+//   ShippingBenefitsStrip (franja de envío/beneficios debajo de los 3
+//   banners) se quitó por completo a pedido explícito — esa info ya
+//   vive en la barra de confianza del Navbar.
 // ============================================================
 
 import { Navbar } from '../components/shop/Navbar'
 import { HeroBanner } from '../components/shop/HeroBanner'
 import { HomeCategoryStrip } from '../components/shop/HomeCategoryStrip'
-import { ShippingBenefitsStrip } from '../components/shop/ShippingBenefitsStrip'
 import { HomeProductGrid } from '../components/shop/HomeProductGrid'
 import { FeaturedProducts } from '../components/shop/FeaturedProducts'
+import { PromoBannersRow } from '../components/shop/PromoBannersRow'
 import { DailyDeals } from '../components/shop/DailyDeals'
 import { RecentlyPublished } from '../components/shop/RecentlyPublished'
 import { BestSellers } from '../components/shop/BestSellers'
@@ -32,52 +42,24 @@ export default function HomePage() {
   return (
     <div className="flex flex-col">
       <Navbar />
-      <div>
-        <HeroBanner />
-      </div>
-      {/* Justo debajo del hero en ambos breakpoints */}
-      <div>
-        <ShippingBenefitsStrip />
-      </div>
-      <div>
-        <FeaturedProducts />
-      </div>
-      <div>
-        <HomeCategoryStrip />
-      </div>
-      {/* "Ofertas del día" — debajo de "Productos destacados" */}
-      <div className="order-4">
-        <DailyDeals />
-      </div>
-      {/* Fase 1-2, homepage vivo — cada una se oculta sola si no
-          califica ningún producto real, nunca se rellena con mock */}
-      <div className="order-4">
-        <RecentActivity />
-      </div>
-      <div className="order-4">
-        <RecentlyPublished />
-      </div>
-      <div className="order-4">
-        <BestSellers />
-      </div>
-      <div className="order-4">
-        <LowStock />
-      </div>
-      <div className="order-4">
-        <Trending />
-      </div>
-      <div className="order-4">
-        <Popular />
-      </div>
-      <div className="order-4">
-        <NearbyProducts />
-      </div>
-      <div className="order-4">
-        <HomeProductGrid />
-      </div>
-      <div className="order-4">
-        <FeaturedProviders />
-      </div>
+
+      <HeroBanner />
+      <HomeCategoryStrip />
+      <FeaturedProducts />
+      <PromoBannersRow />
+      <FeaturedProviders />
+      <RecentlyPublished />
+
+      {/* Descubrimiento adicional — cada una ya decide ocultarse si no
+          califica ningún producto real */}
+      <DailyDeals />
+      <RecentActivity />
+      <BestSellers />
+      <LowStock />
+      <Trending />
+      <Popular />
+      <NearbyProducts />
+      <HomeProductGrid />
     </div>
   )
 }

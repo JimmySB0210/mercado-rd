@@ -11,6 +11,7 @@ import { AdminSidebar } from '@/components/admin/AdminSidebar'
 import { RestrictedAccess } from '@/components/admin/RestrictedAccess'
 import { PromoBannerPageHeader } from '@/components/admin/PromoBannerPageHeader'
 import { BrandBannerToggle } from '@/components/admin/BrandBannerToggle'
+import { PromoCardImages } from '@/components/admin/PromoCardImages'
 import type { PromoBanner } from '@/types/database.types'
 
 export default async function AdminPromocionesPage() {
@@ -32,12 +33,18 @@ export default async function AdminPromocionesPage() {
   const { data: settingRows } = await supabase
     .from('site_settings')
     .select('key, value')
-    .in('key', ['show_brand_banner', 'brand_banner_image_url', 'brand_banner_mobile_image_url'])
+    .in('key', [
+      'show_brand_banner', 'brand_banner_image_url', 'brand_banner_mobile_image_url',
+      'promo_card_sell_image_url', 'promo_card_shipping_image_url', 'promo_card_offers_image_url',
+    ])
 
   const settings = new Map((settingRows ?? []).map(row => [row.key, row.value]))
   const showBrandBanner = (settings.get('show_brand_banner') as boolean | undefined) ?? true
   const brandDesktopImageUrl = (settings.get('brand_banner_image_url') as string | null | undefined) ?? null
   const brandMobileImageUrl = (settings.get('brand_banner_mobile_image_url') as string | null | undefined) ?? null
+  const promoCardSellImageUrl = (settings.get('promo_card_sell_image_url') as string | null | undefined) ?? null
+  const promoCardShippingImageUrl = (settings.get('promo_card_shipping_image_url') as string | null | undefined) ?? null
+  const promoCardOffersImageUrl = (settings.get('promo_card_offers_image_url') as string | null | undefined) ?? null
   const bannerList = (banners ?? []) as PromoBanner[]
 
   return (
@@ -52,6 +59,11 @@ export default async function AdminPromocionesPage() {
           initialValue={showBrandBanner}
           initialDesktopImageUrl={brandDesktopImageUrl}
           initialMobileImageUrl={brandMobileImageUrl}
+        />
+        <PromoCardImages
+          initialSellImageUrl={promoCardSellImageUrl}
+          initialShippingImageUrl={promoCardShippingImageUrl}
+          initialOffersImageUrl={promoCardOffersImageUrl}
         />
         <PromoBannerManager initialBanners={bannerList} />
       </div>

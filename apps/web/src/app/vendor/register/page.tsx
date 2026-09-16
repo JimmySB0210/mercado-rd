@@ -94,7 +94,7 @@ export default function VendorRegisterPage() {
       <div style={{ minHeight: '100vh', background: BRAND.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <div className="auth-card" style={{ background: '#fff', borderRadius: 12, maxWidth: 440, width: '100%', boxShadow: '0 2px 20px rgba(0,0,0,0.08)', textAlign: 'center' }}>
           <div style={{ fontWeight: 700, fontSize: 24, marginBottom: 8 }}>
-            <span style={{ color: BRAND.blue }}>Mercado</span><span style={{ color: BRAND.red }}>RD</span>
+            <span style={{ color: 'var(--color-blue-dark)' }}>Mercado</span><span style={{ color: BRAND.red }}>RD</span>
           </div>
           <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 10, color: BRAND.dark }}>
             Necesitas una cuenta para vender en MercadoRD

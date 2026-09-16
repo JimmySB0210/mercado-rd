@@ -424,9 +424,9 @@ export default function CheckoutPage() {
                   value={form.address}
                   onChange={handleChange}
                   placeholder={t('addressPlaceholder')}
-                  style={{ width: '100%', border: `1px solid ${addressError ? '#E53935' : 'var(--color-border)'}`, borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', border: `1px solid ${addressError ? BRAND.red : 'var(--color-border)'}`, borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
                 />
-                {addressError && <p style={{ fontSize: 12, color: '#E53935', margin: '4px 0 0' }}>{addressError}</p>}
+                {addressError && <p style={{ fontSize: 12, color: BRAND.red, margin: '4px 0 0' }}>{addressError}</p>}
               </div>
               <div style={{ position: 'relative' }}>
                 <select
@@ -477,9 +477,9 @@ export default function CheckoutPage() {
                   onChange={handleChange}
                   placeholder={t('notesPlaceholder')}
                   rows={2}
-                  style={{ width: '100%', border: `1px solid ${notesError ? '#E53935' : 'var(--color-border)'}`, borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }}
+                  style={{ width: '100%', border: `1px solid ${notesError ? BRAND.red : 'var(--color-border)'}`, borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }}
                 />
-                {notesError && <p style={{ fontSize: 12, color: '#E53935', margin: '4px 0 0' }}>{notesError}</p>}
+                {notesError && <p style={{ fontSize: 12, color: BRAND.red, margin: '4px 0 0' }}>{notesError}</p>}
               </div>
             </div>
           </div>
@@ -639,7 +639,7 @@ export default function CheckoutPage() {
                   </button>
                 )}
               </div>
-              {couponError && <p style={{ fontSize: 12, color: '#E53935', margin: '6px 0 0' }}>{couponError}</p>}
+              {couponError && <p style={{ fontSize: 12, color: BRAND.red, margin: '6px 0 0' }}>{couponError}</p>}
               {appliedCoupon && (
                 <p style={{ fontSize: 12, color: '#2E7D32', margin: '6px 0 0', fontWeight: 600 }}>
                   {t('couponAppliedMsg', { code: appliedCoupon.code })}
@@ -673,7 +673,7 @@ export default function CheckoutPage() {
                             <span style={{ textDecoration: 'line-through', color: BRAND.gray, marginRight: 6 }}>
                               RD${(rawShipping / 100).toLocaleString('es-DO')}
                             </span>
-                            <span style={{ color: 'var(--color-success)', fontWeight: 700 }}>{t('freeBadge')}</span>
+                            <span style={{ color: 'var(--color-green)', fontWeight: 700 }}>{t('freeBadge')}</span>
                           </>
                         )
                         : `RD$${(ENVIO / 100).toLocaleString('es-DO')}`}
@@ -683,7 +683,7 @@ export default function CheckoutPage() {
                 <span>{t('itbisLabel')}</span><span>RD${(itbis / 100).toLocaleString('es-DO')}</span>
               </div>
               {appliedCoupon && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--color-success)', fontWeight: 600 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--color-green)', fontWeight: 600 }}>
                   <span>{t('discountLabel', { code: appliedCoupon.code })}</span>
                   <span>-RD${(discountRdp / 100).toLocaleString('es-DO')}</span>
                 </div>
@@ -728,7 +728,7 @@ export default function CheckoutPage() {
             {loading ? t('processingPayment') : shippingLoading ? t('calculatingShippingButton') : rateLimited ? t('rateLimitedButton') : t('confirmAndPay')}
           </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 12, background: 'var(--color-success-subtle)', borderRadius: 'var(--radius-control)', color: 'var(--color-success)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 12, background: 'var(--color-green-subtle)', borderRadius: 'var(--radius-control)', color: 'var(--color-green)' }}>
             <ShieldCheck size={15} color="currentColor" style={{ flexShrink: 0 }} />
             <span style={{ fontSize: 11 }}>{t('securePaymentNotice')}</span>
           </div>

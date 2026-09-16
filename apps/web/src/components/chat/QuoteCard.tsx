@@ -183,7 +183,7 @@ export function QuoteCard({ quote, productName, catalogPriceRdp, isBuyer, provin
                 type="button"
                 onClick={() => setShowAcceptForm(true)}
                 className="mt-2 w-full py-1.5 rounded-lg text-xs font-medium text-white border-none cursor-pointer"
-                style={{ background: 'var(--color-success)' }}
+                style={{ background: 'var(--color-green)' }}
               >
                 {t('acceptQuoteButton')}
               </button>
@@ -227,7 +227,7 @@ export function QuoteCard({ quote, productName, catalogPriceRdp, isBuyer, provin
                     type="submit"
                     disabled={acceptLoading}
                     className="flex-1 py-1.5 rounded-lg text-xs font-medium text-white border-none cursor-pointer disabled:opacity-60"
-                    style={{ background: 'var(--color-success)' }}
+                    style={{ background: 'var(--color-green)' }}
                   >
                     {acceptLoading ? t('sendingButton') : t('confirmAcceptButton')}
                   </button>
@@ -245,7 +245,7 @@ export function QuoteCard({ quote, productName, catalogPriceRdp, isBuyer, provin
 
       {quote.status === 'accepted' && (
         <div className="mt-2">
-          <p className="text-sm font-bold" style={{ color: 'var(--color-success)' }}>✅ {t('quoteAcceptedLabel')}</p>
+          <p className="text-sm font-bold" style={{ color: 'var(--color-green)' }}>✅ {t('quoteAcceptedLabel')}</p>
           {subtotal !== null && (
             <p className="text-xs text-gray-500">{t('subtotalLine', { amount: formatPrice(subtotal) })}</p>
           )}

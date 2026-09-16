@@ -122,6 +122,15 @@ export const admin = {
   brandImageUploadFailed: 'Could not upload the image. Try again.',
   brandImageUpdateFailed: 'The image uploaded, but could not be saved. Try again.',
 
+  promoCardImagesTitle: 'Photos for the 3 small banners',
+  promoCardImagesSub: 'Replace the icon and color gradient with a real photo. If you don\'t upload anything, the current design stays.',
+  promoCardSellImageLabel: '"Sell your products on MercadoRD" (optional)',
+  promoCardSellImageHint: 'Selling/commerce photo. If you don\'t upload anything, the icon with the blue gradient is used.',
+  promoCardShippingImageLabel: '"Reliable, fast shipping" (optional)',
+  promoCardShippingImageHint: 'Shipping/packages photo. If you don\'t upload anything, the icon with the light background is used.',
+  promoCardOffersImageLabel: '"Special offers" (optional)',
+  promoCardOffersImageHint: 'Offers photo. If you don\'t upload anything, the icon with the purple gradient is used.',
+
   currentBannersTitle: 'Current banners ({count})',
   editBannerTitle: 'Edit banner',
   createBannerTitle: 'Create new banner',

@@ -377,7 +377,7 @@ export function ProductActions({
         disabled={!canAdd}
         className={`w-full py-3.5 font-semibold text-white flex items-center justify-center gap-2 ${
           added
-            ? 'bg-[var(--color-success)]'
+            ? 'bg-[var(--color-green)]'
             : canAdd
             ? 'bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] active:scale-[0.98]'
             : 'bg-gray-300 cursor-not-allowed text-white'

@@ -3,15 +3,16 @@
 @tailwind utilities;
 
 /* ============================================================
-   MercadoRD — Sistema de diseño "Caribe Premium Minimal"
-   Fase 1: fundación de tokens únicamente.
+   MercadoRD — Sistema de diseño
    ============================================================
-   Estos tokens todavía NO están aplicados a ningún componente —
-   el sitio sigue viéndose exactamente igual hasta que empiece la
-   Fase 2. BRAND (lib/colors.ts) y --brand-blue/--brand-red
-   (definidos en <body>, app/layout.tsx) son el sistema de colores
-   ACTUAL y siguen intactos; conviven con estos tokens nuevos hasta
-   que los componentes migren uno por uno.
+   Estos tokens de color son la paleta oficial de marca — fuente única
+   de verdad para todo el sitio, junto con BRAND en lib/colors.ts
+   (BRAND.blue/BRAND.red deben llevar los mismos valores que
+   --color-primary/--brand-red respectivamente; ver comentario ahí).
+   --brand-blue/--brand-red (CSS vars puestas en runtime desde BRAND.*
+   en app/layout.tsx y en los <main> de login/register/recuperar-
+   password/restablecer-password) no viven en este :root — se
+   resuelven a los valores de BRAND en tiempo de render.
 
    Tipografía: --font-heading y --font-body apuntan a --font-manrope
    (Manrope, pesos 400/500/600/700/800), expuesta por next/font en
@@ -20,21 +21,39 @@
    no se quitaron por si hace falta revertir.
    ============================================================ */
 :root {
-  /* ── Colores ── */
-  --color-primary: #0F4C81;
-  --color-primary-hover: #0A3A66;
-  --color-primary-subtle: #E8F1F8;
-  --color-accent: #E8B923;
-  --color-success: #10B981;
-  --color-success-subtle: #ECFDF5;
-  --color-badge-orange: #FF6B35;
-  --color-bg: #F8F9FB;
+  /* ── Colores — paleta oficial de MercadoRD ──
+     Fuente única de verdad para TODO el sitio (junto con BRAND en
+     lib/colors.ts, que debe llevar los mismos valores donde coinciden
+     — ver comentario ahí). Reemplaza los tokens ad-hoc de las fases
+     "Caribe Premium Minimal"/2A anteriores.
+
+     Derivados (sin equivalente directo en la paleta oficial, calculados
+     por fórmula explícita en vez de a ojo):
+       --color-primary-hover:  --color-primary × 0.85 (15% más oscuro)
+       --color-primary-subtle: --color-primary al 10% mezclado con blanco
+       --color-green-subtle:   --color-green al 10% mezclado con blanco
+       --color-text-tertiary:  --color-text-secondary al 65% + blanco 35%
+       --color-divider:        --color-border al 45% + blanco 55% */
+  --color-primary: #0458B4;
+  --color-primary-hover: #034B99;
+  --color-primary-subtle: #E6EEF8;
+  --color-blue-deep: #064074;
+  --color-blue-dark: #0A2E56;
+  --color-blue-bright: #097FE5;
+  --color-yellow-cta: #F5BD0F;
+  --color-purple-deep: #4A2E8A;
+  --color-purple-bright: #7C3AED;
+  --color-green: #00A86B;
+  --color-green-subtle: #E6F6F0;
+  --color-orange: #FF7A00;
+  --color-bg-main: #FBFCFD;
+  --color-bg-cream: #F2F1E9;
   --color-card-bg: #FFFFFF;
-  --color-text-primary: #1A1A1A;
-  --color-text-secondary: #6B7280;
-  --color-text-tertiary: #9CA3AF;
-  --color-border: #E5E7EB;
-  --color-divider: #F3F4F6;
+  --color-text-primary: #131A18;
+  --color-text-secondary: #3D5361;
+  --color-text-tertiary: #818F98;
+  --color-border: #D1D4D7;
+  --color-divider: #EAECED;
 
   /* ── Tipografía ── */
   --font-heading: var(--font-manrope), sans-serif;
@@ -55,7 +74,7 @@
   /* ── Sombras ── */
   --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.06);
   --shadow-card-hover: 0 8px 30px rgba(0, 0, 0, 0.08);
-  --shadow-button: 0 2px 8px rgba(15, 76, 129, 0.15);
+  --shadow-button: 0 2px 8px rgba(4, 88, 180, 0.2);
 
   /* ── Espaciado (escala de 4px) ── */
   --space-1: 4px;
@@ -88,7 +107,7 @@ html {
 }
 
 html, body {
-  background: #F5F7FA;
+  background: var(--color-bg-main);
   min-height: 100vh;
   overflow-x: hidden;
   max-width: 100vw;

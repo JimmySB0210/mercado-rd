@@ -342,7 +342,7 @@ export function ListaRegalosContent({ list: initialList, items: initialItems, pr
                         onClick={() => addProductToList(list.id, product.id, 2)}
                         disabled={added || addingId === product.id}
                         className="text-xs font-medium px-3 py-1.5 rounded-lg border flex-shrink-0 disabled:opacity-60"
-                        style={{ borderColor: added ? 'var(--color-success)' : BRAND.blue, color: added ? 'var(--color-success)' : BRAND.blue }}
+                        style={{ borderColor: added ? 'var(--color-green)' : BRAND.blue, color: added ? 'var(--color-green)' : BRAND.blue }}
                       >
                         {added ? t('addedProductButton') : t('addProductButton')}
                       </button>
@@ -382,7 +382,7 @@ export function ListaRegalosContent({ list: initialList, items: initialItems, pr
                         <p className="text-sm font-medium text-gray-900 truncate">{item.product.name}</p>
                         <p className="text-xs text-gray-400">{formatPrice(item.product.price_rdp)}</p>
                         {isPurchased && (
-                          <p className="text-xs font-medium mt-0.5" style={{ color: 'var(--color-success)' }}>
+                          <p className="text-xs font-medium mt-0.5" style={{ color: 'var(--color-green)' }}>
                             {t('giftedItemBadge')}
                           </p>
                         )}

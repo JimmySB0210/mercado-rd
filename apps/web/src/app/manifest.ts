@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next'
+import { BRAND } from '@/lib/colors'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -7,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Compra y vende en toda República Dominicana',
     start_url: '/',
     display: 'standalone',
-    background_color: '#0D47A1',
-    theme_color: '#0D47A1',
+    background_color: BRAND.blue,
+    theme_color: BRAND.blue,
     orientation: 'portrait',
     icons: [
       { src: '/icons/icon-72x72.png', sizes: '72x72', type: 'image/png' },

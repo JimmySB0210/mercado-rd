@@ -11,7 +11,12 @@ export async function FeaturedProducts() {
 
   const { data, error } = await supabase
     .from('products')
-    .select('*, vendors(business_name, is_verified), categories(name), provinces_rd(name)')
+    // vendors(id, whatsapp) — faltaban: sin ellos, ProductCard no puede
+    // armar "Ver tienda" ni el botón de WhatsApp, así que un producto
+    // con variantes (que no puede ofrecer "Agregar al carrito" directo)
+    // quedaba con el área de CTA completamente vacía. Mismo shape que ya
+    // usan RecentlyPublished.tsx/BestSellers.tsx/etc.
+    .select('*, vendors(id, business_name, is_verified, whatsapp), categories(name), provinces_rd(name)')
     .eq('is_featured', true)
     .eq('is_active', true)
     .limit(8)

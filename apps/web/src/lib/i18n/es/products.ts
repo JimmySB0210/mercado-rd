@@ -11,6 +11,9 @@
 export const products = {
   // ProductCard
   stockLeftBadge: 'Quedan {count}',
+  newBadge: 'Nuevo',
+  bestSellerBadge: 'Más vendido',
+  localBadge: 'Local',
   viewStore: 'Ver tienda →',
   askWhatsappShort: 'Preguntar',
   verifiedBadge: 'Verificado',
@@ -29,8 +32,8 @@ export const products = {
   selectSizePlaceholder: 'Selecciona una talla',
   selectColor: 'Selecciona color',
   selectOption: 'Selecciona una opción',
-  addedToCart: '✓ Añadido al carrito',
-  addToCart: 'Añadir al carrito',
+  addedToCart: '✓ Agregado al carrito',
+  addToCart: 'Agregar al carrito',
 
   // FreeShippingBadge
   freeShippingApplied: '🎉 ¡Envío gratis ya aplicado en tu carrito!',
@@ -98,7 +101,8 @@ export const products = {
   loadError: 'No pudimos cargar los productos. Intenta recargar la página.',
   loading: 'Cargando...',
   loadMore: 'Ver más productos',
-  popularStoresTitle: 'Tiendas populares',
+  popularStoresTitle: 'Tiendas destacadas',
+  popularStoresSubtitle: 'Descubre tiendas confiables en toda República Dominicana.',
   featuredProvidersTitle: 'Proveedores destacados',
   exploreCategoriesTitle: 'Explora por categoría',
   moreCategoriesLabel: 'Más categorías',
@@ -111,11 +115,28 @@ export const products = {
   trustShippingTitle: '+32 provincias',
   trustShippingSub: 'Envíos a todo el país',
 
-  // FeaturedProducts
+  // FeaturedProducts — is_featured es una curaduría manual (vendor/admin),
+  // no un ranking por búsquedas ni vistas, así que el subtítulo no puede
+  // decir "los más buscados" sin inventar un dato que no existe.
   featuredProductsTitle: 'Productos destacados ⭐',
+  featuredProductsSubtitle: 'Una selección especial de productos para ti.',
 
-  // DailyDeals
+  // DailyDeals — get_daily_deals() sí filtra por % de descuento real
   dailyDealsTitle: '⚡ Ofertas del día',
+  dailyDealsSubtitle: 'Descuentos por tiempo limitado en productos seleccionados.',
+  viewOffersCta: 'Ver ofertas →',
+
+  // 3 banners promocionales (home), justo debajo de "Productos
+  // destacados" — vendedores / envíos / ofertas, mismo trío que pide la
+  // referencia visual.
+  sellerCtaTitle: 'Vende tus productos\nen MercadoRD',
+  sellerCtaSubtitle: 'Llega a miles de compradores\nen toda la República Dominicana.',
+  sellerCtaButton: 'Comenzar a vender →',
+  shippingCardTitle: 'Envíos confiables\ny rápidos',
+  shippingCardSubtitle: 'Tus productos llegan seguros\na cualquier parte del país.',
+  moreInfoCta: 'Más información →',
+  offersCardTitle: 'Ofertas especiales',
+  offersCardSubtitle: 'Los mejores precios en\ntecnología, moda y más.',
 
   pricingTiersTitle: 'Precios por cantidad',
   pricingTiersRangeAndUp: '{min}+ {unit}',

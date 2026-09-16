@@ -7,6 +7,9 @@ import type { ProductsDict } from '@/lib/i18n/es/products'
 
 export const products = {
   stockLeftBadge: '{count} left',
+  newBadge: 'New',
+  bestSellerBadge: 'Best seller',
+  localBadge: 'Local',
   viewStore: 'View store →',
   askWhatsappShort: 'Ask',
   verifiedBadge: 'Verified',
@@ -86,7 +89,8 @@ export const products = {
   loadError: "We couldn't load the products. Try reloading the page.",
   loading: 'Loading...',
   loadMore: 'Load more products',
-  popularStoresTitle: 'Popular stores',
+  popularStoresTitle: 'Featured stores',
+  popularStoresSubtitle: 'Discover trusted stores across the Dominican Republic.',
   featuredProvidersTitle: 'Featured providers',
   exploreCategoriesTitle: 'Explore by category',
   moreCategoriesLabel: 'More categories',
@@ -100,8 +104,20 @@ export const products = {
   trustShippingSub: 'Nationwide shipping',
 
   featuredProductsTitle: 'Featured products ⭐',
+  featuredProductsSubtitle: 'A special selection of products for you.',
 
   dailyDealsTitle: '⚡ Deals of the day',
+  dailyDealsSubtitle: 'Limited-time discounts on selected products.',
+  viewOffersCta: 'View offers →',
+
+  sellerCtaTitle: 'Sell your products\non MercadoRD',
+  sellerCtaSubtitle: 'Reach thousands of buyers\nacross the Dominican Republic.',
+  sellerCtaButton: 'Start selling →',
+  shippingCardTitle: 'Reliable, fast\nshipping',
+  shippingCardSubtitle: 'Your products arrive safely\nanywhere in the country.',
+  moreInfoCta: 'Learn more →',
+  offersCardTitle: 'Special offers',
+  offersCardSubtitle: 'The best prices in\ntech, fashion, and more.',
 
   pricingTiersTitle: 'Quantity pricing',
   pricingTiersRangeAndUp: '{min}+ {unit}',

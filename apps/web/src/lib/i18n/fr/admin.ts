@@ -122,6 +122,15 @@ export const admin = {
   brandImageUploadFailed: "Impossible de téléverser l'image. Réessayez.",
   brandImageUpdateFailed: "L'image a été téléversée, mais n'a pas pu être enregistrée. Réessayez.",
 
+  promoCardImagesTitle: 'Photos des 3 petites bannières',
+  promoCardImagesSub: "Remplacent l'icône et le dégradé de couleur par une vraie photo. Si vous ne téléversez rien, le design actuel reste.",
+  promoCardSellImageLabel: '« Vendez vos produits sur MercadoRD » (optionnel)',
+  promoCardSellImageHint: "Photo de vente/commerce. Si vous ne téléversez rien, l'icône avec le dégradé bleu est utilisée.",
+  promoCardShippingImageLabel: '« Livraison fiable et rapide » (optionnel)',
+  promoCardShippingImageHint: "Photo de livraison/colis. Si vous ne téléversez rien, l'icône avec le fond clair est utilisée.",
+  promoCardOffersImageLabel: '« Offres spéciales » (optionnel)',
+  promoCardOffersImageHint: "Photo d'offres. Si vous ne téléversez rien, l'icône avec le dégradé violet est utilisée.",
+
   currentBannersTitle: 'Bannières actuelles ({count})',
   editBannerTitle: 'Modifier la bannière',
   createBannerTitle: 'Créer une nouvelle bannière',

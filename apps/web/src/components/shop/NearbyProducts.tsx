@@ -17,9 +17,11 @@
 
 import { useEffect, useState } from 'react'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { useHasVariantsMap } from '@/lib/hooks/useHasVariantsMap'
 import { useLocationStore } from '@/lib/store/location'
 import { createPublicClient } from '@/lib/supabase/public'
 import { ProductCard } from '@/components/product/ProductCard'
+import { getBestSellerProductId } from '@/lib/utils'
 import type { ProductWithVendor } from '@/types/database.types'
 
 const MIN_EXACT_MATCH = 4
@@ -36,6 +38,8 @@ export function NearbyProducts() {
   const { t } = useTranslation('products')
   const province = useLocationStore(s => s.province)
   const [products, setProducts] = useState<ProductWithVendor[]>([])
+  const variantIds = useHasVariantsMap(products.map(p => p.id))
+  const bestSellerId = getBestSellerProductId(products)
 
   useEffect(() => {
     if (!province) {
@@ -119,7 +123,7 @@ export function NearbyProducts() {
       </div>
       <div className="grid-products">
         {products.map(p => (
-          <ProductCard key={p.id} product={p} />
+          <ProductCard key={p.id} product={p} hasVariants={variantIds ? variantIds.has(p.id) : undefined} isBestSeller={p.id === bestSellerId} />
         ))}
       </div>
     </div>

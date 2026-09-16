@@ -80,7 +80,7 @@ export const metadata: Metadata = {
     statusBarStyle: 'default',
     title: 'MercadoRD',
   },
-  themeColor: '#0D47A1',
+  themeColor: BRAND.blue,
 }
 
 export default function RootLayout({
@@ -99,7 +99,7 @@ export default function RootLayout({
           margin: 0,
           padding: 0,
           fontFamily: 'var(--font-poppins), sans-serif',
-          background: '#F5F7FA',
+          background: '#FAFBFC',
           '--brand-red': BRAND.red,
           '--brand-blue': BRAND.blue,
         } as React.CSSProperties}

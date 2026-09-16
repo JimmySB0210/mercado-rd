@@ -141,6 +141,18 @@ export const admin = {
   brandImageUploadFailed: 'No se pudo subir la imagen. Intenta de nuevo.',
   brandImageUpdateFailed: 'La imagen se subió, pero no se pudo guardar. Intenta de nuevo.',
 
+  // components/admin/PromoCardImages.tsx — fotos de los 3 banners
+  // pequeños del home (PromoBannersRow.tsx), mismo mecanismo que el
+  // banner de marca (site_settings + bucket 'banners')
+  promoCardImagesTitle: 'Fotos de los 3 banners pequeños',
+  promoCardImagesSub: 'Reemplazan el ícono y el degradado de color por una foto real. Si no subes nada, se queda el diseño actual.',
+  promoCardSellImageLabel: '"Vende tus productos en MercadoRD" (opcional)',
+  promoCardSellImageHint: 'Foto de venta/comercio. Si no subes nada, se usa el ícono con degradado azul.',
+  promoCardShippingImageLabel: '"Envíos confiables y rápidos" (opcional)',
+  promoCardShippingImageHint: 'Foto de envíos/paquetes. Si no subes nada, se usa el ícono con fondo claro.',
+  promoCardOffersImageLabel: '"Ofertas especiales" (opcional)',
+  promoCardOffersImageHint: 'Foto de ofertas. Si no subes nada, se usa el ícono con degradado morado.',
+
   // components/admin/PromoBannerManager.tsx
   currentBannersTitle: 'Banners actuales ({count})',
   editBannerTitle: 'Editar banner',

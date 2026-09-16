@@ -133,7 +133,7 @@ export default function CartPage() {
                   {t('freeShippingMissing', { amount: ((FREE_SHIPPING_THRESHOLD_RDP - subtotal) / 100).toLocaleString('es-DO') })}
                 </div>
               ) : (
-                <div style={{ fontSize: 12, color: 'var(--color-success)', background: 'var(--color-success-subtle)', borderRadius: 'var(--radius-control)', padding: '8px 10px', marginBottom: 12, fontWeight: 600 }}>
+                <div style={{ fontSize: 12, color: 'var(--color-green)', background: 'var(--color-green-subtle)', borderRadius: 'var(--radius-control)', padding: '8px 10px', marginBottom: 12, fontWeight: 600 }}>
                   {t('freeShippingApplied')}
                 </div>
               )}
@@ -142,7 +142,7 @@ export default function CartPage() {
                 <span>{t('shippingLabel')}</span>
                 <span>
                   {items.length > 0 && subtotal >= FREE_SHIPPING_THRESHOLD_RDP
-                    ? <span style={{ color: 'var(--color-success)', fontWeight: 700 }}>{t('freeBadge')}</span>
+                    ? <span style={{ color: 'var(--color-green)', fontWeight: 700 }}>{t('freeBadge')}</span>
                     : `RD$${(ENVIO / 100).toLocaleString('es-DO')}`}
                 </span>
               </div>
@@ -168,7 +168,7 @@ export default function CartPage() {
                 {t('continueShopping')}
               </a>
 
-              <div style={{ marginTop: 14, padding: 12, background: 'var(--color-success-subtle)', borderRadius: 'var(--radius-control)', display: 'flex', gap: 8, alignItems: 'flex-start', color: 'var(--color-success)' }}>
+              <div style={{ marginTop: 14, padding: 12, background: 'var(--color-green-subtle)', borderRadius: 'var(--radius-control)', display: 'flex', gap: 8, alignItems: 'flex-start', color: 'var(--color-green)' }}>
                 <ShieldCheck size={16} color="currentColor" style={{ flexShrink: 0, marginTop: 1 }} />
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 2 }}>{t('protectedPurchaseTitle')}</div>

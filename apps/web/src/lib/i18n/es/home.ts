@@ -7,19 +7,21 @@
 // ============================================================
 
 export const home = {
-  welcomeTitle: 'Compra y vende en RD',
-  welcomeSubtitle: 'Miles de productos y tiendas cerca de ti.',
-  exploreCta: 'Explorar productos',
+  heroKicker: 'Tu marketplace de confianza',
+  heroTagline: 'Lo que necesitas, está aquí',
+  welcomeTitle: 'Productos únicos, de todo el mundo',
+  welcomeSubtitle: 'Conecta con miles de proveedores y encuentra lo que necesitas, sin salir de República Dominicana.',
+  exploreCta: 'Explorar categorías →',
   heroModelAlt: 'Clienta sonriendo mientras usa MercadoRD desde su celular',
   slideGoToAria: 'Ir a diapositiva',
 
-  perkSecurePaymentTitle: 'Pago seguro',
+  perkSecurePaymentTitle: 'Compra segura y protegida',
   perkSecurePaymentSub: 'Protegemos tu compra',
-  perkShippingTitle: 'Envíos a todo el país',
+  perkShippingTitle: 'Envíos rápidos a todo el país',
   perkShippingSub: 'Rápido y confiable',
   perkStoresTitle: 'Miles de tiendas',
   perkStoresSub: 'Apoya lo local',
-  perkSupportTitle: 'Soporte 24/7',
+  perkSupportTitle: 'Soporte 24/7 en español',
   perkSupportSub: 'Estamos para ayudarte',
 
   // ShippingBenefitsStrip — franja aparte, debajo del hero (Fase 2A

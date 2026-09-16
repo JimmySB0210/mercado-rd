@@ -66,3 +66,16 @@ export function getMembershipDuration(createdAt: string): string {
   const years = Math.floor(months / 12)
   return `hace ${years} ${years === 1 ? 'año' : 'años'}`
 }
+
+// "Más vendido" del badge de ProductCard — SIEMPRE relativo a la lista
+// que se está renderizando (el sold_count más alto DE ESE GRID), nunca
+// un ranking global de la plataforma que no existe hoy. Devuelve null si
+// nadie en la lista vendió nada todavía, para no marcar un 0 como
+// "más vendido".
+export function getBestSellerProductId(products: { id: string; sold_count: number }[]): string | null {
+  let best: { id: string; sold_count: number } | null = null
+  for (const p of products) {
+    if (p.sold_count > 0 && (!best || p.sold_count > best.sold_count)) best = p
+  }
+  return best?.id ?? null
+}

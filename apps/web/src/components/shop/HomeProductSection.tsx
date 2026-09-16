@@ -11,7 +11,9 @@
 // ============================================================
 
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { useHasVariantsMap } from '@/lib/hooks/useHasVariantsMap'
 import { ProductCard } from '@/components/product/ProductCard'
+import { getBestSellerProductId } from '@/lib/utils'
 import type { ProductWithVendor } from '@/types/database.types'
 
 type TitleKey = 'recentlyPublishedTitle' | 'bestSellersTitle' | 'lowStockTitle' | 'trendingTitle' | 'popularTitle' | 'nearbyTitle'
@@ -23,9 +25,19 @@ interface Props {
 
 export function HomeProductSection({ titleKey, products }: Props) {
   const { t } = useTranslation('products')
+  const variantIds = useHasVariantsMap(products.map(p => p.id))
+  const bestSellerId = getBestSellerProductId(products)
 
   return (
-    <div style={{ maxWidth: 1400, margin: '0 auto', padding: '24px 24px 0' }}>
+    // width:'100%' explícito — mismo bug que HeroBanner/PromoBannersRow:
+    // este div es flex item de la columna raíz de page.tsx, y sin ancho
+    // explícito el margin:auto desactiva el stretch. Acá afectaba a las
+    // 6 secciones que comparten este componente (recién publicados, más
+    // vendidos, últimas unidades, tendencias, populares, cerca de ti):
+    // en mobile, .grid-products (2 columnas vía column-count) calculaba
+    // sus columnas sobre un contenedor más ancho que el viewport real,
+    // dejando toda la segunda columna cortada fuera de pantalla.
+    <div style={{ width: '100%', maxWidth: 1400, margin: '0 auto', padding: '24px 24px 0' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 0 16px' }}>
         <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text-primary)', margin: 0 }}>
           {t(titleKey)}
@@ -33,7 +45,12 @@ export function HomeProductSection({ titleKey, products }: Props) {
       </div>
       <div className="grid-products">
         {products.map(p => (
-          <ProductCard key={p.id} product={p} />
+          <ProductCard
+            key={p.id}
+            product={p}
+            hasVariants={variantIds ? variantIds.has(p.id) : undefined}
+            isBestSeller={p.id === bestSellerId}
+          />
         ))}
       </div>
     </div>

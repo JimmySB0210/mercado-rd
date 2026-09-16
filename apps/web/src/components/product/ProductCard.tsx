@@ -13,33 +13,105 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { ShoppingCart, Check } from 'lucide-react'
 import { formatPrice, discountPercent, type ProductWithVendor } from '@/types/database.types'
+import type { Product as CartProduct } from '@/types'
 import { WishlistButton } from '@/components/shop/WishlistButton'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { useShippingRateForCurrentProvince } from '@/lib/hooks/useShippingRate'
+import { useCartStore } from '@/lib/store/cart'
+import { useLocationStore } from '@/lib/store/location'
 import { PLACEHOLDER_PRODUCT_IMAGE } from '@/lib/utils'
 
 interface Props {
   product: ProductWithVendor
+  // Si el que renderiza la tarjeta ya verificó (con una sola consulta
+  // batched a product_variants, no una por tarjeta) que este producto
+  // tiene variantes activas — undefined significa "no se verificó", y en
+  // ese caso la tarjeta NUNCA ofrece agregar directo al carrito, para no
+  // arriesgarse a crear una línea sin talla/color en un producto que sí
+  // los necesita. Ver HomeProductSection/FeaturedProductsGrid/etc.
+  hasVariants?: boolean
+  // "Más vendido" relativo a la lista donde se está renderizando esta
+  // tarjeta (el sold_count más alto DEL GRID ACTUAL, nunca un ranking
+  // global de la plataforma que no existe) — lo calcula el padre sobre
+  // el array completo, una tarjeta sola no puede saberlo de sí misma.
+  isBestSeller?: boolean
 }
 
 // Mismo umbral real que ya usa todo el sitio (cart/page.tsx,
-// checkout/page.tsx, FreeShippingBadge.tsx, ShippingBenefitsStrip.tsx)
+// checkout/page.tsx, FreeShippingBadge.tsx)
 const FREE_SHIPPING_THRESHOLD_RDP = 250000 // RD$2,500
 
-export function ProductCard({ product }: Props) {
+// "Nuevo" — mismo criterio en todos lados donde se muestre: publicado
+// hace 14 días o menos. published_at (no created_at) porque no se mueve
+// si el vendor dejó el producto en borrador semanas antes de publicarlo.
+const NEW_BADGE_WINDOW_DAYS = 14
+
+function isRecentlyPublished(publishedAt: string | null | undefined): boolean {
+  if (!publishedAt) return false
+  const days = (Date.now() - new Date(publishedAt).getTime()) / 86_400_000
+  return days >= 0 && days <= NEW_BADGE_WINDOW_DAYS
+}
+
+export function ProductCard({ product, hasVariants, isBestSeller }: Props) {
   const { t } = useTranslation('products')
+  const addItem = useCartStore(s => s.addItem)
+  const selectedProvince = useLocationStore(s => s.province)
   const [imgSrc, setImgSrc] = useState(product.images?.[0] ?? PLACEHOLDER_PRODUCT_IMAGE)
+  const [added, setAdded] = useState(false)
   const hasDiscount = product.compare_rdp && product.compare_rdp > product.price_rdp
   const discount = hasDiscount
     ? discountPercent(product.price_rdp, product.compare_rdp!)
     : null
+  const isNew = isRecentlyPublished(product.published_at)
+  const isLowStock = product.stock > 0 && product.stock <= 5
+  const isLocal = !!selectedProvince && product.province?.id === selectedProvince.id
+
+  // Solo se ofrece "Agregar al carrito" directo cuando quien renderizó la
+  // tarjeta confirmó que no hay variantes activas (product_variants) Y el
+  // producto tampoco usa el sistema viejo de sizes/colors — cualquiera de
+  // los dos significa que hace falta elegir algo antes de comprar, y esa
+  // selección solo existe en la página de producto (ProductActions).
+  const canAddDirectly = hasVariants === false && product.sizes.length === 0 && product.colors.length === 0 && product.stock > 0
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!canAddDirectly || added) return
+    // Mismo cast que ya usan los demás call sites entre ProductWithVendor
+    // (vendor: Pick<...>) y Product (vendor?: Vendor completo) — son dos
+    // formas del mismo producto real, no dos productos distintos.
+    addItem(product as unknown as CartProduct, 1)
+    setAdded(true)
+    setTimeout(() => setAdded(false), 2000)
+  }
 
   // Info de envío — Fase 2A Batch 3. Sin provincia seleccionada
   // (rate === undefined) no se muestra nada, no se adivina.
   const shippingRate = useShippingRateForCurrentProvince()
   const qualifiesFreeShipping = product.price_rdp >= FREE_SHIPPING_THRESHOLD_RDP
   const showShippingInfo = shippingRate !== undefined && (qualifiesFreeShipping || shippingRate !== null)
+
+  // Un solo badge por tarjeta, no varios apilados — mismo patrón que la
+  // referencia visual (cada tarjeta muestra exactamente uno). Prioridad:
+  // descuento real > últimas unidades > más vendido (de esta lista) >
+  // nuevo > envío gratis > local. Cada color comunica el tipo de
+  // beneficio en vez de un solo naranja para todo. Nunca se inventa un
+  // badge sin el dato real detrás.
+  const badge = discount
+    ? { label: `-${discount}%`, bg: 'var(--brand-red)' }
+    : isLowStock
+      ? { label: t('stockLeftBadge', { count: product.stock }), bg: 'var(--color-orange)' }
+      : isBestSeller
+        ? { label: t('bestSellerBadge'), bg: 'var(--color-orange)' }
+        : isNew
+          ? { label: t('newBadge'), bg: 'var(--color-purple-bright)' }
+          : qualifiesFreeShipping
+            ? { label: t('cardFreeShipping'), bg: 'var(--color-green)' }
+            : isLocal
+              ? { label: t('localBadge'), bg: 'var(--color-primary)' }
+              : null
 
   return (
     <div
@@ -63,18 +135,28 @@ export function ProductCard({ product }: Props) {
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             onError={() => setImgSrc(PLACEHOLDER_PRODUCT_IMAGE)}
           />
-          {(discount || (product.stock <= 5 && product.stock > 0)) && (
+          {/* Un solo badge — ver prioridad calculada arriba (`badge`) */}
+          {badge && (
             <span
               className="absolute top-2 left-2 text-white text-xs font-bold px-2.5 py-1"
-              style={{ background: 'var(--color-badge-orange)', borderRadius: 'var(--radius-pill)' }}
+              style={{ background: badge.bg, borderRadius: 'var(--radius-pill)' }}
             >
-              {discount ? `-${discount}%` : t('stockLeftBadge', { count: product.stock })}
+              {badge.label}
             </span>
           )}
         </div>
 
-        {/* Info */}
+        {/* Info — orden pedido explícitamente: rating → vendedor → nombre → precio → envío */}
         <div className="p-3 pb-0">
+          {/* Rating — siempre visible, aunque no haya reseñas todavía
+              (rating_avg es null cuando rating_count es 0 — se
+              recalculan juntos vía trigger, nunca uno sin el otro) */}
+          <p className="text-xs mb-1" style={{ color: 'var(--color-text-secondary)' }}>
+            {product.rating_count > 0
+              ? <>⭐ {product.rating_avg!.toFixed(1)} ({product.rating_count})</>
+              : t('cardNoRatingsYet')}
+          </p>
+
           {/* Vendor */}
           <div className="flex items-center gap-1 mb-1">
             <span className="text-xs truncate" style={{ color: 'var(--color-text-secondary)' }}>{product.vendor?.business_name}</span>
@@ -92,26 +174,18 @@ export function ProductCard({ product }: Props) {
 
           {/* Nombre */}
           <p
-            className="text-sm font-medium text-gray-900 line-clamp-2 mb-1 leading-snug"
+            className="text-sm font-medium text-gray-900 line-clamp-2 mb-2 leading-snug"
             style={{ fontFamily: 'var(--font-body)' }}
           >
             {product.name}
           </p>
 
-          {/* Rating — siempre visible, aunque no haya reseñas todavía
-              (rating_avg es null cuando rating_count es 0 — se
-              recalculan juntos vía trigger, nunca uno sin el otro) */}
-          <p className="text-xs mb-2" style={{ color: 'var(--color-text-secondary)' }}>
-            {product.rating_count > 0
-              ? <>⭐ {product.rating_avg!.toFixed(1)} ({product.rating_count})</>
-              : t('cardNoRatingsYet')}
-          </p>
-
-          {/* Precio */}
+          {/* Precio — rojo cuando hay descuento real (mismo rojo que el
+              badge "-X%"), azul de marca en cualquier otro caso */}
           <div className="flex items-baseline gap-2">
             <span
-              className="text-lg font-bold"
-              style={{ color: 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}
+              className="text-xl font-extrabold"
+              style={{ color: hasDiscount ? 'var(--brand-red)' : 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}
             >
               {formatPrice(product.price_rdp)}
             </span>
@@ -126,7 +200,7 @@ export function ProductCard({ product }: Props) {
           {showShippingInfo && (
             <p
               className="text-xs mt-1"
-              style={{ color: qualifiesFreeShipping ? 'var(--color-success)' : 'var(--color-text-secondary)', fontWeight: qualifiesFreeShipping ? 600 : 400 }}
+              style={{ color: qualifiesFreeShipping ? 'var(--color-green)' : 'var(--color-text-secondary)', fontWeight: qualifiesFreeShipping ? 600 : 400 }}
             >
               🚚 {qualifiesFreeShipping ? t('cardFreeShipping') : t('cardShippingFrom', { amount: (shippingRate! / 100).toLocaleString('es-DO') })}
             </p>
@@ -134,29 +208,64 @@ export function ProductCard({ product }: Props) {
         </div>
       </Link>
 
-      {/* Ver tienda + WhatsApp CTA — fuera del Link, como hermanos, para evitar <a> dentro de <a> */}
+      {/* CTA — fuera del Link, como hermanos, para evitar <a>/<button> dentro de <a> */}
       <div className="px-3 pb-3">
-        {product.vendor?.id && (
-          <Link
-            href={`/tienda/${product.vendor.id}`}
-            className="block text-xs font-medium mb-2 hover:underline"
-            style={{ color: 'var(--brand-blue)' }}
-          >
-            {t('viewStore')}
-          </Link>
-        )}
-        {product.vendor?.whatsapp && (
-          <a
-            href={`https://wa.me/${product.vendor.whatsapp}?text=Hola, me interesa: ${encodeURIComponent(product.name)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 flex items-center justify-center gap-1.5 w-full border border-green-500 text-green-600 text-xs font-medium py-1.5 rounded-lg hover:bg-green-50 transition-colors"
-          >
-            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-            </svg>
-            {t('askWhatsappShort')}
-          </a>
+        {canAddDirectly ? (
+          <>
+            {/* Compra directa es el camino principal cuando el producto lo
+                permite — "descubro → evalúo → agrego al carrito", no
+                "pregunto por WhatsApp primero". */}
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              className="flex items-center justify-center gap-1.5 w-full text-white text-xs font-semibold py-2.5 transition-colors"
+              style={{
+                background: added ? 'var(--color-green)' : 'var(--color-primary)',
+                borderRadius: 'var(--radius-control)',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              {added ? (
+                <>
+                  <Check size={14} /> {t('addedToCart')}
+                </>
+              ) : (
+                <>
+                  <ShoppingCart size={14} /> {t('addToCart')}
+                </>
+              )}
+            </button>
+
+            {/* Ver tienda — fila secundaria compacta, nunca más
+                protagónica que comprar. WhatsApp se quitó de la tarjeta
+                a pedido explícito (sigue en la página del producto,
+                ProductActions.tsx, sin tocar). */}
+            {product.vendor?.id && (
+              <Link
+                href={`/tienda/${product.vendor.id}`}
+                className="block text-center text-xs font-medium py-1.5 mt-2 hover:underline truncate"
+                style={{ color: 'var(--color-text-secondary)' }}
+              >
+                {t('viewStore')}
+              </Link>
+            )}
+          </>
+        ) : (
+          <>
+            {/* WhatsApp se quitó de la tarjeta a pedido explícito (sigue
+                en la página del producto, ProductActions.tsx, sin
+                tocar). */}
+            {product.vendor?.id && (
+              <Link
+                href={`/tienda/${product.vendor.id}`}
+                className="block text-xs font-medium mb-2 hover:underline"
+                style={{ color: 'var(--brand-blue)' }}
+              >
+                {t('viewStore')}
+              </Link>
+            )}
+          </>
         )}
       </div>
     </div>

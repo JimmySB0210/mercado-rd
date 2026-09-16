@@ -62,7 +62,7 @@ export function ProductReviewsList({ reviews }: { reviews: ReviewViewModel[] }) 
                 <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-semibold text-gray-900">{r.buyerName ?? t('defaultReviewerName')}</span>
-                    <span className="text-xs font-medium" style={{ color: 'var(--color-success)' }}>
+                    <span className="text-xs font-medium" style={{ color: 'var(--color-green)' }}>
                       {t('verifiedPurchaseBadge')}
                     </span>
                   </div>

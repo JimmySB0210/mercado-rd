@@ -10,16 +10,17 @@
 // se renderiza — antes rellenaba con un mock hardcodeado, lo cual
 // violaba la regla de "nunca inventar datos" (Fase 1, homepage vivo).
 // El trust bar que vivía aquí se eliminó (Fase 2A, reconciliación de
-// franjas de beneficios) — ShippingBenefitsStrip, debajo del hero, es
-// ahora la única fuente de verdad.
+// franjas de beneficios) — esa info ya vive en la barra de confianza
+// del Navbar.
 // ============================================================
 
 import { useCallback, useEffect, useState } from 'react'
 import { Star } from 'lucide-react'
-import { BRAND } from '@/lib/colors'
 import { ProductCard } from '@/components/product/ProductCard'
 import { createPublicClient } from '@/lib/supabase/public'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { useHasVariantsMap } from '@/lib/hooks/useHasVariantsMap'
+import { getBestSellerProductId } from '@/lib/utils'
 import type { Product } from '@/types'
 
 const PAGE_SIZE = 12
@@ -84,6 +85,8 @@ export function HomeProductGrid() {
   const [fetchError, setFetchError] = useState(false)
 
   const [vendors, setVendors] = useState<FeaturedVendor[]>([])
+  const variantIds = useHasVariantsMap(products.map(p => p.id))
+  const bestSellerId = getBestSellerProductId(products)
 
   useEffect(() => {
     let active = true
@@ -146,15 +149,23 @@ export function HomeProductGrid() {
   const showFeaturedOffers = hasReal || showError
 
   return (
-    <div id="productos" style={{maxWidth:1400, margin:'0 auto', padding:'8px 24px 20px'}}>
+    // width:'100%' explícito — mismo bug que HeroBanner/PromoBannersRow/
+    // FeaturedProductsGrid/HomeProductSection/HomeCategoryStrip: este
+    // div es flex item de la columna raíz de page.tsx, y sin ancho
+    // explícito el margin:auto desactiva el stretch. Acá afectaba tanto
+    // a "Ofertas destacadas" (.grid-products) como a "Tiendas
+    // destacadas" (.grid-stores), que viven dentro de este mismo
+    // wrapper — en mobile ambas quedaban con su segunda columna
+    // cortada fuera de la pantalla.
+    <div id="productos" style={{width:'100%', maxWidth:1400, margin:'0 auto', padding:'8px 24px 20px'}}>
 
       {/* Ofertas destacadas — si no hay productos reales (y no fue un
           error de carga), la sección entera no se renderiza */}
       {showFeaturedOffers && (
         <>
           <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', margin:'20px 0 16px'}}>
-            <h2 style={{fontSize:18, fontWeight:700, color:BRAND.dark, margin:0}}>{t('featuredOffersTitle')}</h2>
-            <a href='/categoria/electronica' style={{color:BRAND.blue, fontSize:13, fontWeight:600, textDecoration:'none'}}>
+            <h2 style={{fontSize:18, fontWeight:700, color:'var(--color-text-primary)', margin:0}}>{t('featuredOffersTitle')}</h2>
+            <a href='/categoria/electronica' style={{color:'var(--color-primary)', fontSize:13, fontWeight:600, textDecoration:'none'}}>
               {t('viewAll')}
             </a>
           </div>
@@ -162,15 +173,15 @@ export function HomeProductGrid() {
           {hasReal && (
             <div className="grid-products">
               {products.map(p => (
-                <ProductCard key={p.id} product={p as any} />
+                <ProductCard key={p.id} product={p as any} hasVariants={variantIds ? variantIds.has(p.id) : undefined} isBestSeller={p.id === bestSellerId} />
               ))}
             </div>
           )}
 
           {showError && (
-            <div style={{background:'#fff', border:'1px solid #EEE', borderRadius:10, padding:'40px 20px', textAlign:'center'}}>
+            <div style={{background:'var(--color-card-bg)', boxShadow:'var(--shadow-card)', borderRadius:'var(--radius-card)', padding:'40px 20px', textAlign:'center'}}>
               <div style={{fontSize:40, marginBottom:12}}>⚠️</div>
-              <p style={{color:BRAND.gray, fontSize:14, margin:0}}>{t('loadError')}</p>
+              <p style={{color:'var(--color-text-secondary)', fontSize:14, margin:0}}>{t('loadError')}</p>
             </div>
           )}
         </>
@@ -183,13 +194,14 @@ export function HomeProductGrid() {
             onClick={handleLoadMore}
             disabled={loadingMore}
             style={{
-              background:BRAND.blue,
+              background:'var(--color-primary)',
               color:'#fff',
               border:'none',
-              borderRadius:8,
+              borderRadius:'var(--radius-control)',
               padding:'12px 28px',
               fontSize:14,
               fontWeight:600,
+              boxShadow:'var(--shadow-button)',
               cursor: loadingMore ? 'wait' : 'pointer',
               opacity: loadingMore ? 0.7 : 1,
             }}
@@ -199,10 +211,13 @@ export function HomeProductGrid() {
         </div>
       )}
 
-      {/* Tiendas populares */}
-      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', margin:'24px 0 16px'}}>
-        <h2 style={{fontSize:18, fontWeight:700, color:BRAND.dark, margin:0}}>{t('popularStoresTitle')}</h2>
-        <a href='/tiendas' style={{color:BRAND.blue, fontSize:13, fontWeight:600, textDecoration:'none'}}>{t('viewAll')}</a>
+      {/* Tiendas destacadas */}
+      <div id="tiendas" style={{display:'flex', justifyContent:'space-between', alignItems:'flex-end', margin:'24px 0 16px'}}>
+        <div>
+          <h2 style={{fontSize:18, fontWeight:700, color:'var(--color-text-primary)', margin:'0 0 4px'}}>{t('popularStoresTitle')}</h2>
+          <p style={{fontSize:13, color:'var(--color-text-secondary)', margin:0}}>{t('popularStoresSubtitle')}</p>
+        </div>
+        <a href='/tiendas' style={{color:'var(--color-primary)', fontSize:13, fontWeight:600, textDecoration:'none', whiteSpace:'nowrap', flexShrink:0}}>{t('viewAll')}</a>
       </div>
 
       {vendors.length > 0 && (
@@ -211,10 +226,10 @@ export function HomeProductGrid() {
             <a
               key={v.id}
               href={`/tienda/${v.id}`}
-              className="hover:shadow-md transition-shadow"
-              style={{background:'#fff', border:'1px solid #EEE', borderRadius:10, padding:18, display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center', gap:10, textDecoration:'none', cursor:'pointer'}}
+              className="hover:[box-shadow:var(--shadow-card-hover)]"
+              style={{background:'var(--color-card-bg)', boxShadow:'var(--shadow-card)', borderRadius:'var(--radius-card)', padding:18, display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center', gap:10, textDecoration:'none', cursor:'pointer', transition:'box-shadow var(--transition-base)'}}
             >
-              <div style={{width:48, height:48, borderRadius:10, background:BRAND.bg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, overflow:'hidden'}}>
+              <div style={{width:48, height:48, borderRadius:'var(--radius-control)', background:'var(--color-primary-subtle)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, overflow:'hidden'}}>
                 {v.logo_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={v.logo_url} alt={v.business_name} style={{width:'100%', height:'100%', objectFit:'cover'}} />
@@ -223,13 +238,13 @@ export function HomeProductGrid() {
                 )}
               </div>
               <div>
-                <div style={{fontWeight:600, fontSize:13, color:BRAND.dark}}>{v.business_name}</div>
+                <div style={{fontWeight:600, fontSize:13, color:'var(--color-text-primary)'}}>{v.business_name}</div>
                 {v.is_verified && (
-                  <div style={{fontSize:11, color:BRAND.blue, fontWeight:600}}>{t('verifiedBadge')}</div>
+                  <div style={{fontSize:11, color:'var(--color-primary)', fontWeight:600}}>{t('verifiedBadge')}</div>
                 )}
               </div>
               {Number(v.rating_avg) > 0 && (
-                <div style={{display:'flex', alignItems:'center', gap:4, fontSize:12, color:BRAND.gray}}>
+                <div style={{display:'flex', alignItems:'center', gap:4, fontSize:12, color:'var(--color-text-secondary)'}}>
                   <Star size={12} fill='#F5A623' color='#F5A623' />
                   {Number(v.rating_avg).toFixed(1)} · {v.total_sales ?? 0} {t('salesSuffix')}
                 </div>

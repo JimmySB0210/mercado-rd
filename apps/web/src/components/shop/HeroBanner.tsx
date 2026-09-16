@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import { ShieldCheck, Truck, Headset } from 'lucide-react'
 import { createPublicClient } from '@/lib/supabase/public'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { useTranslation } from '@/lib/hooks/useTranslation'
@@ -9,6 +10,16 @@ import type { PromoBanner } from '@/types/database.types'
 
 const SLIDE_INTERVAL_MS = 3500
 const MOBILE_BREAKPOINT = 1010
+
+// Los 3 perks del banner — vuelven a pedido explícito, con el texto
+// exacto de la imagen de referencia (antes se habían quitado del todo;
+// ver comentario en HeroBanner más abajo). Mismos íconos que usaba la
+// franja vieja de beneficios (ShieldCheck/Truck/Headset).
+const HERO_PERKS = [
+  { Icon: ShieldCheck, key: 'perkSecurePaymentTitle' as const },
+  { Icon: Truck, key: 'perkShippingTitle' as const },
+  { Icon: Headset, key: 'perkSupportTitle' as const },
+]
 
 // Diapositiva de marca — contenido y estilos sin cambios respecto a la
 // versión original de HeroBanner. Solo se usa en desktop (≥1010px de
@@ -29,7 +40,7 @@ function BrandSlide({ imageUrl }: { imageUrl: string | null }) {
       position:'relative',
       overflow:'hidden',
       background: imageUrl ? undefined : `linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%)`,
-      padding:'40px',
+      padding:'32px 40px',
       display:'flex',
       alignItems:'center',
       justifyContent:'space-between',
@@ -45,11 +56,12 @@ function BrandSlide({ imageUrl }: { imageUrl: string | null }) {
             alt=""
             style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', zIndex:0 }}
           />
-          {/* Mismo degradado navy de siempre, ahora como wash encima de la foto para que texto/perks sigan legibles */}
+          {/* Wash de marca encima de la foto para que el texto siga legible —
+              más oscuro del lado izquierdo (donde vive el texto), se aclara
+              hacia la derecha para dejar respirar la foto. */}
           <div style={{
             position:'absolute', inset:0,
-            background:`linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%)`,
-            opacity: 0.6,
+            background:`linear-gradient(100deg, var(--color-primary) 0%, rgba(4,88,180,0.55) 45%, rgba(4,88,180,0.35) 100%)`,
           }} />
         </>
       ) : (
@@ -67,7 +79,7 @@ function BrandSlide({ imageUrl }: { imageUrl: string | null }) {
           <div style={{
             position:'absolute',
             inset:0,
-            background:`linear-gradient(to right, var(--color-primary) 0%, rgba(15,76,129,0) 100%)`,
+            background:`linear-gradient(to right, var(--color-primary) 0%, rgba(4,88,180,0) 100%)`,
           }} />
         </div>
       )}
@@ -77,16 +89,42 @@ function BrandSlide({ imageUrl }: { imageUrl: string | null }) {
           del panel; con basis 480px y sin grow se queda como una
           columna de texto normal, dejando ver la foto de fondo/modelo
           a la derecha en vez de un vacío. */}
-      <div style={{position:'relative',zIndex:1,flex:'0 1 480px',minWidth:280}}>
-        <h1 style={{fontFamily:'var(--font-heading)',letterSpacing:'var(--tracking-heading)',fontSize:32,fontWeight:700,lineHeight:1.25,margin:'0 0 14px'}}>
+      <div style={{position:'relative',zIndex:1,flex:'0 1 580px',minWidth:280}}>
+        <span style={{display:'inline-block',fontSize:12,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--color-yellow-cta)',marginBottom:8}}>
+          {t('heroKicker')}
+        </span>
+        <h1 style={{fontFamily:'var(--font-heading)',letterSpacing:'var(--tracking-heading)',fontSize:36,fontWeight:800,lineHeight:1.15,margin:'0 0 10px',textShadow:'0 2px 12px rgba(0,0,0,0.2)'}}>
           {t('welcomeTitle')}
         </h1>
-        <p style={{color:'rgba(255,255,255,0.75)',fontSize:14,margin:'0 0 22px',maxWidth:320}}>
+        <p style={{color:'rgba(255,255,255,0.85)',fontSize:14,lineHeight:1.45,margin:'0 0 18px',maxWidth:360}}>
           {t('welcomeSubtitle')}
         </p>
-        <a href='#productos' style={{display:'inline-block',background:'var(--color-accent)',color:'var(--color-primary)',textDecoration:'none',padding:'13px 26px',borderRadius:'var(--radius-control)',fontWeight:700,fontSize:14,boxShadow:'0 2px 10px rgba(232,185,35,0.35)'}}>
+        <a href='#categorias' style={{display:'inline-block',background:'var(--color-yellow-cta)',color:'var(--color-primary)',textDecoration:'none',padding:'12px 26px',borderRadius:'var(--radius-control)',fontWeight:700,fontSize:14,boxShadow:'0 4px 14px rgba(232,185,35,0.4)'}}>
           {t('exploreCta')}
         </a>
+
+        {/* Los 3 perks — vueltos a pedido explícito, con el texto exacto
+            de la imagen de referencia. Secundarios a propósito: nunca
+            deben competir con el titular, por eso van chicos y en un
+            blanco apagado, no en el amarillo del CTA. */}
+        <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+          {HERO_PERKS.map(({ Icon, key }) => (
+            <span key={key} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, fontWeight: 500, color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap' }}>
+              <Icon size={12} color="rgba(255,255,255,0.8)" />
+              {t(key)}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Bandera + tagline — puramente decorativo, refuerza la identidad
+          dominicana pedida en el brief. Siempre encima de lo que haya de
+          fondo (gradiente, modelo, o foto configurada desde admin). */}
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, marginLeft: 'auto' }}>
+        <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 16, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.35)', textAlign: 'right', maxWidth: 220 }}>
+          {t('heroTagline')}
+        </span>
+        <span style={{ fontSize: 40, lineHeight: 1 }} role="img" aria-label="República Dominicana">🇩🇴</span>
       </div>
     </div>
   );
@@ -118,18 +156,19 @@ function WelcomeSlide({ imageUrl }: { imageUrl: string | null }) {
           {/* Mismo degradado navy de siempre, ahora como wash encima de la foto para que el texto siga legible */}
           <div style={{
             position:'absolute', inset:0,
-            background:`linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%)`,
-            opacity: 0.72,
+            background:`linear-gradient(100deg, var(--color-primary) 0%, rgba(4,88,180,0.6) 100%)`,
           }} />
         </>
       )}
-      <h1 style={{position:'relative',zIndex:1,fontFamily:'var(--font-heading)',letterSpacing:'var(--tracking-heading)',fontSize:18,fontWeight:700,lineHeight:1.25,margin:0}}>
+      <h1 style={{position:'relative',zIndex:1,fontFamily:'var(--font-heading)',letterSpacing:'var(--tracking-heading)',fontSize:19,fontWeight:800,lineHeight:1.2,margin:0,textShadow:'0 1px 8px rgba(0,0,0,0.2)'}}>
         {t('welcomeTitle')}
       </h1>
-      <p style={{position:'relative',zIndex:1,color:'rgba(255,255,255,0.75)',fontSize:11,margin:0,maxWidth:280}}>
+      <p
+        style={{position:'relative',zIndex:1,color:'rgba(255,255,255,0.85)',fontSize:12,lineHeight:1.4,margin:0,maxWidth:300,display:'-webkit-box',WebkitLineClamp:1,WebkitBoxOrient:'vertical',overflow:'hidden',textOverflow:'ellipsis'}}
+      >
         {t('welcomeSubtitle')}
       </p>
-      <a href='#productos' style={{position:'relative',zIndex:1,display:'inline-block',background:'var(--color-accent)',color:'var(--color-primary)',textDecoration:'none',padding:'7px 16px',borderRadius:'var(--radius-control)',fontWeight:700,fontSize:12,marginTop:4}}>
+      <a href='#categorias' style={{position:'relative',zIndex:1,display:'inline-block',background:'var(--color-yellow-cta)',color:'var(--color-primary)',textDecoration:'none',padding:'8px 18px',borderRadius:'var(--radius-control)',fontWeight:700,fontSize:12,marginTop:6}}>
         {t('exploreCta')}
       </a>
     </div>
@@ -198,10 +237,12 @@ export function HeroBanner() {
   const isMobile = useIsMobile(MOBILE_BREAKPOINT)
 
   // Una sola diapositiva de marca (WelcomeSlide en mobile, BrandSlide
-  // en desktop) + promos. PerksSlide se eliminó (Fase 2A, reconciliación
-  // de franjas de beneficios — redundante con ShippingBenefitsStrip,
-  // que vive justo debajo del hero). Si el admin apagó el interruptor
-  // en /admin/promociones, la de marca no cuenta.
+  // en desktop) + promos. Los 3 perks (compra segura/envíos/soporte)
+  // habían salido del banner porque esa info ya vive en la barra de
+  // confianza del Navbar — volvieron a pedido explícito, con el texto
+  // exacto de la imagen de referencia (ver HERO_PERKS arriba). Si el
+  // admin apagó el interruptor en /admin/promociones, la de marca no
+  // cuenta.
   const brandSlideCount = showBrandBanner ? 1 : 0
   const totalSlides = brandSlideCount + banners.length
 
@@ -243,7 +284,13 @@ export function HeroBanner() {
   }, [totalSlides])
 
   return (
-    <div style={{maxWidth:1400, margin:'0 auto', padding: isMobile ? '12px 16px 0' : '24px 24px 0'}}>
+    // width:'100%' explícito — este div es flex item de la columna raíz
+    // de page.tsx (`flex flex-col`); sin ancho explícito, el margin:auto
+    // horizontal desactiva el stretch por defecto y el banner se
+    // encoge al ancho de su contenido (~800px) en vez de llenar el
+    // contenedor hasta maxWidth. Mismo bug latente por el que "ampliar
+    // el banner" nunca se sentía suficiente sin importar el aspectRatio.
+    <div style={{width:'100%', maxWidth:1400, margin:'0 auto', padding: isMobile ? '12px 16px 0' : '24px 24px 0'}}>
       <div style={{
         position: 'relative', overflow: 'hidden',
         borderRadius: isMobile ? 12 : 16,
@@ -252,7 +299,12 @@ export function HeroBanner() {
         // ocupe notablemente menos alto en mobile — "vende una acción,
         // no explica toda la plataforma". El interruptor/imagen
         // configurable de BrandSlide y WelcomeSlide no se tocaron.
-        aspectRatio: isMobile ? '3.2 / 1' : undefined,
+        // Desktop: 4.4/1 — ancho ya correcto (width:100%, ver abajo);
+        // más bajo que el 4/1 anterior a pedido explícito ("el banner
+        // está muy grande"), compensado con paddings/márgenes internos
+        // más ajustados en BrandSlide para que los 3 perks entren sin
+        // que el conjunto se sienta apretado.
+        aspectRatio: isMobile ? '3.2 / 1' : '4.4 / 1',
       }}>
         <div style={{
           display: 'flex',

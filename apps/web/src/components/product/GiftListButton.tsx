@@ -105,7 +105,7 @@ export function GiftListButton({ productId }: Props) {
         type="button"
         onClick={() => router.push('/perfil/lista-regalos')}
         className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 font-medium transition-colors"
-        style={{ borderColor: 'var(--color-success)', color: 'var(--color-success)' }}
+        style={{ borderColor: 'var(--color-green)', color: 'var(--color-green)' }}
       >
         {t('addedToGiftListButton')}
       </button>

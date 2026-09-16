@@ -17,7 +17,7 @@ export function FreeShippingBadge() {
   return (
     <div
       className="flex items-center justify-center gap-2 w-full py-2.5 font-medium text-sm"
-      style={{ background: 'var(--color-success-subtle)', color: 'var(--color-success)', borderRadius: 'var(--radius-pill)' }}
+      style={{ background: 'var(--color-green-subtle)', color: 'var(--color-green)', borderRadius: 'var(--radius-pill)' }}
     >
       {cartSubtotal >= FREE_SHIPPING_THRESHOLD_RDP
         ? t('freeShippingApplied')
