@@ -39,7 +39,7 @@ export function HomeProductSection({ titleKey, products }: Props) {
     // dejando toda la segunda columna cortada fuera de pantalla.
     <div style={{ width: '100%', maxWidth: 1400, margin: '0 auto', padding: '24px 24px 0' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 0 16px' }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text-primary)', margin: 0 }}>
+        <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--color-blue-dark)', fontFamily: 'var(--font-heading)', margin: 0 }}>
           {t(titleKey)}
         </h2>
       </div>

@@ -27,7 +27,7 @@ export function RecentActivityList({ items }: { items: ActivityViewModel[] }) {
   return (
     <div style={{ maxWidth: 1400, margin: '0 auto', padding: '24px 24px 0' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 0 16px' }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text-primary)', margin: 0 }}>
+        <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--color-blue-dark)', fontFamily: 'var(--font-heading)', margin: 0 }}>
           {t('recentActivityHeading')}
         </h2>
       </div>

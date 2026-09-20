@@ -164,7 +164,7 @@ export function HomeProductGrid() {
       {showFeaturedOffers && (
         <>
           <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', margin:'20px 0 16px'}}>
-            <h2 style={{fontSize:18, fontWeight:700, color:'var(--color-text-primary)', margin:0}}>{t('featuredOffersTitle')}</h2>
+            <h2 style={{fontSize:24, fontWeight:800, color:'var(--color-blue-dark)', fontFamily:'var(--font-heading)', margin:0}}>{t('featuredOffersTitle')}</h2>
             <a href='/categoria/electronica' style={{color:'var(--color-primary)', fontSize:13, fontWeight:600, textDecoration:'none'}}>
               {t('viewAll')}
             </a>
@@ -214,7 +214,7 @@ export function HomeProductGrid() {
       {/* Tiendas destacadas */}
       <div id="tiendas" style={{display:'flex', justifyContent:'space-between', alignItems:'flex-end', margin:'24px 0 16px'}}>
         <div>
-          <h2 style={{fontSize:18, fontWeight:700, color:'var(--color-text-primary)', margin:'0 0 4px'}}>{t('popularStoresTitle')}</h2>
+          <h2 style={{fontSize:24, fontWeight:800, color:'var(--color-blue-dark)', fontFamily:'var(--font-heading)', margin:'0 0 4px'}}>{t('popularStoresTitle')}</h2>
           <p style={{fontSize:13, color:'var(--color-text-secondary)', margin:0}}>{t('popularStoresSubtitle')}</p>
         </div>
         <a href='/tiendas' style={{color:'var(--color-primary)', fontSize:13, fontWeight:600, textDecoration:'none', whiteSpace:'nowrap', flexShrink:0}}>{t('viewAll')}</a>

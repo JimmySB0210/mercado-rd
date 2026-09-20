@@ -93,8 +93,7 @@ export function HomeCategoryStrip() {
     <div id="categorias" className="w-full max-w-[1400px] mx-auto px-4 md-860:px-6">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 0 16px' }}>
         <h2
-          className="text-lg font-bold text-gray-900"
-          style={{ margin: 0, fontFamily: 'var(--font-heading)' }}
+          style={{ margin: 0, fontFamily: 'var(--font-heading)', fontSize: 24, fontWeight: 800, color: 'var(--color-blue-dark)' }}
         >
           {t('exploreCategoriesTitle')}
         </h2>

@@ -27,10 +27,12 @@ interface Props {
   product: ProductWithVendor
   // Si el que renderiza la tarjeta ya verificó (con una sola consulta
   // batched a product_variants, no una por tarjeta) que este producto
-  // tiene variantes activas — undefined significa "no se verificó", y en
-  // ese caso la tarjeta NUNCA ofrece agregar directo al carrito, para no
-  // arriesgarse a crear una línea sin talla/color en un producto que sí
-  // los necesita. Ver HomeProductSection/FeaturedProductsGrid/etc.
+  // tiene variantes activas — undefined significa "todavía no se sabe"
+  // (la consulta sigue en vuelo): mientras tanto la tarjeta NUNCA ofrece
+  // agregar directo (para no arriesgarse a una línea sin talla/color),
+  // pero muestra un botón "verificando" en vez de saltar directo a "no
+  // se puede" — ver isCheckingVariants más abajo. Ver
+  // HomeProductSection/FeaturedProductsGrid/etc.
   hasVariants?: boolean
   // "Más vendido" relativo a la lista donde se está renderizando esta
   // tarjeta (el sold_count más alto DEL GRID ACTUAL, nunca un ranking
@@ -68,12 +70,24 @@ export function ProductCard({ product, hasVariants, isBestSeller }: Props) {
   const isLowStock = product.stock > 0 && product.stock <= 5
   const isLocal = !!selectedProvince && product.province?.id === selectedProvince.id
 
-  // Solo se ofrece "Agregar al carrito" directo cuando quien renderizó la
-  // tarjeta confirmó que no hay variantes activas (product_variants) Y el
-  // producto tampoco usa el sistema viejo de sizes/colors — cualquiera de
-  // los dos significa que hace falta elegir algo antes de comprar, y esa
-  // selección solo existe en la página de producto (ProductActions).
-  const canAddDirectly = hasVariants === false && product.sizes.length === 0 && product.colors.length === 0 && product.stock > 0
+  // sizes/colors (sistema viejo) se conocen de entrada, sin esperar red
+  // — si el producto ya trae alguno, no hace falta ni preguntar por
+  // product_variants, seguro necesita elegir algo.
+  const legacyNeedsVariant = product.sizes.length > 0 || product.colors.length > 0
+  // Mientras hasVariants todavía no llegó (consulta batched a
+  // product_variants en vuelo) Y el producto no tiene ya un motivo
+  // conocido para bloquear la compra directa, el estado real es
+  // "verificando", no "no se puede" — antes caía directo a "Ver tienda"
+  // apenas se montaba la tarjeta, y en listas con muchas secciones (cada
+  // una con su propia consulta) ese parpadeo podía durar varios
+  // segundos y parecer que al producto simplemente le faltaba el botón.
+  const isCheckingVariants = hasVariants === undefined && !legacyNeedsVariant
+  // Solo se ofrece "Agregar al carrito" directo cuando ya se confirmó
+  // que no hay variantes activas (product_variants) ni sizes/colors del
+  // sistema viejo — cualquiera de los dos significa que hace falta
+  // elegir algo antes de comprar, y esa selección solo existe en la
+  // página de producto (ProductActions).
+  const canAddDirectly = hasVariants === false && !legacyNeedsVariant && product.stock > 0
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -251,6 +265,24 @@ export function ProductCard({ product, hasVariants, isBestSeller }: Props) {
               </Link>
             )}
           </>
+        ) : isCheckingVariants ? (
+          // Mismo tamaño/forma que el botón real para que no haya salto
+          // de layout cuando resuelva — deshabilitado y apagado para que
+          // se lea como "un momento", no como "ya se decidió que no".
+          <button
+            type="button"
+            disabled
+            className="flex items-center justify-center gap-1.5 w-full text-xs font-semibold py-2.5"
+            style={{
+              background: 'var(--color-divider)',
+              color: 'var(--color-text-tertiary)',
+              borderRadius: 'var(--radius-control)',
+              border: 'none',
+              cursor: 'wait',
+            }}
+          >
+            <ShoppingCart size={14} /> {t('addToCart')}
+          </button>
         ) : (
           <>
             {/* WhatsApp se quitó de la tarjeta a pedido explícito (sigue

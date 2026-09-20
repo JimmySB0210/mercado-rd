@@ -131,7 +131,7 @@ export function DailyDealsGrid({ deals }: { deals: DealViewModel[] }) {
     <div id="ofertas" style={{ maxWidth: 1400, margin: '0 auto', padding: '24px 24px 0' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', margin: '20px 0 16px' }}>
         <div>
-          <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-text-primary)', fontFamily: 'var(--font-heading)', margin: '0 0 4px' }}>
+          <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--color-blue-dark)', fontFamily: 'var(--font-heading)', margin: '0 0 4px' }}>
             {t('dailyDealsTitle')}
           </h2>
           <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', margin: 0 }}>
