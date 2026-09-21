@@ -86,6 +86,7 @@ export const products = {
   trendingTitle: '📈 Tendances',
   popularTitle: '👀 Populaires',
   nearbyTitle: '📍 Près de vous',
+  recommendedTitle: "D'après ce que vous avez consulté",
   viewAll: 'Voir tout →',
   loadError: "Nous n'avons pas pu charger les produits. Essayez de recharger la page.",
   loading: 'Chargement...',

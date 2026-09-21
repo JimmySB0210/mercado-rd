@@ -11,7 +11,9 @@
 // producto real, nunca se rellena con mock), pedida explícitamente en
 // este orden:
 //   Hero → Categorías → Destacados → 3 banners promocionales →
-//   Proveedores destacados → Recién publicados → el resto de
+//   Proveedores destacados → Recién publicados → Basado en lo que
+//   viste (solo con sesión e historial; client-side, el ISR no puede
+//   saber quién mira) → el resto de
 //   descubrimiento (ofertas del día, actividad reciente, más vendidos,
 //   últimas unidades, tendencias, populares, cerca de ti, catálogo
 //   paginado — que también trae "Tiendas destacadas" al final).
@@ -28,6 +30,7 @@ import { FeaturedProducts } from '../components/shop/FeaturedProducts'
 import { PromoBannersRow } from '../components/shop/PromoBannersRow'
 import { DailyDeals } from '../components/shop/DailyDeals'
 import { RecentlyPublished } from '../components/shop/RecentlyPublished'
+import { RecommendedProducts } from '../components/shop/RecommendedProducts'
 import { BestSellers } from '../components/shop/BestSellers'
 import { LowStock } from '../components/shop/LowStock'
 import { RecentActivity } from '../components/shop/RecentActivity'
@@ -49,6 +52,10 @@ export default function HomePage() {
       <PromoBannersRow />
       <FeaturedProviders />
       <RecentlyPublished />
+
+      {/* Personalizada: solo con sesión y historial suficiente (ver
+          RecommendedProducts.tsx) — para el resto no renderiza nada */}
+      <RecommendedProducts />
 
       {/* Descubrimiento adicional — cada una ya decide ocultarse si no
           califica ningún producto real */}

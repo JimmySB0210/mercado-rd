@@ -3,11 +3,11 @@
 // MercadoRD — Sección genérica de productos en el home
 // Ruta: src/components/shop/HomeProductSection.tsx
 // ============================================================
-// Presentación compartida por RecentlyPublished.tsx, BestSellers.tsx
-// y LowStock.tsx — las 3 son idénticas visualmente (título + grid),
-// solo cambia qué productos trae cada Server Component. Cada uno de
-// esos ya decide devolver null si no califica ningún producto real,
-// así que este componente asume que products siempre trae algo.
+// Presentación compartida por RecentlyPublished.tsx, BestSellers.tsx,
+// LowStock.tsx y RecommendedProducts.tsx — idénticas visualmente
+// (título + grid), solo cambia qué productos trae cada una. Cada una ya
+// decide devolver null si no califica ningún producto real, así que este
+// componente asume que products siempre trae algo.
 // ============================================================
 
 import { useTranslation } from '@/lib/hooks/useTranslation'
@@ -16,7 +16,7 @@ import { ProductCard } from '@/components/product/ProductCard'
 import { getBestSellerProductId } from '@/lib/utils'
 import type { ProductWithVendor } from '@/types/database.types'
 
-type TitleKey = 'recentlyPublishedTitle' | 'bestSellersTitle' | 'lowStockTitle' | 'trendingTitle' | 'popularTitle' | 'nearbyTitle'
+type TitleKey = 'recentlyPublishedTitle' | 'bestSellersTitle' | 'lowStockTitle' | 'trendingTitle' | 'popularTitle' | 'nearbyTitle' | 'recommendedTitle'
 
 interface Props {
   titleKey: TitleKey

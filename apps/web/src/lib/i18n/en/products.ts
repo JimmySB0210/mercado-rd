@@ -86,6 +86,7 @@ export const products = {
   trendingTitle: '📈 Trending',
   popularTitle: '👀 Popular',
   nearbyTitle: '📍 Near you',
+  recommendedTitle: 'Based on what you viewed',
   viewAll: 'View all →',
   loadError: "We couldn't load the products. Try reloading the page.",
   loading: 'Loading...',

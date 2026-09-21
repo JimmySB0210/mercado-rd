@@ -98,6 +98,7 @@ export const products = {
   trendingTitle: '📈 Tendencias',
   popularTitle: '👀 Populares',
   nearbyTitle: '📍 Cerca de ti',
+  recommendedTitle: 'Basado en lo que viste',
   viewAll: 'Ver todas →',
   loadError: 'No pudimos cargar los productos. Intenta recargar la página.',
   loading: 'Cargando...',
