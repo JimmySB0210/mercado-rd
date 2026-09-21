@@ -52,6 +52,7 @@ export const common = {
   favorites: 'Favoritos',
   myOrders: 'Mis pedidos',
   myStore: 'Mi tienda',
+  helpCenter: 'Centro de ayuda',
   supportCenter: 'Centro de soporte',
   terms: 'Términos y condiciones',
   privacyPolicy: 'Política de privacidad',

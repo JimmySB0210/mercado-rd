@@ -11,6 +11,7 @@ export const products = {
   bestSellerBadge: 'Meilleure vente',
   localBadge: 'Local',
   viewStore: 'Voir la boutique →',
+  viewOptionsCta: 'Voir les options →',
   askWhatsappShort: 'Demander',
   verifiedBadge: 'Vérifié',
   cardFreeShipping: 'Livraison gratuite',

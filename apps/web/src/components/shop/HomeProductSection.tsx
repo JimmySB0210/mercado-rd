@@ -25,7 +25,7 @@ interface Props {
 
 export function HomeProductSection({ titleKey, products }: Props) {
   const { t } = useTranslation('products')
-  const variantIds = useHasVariantsMap(products.map(p => p.id))
+  const variantsById = useHasVariantsMap(products.map(p => p.id))
   const bestSellerId = getBestSellerProductId(products)
 
   return (
@@ -48,7 +48,7 @@ export function HomeProductSection({ titleKey, products }: Props) {
           <ProductCard
             key={p.id}
             product={p}
-            hasVariants={variantIds ? variantIds.has(p.id) : undefined}
+            hasVariants={variantsById.get(p.id)}
             isBestSeller={p.id === bestSellerId}
           />
         ))}

@@ -115,6 +115,7 @@ export function Footer() {
               {t('footerSectionHelp')}
             </h3>
             <ul style={{ display: 'flex', flexDirection: 'column', gap: 10, listStyle: 'none', padding: 0, margin: 0 }}>
+              <FooterLink href="/centro-ayuda">{t('helpCenter')}</FooterLink>
               <FooterLink href="/soporte">{t('supportCenter')}</FooterLink>
               <FooterLink href="/terminos">{t('terms')}</FooterLink>
               <FooterLink href="/privacidad">{t('privacyPolicy')}</FooterLink>

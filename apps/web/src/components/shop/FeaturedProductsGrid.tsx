@@ -20,7 +20,7 @@ const SCROLL_STEP_PX = 640
 
 export function FeaturedProductsGrid({ products }: { products: ProductWithVendor[] }) {
   const { t } = useTranslation('products')
-  const variantIds = useHasVariantsMap(products.map(p => p.id))
+  const variantsById = useHasVariantsMap(products.map(p => p.id))
   const bestSellerId = getBestSellerProductId(products)
   const scrollerRef = useRef<HTMLDivElement>(null)
 
@@ -77,7 +77,7 @@ export function FeaturedProductsGrid({ products }: { products: ProductWithVendor
           <div key={p.id} className="flex-shrink-0" style={{ width: 220 }}>
             <ProductCard
               product={p}
-              hasVariants={variantIds ? variantIds.has(p.id) : undefined}
+              hasVariants={variantsById.get(p.id)}
               isBestSeller={p.id === bestSellerId}
             />
           </div>

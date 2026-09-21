@@ -54,14 +54,17 @@ function BrandSlide({ imageUrl }: { imageUrl: string | null }) {
           <img
             src={imageUrl}
             alt=""
-            style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', zIndex:0 }}
+            style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', zIndex:0, filter:'saturate(1.25) contrast(1.05)' }}
           />
           {/* Wash de marca encima de la foto para que el texto siga legible —
-              más oscuro del lado izquierdo (donde vive el texto), se aclara
-              hacia la derecha para dejar respirar la foto. */}
+              sólido del lado izquierdo (donde vive el texto) y cayendo
+              rápido hacia la derecha (.85 → .45 → .12) para que la foto se
+              vea nítida y saturada ahí, en vez de apagada bajo un azul
+              parejo. saturate/contrast compensan que la foto de origen es
+              chica (736×184) y se ve lavada al escalarla. */}
           <div style={{
             position:'absolute', inset:0,
-            background:`linear-gradient(100deg, var(--color-primary) 0%, rgba(4,88,180,0.55) 45%, rgba(4,88,180,0.35) 100%)`,
+            background:`linear-gradient(100deg, var(--color-primary) 0%, rgba(4,88,180,0.85) 40%, rgba(4,88,180,0.45) 65%, rgba(4,88,180,0.12) 100%)`,
           }} />
         </>
       ) : (

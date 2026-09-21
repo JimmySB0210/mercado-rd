@@ -9,6 +9,7 @@
 // ============================================================
 
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { useHasVariantsMap } from '@/lib/hooks/useHasVariantsMap'
 import { ProductCard } from '@/components/product/ProductCard'
 import { AgeConfirmationModal } from '@/components/shop/AgeConfirmationModal'
 import { getCategoryName } from '@/lib/utils'
@@ -25,6 +26,7 @@ interface Props {
 
 export function CategoryContent({ categoryNames, fallbackTitle, emoji, categoryId, requiresAgeConfirmation, products }: Props) {
   const { t, language } = useTranslation('categories')
+  const variantsById = useHasVariantsMap(products.map(p => p.id))
   const resolvedTitle = categoryNames ? getCategoryName(categoryNames, language) : (fallbackTitle ?? t('defaultCategoryTitle'))
 
   return (
@@ -73,7 +75,7 @@ export function CategoryContent({ categoryNames, fallbackTitle, emoji, categoryI
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {products.map(p => (
-            <ProductCard key={p.id} product={p} />
+            <ProductCard key={p.id} product={p} hasVariants={variantsById.get(p.id)} />
           ))}
         </div>
       )}

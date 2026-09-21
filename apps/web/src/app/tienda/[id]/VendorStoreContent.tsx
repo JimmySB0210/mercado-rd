@@ -17,6 +17,7 @@
 // ============================================================
 
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { useHasVariantsMap } from '@/lib/hooks/useHasVariantsMap'
 import { formatDate, getCategoryName } from '@/lib/utils'
 import { ProductCard } from '@/components/product/ProductCard'
 import { VerificationBadge } from '@/components/vendor/VerificationBadge'
@@ -74,6 +75,7 @@ export function VendorStoreContent({
   services, targetCustomers, showsManufacturing, hasProviderInfo, memberSinceRaw,
 }: Props) {
   const { t, language } = useTranslation('directory')
+  const variantsById = useHasVariantsMap(productsWithVendor.map(p => p.id))
   const memberSince = formatDate(memberSinceRaw, language, { month: 'long', year: 'numeric' })
 
   const membershipDuration = (() => {
@@ -305,7 +307,7 @@ export function VendorStoreContent({
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {productsWithVendor.map(p => (
-              <ProductCard key={p.id} product={p as any} />
+              <ProductCard key={p.id} product={p as any} hasVariants={variantsById.get(p.id)} />
             ))}
           </div>
         )}

@@ -10,10 +10,12 @@
 // ============================================================
 
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { useHasVariantsMap } from '@/lib/hooks/useHasVariantsMap'
 import { ProductCard } from '@/components/product/ProductCard'
 
 export function HistorialContent({ products }: { products: any[] }) {
   const { t } = useTranslation('profile')
+  const variantsById = useHasVariantsMap(products.map((p: any) => p.id))
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -31,7 +33,7 @@ export function HistorialContent({ products }: { products: any[] }) {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {products.map((p: any) => (
-            <ProductCard key={p.id} product={p} />
+            <ProductCard key={p.id} product={p} hasVariants={variantsById.get(p.id)} />
           ))}
         </div>
       )}

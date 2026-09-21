@@ -38,7 +38,7 @@ export function NearbyProducts() {
   const { t } = useTranslation('products')
   const province = useLocationStore(s => s.province)
   const [products, setProducts] = useState<ProductWithVendor[]>([])
-  const variantIds = useHasVariantsMap(products.map(p => p.id))
+  const variantsById = useHasVariantsMap(products.map(p => p.id))
   const bestSellerId = getBestSellerProductId(products)
 
   useEffect(() => {
@@ -123,7 +123,7 @@ export function NearbyProducts() {
       </div>
       <div className="grid-products">
         {products.map(p => (
-          <ProductCard key={p.id} product={p} hasVariants={variantIds ? variantIds.has(p.id) : undefined} isBestSeller={p.id === bestSellerId} />
+          <ProductCard key={p.id} product={p} hasVariants={variantsById.get(p.id)} isBestSeller={p.id === bestSellerId} />
         ))}
       </div>
     </div>

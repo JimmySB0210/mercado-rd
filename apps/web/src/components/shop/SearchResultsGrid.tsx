@@ -15,6 +15,7 @@
 
 import { useCallback, useState } from 'react'
 import { ProductCard } from '@/components/product/ProductCard'
+import { useHasVariantsMap } from '@/lib/hooks/useHasVariantsMap'
 import { createPublicClient } from '@/lib/supabase/public'
 import { BRAND } from '@/lib/colors'
 
@@ -41,6 +42,9 @@ interface Props {
 
 export function SearchResultsGrid({ initialProducts, initialHasMore, searchState }: Props) {
   const [products, setProducts] = useState<any[]>(initialProducts)
+  // "Ver más resultados" agrega productos a esta lista: los ya verificados
+  // conservan su valor y solo los nuevos arrancan en "verificando".
+  const variantsById = useHasVariantsMap(products.map(p => p.id))
   const [offset, setOffset] = useState(PAGE_SIZE)
   const [hasMore, setHasMore] = useState(initialHasMore)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -102,7 +106,7 @@ export function SearchResultsGrid({ initialProducts, initialHasMore, searchState
     <>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {products.map(p => (
-          <ProductCard key={p.id} product={p as any} />
+          <ProductCard key={p.id} product={p as any} hasVariants={variantsById.get(p.id)} />
         ))}
       </div>
 

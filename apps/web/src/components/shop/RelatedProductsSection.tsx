@@ -9,18 +9,20 @@
 // ============================================================
 
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { useHasVariantsMap } from '@/lib/hooks/useHasVariantsMap'
 import { ProductCard } from '@/components/product/ProductCard'
 import type { ProductWithVendor } from '@/types/database.types'
 
 export function RelatedProductsSection({ products }: { products: ProductWithVendor[] }) {
   const { t } = useTranslation('products')
+  const variantsById = useHasVariantsMap(products.map(p => p.id))
 
   return (
     <section className="mt-16">
       <h2 className="text-xl font-bold text-gray-900 mb-6">{t('relatedProductsTitle')}</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {products.map(p => (
-          <ProductCard key={p.id} product={p} />
+          <ProductCard key={p.id} product={p} hasVariants={variantsById.get(p.id)} />
         ))}
       </div>
     </section>

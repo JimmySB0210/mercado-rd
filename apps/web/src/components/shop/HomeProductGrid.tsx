@@ -85,7 +85,7 @@ export function HomeProductGrid() {
   const [fetchError, setFetchError] = useState(false)
 
   const [vendors, setVendors] = useState<FeaturedVendor[]>([])
-  const variantIds = useHasVariantsMap(products.map(p => p.id))
+  const variantsById = useHasVariantsMap(products.map(p => p.id))
   const bestSellerId = getBestSellerProductId(products)
 
   useEffect(() => {
@@ -173,7 +173,7 @@ export function HomeProductGrid() {
           {hasReal && (
             <div className="grid-products">
               {products.map(p => (
-                <ProductCard key={p.id} product={p as any} hasVariants={variantIds ? variantIds.has(p.id) : undefined} isBestSeller={p.id === bestSellerId} />
+                <ProductCard key={p.id} product={p as any} hasVariants={variantsById.get(p.id)} isBestSeller={p.id === bestSellerId} />
               ))}
             </div>
           )}

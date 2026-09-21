@@ -4,7 +4,7 @@
 // ============================================================
 
 import { createServerClient } from '@/lib/supabase/server'
-import type { Vendor, BusinessType, VendorService, CustomerType, ContentFlagTerm, FlaggedContent } from '@/types/database.types'
+import type { Vendor, BusinessType, VendorService, CustomerType, ContentFlagTerm, FlaggedContent, HelpArticle } from '@/types/database.types'
 
 export async function isCurrentUserAdmin(): Promise<boolean> {
   const supabase = await createServerClient()
@@ -500,6 +500,27 @@ export async function getAbandonedCarts(): Promise<AbandonedCartsSummary> {
   }))
 
   return { totalUnrecovered, totalPotentialValueRdp, recent }
+}
+
+// ─── Centro de ayuda ────────────────────────────────────────────────────────
+// El público solo lee is_published = true (help_articles_public_read); la
+// política help_articles_admin_write es FOR ALL con is_admin(), así que
+// esta misma consulta, con la sesión de un admin, trae también los
+// despublicados — que son justo los que el panel necesita seguir viendo.
+export async function getAllHelpArticles(): Promise<HelpArticle[]> {
+  const supabase = await createServerClient()
+
+  const { data, error } = await supabase
+    .from('help_articles')
+    .select('*')
+    .order('category')
+    .order('sort_order')
+
+  if (error || !data) {
+    console.error('[getAllHelpArticles]', error)
+    return []
+  }
+  return data as HelpArticle[]
 }
 
 // ─── Moderación de contenido ────────────────────────────────────────────────

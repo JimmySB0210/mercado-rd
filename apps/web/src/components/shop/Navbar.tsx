@@ -573,7 +573,7 @@ export function Navbar() {
               <a href='/vendor/register' className="hover:text-[var(--color-primary)] transition-colors" style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>
                 {t('sellCta')}
               </a>
-              <a href='/soporte' className="hover:text-[var(--color-primary)] transition-colors" style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>
+              <a href='/centro-ayuda' className="hover:text-[var(--color-primary)] transition-colors" style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>
                 {t('helpNav')}
               </a>
             </div>

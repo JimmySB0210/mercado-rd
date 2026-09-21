@@ -88,6 +88,10 @@ export function ProductCard({ product, hasVariants, isBestSeller }: Props) {
   // elegir algo antes de comprar, y esa selección solo existe en la
   // página de producto (ProductActions).
   const canAddDirectly = hasVariants === false && !legacyNeedsVariant && product.stock > 0
+  // Producto que exige elegir color/talla/etc. antes de comprar — la tarjeta
+  // no puede agregarlo directo, así que ofrece "Ver opciones →" hacia la
+  // página de producto, donde ya existe esa selección (ProductActions).
+  const needsOptions = hasVariants === true || legacyNeedsVariant
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -127,9 +131,21 @@ export function ProductCard({ product, hasVariants, isBestSeller }: Props) {
               ? { label: t('localBadge'), bg: 'var(--color-primary)' }
               : null
 
+  // Alturas parejas (desde 641px) — antes cada tarjeta medía lo que le
+  // salía según su contenido (título de 1 o 2 líneas, con o sin botón), y
+  // en una misma fila unas terminaban 50-100px más cortas que otras.
+  // Ahora: la tarjeta es una columna que llena su celda (h-full), el
+  // título reserva 2 líneas, y el CTA queda anclado abajo con 84px
+  // reservados (botón 36 + separación 8 + "Ver tienda" 28 + pb-3 12) en
+  // TODOS los estados — comprar, verificando, ver opciones — así que
+  // resolver la consulta de variantes no mueve nada.
+  // Todo va con min-[641px]: (no sm:, que arranca en 640 y se pisaría con
+  // el max-width:640px del masonry) porque bajo 640px el home usa
+  // .grid-products como columnas escalonadas (globals.css) a propósito:
+  // ahí la tarjeta conserva su alto natural.
   return (
     <div
-      className="relative group overflow-hidden bg-[var(--color-card-bg)] [box-shadow:var(--shadow-card)] hover:[box-shadow:var(--shadow-card-hover)] hover:-translate-y-0.5"
+      className="relative group overflow-hidden bg-[var(--color-card-bg)] [box-shadow:var(--shadow-card)] hover:[box-shadow:var(--shadow-card-hover)] hover:-translate-y-0.5 min-[641px]:flex min-[641px]:flex-col min-[641px]:h-full"
       style={{ borderRadius: 'var(--radius-card)', transition: 'box-shadow var(--transition-base), transform var(--transition-base)' }}
     >
       {/* Hermano del Link, no anidado dentro — mismo motivo que el CTA de WhatsApp */}
@@ -186,9 +202,9 @@ export function ProductCard({ product, hasVariants, isBestSeller }: Props) {
             )}
           </div>
 
-          {/* Nombre */}
+          {/* Nombre — min-h de 2 líneas (2 × leading-snug 1.375em) */}
           <p
-            className="text-sm font-medium text-gray-900 line-clamp-2 mb-2 leading-snug"
+            className="text-sm font-medium text-gray-900 line-clamp-2 mb-2 leading-snug min-[641px]:min-h-[2.75em]"
             style={{ fontFamily: 'var(--font-body)' }}
           >
             {product.name}
@@ -222,8 +238,9 @@ export function ProductCard({ product, hasVariants, isBestSeller }: Props) {
         </div>
       </Link>
 
-      {/* CTA — fuera del Link, como hermanos, para evitar <a>/<button> dentro de <a> */}
-      <div className="px-3 pb-3">
+      {/* CTA — fuera del Link, como hermanos, para evitar <a>/<button> dentro de <a>.
+          Desde 641px: anclado abajo (mt-auto) con 84px reservados. */}
+      <div className="px-3 pb-3 min-[641px]:mt-auto min-[641px]:min-h-[84px]">
         {canAddDirectly ? (
           <>
             {/* Compra directa es el camino principal cuando el producto lo
@@ -285,14 +302,35 @@ export function ProductCard({ product, hasVariants, isBestSeller }: Props) {
           </button>
         ) : (
           <>
+            {/* Con variantes no se puede agregar directo — este botón lleva
+                a la página del producto, donde ya está el flujo real de
+                elegir color/talla. Ocupa el mismo espacio (36px) que
+                "Agregar al carrito" en las demás tarjetas. Solo desde
+                641px: bajo eso la tarjeta se queda como estaba (masonry). */}
+            {needsOptions && (
+              <Link
+                href={`/producto/${product.id}`}
+                className="hidden min-[641px]:flex items-center justify-center w-full h-9 text-xs font-semibold transition-colors hover:bg-[var(--color-primary-subtle)]"
+                style={{
+                  color: 'var(--color-primary)',
+                  border: '1.5px solid var(--color-primary)',
+                  borderRadius: 'var(--radius-control)',
+                }}
+              >
+                {t('viewOptionsCta')}
+              </Link>
+            )}
+
             {/* WhatsApp se quitó de la tarjeta a pedido explícito (sigue
                 en la página del producto, ProductActions.tsx, sin
-                tocar). */}
+                tocar). Bajo 641px queda como siempre (azul, alineado a la
+                izquierda); desde 641px toma el mismo estilo que "Ver
+                tienda" de la rama de compra directa, para que ambas
+                tarjetas se vean como un mismo par. */}
             {product.vendor?.id && (
               <Link
                 href={`/tienda/${product.vendor.id}`}
-                className="block text-xs font-medium mb-2 hover:underline"
-                style={{ color: 'var(--brand-blue)' }}
+                className="block text-xs font-medium mb-2 hover:underline text-[color:var(--brand-blue)] min-[641px]:mb-0 min-[641px]:mt-2 min-[641px]:py-1.5 min-[641px]:text-center min-[641px]:truncate min-[641px]:text-[color:var(--color-text-secondary)]"
               >
                 {t('viewStore')}
               </Link>

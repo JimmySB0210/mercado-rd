@@ -95,6 +95,22 @@ export interface PromoBanner {
   created_at: string
 }
 
+// Centro de ayuda (/centro-ayuda). category es texto libre en la base
+// (sin CHECK) — las 9 categorías conocidas viven en lib/helpCenter.ts.
+// slug es único global. content es texto plano: párrafos separados por
+// una línea en blanco.
+export interface HelpArticle {
+  id: string
+  category: string
+  slug: string
+  title: string
+  content: string
+  sort_order: number
+  is_published: boolean
+  created_at: string
+  updated_at: string
+}
+
 export interface SiteSetting {
   key: string
   value: unknown
