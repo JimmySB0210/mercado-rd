@@ -56,6 +56,12 @@ export const common = {
   supportCenter: 'Centre d\'assistance',
   terms: 'Conditions générales',
   privacyPolicy: 'Politique de confidentialité',
+  // ── Colonne "À propos" (acerca-de) ──
+  footerSectionAbout: "À propos",
+  footerAboutUs: "À propos de nous",
+  footerCommitment: "Notre engagement",
+  footerWhyChooseUs: "Pourquoi nous choisir",
+  footerResponsibility: "Responsabilité",
   copyright: '© 2026 MercadoRD. Tous droits réservés.',
   securePayments: 'Paiements sécurisés avec Visa, Mastercard et Azul',
 

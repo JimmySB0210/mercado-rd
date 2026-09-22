@@ -60,7 +60,7 @@ export function Footer() {
   return (
     <footer style={{ background: '#0a1628', color: '#fff', marginTop: 'auto' }}>
       <div className="max-w-7xl mx-auto px-6 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
 
           {/* MercadoRD */}
           <div>
@@ -119,6 +119,20 @@ export function Footer() {
               <FooterLink href="/soporte">{t('supportCenter')}</FooterLink>
               <FooterLink href="/terminos">{t('terms')}</FooterLink>
               <FooterLink href="/privacidad">{t('privacyPolicy')}</FooterLink>
+            </ul>
+          </div>
+
+          {/* Nosotros — anclas a #categoría en /acerca-de (mismas 4
+              categorías nuevas de help_articles, ver AboutContent.tsx) */}
+          <div>
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              {t('footerSectionAbout')}
+            </h3>
+            <ul style={{ display: 'flex', flexDirection: 'column', gap: 10, listStyle: 'none', padding: 0, margin: 0 }}>
+              <FooterLink href="/acerca-de#acerca-de">{t('footerAboutUs')}</FooterLink>
+              <FooterLink href="/acerca-de#compromiso">{t('footerCommitment')}</FooterLink>
+              <FooterLink href="/acerca-de#por-que-elegirnos">{t('footerWhyChooseUs')}</FooterLink>
+              <FooterLink href="/acerca-de#responsabilidad">{t('footerResponsibility')}</FooterLink>
             </ul>
           </div>
 

@@ -89,6 +89,13 @@ export const support = {
   helpCategoryDisputas: 'Disputas',
   helpCategorySeguridad: 'Seguridad',
   helpCategoryContacto: 'Contacto',
+  // ── Acerca de MercadoRD (app/acerca-de) ──
+  aboutBreadcrumbCurrent: 'Acerca de',
+  aboutPageTitle: 'Acerca de MercadoRD',
+  aboutPageSubtitle: 'El marketplace dominicano hecho para conectar compradores y vendedores de todo el país.',
+  aboutSpanishOnlyNotice: 'Por ahora el contenido de esta página está disponible solo en español.',
+  aboutLoadError: 'No pudimos cargar esta página. Intenta de nuevo en unos minutos.',
+  aboutEmpty: 'Todavía no hay contenido publicado.',
 }
 
 export type SupportDict = typeof support

@@ -77,4 +77,11 @@ export const support = {
   helpCategoryDisputas: 'Litiges',
   helpCategorySeguridad: 'Sécurité',
   helpCategoryContacto: 'Contact',
+  // ── À propos de MercadoRD (app/acerca-de) ──
+  aboutBreadcrumbCurrent: "À propos",
+  aboutPageTitle: "À propos de MercadoRD",
+  aboutPageSubtitle: "La marketplace dominicaine conçue pour connecter acheteurs et vendeurs dans tout le pays.",
+  aboutSpanishOnlyNotice: "Pour l'instant, le contenu de cette page n'est disponible qu'en espagnol.",
+  aboutLoadError: "Impossible de charger cette page. Réessayez dans quelques minutes.",
+  aboutEmpty: "Aucun contenu n'est encore publié.",
 } satisfies SupportDict
