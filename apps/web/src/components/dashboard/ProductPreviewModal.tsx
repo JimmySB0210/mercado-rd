@@ -43,9 +43,6 @@ export function ProductPreviewModal({ product, vendor, variants, onClose }: Prop
   const discount = hasDiscount ? discountPercent(product.price_rdp, product.compare_rdp!) : null
   const itbis = Math.round(product.price_rdp * 0.18)
   const totalConItbis = product.price_rdp + itbis
-  const whatsappMsg = encodeURIComponent(
-    `Hola, me interesa este producto en MercadoRD:\n*${product.name}*\n¿Está disponible?`
-  )
 
   return (
     <div
@@ -88,7 +85,6 @@ export function ProductPreviewModal({ product, vendor, variants, onClose }: Prop
             discount={discount}
             itbis={itbis}
             totalConItbis={totalConItbis}
-            whatsappMsg={whatsappMsg}
           />
         </div>
       </div>

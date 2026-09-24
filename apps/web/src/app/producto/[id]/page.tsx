@@ -10,10 +10,11 @@ import { createPublicClient } from '@/lib/supabase/public'
 import { Navbar } from '@/components/shop/Navbar'
 import { ProductViewTracker } from '@/components/product/ProductViewTracker'
 import { RelatedProducts } from '@/components/shop/RelatedProducts'
+import { VendorProductsCarousel } from '@/components/shop/VendorProductsCarousel'
 import { ProductReviews } from '@/components/shop/ProductReviews'
 import { ProductFaqSection } from '@/components/shop/ProductFaqSection'
 import { ProductPageContent } from './ProductPageContent'
-import { discountPercent, formatPrice } from '@/types/database.types'
+import { discountPercent } from '@/types/database.types'
 import type { Product } from '@/types'
 import type { ProductSpecItem, VariantDynamicDimension, VariantDynamicValuesMap, PricingTier } from './ProductPageContent'
 
@@ -201,9 +202,11 @@ export default async function ProductPage(
     }
   }
 
-  // Precios por cantidad — si el producto no tiene filas, pricingTiers
-  // queda vacío y la tarjeta simplemente no se renderiza (cero cambio
-  // visual para el catálogo existente).
+  // Precios por cantidad — la consulta y el tipo (PricingTier) se
+  // mantienen a propósito aunque ya no se rendericen en esta vista (a
+  // pedido explícito, 2026-09-23): la tabla, la RLS y este fetch siguen
+  // intactos para cuando se construya la experiencia de proveedores
+  // real; ver VolumePricingBanner.tsx, que ocupa este mismo lugar hoy.
   const { data: pricingTiersData } = await supabase
     .from('product_pricing_tiers')
     .select('id, min_quantity, max_quantity, price_rdp, unit_label')
@@ -211,6 +214,15 @@ export default async function ProductPage(
     .order('min_quantity', { ascending: true })
 
   const pricingTiers: PricingTier[] = pricingTiersData ?? []
+  void pricingTiers // fetch intencional sin consumidor — ver comentario arriba
+
+  // Categoría padre — solo para el breadcrumb ("Inicio › Ropa & Moda ›
+  // Camisetas"). category:categories(*) ya trae parent_id; acá se
+  // resuelve el NOMBRE del padre con una sola fila extra.
+  const parentCategoryId = (product.category as { parent_id?: number | null } | null)?.parent_id ?? null
+  const { data: parentCategory } = parentCategoryId
+    ? await supabase.from('categories').select('name, name_en, name_fr, slug').eq('id', parentCategoryId).maybeSingle()
+    : { data: null }
 
   const vendor = product.vendor as Product['vendor'] & {
     business_name: string
@@ -218,7 +230,29 @@ export default async function ProductPage(
     whatsapp?: string
     rating_avg?: number
     total_sales?: number
+    logo_url?: string | null
+    created_at?: string
   }
+
+  // Conteo real de reseñas — para la etiqueta de la pestaña ("Reseñas
+  // (12)"). Consulta liviana (count exacto, sin traer filas); el
+  // contenido completo lo sigue trayendo ProductReviews más abajo.
+  const { count: reviewCount } = await supabase
+    .from('reviews')
+    .select('id', { count: 'exact', head: true })
+    .eq('product_id', product.id)
+
+  // ¿Hay algo real que mostrar en la pestaña "Preguntas"? Mismas dos
+  // consultas que ya hace ProductFaqSection (ambas livianas) — se
+  // duplican acá solo para decidir si el botón de la pestaña aparece;
+  // el contenido en sí lo sigue resolviendo ese componente.
+  const [{ data: businessTypesRows }, { data: faqRows }] = vendor
+    ? await Promise.all([
+        supabase.from('vendor_business_types').select('business_type').eq('vendor_id', product.vendor_id),
+        supabase.from('vendor_faqs').select('id').eq('vendor_id', product.vendor_id).eq('is_active', true),
+      ])
+    : [{ data: [] }, { data: [] }]
+  const hasFaqContent = (businessTypesRows?.length ?? 0) > 0 || (faqRows?.length ?? 0) > 0
 
   const hasDiscount = product.compare_rdp && product.compare_rdp > product.price_rdp
   const discount = hasDiscount
@@ -227,10 +261,6 @@ export default async function ProductPage(
 
   const itbis = Math.round(product.price_rdp * 0.18)
   const totalConItbis = product.price_rdp + itbis
-
-  const whatsappMsg = encodeURIComponent(
-    `Hola, me interesa este producto en MercadoRD:\n*${product.name}*\nPrecio: ${formatPrice(product.price_rdp)}\n¿Está disponible?`
-  )
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -246,22 +276,19 @@ export default async function ProductPage(
           discount={discount}
           itbis={itbis}
           totalConItbis={totalConItbis}
-          whatsappMsg={whatsappMsg}
           specs={specs}
           dynamicDimensions={dynamicDimensions}
           variantDynamicValues={variantDynamicValues}
-          pricingTiers={pricingTiers}
+          parentCategory={parentCategory}
+          reviewCount={reviewCount ?? 0}
+          reviewsSlot={<ProductReviews productId={product.id} />}
+          hasFaqContent={hasFaqContent}
+          faqSlot={vendor ? <ProductFaqSection vendorId={product.vendor_id} vendorName={vendor.business_name} /> : null}
         />
 
-        {/* Reseñas — primero, nunca existió una lista antes de esto */}
-        <ProductReviews productId={product.id} />
-
-        {/* Preguntas frecuentes — debajo de reseñas */}
-        {vendor && (
-          <ProductFaqSection vendorId={product.vendor_id} vendorName={vendor.business_name} />
-        )}
-
-        {/* También te puede interesar */}
+        {/* Productos de este vendedor / también te puede interesar —
+            secciones propias (antes una sola, mezclada y deduplicada) */}
+        <VendorProductsCarousel vendorId={product.vendor_id} currentProductId={product.id} />
         <RelatedProducts
           categoryId={product.category_id}
           vendorId={product.vendor_id}

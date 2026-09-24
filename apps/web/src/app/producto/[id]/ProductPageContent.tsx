@@ -6,7 +6,14 @@
 // page.tsx es un Server Component (fetch directo a Supabase) y no
 // puede usar useTranslation. Este componente recibe el producto ya
 // resuelto (+ valores derivados) como props y renderiza breadcrumb +
-// columna de info completa, con todo el texto traducido.
+// una cuadrícula de 3 columnas (galería/vendedor · info · buy-box) +
+// pestañas (Descripción/Especificaciones/Envío/Reseñas/Preguntas).
+//
+// reviewsSlot/faqSlot llegan ya renderizados desde page.tsx — son
+// Server Components (ProductReviews/ProductFaqSection hacen su propio
+// fetch a Supabase) que este Client Component no puede importar
+// directamente, pero sí puede recibir como children/props ya resueltos
+// y colocarlos dentro de las pestañas sin volver a pedirlos.
 //
 // Nombre y descripción del producto en sí (texto libre del vendor, no
 // una key de i18n) se traducen aparte, bajo demanda, contra
@@ -18,15 +25,21 @@
 // ============================================================
 
 import { useEffect, useState } from 'react'
+import { Check } from 'lucide-react'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { AgeConfirmationModal } from '@/components/shop/AgeConfirmationModal'
-import { ProductActions } from '@/components/product/ProductActions'
+import { ProductActionsProvider, ProductSelectors, AddToCartButton } from '@/components/product/ProductActions'
 import { FreeShippingBadge } from '@/components/product/FreeShippingBadge'
+import { ProductTabs, type ProductTabDef } from '@/components/product/ProductTabs'
+import { ShippingEstimateLine } from '@/components/product/ShippingEstimateLine'
+import { VolumePricingBanner } from '@/components/product/VolumePricingBanner'
 import { ContactVendorButton } from '@/components/product/ContactVendorButton'
 import { GiftListButton } from '@/components/product/GiftListButton'
 import { VendorTrustBar } from '@/components/shop/VendorTrustBar'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { formatPrice } from '@/types/database.types'
+import { formatDate } from '@/lib/utils'
+import type { Language } from '@/lib/store/language'
 import type { ProductVariant } from '@/types/database.types'
 import type { Product } from '@/types'
 
@@ -37,6 +50,32 @@ interface VendorInfo {
   whatsapp?: string
   rating_avg?: number
   total_sales?: number
+  logo_url?: string | null
+  created_at?: string
+}
+
+// name_en/name_fr/requires_age_confirmation opcionales — ProductPreviewModal.tsx
+// (vista previa desde el formulario del vendedor, sin guardar) reusa
+// este mismo componente con una categoría más angosta (solo
+// slug/emoji/name, sin los 2 idiomas ni la confirmación de edad).
+interface CategoryInfo {
+  slug: string
+  emoji: string
+  name: string
+  name_en?: string
+  name_fr?: string
+  requires_age_confirmation?: boolean
+}
+
+// Igual que getCategoryName() de lib/utils.ts pero tolerante a
+// name_en/name_fr ausentes (cae al nombre en español) — esa función
+// exige los 3 campos, lo cual rompería ProductPreviewModal.tsx. Toma
+// solo {name, name_en?, name_fr?} para que sirva tanto para
+// product.category (CategoryInfo) como para parentCategory (más angosto).
+function categoryLabel(category: { name: string; name_en?: string; name_fr?: string }, language: Language): string {
+  if (language === 'en' && category.name_en) return category.name_en
+  if (language === 'fr' && category.name_fr) return category.name_fr
+  return category.name
 }
 
 export interface ProductSpecItem {
@@ -59,6 +98,9 @@ export interface VariantDynamicDimension {
 // variantId -> { attributeId -> value_text (código, no label) }
 export type VariantDynamicValuesMap = Record<string, Record<string, string>>
 
+// El tipo y sus campos se mantienen (page.tsx sigue trayendo estas
+// filas) aunque esta vista ya no los renderice — ver el comentario en
+// page.tsx junto al fetch de product_pricing_tiers.
 export interface PricingTier {
   id: string
   min_quantity: number
@@ -67,22 +109,9 @@ export interface PricingTier {
   unit_label: string
 }
 
-// Los precios por cantidad suelen tener centavos significativos (ej.
-// RD$28.96/unidad en compras al por mayor) — a diferencia de
-// formatPrice(), que redondea a 0 decimales para precios normales de
-// producto, aquí se preservan 2 decimales.
-function formatTierPrice(priceRdp: number): string {
-  return new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(priceRdp / 100)
-}
-
 interface Props {
   product: Product & {
-    category: { slug: string; emoji: string; name: string; requires_age_confirmation: boolean } | null
+    category: CategoryInfo | null
     province: { name: string } | null
   }
   vendor: VendorInfo | undefined
@@ -91,16 +120,40 @@ interface Props {
   discount: number | null
   itbis: number
   totalConItbis: number
-  whatsappMsg: string
   specs?: ProductSpecItem[]
   dynamicDimensions?: VariantDynamicDimension[]
   variantDynamicValues?: VariantDynamicValuesMap
-  pricingTiers?: PricingTier[]
+  // Categoría padre (solo nombre) para el breadcrumb de 2 niveles —
+  // null si la categoría del producto no tiene padre (o no hay categoría)
+  parentCategory?: { name: string; name_en?: string; name_fr?: string; slug: string } | null
+  // Los 4 siguientes son opcionales con valores por defecto honestos —
+  // ProductPreviewModal.tsx (vista previa sin guardar, sin producto real
+  // en la BD todavía) no tiene reseñas/FAQ reales que pasar; ahí no se
+  // le pasa nada y esta vista cae al mismo estado "Aún no hay reseñas"
+  // que vería un producto real recién publicado, sin pestaña de Preguntas.
+  reviewsSlot?: React.ReactNode
+  reviewCount?: number
+  faqSlot?: React.ReactNode | null
+  hasFaqContent?: boolean
+}
+
+// Checklist de confianza — el primer ítem depende de un dato real del
+// vendedor (is_verified); los otros 3 son garantías verdaderas de toda
+// la plataforma (mismo tono que la barra de confianza del Navbar), no
+// una promesa inventada sobre este producto en particular.
+function TrustItem({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex items-center gap-2 text-sm text-gray-600">
+      <Check size={15} className="flex-shrink-0" style={{ color: 'var(--color-green)' }} aria-hidden="true" />
+      {children}
+    </li>
+  )
 }
 
 export function ProductPageContent({
-  product, vendor, variants, hasDiscount, discount, itbis, totalConItbis, whatsappMsg, specs = [],
-  dynamicDimensions = [], variantDynamicValues = {}, pricingTiers = [],
+  product, vendor, variants, hasDiscount, discount, itbis, totalConItbis, specs = [],
+  dynamicDimensions = [], variantDynamicValues = {}, parentCategory = null,
+  reviewsSlot, reviewCount = 0, faqSlot = null, hasFaqContent = false,
 }: Props) {
   const { t, language } = useTranslation('products')
 
@@ -140,16 +193,103 @@ export function ProductPageContent({
     }
   }, [language, product.id, product.name, product.description])
 
+  // ─── Pestañas — solo se incluye un tab si hay contenido real detrás ───
+  const tabs: ProductTabDef[] = []
+
+  if (displayDescription) {
+    tabs.push({
+      key: 'description',
+      label: t('descriptionHeading'),
+      content: (
+        <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{displayDescription}</p>
+      ),
+    })
+  }
+
+  if (specs.length > 0) {
+    tabs.push({
+      key: 'specs',
+      label: t('specsHeading'),
+      content: (
+        <dl className="text-sm">
+          {specs.map((spec, i) => (
+            <div key={i} className="flex items-center justify-between gap-4 py-1.5 border-b border-gray-50 last:border-0">
+              <dt className="text-gray-400">{spec.label}</dt>
+              <dd className="text-gray-700 font-medium text-right">
+                {spec.type === 'boolean' ? (spec.boolValue ? t('specYes') : t('specNo')) : spec.displayValue}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ),
+    })
+  }
+
+  tabs.push({
+    key: 'shipping',
+    label: t('tabShipping'),
+    content: (
+      <div className="flex flex-col gap-3">
+        <ShippingEstimateLine />
+        <p className="text-sm text-gray-600">{t('shippingCoverageLine')}</p>
+      </div>
+    ),
+  })
+
+  tabs.push({
+    key: 'reviews',
+    label: reviewCount > 0 ? `${t('reviewsHeading')} (${reviewCount})` : t('reviewsHeading'),
+    // Sin reviewsSlot real (ProductPreviewModal) cae al mismo estado
+    // "Aún no hay reseñas" que vería un producto real recién publicado.
+    content: reviewsSlot ?? <p className="text-sm text-gray-500 text-center py-6">{t('noReviewsYet')}</p>,
+  })
+
+  if (hasFaqContent && faqSlot) {
+    tabs.push({ key: 'faq', label: t('tabFaqLabel'), content: faqSlot })
+  }
+
+  const breadcrumbCrumbs = [
+    parentCategory ? categoryLabel(parentCategory, language) : null,
+    product.category ? categoryLabel(product.category, language) : t('breadcrumbCurrentProduct'),
+  ].filter((c): c is string => !!c)
+
   return (
     <>
       <AgeConfirmationModal requiresConfirmation={product.category?.requires_age_confirmation ?? false} />
 
-      {/* Contenido principal */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+      {/* Breadcrumb — mismo patrón que CategoryContent/HelpCenterContent */}
+      <nav className="text-sm text-gray-400 mb-4">
+        <a href="/" className="hover:text-gray-600 transition-colors no-underline">{t('breadcrumbHome')}</a>
+        {breadcrumbCrumbs.map((crumb, i) => (
+          <span key={i}>
+            <span className="mx-2">/</span>
+            {i === breadcrumbCrumbs.length - 1
+              ? <span className="text-gray-600">{crumb}</span>
+              : crumb}
+          </span>
+        ))}
+      </nav>
 
-        {/* Galería + info del vendedor (llena el espacio debajo de la imagen) */}
-        <div className="flex flex-col gap-4">
-          <ProductGallery images={product.images ?? []} name={displayName} videoUrl={product.video_url} />
+      {/* Contenido principal — 3 columnas en escritorio: galería+vendedor · info · buy-box.
+          ProductActionsProvider envuelve las dos columnas de la derecha:
+          ProductSelectors (talla/color/cantidad) vive en la columna de
+          info, AddToCartButton vive en el buy-box — mismo estado
+          compartido vía Context, ver el comentario en ProductActions.tsx. */}
+      <ProductActionsProvider
+        product={{
+          ...product,
+          sizes: (product as any).sizes ?? [],
+          colors: (product as any).colors ?? [],
+        } as unknown as Product}
+        variants={variants ?? []}
+        dynamicDimensions={dynamicDimensions}
+        variantDynamicValues={variantDynamicValues}
+      >
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+
+        {/* Galería + info del vendedor */}
+        <div className="lg:col-span-5 flex flex-col gap-4">
+          <ProductGallery productId={product.id} images={product.images ?? []} name={displayName} videoUrl={product.video_url} />
 
           {vendor && (
             <div
@@ -157,18 +297,35 @@ export function ProductPageContent({
               style={{ borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)' }}
             >
               <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('vendorHeading')}</h2>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-gray-900">{vendor.business_name}</p>
-                  {vendor.rating_avg && vendor.rating_avg > 0 && (
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      ⭐ {Number(vendor.rating_avg).toFixed(1)} · {vendor.total_sales ?? 0} {t('salesSuffix')}
-                    </p>
-                  )}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className="flex items-center justify-center flex-shrink-0 overflow-hidden font-bold text-gray-400"
+                    style={{ width: 40, height: 40, borderRadius: 'var(--radius-control)', background: 'var(--color-primary-subtle)' }}
+                  >
+                    {vendor.logo_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={vendor.logo_url} alt={vendor.business_name} className="w-full h-full object-cover" />
+                    ) : (
+                      vendor.business_name.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-900 truncate">{vendor.business_name}</p>
+                    {vendor.rating_avg && vendor.rating_avg > 0 ? (
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        ⭐ {Number(vendor.rating_avg).toFixed(1)} · {vendor.total_sales ?? 0} {t('salesSuffix')}
+                      </p>
+                    ) : vendor.created_at ? (
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {t('vendorMemberSince', { date: formatDate(vendor.created_at, language, { month: 'long', year: 'numeric' }) })}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
                 <a
                   href={`/tienda/${vendor.id}`}
-                  className="text-xs font-medium hover:underline"
+                  className="text-xs font-medium hover:underline flex-shrink-0"
                   style={{ color: 'var(--brand-blue)' }}
                 >
                   {t('viewStore')}
@@ -182,7 +339,7 @@ export function ProductPageContent({
         </div>
 
         {/* Info del producto */}
-        <div className="flex flex-col gap-5">
+        <div className="lg:col-span-4 flex flex-col gap-5">
 
           <FreeShippingBadge />
 
@@ -293,108 +450,56 @@ export function ProductPageContent({
             </div>
           </div>
 
-          {/* Precios por cantidad — si el producto no tiene filas, no se
-              renderiza nada (cero cambio visual para el resto del catálogo) */}
-          {pricingTiers.length > 0 && (
-            <div
-              className="bg-[var(--color-card-bg)] p-4"
-              style={{ borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)' }}
-            >
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('pricingTiersTitle')}</h3>
-              <div className="divide-y divide-gray-50">
-                {pricingTiers.map(tier => (
-                  <div key={tier.id} className="flex items-center justify-between py-2 text-sm">
-                    <span className="text-gray-500">
-                      {tier.max_quantity !== null
-                        ? t('pricingTiersRangeBetween', { min: tier.min_quantity.toLocaleString('es-DO'), max: tier.max_quantity.toLocaleString('es-DO'), unit: tier.unit_label })
-                        : t('pricingTiersRangeAndUp', { min: tier.min_quantity.toLocaleString('es-DO'), unit: tier.unit_label })}
-                    </span>
-                    <span className="font-semibold text-gray-900">{formatTierPrice(tier.price_rdp)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+          {/* Invitación a precios por volumen — reemplaza la tabla de
+              product_pricing_tiers en esta vista normal (a pedido
+              explícito). El único mecanismo real hoy para negociar un
+              precio por cantidad es el chat con el vendedor. */}
+          {vendor && (
+            <VolumePricingBanner
+              vendorId={vendor.id}
+              productId={product.id}
+              productName={product.name}
+              vendorName={vendor.business_name}
+            />
           )}
 
-          {/* Selector de talla/color + carrito */}
-          <ProductActions
-            product={{
-              ...product,
-              sizes: (product as any).sizes ?? [],
-              colors: (product as any).colors ?? [],
-            } as unknown as Product}
-            variants={variants ?? []}
-            dynamicDimensions={dynamicDimensions}
-            variantDynamicValues={variantDynamicValues}
-          />
+          {/* Talla / color / dimensiones dinámicas / cantidad — el botón
+              de agregar vive en el buy-box, mismo estado compartido */}
+          <ProductSelectors />
+        </div>
 
-          {/* Chat interno */}
-          {vendor?.id && (
-            <ContactVendorButton vendorId={vendor.id} productId={product.id} productName={product.name} />
-          )}
+        {/* Buy-box — acciones de compra, siempre a la vista */}
+        <div className="lg:col-span-3">
+          <div
+            className="bg-[var(--color-card-bg)] p-4 flex flex-col gap-4 lg:sticky lg:top-4"
+            style={{ borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)' }}
+          >
+            <ShippingEstimateLine />
 
-          {/* Lista de regalos */}
-          <GiftListButton productId={product.id} />
+            <ul className="flex flex-col gap-1.5">
+              {vendor?.is_verified && <TrustItem>{t('trustVerifiedVendor')}</TrustItem>}
+              <TrustItem>{t('trustSecurePayment')}</TrustItem>
+              <TrustItem>{t('trustOrderTracking')}</TrustItem>
+              <TrustItem>{t('trustPlatformSupport')}</TrustItem>
+            </ul>
 
-          {/* WhatsApp */}
-          {vendor?.whatsapp && (
-            <a
-              href={`https://wa.me/${vendor.whatsapp}?text=${whatsappMsg}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-3 font-medium hover:bg-[var(--color-green-subtle)]"
-              style={{
-                borderRadius: 'var(--radius-control)',
-                border: '2px solid var(--color-green)',
-                color: 'var(--color-green)',
-                transition: 'background-color var(--transition-fast)',
-              }}
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-              </svg>
-              {t('askWhatsapp')}
-            </a>
-          )}
+            {/* Agregar al carrito — usa la talla/color/cantidad elegidos en ProductSelectors */}
+            <AddToCartButton />
 
-          {/* Descripción */}
-          {displayDescription && (
-            <div
-              className="bg-[var(--color-card-bg)] p-4"
-              style={{ borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)' }}
-            >
-              <h2 className="text-sm font-semibold text-gray-700 mb-2">{t('descriptionHeading')}</h2>
-              <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
-                {displayDescription}
-              </p>
-            </div>
-          )}
+            {/* Chat interno */}
+            {vendor?.id && (
+              <ContactVendorButton vendorId={vendor.id} productId={product.id} productName={product.name} />
+            )}
 
-          {/* Especificaciones */}
-          {specs.length > 0 && (
-            <div
-              className="bg-[var(--color-card-bg)] p-4"
-              style={{ borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)' }}
-            >
-              <h2 className="text-sm font-semibold text-gray-700 mb-2">{t('specsHeading')}</h2>
-              <dl className="text-sm">
-                {specs.map((spec, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between gap-4 py-1.5 border-b border-gray-50 last:border-0"
-                  >
-                    <dt className="text-gray-400">{spec.label}</dt>
-                    <dd className="text-gray-700 font-medium text-right">
-                      {spec.type === 'boolean' ? (spec.boolValue ? t('specYes') : t('specNo')) : spec.displayValue}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          )}
-
+            {/* Lista de regalos */}
+            <GiftListButton productId={product.id} />
+          </div>
         </div>
       </div>
+      </ProductActionsProvider>
+
+      {/* Descripción / Especificaciones / Envío y entrega / Reseñas / Preguntas */}
+      <ProductTabs tabs={tabs} />
     </>
   )
 }

@@ -17,9 +17,15 @@ interface Props {
   vendorId: string
   productId: string
   productName: string
+  // Mensaje/etiqueta/ícono personalizables — VolumePricingBanner.tsx reusa
+  // este mismo botón (mismo RPC, mismo flujo de login) con un mensaje de
+  // apertura distinto, en vez de duplicar la llamada a send_chat_message.
+  message?: string
+  label?: string
+  icon?: string
 }
 
-export function ContactVendorButton({ vendorId, productId, productName }: Props) {
+export function ContactVendorButton({ vendorId, productId, productName, message, label, icon = '💬' }: Props) {
   const { t } = useTranslation('products')
   const router = useRouter()
   const supabase = createClient()
@@ -37,7 +43,7 @@ export function ContactVendorButton({ vendorId, productId, productName }: Props)
     const { data: messageId, error } = await supabase.rpc('send_chat_message', {
       p_vendor_id: vendorId,
       p_product_id: productId,
-      p_message: `Hola, tengo una pregunta sobre ${productName}`,
+      p_message: message ?? `Hola, tengo una pregunta sobre ${productName}`,
     })
 
     if (error || !messageId) {
@@ -46,7 +52,7 @@ export function ContactVendorButton({ vendorId, productId, productName }: Props)
       return
     }
 
-    const { data: message } = await supabase
+    const { data: sentMessage } = await supabase
       .from('chat_messages')
       .select('conversation_id')
       .eq('id', messageId)
@@ -54,8 +60,8 @@ export function ContactVendorButton({ vendorId, productId, productName }: Props)
 
     setLoading(false)
 
-    if (message?.conversation_id) {
-      router.push(`/mensajes/${message.conversation_id}`)
+    if (sentMessage?.conversation_id) {
+      router.push(`/mensajes/${sentMessage.conversation_id}`)
     }
   }
 
@@ -67,7 +73,7 @@ export function ContactVendorButton({ vendorId, productId, productName }: Props)
       className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 font-medium transition-colors disabled:opacity-60"
       style={{ borderColor: 'var(--brand-blue)', color: 'var(--brand-blue)' }}
     >
-      💬 {loading ? t('openingChat') : t('askVendorButton')}
+      {icon} {loading ? t('openingChat') : (label ?? t('askVendorButton'))}
     </button>
   )
 }

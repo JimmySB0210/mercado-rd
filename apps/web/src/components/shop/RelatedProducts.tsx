@@ -2,8 +2,13 @@
 // MercadoRD — "También te puede interesar"
 // Ruta: src/components/shop/RelatedProducts.tsx
 // ============================================================
-// Server Component — dos queries en paralelo (misma categoría +
-// mismo vendor), deduplicadas por id, máximo 4 productos.
+// Server Component — misma categoría, EXCLUYE el vendedor actual (sus
+// productos ya tienen su propia sección, ver VendorProductsCarousel.tsx
+// — antes esta consulta los incluía y se deduplicaba contra "byVendor"
+// en un solo grid; separarlas evita mostrar el mismo producto dos veces
+// en la página). Límite subido de 4 a 8 — con el carrusel horizontal
+// nuevo (antes era un grid fijo), 4 apenas llenaba una fila sin dejar
+// nada que desplazar.
 // ============================================================
 
 import { createPublicClient } from '@/lib/supabase/public'
@@ -23,38 +28,19 @@ const SELECT = `
 `
 
 export async function RelatedProducts({ categoryId, vendorId, currentProductId }: Props) {
+  if (!categoryId) return null
+
   const supabase = createPublicClient()
+  const { data } = await supabase
+    .from('products')
+    .select(SELECT)
+    .eq('category_id', categoryId)
+    .eq('is_active', true)
+    .neq('id', currentProductId)
+    .neq('vendor_id', vendorId)
+    .limit(8)
 
-  const [byCategory, byVendor] = await Promise.all([
-    categoryId
-      ? supabase
-          .from('products')
-          .select(SELECT)
-          .eq('category_id', categoryId)
-          .eq('is_active', true)
-          .neq('id', currentProductId)
-          .limit(4)
-      : Promise.resolve({ data: [] as any[] }),
-    supabase
-      .from('products')
-      .select(SELECT)
-      .eq('vendor_id', vendorId)
-      .eq('is_active', true)
-      .neq('id', currentProductId)
-      .limit(4),
-  ])
+  if (!data || data.length === 0) return null
 
-  const combined = [...(byCategory.data ?? []), ...(byVendor.data ?? [])]
-  const seen = new Set<string>()
-  const deduped = combined
-    .filter(p => {
-      if (seen.has(p.id)) return false
-      seen.add(p.id)
-      return true
-    })
-    .slice(0, 4)
-
-  if (deduped.length === 0) return null
-
-  return <RelatedProductsSection products={deduped as any} />
+  return <RelatedProductsSection products={data as any} />
 }

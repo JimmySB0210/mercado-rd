@@ -162,6 +162,24 @@ export const products = {
   showMoreReviewsButton: 'Ver más reseñas',
   faqPublicHeading: 'Preguntas frecuentes',
   businessTypeQuestion: '¿Qué tipo de negocio es {vendorName}?',
+  // ── Rediseño de la página de producto (galería, buy-box, tabs) ──
+  shareProductAria: "Compartir producto",
+  linkCopied: "Enlace copiado",
+  volumePricingTitle: "🏪 ¿Compras para revender?",
+  volumePricingSubtitle: "Obtén precios especiales por volumen negociando directo con {vendorName}.",
+  volumePricingCta: "Solicitar cotización por volumen",
+  vendorMemberSince: "Vendedor desde {date}",
+  shippingToProvinceLabel: "🚚 Envío: {amount} a tu provincia",
+  shippingFreeToProvinceLabel: "🚚 Envío gratis a tu provincia",
+  shippingCoverageLine: "Envíos a las 32 provincias de RD",
+  trustVerifiedVendor: "Vendedor verificado",
+  trustSecurePayment: "Pago seguro",
+  trustOrderTracking: "Seguimiento del pedido",
+  trustPlatformSupport: "Soporte MercadoRD",
+  tabShipping: "Envío y entrega",
+  tabFaqLabel: "Preguntas",
+  vendorProductsTitle: "Productos de este vendedor",
+  breadcrumbCurrentProduct: "Producto",
 }
 
 export type ProductsDict = typeof products

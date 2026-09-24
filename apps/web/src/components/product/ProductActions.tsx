@@ -3,8 +3,30 @@
 // MercadoRD — Acciones del producto (talla, color, carrito)
 // Ruta: src/components/product/ProductActions.tsx
 // ============================================================
+// Split en 3 piezas (2026-09-24, a pedido explícito de la referencia
+// visual): antes era un solo bloque con selectores + botón juntos; el
+// mockup los separa en dos columnas distintas de la página —
+// Talla/Color/Cantidad en la columna de info, "Agregar al carrito" en
+// el buy-box. Como ambas necesitan el MISMO estado (qué talla/color
+// está elegido, para saber qué variante agregar), ese estado se elevó
+// a un hook (useProductActionsState) detrás de un Context, en vez de
+// vivir local a un solo componente — la lógica de negocio en sí
+// (matching de variantes, clamp de cantidad, la llamada a addItem) es
+// exactamente la misma de siempre, ni una línea cambió.
+//
+//   <ProductActionsProvider product=... variants=... ...>
+//     ...                        ← cualquier otra cosa de la página
+//     <ProductSelectors />       ← talla / color / dimensiones dinámicas / cantidad
+//     ...
+//     <AddToCartButton />        ← el botón, en otro lugar del árbol
+//   </ProductActionsProvider>
+//
+// Ambos deben vivir dentro del mismo Provider (da igual en qué
+// columna); si AddToCartButton se usa fuera de un Provider, lanza un
+// error claro en vez de fallar en silencio.
+// ============================================================
 
-import { useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { ChevronDown, ShoppingCart } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
 import { useCartStore } from '@/lib/store/cart'
@@ -14,7 +36,7 @@ import type { ProductVariant } from '@/types/database.types'
 import type { Product } from '@/types'
 import type { VariantDynamicDimension, VariantDynamicValuesMap } from '@/app/producto/[id]/ProductPageContent'
 
-interface ProductActionProps {
+interface ProductActionsProps {
   // Recibe el producto completo para pasarlo íntegro al store
   product: Product
   variants?: ProductVariant[]
@@ -25,9 +47,11 @@ interface ProductActionProps {
   variantDynamicValues?: VariantDynamicValuesMap
 }
 
-export function ProductActions({
+// ─── Estado + lógica compartida — sin cambios respecto al componente
+// monolítico original, solo movida a un hook para poder compartirla ───
+function useProductActionsState({
   product, variants = [], dynamicDimensions = [], variantDynamicValues = {},
-}: ProductActionProps) {
+}: ProductActionsProps) {
   const { t } = useTranslation('products')
   const addItem = useCartStore(s => s.addItem)
   const hasVariants = variants.length > 0
@@ -161,6 +185,46 @@ export function ProductActions({
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
   }
+
+  return {
+    t, hasVariants, hasDynamicDims,
+    sizes, colors, colorImageMap,
+    selectedSize, setSelectedSize, selectedColor, setSelectedColor,
+    dynamicDimensions, selectedDynamicValues, setSelectedDynamicValues,
+    dynamicColorDim, sizeLikeKeys, dynamicColorImageMap, dynamicMatchedVariant,
+    quantity, quantityInput, setQuantityInput, setQuantity, handleQuantityBlur,
+    needsSize, needsColor, matchedVariant, effectiveStock, isOutOfStock,
+    canAdd, added, handleAdd,
+  }
+}
+
+type ProductActionsState = ReturnType<typeof useProductActionsState>
+
+const ProductActionsContext = createContext<ProductActionsState | null>(null)
+
+function useProductActionsContext(): ProductActionsState {
+  const ctx = useContext(ProductActionsContext)
+  if (!ctx) {
+    throw new Error('ProductSelectors/AddToCartButton deben usarse dentro de <ProductActionsProvider>')
+  }
+  return ctx
+}
+
+export function ProductActionsProvider({ children, ...props }: ProductActionsProps & { children: React.ReactNode }) {
+  const state = useProductActionsState(props)
+  return <ProductActionsContext.Provider value={state}>{children}</ProductActionsContext.Provider>
+}
+
+// Talla / Color / dimensiones dinámicas / Cantidad — sin el botón
+export function ProductSelectors() {
+  const {
+    t, hasDynamicDims, sizes, colors, colorImageMap,
+    selectedSize, setSelectedSize, selectedColor, setSelectedColor,
+    dynamicDimensions, selectedDynamicValues, setSelectedDynamicValues,
+    dynamicColorDim, sizeLikeKeys, dynamicColorImageMap, dynamicMatchedVariant,
+    quantity, quantityInput, setQuantityInput, setQuantity, handleQuantityBlur,
+    needsSize, needsColor, matchedVariant, effectiveStock, hasVariants,
+  } = useProductActionsContext()
 
   return (
     <div className="flex flex-col gap-4">
@@ -370,34 +434,39 @@ export function ProductActions({
           </button>
         </div>
       </div>
-
-      {/* Botón añadir al carrito */}
-      <button
-        onClick={handleAdd}
-        disabled={!canAdd}
-        className={`w-full py-3.5 font-semibold text-white flex items-center justify-center gap-2 ${
-          added
-            ? 'bg-[var(--color-green)]'
-            : canAdd
-            ? 'bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] active:scale-[0.98]'
-            : 'bg-gray-300 cursor-not-allowed text-white'
-        }`}
-        style={{
-          borderRadius: 'var(--radius-control)',
-          boxShadow: canAdd && !added ? 'var(--shadow-button)' : 'none',
-          transition: 'background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast)',
-        }}
-      >
-        {canAdd && !added && <ShoppingCart size={18} />}
-        {isOutOfStock
-          ? (hasVariants ? t('outOfStock') : t('noStock'))
-          : !canAdd
-          ? (hasDynamicDims ? t('selectOption') : (needsSize && !selectedSize ? t('selectSize') : t('selectColor')))
-          : added
-          ? t('addedToCart')
-          : t('addToCart')}
-      </button>
-
     </div>
+  )
+}
+
+// Solo el botón — vive en el buy-box, lee el mismo estado que ProductSelectors
+export function AddToCartButton() {
+  const { t, hasVariants, hasDynamicDims, needsSize, selectedSize, canAdd, added, isOutOfStock, handleAdd } = useProductActionsContext()
+
+  return (
+    <button
+      onClick={handleAdd}
+      disabled={!canAdd}
+      className={`w-full py-3.5 font-semibold text-white flex items-center justify-center gap-2 ${
+        added
+          ? 'bg-[var(--color-green)]'
+          : canAdd
+          ? 'bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] active:scale-[0.98]'
+          : 'bg-gray-300 cursor-not-allowed text-white'
+      }`}
+      style={{
+        borderRadius: 'var(--radius-control)',
+        boxShadow: canAdd && !added ? 'var(--shadow-button)' : 'none',
+        transition: 'background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast)',
+      }}
+    >
+      {canAdd && !added && <ShoppingCart size={18} />}
+      {isOutOfStock
+        ? (hasVariants ? t('outOfStock') : t('noStock'))
+        : !canAdd
+        ? (hasDynamicDims ? t('selectOption') : (needsSize && !selectedSize ? t('selectSize') : t('selectColor')))
+        : added
+        ? t('addedToCart')
+        : t('addToCart')}
+    </button>
   )
 }
