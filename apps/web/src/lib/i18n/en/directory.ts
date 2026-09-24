@@ -26,6 +26,10 @@ export const directory = {
   filtersDrawerTitle: 'Filters',
   closeFiltersAria: 'Close filters',
   viewResultsButton: 'View results',
+  storesTabLabel: 'Stores',
+  productsTabLabel: 'Products',
+  searchingProducts: 'Searching products...',
+  noProductsFoundDirectory: "We couldn't find products with those filters — try adjusting your search",
 
   businessTypeFilterLabel: 'Business type',
   categoryFilterLabel: 'Category',

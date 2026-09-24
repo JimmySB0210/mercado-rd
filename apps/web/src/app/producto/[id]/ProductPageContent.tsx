@@ -135,6 +135,10 @@ interface Props {
   reviewCount?: number
   faqSlot?: React.ReactNode | null
   hasFaqContent?: boolean
+  // Igual que hasFaqContent — false por defecto (honesto) para
+  // ProductPreviewModal.tsx, que no consulta product_pricing_tiers ni
+  // vendor_business_types para el formulario en curso.
+  hasWholesaleOffering?: boolean
 }
 
 // Checklist de confianza — el primer ítem depende de un dato real del
@@ -154,6 +158,7 @@ export function ProductPageContent({
   product, vendor, variants, hasDiscount, discount, itbis, totalConItbis, specs = [],
   dynamicDimensions = [], variantDynamicValues = {}, parentCategory = null,
   reviewsSlot, reviewCount = 0, faqSlot = null, hasFaqContent = false,
+  hasWholesaleOffering = false,
 }: Props) {
   const { t, language } = useTranslation('products')
 
@@ -453,8 +458,12 @@ export function ProductPageContent({
           {/* Invitación a precios por volumen — reemplaza la tabla de
               product_pricing_tiers en esta vista normal (a pedido
               explícito). El único mecanismo real hoy para negociar un
-              precio por cantidad es el chat con el vendedor. */}
-          {vendor && (
+              precio por cantidad es el chat con el vendedor. Solo se
+              muestra si el vendor realmente ofrece algo mayorista (ya
+              tiene tramos configurados, o su perfil es
+              wholesaler/distributor/manufacturer) — de lo contrario
+              sería una invitación a algo que no existe. */}
+          {vendor && hasWholesaleOffering && (
             <VolumePricingBanner
               vendorId={vendor.id}
               productId={product.id}

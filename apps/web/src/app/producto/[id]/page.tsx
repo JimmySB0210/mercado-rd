@@ -216,6 +216,8 @@ export default async function ProductPage(
   const pricingTiers: PricingTier[] = pricingTiersData ?? []
   void pricingTiers // fetch intencional sin consumidor — ver comentario arriba
 
+  const hasPricingTiers = pricingTiers.length > 0
+
   // Categoría padre — solo para el breadcrumb ("Inicio › Ropa & Moda ›
   // Camisetas"). category:categories(*) ya trae parent_id; acá se
   // resuelve el NOMBRE del padre con una sola fila extra.
@@ -254,6 +256,16 @@ export default async function ProductPage(
     : [{ data: [] }, { data: [] }]
   const hasFaqContent = (businessTypesRows?.length ?? 0) > 0 || (faqRows?.length ?? 0) > 0
 
+  // El banner de "¿Compras para revender?" solo invita a algo que el
+  // vendor realmente ofrece: o ya tiene tramos de precio configurados
+  // para este producto, o su perfil declara un tipo de negocio mayorista
+  // (retailer solo no cuenta — ese vendor no vende al por mayor).
+  const WHOLESALE_BUSINESS_TYPES = new Set(['wholesaler', 'distributor', 'manufacturer'])
+  const hasWholesaleBusinessType = (businessTypesRows ?? []).some(
+    row => WHOLESALE_BUSINESS_TYPES.has(row.business_type)
+  )
+  const hasWholesaleOffering = hasPricingTiers || hasWholesaleBusinessType
+
   const hasDiscount = product.compare_rdp && product.compare_rdp > product.price_rdp
   const discount = hasDiscount
     ? discountPercent(product.price_rdp, product.compare_rdp!)
@@ -283,6 +295,7 @@ export default async function ProductPage(
           reviewCount={reviewCount ?? 0}
           reviewsSlot={<ProductReviews productId={product.id} />}
           hasFaqContent={hasFaqContent}
+          hasWholesaleOffering={hasWholesaleOffering}
           faqSlot={vendor ? <ProductFaqSection vendorId={product.vendor_id} vendorName={vendor.business_name} /> : null}
         />
 

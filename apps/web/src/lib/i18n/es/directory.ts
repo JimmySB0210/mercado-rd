@@ -37,6 +37,10 @@ export const directory = {
   filtersDrawerTitle: 'Filtros',
   closeFiltersAria: 'Cerrar filtros',
   viewResultsButton: 'Ver resultados',
+  storesTabLabel: 'Tiendas',
+  productsTabLabel: 'Productos',
+  searchingProducts: 'Buscando productos...',
+  noProductsFoundDirectory: 'No encontramos productos con esos filtros — prueba ajustando la búsqueda',
 
   // components/providers/ProviderFilters.tsx — solo los labels de cada
   // filtro; las opciones dentro de cada uno ya usan vendorOptions

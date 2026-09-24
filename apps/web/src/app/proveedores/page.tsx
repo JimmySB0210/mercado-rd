@@ -14,18 +14,34 @@ import { createPublicClient } from '@/lib/supabase/public'
 import { Navbar } from '@/components/shop/Navbar'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { useHasVariantsMap } from '@/lib/hooks/useHasVariantsMap'
 import { BRAND } from '@/lib/colors'
 import { ProviderFilters } from '@/components/providers/ProviderFilters'
 import { ProviderCard } from '@/components/providers/ProviderCard'
+import { ProductCard, type ProductCardPricingTier } from '@/components/product/ProductCard'
 import { EMPTY_PROVIDER_FILTERS, type ProviderFiltersState } from '@/components/providers/types'
-import type { Vendor, Category, BusinessType, VendorService } from '@/types/database.types'
+import type { Vendor, Category, BusinessType, VendorService, ProductWithVendor } from '@/types/database.types'
 
 interface ProvinceOption { id: number; name: string }
+
+const PRODUCTS_PAGE_SIZE = 24
+
+// Mismo join que /buscar (buscar/page.tsx, SearchResultsGrid.tsx) — el
+// RPC search_products devuelve SETOF products sin relaciones; esta
+// consulta trae vendor/category/province para hidratar ProductCard.
+const PRODUCT_HYDRATE_SELECT = `
+  *,
+  vendor:vendors(id, business_name, logo_url, is_verified, rating_avg, whatsapp),
+  category:categories(id, name, slug, emoji),
+  province:provinces_rd(id, name)
+`
 
 export default function ProvidersDirectoryPage() {
   const isMobile = useIsMobile(860)
   const { t } = useTranslation('directory')
+  const { t: tp } = useTranslation('products')
 
+  const [activeTab, setActiveTab] = useState<'tiendas' | 'productos'>('tiendas')
   const [filters, setFilters] = useState<ProviderFiltersState>(EMPTY_PROVIDER_FILTERS)
   const [provinces, setProvinces] = useState<ProvinceOption[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -34,6 +50,17 @@ export default function ProvidersDirectoryPage() {
   const [servicesByVendor, setServicesByVendor] = useState<Map<string, VendorService[]>>(new Map())
   const [loading, setLoading] = useState(true)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+
+  // ─── Pestaña "Productos" — mismo directorio, filtrando product_status
+  // real en vez de vendors (search_products, extendido con los mismos 6
+  // filtros que search_providers ya soporta para vendors) ───
+  const [productResults, setProductResults] = useState<ProductWithVendor[]>([])
+  const [pricingTiersByProduct, setPricingTiersByProduct] = useState<Map<string, ProductCardPricingTier[]>>(new Map())
+  const [productLoading, setProductLoading] = useState(true)
+  const [productOffset, setProductOffset] = useState(0)
+  const [productHasMore, setProductHasMore] = useState(false)
+  const [loadingMoreProducts, setLoadingMoreProducts] = useState(false)
+  const variantsById = useHasVariantsMap(productResults.map(p => p.id))
 
   const updateFilters = (patch: Partial<ProviderFiltersState>) => setFilters(f => ({ ...f, ...patch }))
 
@@ -48,10 +75,11 @@ export default function ProvidersDirectoryPage() {
       .then(({ data }) => setCategories(data ?? []))
   }, [])
 
-  // Búsqueda — se dispara con cada cambio de filtro, con un pequeño
-  // debounce para que escribir en el input de MOQ no dispare una
-  // llamada por cada tecla.
+  // Búsqueda de tiendas — se dispara con cada cambio de filtro (solo en
+  // la pestaña "tiendas"), con un pequeño debounce para que escribir en
+  // el input de MOQ no dispare una llamada por cada tecla.
   useEffect(() => {
+    if (activeTab !== 'tiendas') return
     const supabase = createPublicClient()
     setLoading(true)
 
@@ -110,7 +138,131 @@ export default function ProvidersDirectoryPage() {
     }, 350)
 
     return () => clearTimeout(timeout)
-  }, [filters])
+  }, [filters, activeTab])
+
+  // Mismos 6 filtros que search_providers, en los parámetros que
+  // search_products acepta hoy — p_category_id es singular (a
+  // diferencia de p_category_ids en search_providers), así que con
+  // varias categorías seleccionadas solo se aplica la primera; el resto
+  // de filtros no tiene esa limitación.
+  const buildProductRpcParams = (offset: number) => ({
+    p_category_id: filters.categoryIds.length > 0 ? filters.categoryIds[0] : null,
+    p_province_id: filters.provinceId ? Number(filters.provinceId) : null,
+    p_business_types: filters.businessTypes.length > 0 ? filters.businessTypes : null,
+    p_services: filters.services.length > 0 ? filters.services : null,
+    p_max_moq: filters.maxMoq ? Number(filters.maxMoq) : null,
+    p_min_verification_level: filters.minVerificationLevel ? Number(filters.minVerificationLevel) : null,
+    p_limit: PRODUCTS_PAGE_SIZE,
+    p_offset: offset,
+  })
+
+  // product_pricing_tiers para los productos de la página actual — una
+  // sola consulta batched (mismo patrón que businessTypesByVendor /
+  // servicesByVendor más arriba), nunca una por tarjeta.
+  const fetchPricingTiers = async (supabase: ReturnType<typeof createPublicClient>, productIds: string[]) => {
+    if (productIds.length === 0) return new Map<string, ProductCardPricingTier[]>()
+    const { data } = await supabase
+      .from('product_pricing_tiers')
+      .select('id, product_id, min_quantity, max_quantity, price_rdp, unit_label')
+      .in('product_id', productIds)
+      .order('min_quantity', { ascending: true })
+
+    const map = new Map<string, ProductCardPricingTier[]>()
+    for (const row of data ?? []) {
+      const list = map.get(row.product_id) ?? []
+      list.push(row)
+      map.set(row.product_id, list)
+    }
+    return map
+  }
+
+  // Búsqueda de productos — mismo debounce, solo en la pestaña
+  // "productos". search_products devuelve SETOF products (sin
+  // relaciones); se hidrata con el mismo join que /buscar y se
+  // preserva el orden del RPC (.in() no lo garantiza).
+  useEffect(() => {
+    if (activeTab !== 'productos') return
+    const supabase = createPublicClient()
+    setProductLoading(true)
+
+    const timeout = setTimeout(async () => {
+      const { data: rawProducts, error } = await supabase.rpc('search_products', buildProductRpcParams(0))
+
+      if (error) {
+        console.error('[ProvidersDirectoryPage] search_products', error)
+        setProductResults([])
+        setPricingTiersByProduct(new Map())
+        setProductLoading(false)
+        return
+      }
+
+      const ids = (rawProducts ?? []).map((p: { id: string }) => p.id)
+      setProductHasMore(ids.length === PRODUCTS_PAGE_SIZE)
+
+      if (ids.length === 0) {
+        setProductResults([])
+        setPricingTiersByProduct(new Map())
+        setProductOffset(0)
+        setProductLoading(false)
+        return
+      }
+
+      const [{ data: hydrated }, tiersMap] = await Promise.all([
+        supabase.from('products').select(PRODUCT_HYDRATE_SELECT).in('id', ids),
+        fetchPricingTiers(supabase, ids),
+      ])
+
+      const orderMap = new Map<string, number>(ids.map((id: string, i: number) => [id, i]))
+      const sorted = (hydrated ?? []).sort(
+        (a: { id: string }, b: { id: string }) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0)
+      )
+
+      setProductResults(sorted as unknown as ProductWithVendor[])
+      setPricingTiersByProduct(tiersMap)
+      setProductOffset(PRODUCTS_PAGE_SIZE)
+      setProductLoading(false)
+    }, 350)
+
+    return () => clearTimeout(timeout)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters, activeTab])
+
+  const handleLoadMoreProducts = async () => {
+    if (loadingMoreProducts || !productHasMore) return
+    setLoadingMoreProducts(true)
+
+    const supabase = createPublicClient()
+    const { data: rawProducts, error } = await supabase.rpc('search_products', buildProductRpcParams(productOffset))
+
+    if (error || !rawProducts) {
+      console.error('[ProvidersDirectoryPage] search_products (load more)', error)
+      setLoadingMoreProducts(false)
+      return
+    }
+
+    setProductHasMore(rawProducts.length === PRODUCTS_PAGE_SIZE)
+    const ids = rawProducts.map((p: { id: string }) => p.id)
+
+    if (ids.length === 0) {
+      setLoadingMoreProducts(false)
+      return
+    }
+
+    const [{ data: hydrated }, tiersMap] = await Promise.all([
+      supabase.from('products').select(PRODUCT_HYDRATE_SELECT).in('id', ids),
+      fetchPricingTiers(supabase, ids),
+    ])
+
+    const orderMap = new Map<string, number>(ids.map((id: string, i: number) => [id, i]))
+    const sorted = (hydrated ?? []).sort(
+      (a: { id: string }, b: { id: string }) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0)
+    )
+
+    setProductResults(prev => [...prev, ...(sorted as unknown as ProductWithVendor[])])
+    setPricingTiersByProduct(prev => new Map([...prev, ...tiersMap]))
+    setProductOffset(prev => prev + PRODUCTS_PAGE_SIZE)
+    setLoadingMoreProducts(false)
+  }
 
   const provinceNameById = new Map(provinces.map(p => [p.id, p.name]))
 
@@ -128,6 +280,32 @@ export default function ProvidersDirectoryPage() {
           <p className="text-sm text-gray-400 mt-1">
             {t('providersPageSubtitle')}
           </p>
+        </div>
+
+        {/* Tiendas / Productos — mismo panel de filtros para ambas
+            pestañas (filtersPanel más abajo), solo cambia qué se
+            busca y cómo se renderiza el resultado. */}
+        <div className="flex gap-1 border-b border-gray-200" style={{ marginBottom: 20 }} role="tablist">
+          {(['tiendas', 'productos'] as const).map(tab => {
+            const isActive = activeTab === tab
+            return (
+              <button
+                key={tab}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => setActiveTab(tab)}
+                className="px-4 py-2.5 text-sm font-semibold bg-transparent border-none cursor-pointer"
+                style={{
+                  color: isActive ? BRAND.blue : BRAND.gray,
+                  borderBottom: isActive ? `2px solid ${BRAND.blue}` : '2px solid transparent',
+                  marginBottom: -1,
+                }}
+              >
+                {tab === 'tiendas' ? t('storesTabLabel') : t('productsTabLabel')}
+              </button>
+            )
+          })}
         </div>
 
         {isMobile && (
@@ -152,29 +330,69 @@ export default function ProvidersDirectoryPage() {
           )}
 
           <div>
-            {loading ? (
+            {activeTab === 'tiendas' ? (
+              loading ? (
+                <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
+                  <p className="text-gray-400 text-sm">{t('searchingProviders')}</p>
+                </div>
+              ) : results.length === 0 ? (
+                <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
+                  <div className="text-4xl mb-3">🔍</div>
+                  <p className="text-gray-500 text-sm">
+                    {t('noProvidersFound')}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {results.map(vendor => (
+                    <ProviderCard
+                      key={vendor.id}
+                      vendor={vendor}
+                      provinceName={vendor.province_id ? provinceNameById.get(vendor.province_id) ?? null : null}
+                      businessTypes={businessTypesByVendor.get(vendor.id) ?? []}
+                      services={servicesByVendor.get(vendor.id) ?? []}
+                    />
+                  ))}
+                </div>
+              )
+            ) : productLoading ? (
               <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-                <p className="text-gray-400 text-sm">{t('searchingProviders')}</p>
+                <p className="text-gray-400 text-sm">{t('searchingProducts')}</p>
               </div>
-            ) : results.length === 0 ? (
+            ) : productResults.length === 0 ? (
               <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
                 <div className="text-4xl mb-3">🔍</div>
                 <p className="text-gray-500 text-sm">
-                  {t('noProvidersFound')}
+                  {t('noProductsFoundDirectory')}
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {results.map(vendor => (
-                  <ProviderCard
-                    key={vendor.id}
-                    vendor={vendor}
-                    provinceName={vendor.province_id ? provinceNameById.get(vendor.province_id) ?? null : null}
-                    businessTypes={businessTypesByVendor.get(vendor.id) ?? []}
-                    services={servicesByVendor.get(vendor.id) ?? []}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {productResults.map(product => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      hasVariants={variantsById.get(product.id)}
+                      pricingTiers={pricingTiersByProduct.get(product.id) ?? []}
+                    />
+                  ))}
+                </div>
+
+                {productHasMore && (
+                  <div className="flex justify-center mt-6">
+                    <button
+                      type="button"
+                      onClick={handleLoadMoreProducts}
+                      disabled={loadingMoreProducts}
+                      style={{ background: BRAND.blue }}
+                      className="text-white rounded-lg px-7 py-3 text-sm font-semibold disabled:opacity-70 disabled:cursor-wait border-none cursor-pointer"
+                    >
+                      {loadingMoreProducts ? tp('loading') : tp('loadMore')}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

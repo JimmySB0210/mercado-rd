@@ -26,6 +26,10 @@ export const directory = {
   filtersDrawerTitle: 'Filtres',
   closeFiltersAria: 'Fermer les filtres',
   viewResultsButton: 'Voir les résultats',
+  storesTabLabel: 'Boutiques',
+  productsTabLabel: 'Produits',
+  searchingProducts: 'Recherche de produits...',
+  noProductsFoundDirectory: "Nous n'avons trouvé aucun produit avec ces filtres — essayez d'ajuster votre recherche",
 
   businessTypeFilterLabel: "Type d'entreprise",
   categoryFilterLabel: 'Catégorie',

@@ -23,6 +23,17 @@ import { useCartStore } from '@/lib/store/cart'
 import { useLocationStore } from '@/lib/store/location'
 import { PLACEHOLDER_PRODUCT_IMAGE } from '@/lib/utils'
 
+// Mismas 4 columnas que product_pricing_tiers en la BD — ver
+// PricingTiersSection.tsx (editor del vendor) y producto/[id]/page.tsx
+// (fetch original, sin consumidor hasta ahora).
+export interface ProductCardPricingTier {
+  id: string
+  min_quantity: number
+  max_quantity: number | null
+  price_rdp: number
+  unit_label: string
+}
+
 interface Props {
   product: ProductWithVendor
   // Si el que renderiza la tarjeta ya verificó (con una sola consulta
@@ -39,6 +50,13 @@ interface Props {
   // global de la plataforma que no existe) — lo calcula el padre sobre
   // el array completo, una tarjeta sola no puede saberlo de sí misma.
   isBestSeller?: boolean
+  // Filas reales de product_pricing_tiers para ESTE producto (batched
+  // por el padre, igual que hasVariants) — undefined/[] es "no tiene
+  // tramos configurados": la tarjeta cae al precio simple de siempre,
+  // nunca inventa un tramo. Con filas, reemplaza esa línea de precio
+  // por la tabla de tramos — el resto de la tarjeta (imagen, badge,
+  // CTA de carrito a product.price_rdp) no cambia.
+  pricingTiers?: ProductCardPricingTier[]
 }
 
 // Mismo umbral real que ya usa todo el sitio (cart/page.tsx,
@@ -56,7 +74,7 @@ function isRecentlyPublished(publishedAt: string | null | undefined): boolean {
   return days >= 0 && days <= NEW_BADGE_WINDOW_DAYS
 }
 
-export function ProductCard({ product, hasVariants, isBestSeller }: Props) {
+export function ProductCard({ product, hasVariants, isBestSeller, pricingTiers }: Props) {
   const { t } = useTranslation('products')
   const addItem = useCartStore(s => s.addItem)
   const selectedProvince = useLocationStore(s => s.province)
@@ -210,21 +228,48 @@ export function ProductCard({ product, hasVariants, isBestSeller }: Props) {
             {product.name}
           </p>
 
-          {/* Precio — rojo cuando hay descuento real (mismo rojo que el
-              badge "-X%"), azul de marca en cualquier otro caso */}
-          <div className="flex items-baseline gap-2">
-            <span
-              className="text-xl font-extrabold"
-              style={{ color: hasDiscount ? 'var(--brand-red)' : 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}
-            >
-              {formatPrice(product.price_rdp)}
-            </span>
-            {hasDiscount && (
-              <span className="text-xs text-gray-400 line-through">
-                {formatPrice(product.compare_rdp!)}
+          {/* Precio — tabla de tramos cuando el producto los tiene
+              configurados (product_pricing_tiers real, nunca inventado);
+              si no, el precio simple de siempre (rojo con descuento real,
+              azul de marca en cualquier otro caso). */}
+          {pricingTiers && pricingTiers.length > 0 ? (
+            <div>
+              <p className="text-[11px] font-semibold mb-1" style={{ color: 'var(--color-text-secondary)' }}>
+                {t('pricingTiersTitle')}
+              </p>
+              <div className="space-y-0.5">
+                {pricingTiers.map(tier => (
+                  <div key={tier.id} className="flex items-baseline justify-between gap-2">
+                    <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                      {tier.max_quantity !== null
+                        ? t('pricingTiersRangeBetween', { min: tier.min_quantity, max: tier.max_quantity, unit: tier.unit_label })
+                        : t('pricingTiersRangeAndUp', { min: tier.min_quantity, unit: tier.unit_label })}
+                    </span>
+                    <span
+                      className="text-sm font-extrabold"
+                      style={{ color: 'var(--color-primary)', fontFamily: 'var(--font-heading)' }}
+                    >
+                      {formatPrice(tier.price_rdp)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-baseline gap-2">
+              <span
+                className="text-xl font-extrabold"
+                style={{ color: hasDiscount ? 'var(--brand-red)' : 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}
+              >
+                {formatPrice(product.price_rdp)}
               </span>
-            )}
-          </div>
+              {hasDiscount && (
+                <span className="text-xs text-gray-400 line-through">
+                  {formatPrice(product.compare_rdp!)}
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Envío — solo con provincia seleccionada, nunca adivinado */}
           {showShippingInfo && (
