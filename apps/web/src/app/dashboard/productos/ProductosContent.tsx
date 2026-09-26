@@ -8,6 +8,7 @@
 // resueltos como props y se encarga de todo el texto traducido.
 // ============================================================
 
+import { useSearchParams } from 'next/navigation'
 import { FeatureToggleButton } from '@/components/vendor/FeatureToggleButton'
 import { ProductActiveToggle } from '@/components/vendor/ProductActiveToggle'
 import { DailyDealAction } from '@/components/vendor/DailyDealAction'
@@ -44,9 +45,20 @@ interface Props {
 
 export function ProductosContent({ products, isPro }: Props) {
   const { t } = useTranslation('dashboard')
+  // ?tiersWarning=1 -- lo agrega ProductForm.tsx al redirigir acá
+  // cuando un producto recién creado se guardó bien pero sus tramos de
+  // precio por cantidad no (ver handleSubmit). No bloqueante: el
+  // producto ya está en la lista de abajo, solo se avisa.
+  const showTiersWarning = useSearchParams().get('tiersWarning') === '1'
 
   return (
     <div style={{ padding: 28, background: '#f5f5f5' }}>
+      {showTiersWarning && (
+        <div style={{ background: '#FEF3C7', color: '#92400E', border: '1px solid #FDE68A', borderRadius: 8, padding: '12px 16px', fontSize: 13, marginBottom: 20 }}>
+          {t('productTiersSaveWarning')}
+        </div>
+      )}
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 4 }}>{t('productsPageTitle')}</h1>

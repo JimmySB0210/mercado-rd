@@ -50,6 +50,7 @@ export const dashboard = {
   revenueTooltipLabel: 'Revenus',
 
   productsPageTitle: 'Mes Produits',
+  productTiersSaveWarning: "Le produit a été enregistré, mais les prix par quantité n'ont pas pu être enregistrés. Ouvrez-le et ajoutez-les depuis « Modifier ».",
   productCountOne: '{count} produit',
   productCountOther: '{count} produits',
   noProductsYet: "Vous n'avez encore publié aucun produit.",
@@ -103,6 +104,7 @@ export const dashboard = {
   // ─── PricingTiersSection ────────────────────────────────────
   pricingTiersHeading: 'Prix par quantité',
   pricingTiersHint: 'Optionnel — offrez des prix spéciaux selon la quantité achetée.',
+  pricingTiersPendingHint: 'Optionnel — ils seront enregistrés lorsque vous enregistrerez le produit.',
   pricingTiersEmptyHint: "Vous n'avez pas encore ajouté de prix par quantité.",
   addTierRowBtn: '+ Ajouter une ligne',
   tierMinQuantityLabel: 'Quantité minimale',
@@ -118,6 +120,7 @@ export const dashboard = {
   tierRemoveButton: 'Retirer',
   tierRemoving: 'Retrait...',
   tierGenericError: "Impossible d'enregistrer. Réessayez.",
+  tierOverlapError: 'Cette plage de quantité chevauche un prix par quantité existant',
 
   // ─── FaqSection ─────────────────────────────────────────────
   faqSectionTitle: 'Questions fréquentes',

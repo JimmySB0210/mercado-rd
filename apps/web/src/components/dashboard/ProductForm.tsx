@@ -18,7 +18,7 @@ import { DANGEROUS_PATTERN } from '@/lib/validation'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { getCategoryName } from '@/lib/utils'
 import { ProductAttributesSection, type AttributeValue, type AttributeValuesState } from '@/components/dashboard/ProductAttributesSection'
-import { PricingTiersSection } from '@/components/vendor/PricingTiersSection'
+import { PricingTiersSection, type TierRow } from '@/components/vendor/PricingTiersSection'
 import { ProductPreviewModal } from '@/components/dashboard/ProductPreviewModal'
 import { computePublishQuality, qualityTier, QUALITY_TIER_EMOJI, QUALITY_TIER_COLOR } from '@/lib/productQuality'
 import { BRAND } from '@/lib/colors'
@@ -203,6 +203,13 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     { values: {}, stock: '', price: '', imageUrl: null },
   ])
   const [uploadingDynamicVariantIndex, setUploadingDynamicVariantIndex] = useState<number | null>(null)
+
+  // ─── Precios por cantidad en modo "crear" (sin product_id todavía) ──
+  // Mismo patrón que dynamicVariantRows arriba: vive en memoria acá, se
+  // inserta recién en handleSubmit cuando ya existe un product_id real.
+  // En modo "editar" PricingTiersSection sigue manejando su propio
+  // estado y pegando directo contra Supabase -- esto no se usa ahí.
+  const [pendingPricingTiers, setPendingPricingTiers] = useState<TierRow[]>([])
 
   const addDynamicVariantRow = () => {
     setDynamicVariantRows(prev => [...prev, { values: {}, stock: '', price: '', imageUrl: null }])
@@ -821,6 +828,12 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
       }
 
       let productId: string
+      // Se pone en true solo si el producto (que a esta altura YA se
+      // creó) queda sin sus tramos por un fallo en el insert masivo de
+      // pendingPricingTiers -- no se reintenta como si nada (crearía un
+      // borrador duplicado), se avisa en la lista sin bloquear la
+      // navegación. Ver bloque más abajo y el redirect al final.
+      let tiersSaveFailed = false
 
       if (mode === 'editar' && initialData) {
         productId = initialData.product.id
@@ -842,6 +855,24 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
 
         if (insertError) throw insertError
         productId = newProduct.id
+
+        // Tramos armados en memoria mientras no existía un product_id
+        // real (ver pendingPricingTiers arriba) -- recién ahora se
+        // insertan de verdad. Si esto falla, el producto YA se creó
+        // (línea de arriba) -- no se lanza el error (eso haría creer al
+        // catch de abajo que hay que reintentar todo, duplicando el
+        // producto); solo se marca tiersSaveFailed para avisar en la
+        // lista sin bloquear el resto del guardado.
+        if (pendingPricingTiers.length > 0) {
+          const { error: tiersError } = await supabase
+            .from('product_pricing_tiers')
+            .insert(pendingPricingTiers.map(({ id, ...tier }) => ({ product_id: productId, ...tier })))
+
+          if (tiersError) {
+            console.error('[handleSubmit] pendingPricingTiers insert', tiersError)
+            tiersSaveFailed = true
+          }
+        }
       }
 
       // Recién ahora que el guardado fue exitoso se borran de Storage las
@@ -972,7 +1003,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
         }
       }
 
-      router.push('/dashboard/productos')
+      router.push(tiersSaveFailed ? '/dashboard/productos?tiersWarning=1' : '/dashboard/productos')
       router.refresh()
     } catch (err: any) {
       console.error('[handleSubmit]', err)
@@ -1319,9 +1350,14 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
             </div>
           </div>
 
-          {/* Precios por cantidad — solo en modo editar (necesita un product_id real) */}
-          {mode === 'editar' && initialData && (
-            <PricingTiersSection productId={initialData.product.id} />
+          {/* Precios por cantidad — en editar pega directo contra
+              Supabase con el product_id real; en crear vive en memoria
+              (pendingPricingTiers) y se inserta en handleSubmit una vez
+              que el producto existe. */}
+          {mode === 'editar' ? (
+            initialData && <PricingTiersSection mode="editar" productId={initialData.product.id} />
+          ) : (
+            <PricingTiersSection mode="crear" pendingTiers={pendingPricingTiers} onPendingTiersChange={setPendingPricingTiers} />
           )}
 
           {/* Variantes */}

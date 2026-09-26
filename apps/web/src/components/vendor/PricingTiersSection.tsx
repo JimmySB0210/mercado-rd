@@ -3,14 +3,23 @@
 // MercadoRD — Precios por cantidad (product_pricing_tiers)
 // Ruta: src/components/vendor/PricingTiersSection.tsx
 // ============================================================
-// INSERT/UPDATE/DELETE van directo contra product_pricing_tiers con
-// el cliente normal — RLS (product_pricing_tiers_vendor_write) ya
-// restringe a productos propios del vendor autenticado. El rango de
-// cantidad lo valida un trigger en la BD (validate_pricing_tier_overlap)
-// que rechaza cualquier fila cuyo rango se solape con otra existente —
-// este componente solo muestra el mensaje de error exacto que el
-// trigger devuelve, no duplica esa validación en el cliente.
-// Solo se monta en modo "editar" (necesita un product_id real).
+// Modo "editar" (product_id real): INSERT/UPDATE/DELETE van directo
+// contra product_pricing_tiers con el cliente normal — RLS
+// (product_pricing_tiers_vendor_write) ya restringe a productos propios
+// del vendor autenticado. El rango de cantidad lo valida un trigger en
+// la BD (validate_pricing_tier_overlap) que rechaza cualquier fila cuyo
+// rango se solape con otra existente — acá se muestra el mensaje de
+// error exacto que el trigger devuelve.
+//
+// Modo "crear" (sin product_id todavía): no hay ninguna llamada a
+// Supabase mientras se llena el formulario — los tramos viven en
+// memoria en el padre (ProductForm, prop pendingTiers/onPendingTiersChange)
+// y recién se insertan cuando el producto se crea de verdad (ver
+// handleSubmit en ProductForm.tsx). Como acá no hay fila real contra la
+// que el trigger pueda correr, la misma condición de solapamiento se
+// replica en JS (función overlaps() más abajo) para que el vendor vea
+// el error al instante, no como un error del servidor recién al guardar
+// todo el producto.
 // ============================================================
 
 import { useEffect, useState } from 'react'
@@ -18,7 +27,7 @@ import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/colors'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 
-interface TierRow {
+export interface TierRow {
   id: string
   min_quantity: number
   max_quantity: number | null
@@ -35,16 +44,35 @@ interface TierFormValues {
 
 const EMPTY_FORM: TierFormValues = { minQuantity: '', maxQuantity: '', price: '', unitLabel: 'unidades' }
 
-interface Props {
-  productId: string
+// Mismo chequeo que validate_pricing_tier_overlap() en la BD -- ver
+// nota de arriba sobre por qué se replica acá.
+function overlaps(
+  a: { min_quantity: number; max_quantity: number | null },
+  b: { min_quantity: number; max_quantity: number | null }
+): boolean {
+  const aMax = a.max_quantity ?? Infinity
+  const bMax = b.max_quantity ?? Infinity
+  return a.min_quantity <= bMax && aMax >= b.min_quantity
 }
 
-export function PricingTiersSection({ productId }: Props) {
+let pendingIdCounter = 0
+const nextPendingId = () => `pending-${Date.now()}-${pendingIdCounter++}`
+
+interface Props {
+  mode: 'crear' | 'editar'
+  // editar: product_id real -- cada acción pega directo contra Supabase.
+  productId?: string
+  // crear: sin producto real todavía -- el estado vive en el padre.
+  pendingTiers?: TierRow[]
+  onPendingTiersChange?: (tiers: TierRow[]) => void
+}
+
+export function PricingTiersSection({ mode, productId, pendingTiers, onPendingTiersChange }: Props) {
   const { t } = useTranslation('dashboard')
   const supabase = createClient()
 
-  const [tiers, setTiers] = useState<TierRow[]>([])
-  const [loading, setLoading] = useState(true)
+  const [savedTiers, setSavedTiers] = useState<TierRow[]>([])
+  const [loading, setLoading] = useState(mode === 'editar')
   const [open, setOpen] = useState(false)
 
   const [addingOpen, setAddingOpen] = useState(false)
@@ -59,7 +87,12 @@ export function PricingTiersSection({ productId }: Props) {
 
   const [removingId, setRemovingId] = useState<string | null>(null)
 
+  // Fuente de verdad según el modo -- el resto del componente (render,
+  // contador del header) usa esta sola variable, sin bifurcar.
+  const tiers = mode === 'editar' ? savedTiers : (pendingTiers ?? [])
+
   useEffect(() => {
+    if (mode !== 'editar' || !productId) return
     let cancelled = false
     supabase
       .from('product_pricing_tiers')
@@ -68,12 +101,12 @@ export function PricingTiersSection({ productId }: Props) {
       .order('min_quantity', { ascending: true })
       .then(({ data }) => {
         if (cancelled) return
-        setTiers(data ?? [])
+        setSavedTiers(data ?? [])
         setLoading(false)
       })
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productId])
+  }, [mode, productId])
 
   const buildPayload = (form: TierFormValues) => {
     const minQuantity = Number(form.minQuantity)
@@ -97,6 +130,19 @@ export function PricingTiersSection({ productId }: Props) {
       return
     }
 
+    if (mode === 'crear') {
+      if (tiers.some(row => overlaps(row, payload))) {
+        setAddError(t('tierOverlapError'))
+        return
+      }
+      const newRow: TierRow = { id: nextPendingId(), ...payload }
+      onPendingTiersChange?.([...tiers, newRow].sort((a, b) => a.min_quantity - b.min_quantity))
+      setAddForm(EMPTY_FORM)
+      setAddError(null)
+      setAddingOpen(false)
+      return
+    }
+
     setAddSaving(true)
     setAddError(null)
 
@@ -114,7 +160,7 @@ export function PricingTiersSection({ productId }: Props) {
       return
     }
 
-    setTiers(prev => [...prev, data].sort((a, b) => a.min_quantity - b.min_quantity))
+    setSavedTiers(prev => [...prev, data].sort((a, b) => a.min_quantity - b.min_quantity))
     setAddForm(EMPTY_FORM)
     setAddingOpen(false)
   }
@@ -138,6 +184,19 @@ export function PricingTiersSection({ productId }: Props) {
       return
     }
 
+    if (mode === 'crear') {
+      const others = tiers.filter(row => row.id !== editingId)
+      if (others.some(row => overlaps(row, payload))) {
+        setEditError(t('tierOverlapError'))
+        return
+      }
+      const updated: TierRow = { id: editingId, ...payload }
+      onPendingTiersChange?.([...others, updated].sort((a, b) => a.min_quantity - b.min_quantity))
+      setEditingId(null)
+      setEditError(null)
+      return
+    }
+
     setEditSaving(true)
     setEditError(null)
 
@@ -155,11 +214,16 @@ export function PricingTiersSection({ productId }: Props) {
       return
     }
 
-    setTiers(prev => prev.map(row => row.id === data.id ? data : row).sort((a, b) => a.min_quantity - b.min_quantity))
+    setSavedTiers(prev => prev.map(row => row.id === data.id ? data : row).sort((a, b) => a.min_quantity - b.min_quantity))
     setEditingId(null)
   }
 
   const handleRemove = async (id: string) => {
+    if (mode === 'crear') {
+      onPendingTiersChange?.(tiers.filter(row => row.id !== id))
+      return
+    }
+
     setRemovingId(id)
     const { error: deleteError } = await supabase
       .from('product_pricing_tiers')
@@ -171,7 +235,7 @@ export function PricingTiersSection({ productId }: Props) {
       console.error('[PricingTiersSection] remove', deleteError)
       return
     }
-    setTiers(prev => prev.filter(row => row.id !== id))
+    setSavedTiers(prev => prev.filter(row => row.id !== id))
   }
 
   const inputStyle: React.CSSProperties = { width: '100%', border: '1px solid #ddd', borderRadius: 6, padding: '6px 8px', fontSize: 12, boxSizing: 'border-box' }
@@ -197,7 +261,9 @@ export function PricingTiersSection({ productId }: Props) {
 
       {open && (
         <div className="pt-1 space-y-3">
-          <p className="text-xs text-gray-400">{t('pricingTiersHint')}</p>
+          <p className="text-xs text-gray-400">
+            {mode === 'crear' ? t('pricingTiersPendingHint') : t('pricingTiersHint')}
+          </p>
 
           {loading ? (
             <p className="text-xs text-gray-400">...</p>

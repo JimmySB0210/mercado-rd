@@ -58,6 +58,11 @@ export const dashboard = {
 
   // ─── productos/page.tsx ─────────────────────────────────────
   productsPageTitle: 'Mis Productos',
+  // Aviso no bloqueante -- ?tiersWarning=1 en la URL tras crear un
+  // producto cuyos precios por cantidad (armados en memoria durante el
+  // form) no se pudieron guardar; el producto en sí sí se creó. Ver
+  // handleSubmit en ProductForm.tsx.
+  productTiersSaveWarning: 'El producto se guardó, pero los precios por cantidad no se pudieron guardar. Ábrelo y agrégalos desde "Editar".',
   productCountOne: '{count} producto',
   productCountOther: '{count} productos',
   noProductsYet: 'Aún no has publicado ningún producto.',
@@ -114,6 +119,7 @@ export const dashboard = {
   // ─── PricingTiersSection ────────────────────────────────────
   pricingTiersHeading: 'Precios por cantidad',
   pricingTiersHint: 'Opcional — ofrece precios especiales según la cantidad comprada.',
+  pricingTiersPendingHint: 'Opcional — se guardarán cuando guardes el producto.',
   pricingTiersEmptyHint: 'Aún no has agregado precios por cantidad.',
   addTierRowBtn: '+ Agregar fila',
   tierMinQuantityLabel: 'Cantidad mínima',
@@ -129,6 +135,10 @@ export const dashboard = {
   tierRemoveButton: 'Quitar',
   tierRemoving: 'Quitando...',
   tierGenericError: 'No se pudo guardar. Intenta de nuevo.',
+  // Mismo texto que devuelve validate_pricing_tier_overlap() en la BD —
+  // acá se replica la condición en JS solo para modo "crear" (sin fila
+  // real contra la que el trigger pueda correr todavía).
+  tierOverlapError: 'El rango de cantidad se solapa con un precio por cantidad existente',
 
   // ─── FaqSection ─────────────────────────────────────────────
   faqSectionTitle: 'Preguntas frecuentes',

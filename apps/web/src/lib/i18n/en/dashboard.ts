@@ -50,6 +50,7 @@ export const dashboard = {
   revenueTooltipLabel: 'Revenue',
 
   productsPageTitle: 'My Products',
+  productTiersSaveWarning: 'The product was saved, but the quantity pricing tiers could not be saved. Open it and add them from "Edit".',
   productCountOne: '{count} product',
   productCountOther: '{count} products',
   noProductsYet: "You haven't published any products yet.",
@@ -103,6 +104,7 @@ export const dashboard = {
   // ─── PricingTiersSection ────────────────────────────────────
   pricingTiersHeading: 'Quantity pricing',
   pricingTiersHint: 'Optional — offer special prices based on quantity purchased.',
+  pricingTiersPendingHint: 'Optional — these will be saved when you save the product.',
   pricingTiersEmptyHint: "You haven't added any quantity pricing yet.",
   addTierRowBtn: '+ Add row',
   tierMinQuantityLabel: 'Minimum quantity',
@@ -118,6 +120,7 @@ export const dashboard = {
   tierRemoveButton: 'Remove',
   tierRemoving: 'Removing...',
   tierGenericError: 'Could not save. Try again.',
+  tierOverlapError: 'This quantity range overlaps with an existing pricing tier',
 
   // ─── FaqSection ─────────────────────────────────────────────
   faqSectionTitle: 'Frequently asked questions',
