@@ -245,12 +245,16 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     }
   })
 
-  // ─── Categoría → Subcategoría (cascada sobre el mismo `categories`
-  // plano de siempre, usando parent_id) — form.categoryId sigue siendo
-  // el id final (hoja) que ya consume todo el resto del formulario
-  // (atributos dinámicos, guardado); esto solo controla CÓMO se llega
-  // a ese valor. Mismo patrón de derivación que Navbar.tsx/proveedores.
-  const [topCategoryId, setTopCategoryId] = useState('')
+  // ─── Categoría → Subcategoría → ... (cascada RECURSIVA sobre el
+  // mismo `categories` plano de siempre, usando parent_id) —
+  // form.categoryId sigue siendo el id final (hoja, sin hijos propios)
+  // que ya consume todo el resto del formulario (atributos dinámicos,
+  // guardado); esto solo controla CÓMO se llega a ese valor. No asume
+  // ninguna profundidad fija: sigue agregando un <select> más mientras
+  // la categoría elegida en el último nivel tenga hijos reales -- hoy
+  // hay categorías de 2 niveles (la mayoría) y de 3 (Smartphones,
+  // Gorras), y esto sigue funcionando igual si mañana hay una de 4.
+  const [selectedCategoryPath, setSelectedCategoryPath] = useState<string[]>([])
 
   const [customWarranty, setCustomWarranty] = useState(() => {
     const w = initialData?.product.warranty
@@ -794,40 +798,67 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Deriva el "top" de la cascada Categoría→Subcategoría a partir del
-  // category_id (hoja) que ya trae el producto en editar — solo una
-  // vez, apenas cargan las categorías (no se puede antes: hace falta
-  // encontrar el parent_id real de esa hoja).
+  // Deriva el path completo (raíz → ... → hoja) a partir del
+  // category_id (hoja) que ya trae el producto en editar — camina
+  // hacia ARRIBA por parent_id las veces que haga falta (nunca un
+  // número fijo de saltos), solo una vez, apenas cargan las
+  // categorías (no se puede antes: hace falta el árbol completo para
+  // resolver los padres reales de esa hoja).
   useEffect(() => {
-    if (topCategoryId || categories.length === 0 || !form.categoryId) return
-    const current = categories.find(c => String(c.id) === form.categoryId)
-    if (!current) return
-    setTopCategoryId(String(current.parent_id ?? current.id))
+    if (selectedCategoryPath.length > 0 || categories.length === 0 || !form.categoryId) return
+    const byId = new Map(categories.map(c => [c.id, c]))
+    const path: string[] = []
+    let current = byId.get(Number(form.categoryId))
+    while (current) {
+      path.unshift(String(current.id))
+      current = current.parent_id != null ? byId.get(current.parent_id) : undefined
+    }
+    if (path.length > 0) setSelectedCategoryPath(path)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categories])
 
-  const topCategories = categories.filter(c => !c.parent_id)
-  const subcategoriesByParent = new Map<number, Category[]>()
+  // Categorías agrupadas por su padre (null = nivel raíz) -- una sola
+  // estructura sirve para CUALQUIER nivel de profundidad, a diferencia
+  // de un Map<number, Category[]> que solo servía para "hijos directos
+  // de un top-level".
+  const categoriesByParent = new Map<number | null, Category[]>()
   for (const c of categories) {
-    if (!c.parent_id) continue
-    const list = subcategoriesByParent.get(c.parent_id) ?? []
+    const list = categoriesByParent.get(c.parent_id) ?? []
     list.push(c)
-    subcategoriesByParent.set(c.parent_id, list)
-  }
-  const currentSubcategories = topCategoryId ? subcategoriesByParent.get(Number(topCategoryId)) ?? [] : []
-
-  // Elegir el nivel superior fija categoryId de una vez si esa categoría
-  // no tiene subcategorías (ej. "Otros") -- si sí tiene, categoryId
-  // queda vacío hasta que elija una subcategoría (el motor de atributos
-  // dinámicos, más abajo, es hoja-específico).
-  const handleTopCategoryChange = (value: string) => {
-    setTopCategoryId(value)
-    const subs = value ? subcategoriesByParent.get(Number(value)) ?? [] : []
-    setForm(f => ({ ...f, categoryId: subs.length === 0 ? value : '' }))
+    categoriesByParent.set(c.parent_id, list)
   }
 
-  const handleSubcategoryChange = (value: string) => {
-    setForm(f => ({ ...f, categoryId: value }))
+  // Arma la lista de <select> a renderizar: empieza en la raíz (parent
+  // null) y agrega un nivel más mientras la categoría elegida en el
+  // nivel anterior tenga hijos reales -- se detiene sola apenas llega
+  // a una hoja (sin hijos) o a un nivel todavía sin elegir. Ningún
+  // número de niveles hardcodeado.
+  const categoryLevels: { options: Category[]; value: string }[] = []
+  {
+    let parentId: number | null = null
+    let levelIndex = 0
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const options = categoriesByParent.get(parentId) ?? []
+      if (options.length === 0) break
+      const value = selectedCategoryPath[levelIndex] ?? ''
+      categoryLevels.push({ options, value })
+      if (!value) break
+      parentId = Number(value)
+      levelIndex++
+    }
+  }
+
+  // Elegir un nivel trunca cualquier selección más profunda que ya
+  // hubiera (cambiar la categoría de arriba invalida lo elegido
+  // debajo) y fija form.categoryId de una vez SOLO si la categoría
+  // recién elegida no tiene hijos propios -- ahí es una hoja real. Si
+  // tiene hijos, categoryId queda vacío hasta llegar a la hoja
+  // (el motor de atributos dinámicos, más abajo, es hoja-específico).
+  const handleCategoryLevelChange = (levelIndex: number, value: string) => {
+    setSelectedCategoryPath(prev => [...prev.slice(0, levelIndex), value])
+    const children = value ? categoriesByParent.get(Number(value)) ?? [] : []
+    setForm(f => ({ ...f, categoryId: (value && children.length === 0) ? value : '' }))
   }
 
   const handleWarrantySelectChange = (value: string) => {
@@ -1538,31 +1569,24 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <select
-                value={topCategoryId}
-                onChange={e => handleTopCategoryChange(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none bg-white"
-              >
-                <option value="">{t('selectTopCategoryPlaceholder')}</option>
-                {topCategories.map(c => (
-                  <option key={c.id} value={c.id}>{c.emoji} {getCategoryName(c, language)}</option>
-                ))}
-              </select>
-
-              {/* Subcategoría — solo si la categoría elegida tiene hijos
-                  en el mismo `categories` de siempre (parent_id) */}
-              {currentSubcategories.length > 0 && (
+              {/* Un <select> por nivel real del árbol -- 2 para la
+                  mayoría de las categorías, 3 para Smartphones/Gorras,
+                  y se ajusta solo si en el futuro hay más niveles. */}
+              {categoryLevels.map((level, levelIndex) => (
                 <select
-                  value={form.categoryId}
-                  onChange={e => handleSubcategoryChange(e.target.value)}
+                  key={levelIndex}
+                  value={level.value}
+                  onChange={e => handleCategoryLevelChange(levelIndex, e.target.value)}
                   className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none bg-white"
                 >
-                  <option value="">{t('selectSubcategoryPlaceholder')}</option>
-                  {currentSubcategories.map(c => (
-                    <option key={c.id} value={c.id}>{getCategoryName(c, language)}</option>
+                  <option value="">{levelIndex === 0 ? t('selectTopCategoryPlaceholder') : t('selectSubcategoryPlaceholder')}</option>
+                  {level.options.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {levelIndex === 0 ? `${c.emoji} ${getCategoryName(c, language)}` : getCategoryName(c, language)}
+                    </option>
                   ))}
                 </select>
-              )}
+              ))}
             </div>
 
             <select
