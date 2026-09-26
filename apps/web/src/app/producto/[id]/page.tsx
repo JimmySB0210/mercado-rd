@@ -63,9 +63,10 @@ export async function generateMetadata(
 
 // ─── Página principal ──────────────────────────────────────────
 export default async function ProductPage(
-  { params }: { params: Promise<{ id: string }> }
+  { params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ origen?: string }> }
 ) {
   const { id } = await params
+  const { origen } = await searchParams
   const product = await getProductByIdPublic(id)
   if (!product) notFound()
 
@@ -214,9 +215,14 @@ export default async function ProductPage(
     .order('min_quantity', { ascending: true })
 
   const pricingTiers: PricingTier[] = pricingTiersData ?? []
-  void pricingTiers // fetch intencional sin consumidor — ver comentario arriba
 
   const hasPricingTiers = pricingTiers.length > 0
+
+  // Quien llega desde la pestaña Productos de /proveedores ya decidió
+  // que quiere mayoreo -- si el producto tiene tramos reales, se
+  // muestran de una como precio principal (sin banner, sin clic extra).
+  // Sin este origen, o sin tramos reales, la vista es la de siempre.
+  const showTiersAsMainPrice = origen === 'proveedores' && hasPricingTiers
 
   // Categoría padre — solo para el breadcrumb ("Inicio › Ropa & Moda ›
   // Camisetas"). category:categories(*) ya trae parent_id; acá se
@@ -296,6 +302,8 @@ export default async function ProductPage(
           reviewsSlot={<ProductReviews productId={product.id} />}
           hasFaqContent={hasFaqContent}
           hasWholesaleOffering={hasWholesaleOffering}
+          pricingTiers={pricingTiers}
+          showTiersAsMainPrice={showTiersAsMainPrice}
           faqSlot={vendor ? <ProductFaqSection vendorId={product.vendor_id} vendorName={vendor.business_name} /> : null}
         />
 

@@ -57,6 +57,12 @@ interface Props {
   // por la tabla de tramos — el resto de la tarjeta (imagen, badge,
   // CTA de carrito a product.price_rdp) no cambia.
   pricingTiers?: ProductCardPricingTier[]
+  // De dónde viene el clic — hoy solo lo manda /proveedores (Productos)
+  // como "proveedores", para que la página de producto sepa mostrar la
+  // tabla de tramos como precio principal sin banner (ver
+  // producto/[id]/page.tsx). Sin este prop, los links quedan igual que
+  // siempre en cualquier otro lugar donde se usa esta tarjeta.
+  origin?: string
 }
 
 // Mismo umbral real que ya usa todo el sitio (cart/page.tsx,
@@ -74,12 +80,13 @@ function isRecentlyPublished(publishedAt: string | null | undefined): boolean {
   return days >= 0 && days <= NEW_BADGE_WINDOW_DAYS
 }
 
-export function ProductCard({ product, hasVariants, isBestSeller, pricingTiers }: Props) {
+export function ProductCard({ product, hasVariants, isBestSeller, pricingTiers, origin }: Props) {
   const { t } = useTranslation('products')
   const addItem = useCartStore(s => s.addItem)
   const selectedProvince = useLocationStore(s => s.province)
   const [imgSrc, setImgSrc] = useState(product.images?.[0] ?? PLACEHOLDER_PRODUCT_IMAGE)
   const [added, setAdded] = useState(false)
+  const productHref = `/producto/${product.id}${origin ? `?origen=${origin}` : ''}`
   const hasDiscount = product.compare_rdp && product.compare_rdp > product.price_rdp
   const discount = hasDiscount
     ? discountPercent(product.price_rdp, product.compare_rdp!)
@@ -169,7 +176,7 @@ export function ProductCard({ product, hasVariants, isBestSeller, pricingTiers }
       {/* Hermano del Link, no anidado dentro — mismo motivo que el CTA de WhatsApp */}
       <WishlistButton productId={product.id} />
 
-      <Link href={`/producto/${product.id}`} className="block">
+      <Link href={productHref} className="block">
         {/* Imagen */}
         <div
           className="relative aspect-square overflow-hidden bg-gray-50"
@@ -354,7 +361,7 @@ export function ProductCard({ product, hasVariants, isBestSeller, pricingTiers }
                 641px: bajo eso la tarjeta se queda como estaba (masonry). */}
             {needsOptions && (
               <Link
-                href={`/producto/${product.id}`}
+                href={productHref}
                 className="hidden min-[641px]:flex items-center justify-center w-full h-9 text-xs font-semibold transition-colors hover:bg-[var(--color-primary-subtle)]"
                 style={{
                   color: 'var(--color-primary)',

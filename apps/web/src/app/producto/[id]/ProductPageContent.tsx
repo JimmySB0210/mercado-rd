@@ -98,9 +98,8 @@ export interface VariantDynamicDimension {
 // variantId -> { attributeId -> value_text (código, no label) }
 export type VariantDynamicValuesMap = Record<string, Record<string, string>>
 
-// El tipo y sus campos se mantienen (page.tsx sigue trayendo estas
-// filas) aunque esta vista ya no los renderice — ver el comentario en
-// page.tsx junto al fetch de product_pricing_tiers.
+// Mismas filas que ve el vendor en PricingTiersSection.tsx — acá solo
+// se renderizan cuando showTiersAsMainPrice es true (ver más abajo).
 export interface PricingTier {
   id: string
   min_quantity: number
@@ -139,6 +138,16 @@ interface Props {
   // ProductPreviewModal.tsx, que no consulta product_pricing_tiers ni
   // vendor_business_types para el formulario en curso.
   hasWholesaleOffering?: boolean
+  // Filas reales de product_pricing_tiers — solo se usan cuando
+  // showTiersAsMainPrice es true (ver esa prop). El resto del tiempo
+  // page.tsx las sigue trayendo igual, pero acá no se consumen.
+  pricingTiers?: PricingTier[]
+  // true solo cuando el visitante llegó con ?origen=proveedores Y el
+  // producto tiene tramos reales (calculado en page.tsx) — reemplaza el
+  // precio simple + ITBIS por la tabla de tramos y oculta el banner de
+  // "¿Compras para revender?" (ya no hace falta invitarlo a nada, ya
+  // decidió que quiere mayoreo). Sin esto, la vista es la de siempre.
+  showTiersAsMainPrice?: boolean
 }
 
 // Checklist de confianza — el primer ítem depende de un dato real del
@@ -158,7 +167,7 @@ export function ProductPageContent({
   product, vendor, variants, hasDiscount, discount, itbis, totalConItbis, specs = [],
   dynamicDimensions = [], variantDynamicValues = {}, parentCategory = null,
   reviewsSlot, reviewCount = 0, faqSlot = null, hasFaqContent = false,
-  hasWholesaleOffering = false,
+  hasWholesaleOffering = false, pricingTiers = [], showTiersAsMainPrice = false,
 }: Props) {
   const { t, language } = useTranslation('products')
 
@@ -411,35 +420,67 @@ export function ProductPageContent({
             className="bg-[var(--color-card-bg)] p-4"
             style={{ borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)' }}
           >
-            <div className="flex items-baseline gap-3 flex-wrap">
-              <span
-                className="text-3xl font-bold"
-                style={{ color: 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}
-              >
-                {formatPrice(product.price_rdp)}
-              </span>
-              {hasDiscount && (
-                <>
-                  <span className="text-lg text-gray-400 line-through">
-                    {formatPrice(product.compare_rdp!)}
-                  </span>
+            {showTiersAsMainPrice ? (
+              // Llegó desde /proveedores (Productos) a un producto con
+              // tramos reales -- ya decidió que quiere mayoreo, así que
+              // la tabla de tramos ES el precio principal acá, sin
+              // desglose de ITBIS de la unidad simple (no aplica al
+              // mismo tiempo que un precio por volumen) ni banner
+              // debajo (ver esa condición más abajo). Mismo formato que
+              // ya usa ProductCard para esto, solo más grande.
+              <div>
+                <p className="text-sm font-semibold text-gray-500 mb-2">{t('pricingTiersTitle')}</p>
+                <div className="space-y-2">
+                  {pricingTiers.map(tier => (
+                    <div key={tier.id} className="flex items-baseline justify-between gap-3">
+                      <span className="text-sm text-gray-600">
+                        {tier.max_quantity !== null
+                          ? t('pricingTiersRangeBetween', { min: tier.min_quantity, max: tier.max_quantity, unit: tier.unit_label })
+                          : t('pricingTiersRangeAndUp', { min: tier.min_quantity, unit: tier.unit_label })}
+                      </span>
+                      <span
+                        className="text-xl font-bold"
+                        style={{ color: 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}
+                      >
+                        {formatPrice(tier.price_rdp)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-baseline gap-3 flex-wrap">
                   <span
-                    className="text-sm font-bold px-2 py-0.5 rounded-full text-white"
-                    style={{ background: 'var(--brand-red)' }}
+                    className="text-3xl font-bold"
+                    style={{ color: 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}
                   >
-                    -{discount}%
+                    {formatPrice(product.price_rdp)}
                   </span>
-                </>
-              )}
-            </div>
+                  {hasDiscount && (
+                    <>
+                      <span className="text-lg text-gray-400 line-through">
+                        {formatPrice(product.compare_rdp!)}
+                      </span>
+                      <span
+                        className="text-sm font-bold px-2 py-0.5 rounded-full text-white"
+                        style={{ background: 'var(--brand-red)' }}
+                      >
+                        -{discount}%
+                      </span>
+                    </>
+                  )}
+                </div>
 
-            {/* ITBIS */}
-            <div className="mt-2 pt-2 border-t border-gray-50 flex items-center justify-between text-xs text-gray-400">
-              <span>{t('itbisIncluded', { amount: formatPrice(itbis) })}</span>
-              <span className="font-medium text-gray-500">
-                {t('totalLabel', { amount: formatPrice(totalConItbis) })}
-              </span>
-            </div>
+                {/* ITBIS */}
+                <div className="mt-2 pt-2 border-t border-gray-50 flex items-center justify-between text-xs text-gray-400">
+                  <span>{t('itbisIncluded', { amount: formatPrice(itbis) })}</span>
+                  <span className="font-medium text-gray-500">
+                    {t('totalLabel', { amount: formatPrice(totalConItbis) })}
+                  </span>
+                </div>
+              </>
+            )}
 
             {/* Stock */}
             <div className="mt-3">
@@ -462,8 +503,11 @@ export function ProductPageContent({
               muestra si el vendor realmente ofrece algo mayorista (ya
               tiene tramos configurados, o su perfil es
               wholesaler/distributor/manufacturer) — de lo contrario
-              sería una invitación a algo que no existe. */}
-          {vendor && hasWholesaleOffering && (
+              sería una invitación a algo que no existe. Tampoco se
+              muestra si ya se está mostrando la tabla de tramos como
+              precio principal (showTiersAsMainPrice) — no hace falta
+              invitarlo a algo que ya tiene enfrente. */}
+          {vendor && hasWholesaleOffering && !showTiersAsMainPrice && (
             <VolumePricingBanner
               vendorId={vendor.id}
               productId={product.id}

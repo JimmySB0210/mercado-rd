@@ -411,6 +411,7 @@ export default function ProvidersDirectoryPage() {
                     product={product}
                     hasVariants={variantsById.get(product.id)}
                     pricingTiers={pricingTiersByProduct.get(product.id) ?? []}
+                    origin="proveedores"
                   />
                 ))}
               </div>
@@ -430,6 +431,7 @@ export default function ProvidersDirectoryPage() {
                 product={product}
                 hasVariants={variantsById.get(product.id)}
                 pricingTiers={pricingTiersByProduct.get(product.id) ?? []}
+                origin="proveedores"
               />
             ))}
           </div>
