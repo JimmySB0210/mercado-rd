@@ -9,7 +9,7 @@
 // para no tener que tocar el RPC.
 // ============================================================
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPublicClient } from '@/lib/supabase/public'
 import { Navbar } from '@/components/shop/Navbar'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
@@ -61,6 +61,34 @@ export default function ProvidersDirectoryPage() {
   const [productHasMore, setProductHasMore] = useState(false)
   const [loadingMoreProducts, setLoadingMoreProducts] = useState(false)
   const variantsById = useHasVariantsMap(productResults.map(p => p.id))
+
+  // Cuántos productos van en la grilla "de arriba" (4 columnas, junto al
+  // sidebar de filtros) antes de pasar a la grilla de ancho completo (6
+  // columnas, igual que home/búsqueda) -- se recalcula con la altura
+  // real del sidebar (varía según cuántas categorías/servicios carguen),
+  // no un número fijo a ojo.
+  const filtersSidebarRef = useRef<HTMLDivElement>(null)
+  const [topGridProductCount, setTopGridProductCount] = useState(8)
+
+  useEffect(() => {
+    const el = filtersSidebarRef.current
+    if (!el) return
+    // Alto real de una fila de ProductCard (imagen cuadrada + info +
+    // CTA) a 4 columnas, medido en vivo contra el componente real
+    // (Playwright, viewport 1440px) -- no hay forma de medirlo antes de
+    // que la fila exista, así que sigue siendo una aproximación (varía
+    // un poco con badges/tramos de precio), pero calibrada contra el
+    // dato real en vez de una cifra a ojo.
+    const ROW_HEIGHT_ESTIMATE = 481
+    const measure = () => {
+      const rows = Math.max(1, Math.round(el.getBoundingClientRect().height / ROW_HEIGHT_ESTIMATE))
+      setTopGridProductCount(rows * 4)
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   const updateFilters = (patch: Partial<ProviderFiltersState>) => setFilters(f => ({ ...f, ...patch }))
 
@@ -274,8 +302,13 @@ export default function ProvidersDirectoryPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div style={{ marginBottom: 20 }}>
+      {/* maxWidth 1400 + padding 24px -- igual que el contenedor del
+          Navbar (Desktop row / Category bar) -- para que "Proveedores"
+          y el filtro queden exactamente a la par del logo MercadoRD,
+          no un contenedor más angosto (max-w-7xl = 1280px) centrado
+          aparte, que los corría hacia la derecha. */}
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '8px 24px 32px' }}>
+        <div style={{ marginBottom: 8 }}>
           <h1 className="text-2xl font-bold text-gray-900">{t('providersPageTitle')}</h1>
           <p className="text-sm text-gray-400 mt-1">
             {t('providersPageSubtitle')}
@@ -324,7 +357,7 @@ export default function ProvidersDirectoryPage() {
 
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '260px 1fr', gap: 24, alignItems: 'start' }}>
           {!isMobile && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-5" style={{ position: 'sticky', top: 20 }}>
+            <div ref={filtersSidebarRef} className="bg-white rounded-2xl border border-gray-100 p-5" style={{ position: 'sticky', top: 20 }}>
               {filtersPanel}
             </div>
           )}
@@ -367,35 +400,54 @@ export default function ProvidersDirectoryPage() {
                 </p>
               </div>
             ) : (
-              <>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {productResults.map(product => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      hasVariants={variantsById.get(product.id)}
-                      pricingTiers={pricingTiersByProduct.get(product.id) ?? []}
-                    />
-                  ))}
-                </div>
-
-                {productHasMore && (
-                  <div className="flex justify-center mt-6">
-                    <button
-                      type="button"
-                      onClick={handleLoadMoreProducts}
-                      disabled={loadingMoreProducts}
-                      style={{ background: BRAND.blue }}
-                      className="text-white rounded-lg px-7 py-3 text-sm font-semibold disabled:opacity-70 disabled:cursor-wait border-none cursor-pointer"
-                    >
-                      {loadingMoreProducts ? tp('loading') : tp('loadMore')}
-                    </button>
-                  </div>
-                )}
-              </>
+              // Solo los primeros N (misma altura que el sidebar, a 4
+              // columnas) van acá adentro del grid de 260px+1fr — el
+              // resto se renderiza más abajo, fuera de ese grid, a todo
+              // el ancho de la página.
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {productResults.slice(0, topGridProductCount).map(product => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    hasVariants={variantsById.get(product.id)}
+                    pricingTiers={pricingTiersByProduct.get(product.id) ?? []}
+                  />
+                ))}
+              </div>
             )}
           </div>
         </div>
+
+        {/* Resto de los productos — ya no compite por espacio con el
+            sidebar, así que usa el mismo formato de 6 columnas que
+            home/búsqueda (SearchResultsGrid.tsx) en vez de las 4 de
+            arriba. */}
+        {activeTab === 'productos' && !productLoading && productResults.length > topGridProductCount && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4" style={{ marginTop: 16 }}>
+            {productResults.slice(topGridProductCount).map(product => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                hasVariants={variantsById.get(product.id)}
+                pricingTiers={pricingTiersByProduct.get(product.id) ?? []}
+              />
+            ))}
+          </div>
+        )}
+
+        {activeTab === 'productos' && productHasMore && (
+          <div className="flex justify-center mt-6">
+            <button
+              type="button"
+              onClick={handleLoadMoreProducts}
+              disabled={loadingMoreProducts}
+              style={{ background: BRAND.blue }}
+              className="text-white rounded-lg px-7 py-3 text-sm font-semibold disabled:opacity-70 disabled:cursor-wait border-none cursor-pointer"
+            >
+              {loadingMoreProducts ? tp('loading') : tp('loadMore')}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Drawer de filtros — mobile */}
