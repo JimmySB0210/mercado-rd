@@ -20,9 +20,13 @@ import { getCategoryName } from '@/lib/utils'
 import { ProductAttributesSection, type AttributeValue, type AttributeValuesState } from '@/components/dashboard/ProductAttributesSection'
 import { PricingTiersSection, type TierRow } from '@/components/vendor/PricingTiersSection'
 import { ProductPreviewModal } from '@/components/dashboard/ProductPreviewModal'
+import { ProductPageContent } from '@/app/producto/[id]/ProductPageContent'
 import { computePublishQuality, qualityTier, QUALITY_TIER_EMOJI, QUALITY_TIER_COLOR } from '@/lib/productQuality'
 import { BRAND } from '@/lib/colors'
-import type { Product, ProductVariant, CategoryAttribute, AttributeOption } from '@/types/database.types'
+import { formatPrice, discountPercent } from '@/types/database.types'
+import { PLACEHOLDER_PRODUCT_IMAGE } from '@/lib/utils'
+import type { DashboardDict } from '@/lib/i18n/es/dashboard'
+import type { Product, ProductVariant, CategoryAttribute, AttributeOption, VendorService } from '@/types/database.types'
 
 interface Category {
   id: number
@@ -31,6 +35,7 @@ interface Category {
   name_fr: string
   emoji: string
   slug: string
+  parent_id: number | null
 }
 
 interface Province {
@@ -71,8 +76,132 @@ interface DynamicVariantRow {
 const PRESET_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 const OTHER_SIZE = '__otra__'
 
+// Garantía: texto libre en la BD (migración 017), sin verificación del
+// sistema — estos presets son solo el atajo del <select>; "Otra" cae al
+// mismo patrón de texto libre que "Otra" en Talla arriba.
+const WARRANTY_PRESETS = ['Sin garantía', '7 días', '30 días', '90 días', '6 meses', '1 año']
+const WARRANTY_OTHER = '__otra_garantia__'
+
+// Mismo tipo que devuelve useTranslation('dashboard') — nunca un
+// `string` genérico, para que TS siga marcando keys de traducción
+// inexistentes en estos dos componentes igual que en el resto del form.
+type TFunc = (key: keyof DashboardDict, params?: Record<string, string | number>) => string
+
+// ─── Sidebar: checklist visual de calidad ────────────────────────────
+// Puramente de presentación — no recalcula nada, solo pinta el
+// `qualityPercent`/checks que ProductForm ya calculó (misma fórmula de
+// lib/productQuality.ts que usa la lista de productos).
+function QualitySidebarCard({ percent, checks, t }: {
+  percent: number
+  checks: { label: string; done: boolean }[]
+  t: TFunc
+}) {
+  const tier = qualityTier(percent)
+  const allDone = checks.every(c => c.done)
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 p-5">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-semibold text-gray-700">{t('qualityChecklistHeading')}</h3>
+        <span className="text-sm font-bold" style={{ color: QUALITY_TIER_COLOR[tier].text }}>{percent}%</span>
+      </div>
+      <div className="w-full h-2 rounded-full bg-gray-100 overflow-hidden mb-3">
+        <div
+          className="h-full rounded-full transition-all"
+          style={{ width: `${percent}%`, background: QUALITY_TIER_COLOR[tier].text }}
+        />
+      </div>
+      <ul className="space-y-1.5 mb-2">
+        {checks.map(c => (
+          <li key={c.label} className="flex items-center gap-2 text-xs" style={{ color: c.done ? BRAND.dark : '#9CA3AF' }}>
+            <span style={{ color: c.done ? BRAND.green : '#F59E0B', flexShrink: 0 }}>{c.done ? '✓' : '⚠'}</span>
+            {c.label}
+          </li>
+        ))}
+      </ul>
+      <p className="text-xs text-gray-400">{allDone ? t('qualityHintComplete') : t('qualityHintMissing')}</p>
+    </div>
+  )
+}
+
+// ─── Sidebar: mini vista previa siempre visible ──────────────────────
+// Compacta a propósito (no es un segundo ProductPageContent) — usa los
+// mismos datos que arma buildPreviewData() en ProductForm, la misma
+// fuente que alimenta ProductPreviewModal y el paso "Vista previa"
+// completo; acá solo se renderiza un subconjunto chico.
+function PreviewSidebarCard({ data, t }: {
+  data: { previewProduct: any; previewVariants: any[] }
+  t: TFunc
+}) {
+  const { t: tp } = useTranslation('products')
+  const { previewProduct, previewVariants } = data
+
+  const image = previewProduct.images?.[0] ?? PLACEHOLDER_PRODUCT_IMAGE
+  const sizes = [...new Set(previewVariants.map(v => v.size).filter(Boolean))] as string[]
+  const colors = [...new Set(previewVariants.map(v => v.color).filter(Boolean))] as string[]
+  const hasDiscount = !!(previewProduct.compare_rdp && previewProduct.compare_rdp > previewProduct.price_rdp)
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 p-5">
+      <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('previewSidebarHeading')}</h3>
+
+      <div className="rounded-xl overflow-hidden bg-gray-50 mb-3" style={{ aspectRatio: '1' }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={image} alt="" className="w-full h-full object-cover" />
+      </div>
+
+      <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 mb-1">
+        {previewProduct.name || t('previewUntitledProduct')}
+      </p>
+      <p className="text-xs text-gray-400 mb-2">⭐ {(previewProduct.rating_avg ?? 0).toFixed(1)}</p>
+
+      <div className="flex items-baseline gap-2 mb-3">
+        <span className="text-lg font-extrabold" style={{ color: BRAND.blue }}>
+          {formatPrice(previewProduct.price_rdp || 0)}
+        </span>
+        {hasDiscount && (
+          <span className="text-xs text-gray-400 line-through">{formatPrice(previewProduct.compare_rdp)}</span>
+        )}
+      </div>
+
+      {sizes.length > 0 && (
+        <div className="mb-2">
+          <p className="text-xs text-gray-400 mb-1">{sizes.join(' · ')}</p>
+        </div>
+      )}
+      {colors.length > 0 && (
+        <div className="mb-3">
+          <p className="text-xs text-gray-400 mb-1">{colors.join(' · ')}</p>
+        </div>
+      )}
+
+      <div className="space-y-1.5">
+        <div
+          className="w-full text-center text-xs font-semibold text-white rounded-lg py-2"
+          style={{ background: BRAND.blue }}
+        >
+          🛒 {tp('addToCart')}
+        </div>
+        <div
+          className="w-full text-center text-xs font-semibold rounded-lg py-2 border"
+          style={{ color: BRAND.blue, borderColor: BRAND.blue }}
+        >
+          {tp('askVendorButton')}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
   const { t, language } = useTranslation('dashboard')
+  // Reuso de la barra de confianza real que ya existe en products.ts
+  // (Navbar) — no se duplica texto nuevo para la tarjeta de confianza
+  // del costado.
+  const { t: tp } = useTranslation('products')
+  // Labels de servicios ya existentes (t('service.manufacturing') etc,
+  // mismo namespace que usa ProviderFilters.tsx) — no se duplican acá.
+  const { t: tv } = useTranslation('vendorOptions')
   const router = useRouter()
   const supabase = createClient()
 
@@ -102,9 +231,30 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
         lowStockThreshold: p.low_stock_threshold != null ? String(p.low_stock_threshold) : '',
         sku: p.sku ?? '',
         barcode: p.barcode ?? '',
+        warranty: p.warranty ?? '',
+        weightKg: p.weight_kg != null ? String(p.weight_kg) : '',
+        lengthCm: p.length_cm != null ? String(p.length_cm) : '',
+        widthCm: p.width_cm != null ? String(p.width_cm) : '',
+        heightCm: p.height_cm != null ? String(p.height_cm) : '',
       }
     }
-    return { name: '', description: '', categoryId: '', provinceId: '', price: '', comparePrice: '', stock: '', lowStockThreshold: '', sku: '', barcode: '' }
+    return {
+      name: '', description: '', categoryId: '', provinceId: '', price: '', comparePrice: '',
+      stock: '', lowStockThreshold: '', sku: '', barcode: '', warranty: '',
+      weightKg: '', lengthCm: '', widthCm: '', heightCm: '',
+    }
+  })
+
+  // ─── Categoría → Subcategoría (cascada sobre el mismo `categories`
+  // plano de siempre, usando parent_id) — form.categoryId sigue siendo
+  // el id final (hoja) que ya consume todo el resto del formulario
+  // (atributos dinámicos, guardado); esto solo controla CÓMO se llega
+  // a ese valor. Mismo patrón de derivación que Navbar.tsx/proveedores.
+  const [topCategoryId, setTopCategoryId] = useState('')
+
+  const [customWarranty, setCustomWarranty] = useState(() => {
+    const w = initialData?.product.warranty
+    return !!w && !WARRANTY_PRESETS.includes(w)
   })
 
   const [variantRows, setVariantRows] = useState<VariantRow[]>(() => {
@@ -134,6 +284,38 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
 
   const addVariantRow = () => {
     setVariantRows(prev => [...prev, { size: '', color: '', stock: '', price: '', imageUrl: null }])
+  }
+
+  // ─── Generar combinaciones (Talla × Color) — solo para el sistema
+  // fijo (sin variantCategoryAttributes); reemplaza las filas actuales
+  // por el producto cartesiano de las tallas marcadas y los colores
+  // escritos. El vendor sigue pudiendo agregar/editar/quitar filas
+  // sueltas después con los controles de siempre — esto es un atajo
+  // para armar la tabla inicial, no un sistema aparte.
+  const [autoGenSizes, setAutoGenSizes] = useState<string[]>([])
+  const [autoGenColorsText, setAutoGenColorsText] = useState('')
+
+  const toggleAutoGenSize = (size: string) => {
+    setAutoGenSizes(prev => prev.includes(size) ? prev.filter(s => s !== size) : [...prev, size])
+  }
+
+  const generateVariantCombinations = () => {
+    const colors = autoGenColorsText.split(',').map(c => c.trim()).filter(Boolean)
+    if (autoGenSizes.length === 0 && colors.length === 0) return
+
+    const sizeList = autoGenSizes.length > 0 ? autoGenSizes : ['']
+    const colorList = colors.length > 0 ? colors : ['']
+    const rows: VariantRow[] = []
+    for (const size of sizeList) {
+      for (const color of colorList) {
+        rows.push({ size, color, stock: '', price: '', imageUrl: null })
+      }
+    }
+
+    setVariantRows(rows)
+    setCustomSizeIndexes(new Set(
+      rows.map((r, i) => (r.size && !PRESET_SIZES.includes(r.size) ? i : -1)).filter(i => i >= 0)
+    ))
   }
 
   const updateVariantRow = (index: number, field: keyof Omit<VariantRow, 'imageUrl'>, value: string) => {
@@ -484,6 +666,10 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     filledRecommended: recommendedAttrs.filter(isAttrFilled).length,
     hasPhoto: totalImageCount > 0,
     hasDescription: form.description.trim() !== '',
+    hasName: form.name.trim() !== '',
+    hasCategory: form.categoryId !== '',
+    hasPrice: form.price.trim() !== '' && parseFloat(form.price) > 0,
+    hasStock: form.stock.trim() !== '',
   })
 
   // ─── Vista previa (sin guardar) ───────────────────────────────────────
@@ -493,6 +679,11 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     whatsapp?: string; rating_avg?: number; total_sales?: number
   } | null>(null)
   const [loadingPreviewVendor, setLoadingPreviewVendor] = useState(false)
+
+  // Servicios de envío/entrega que el vendor ya declaró a nivel tienda
+  // (vendor_services) — de solo lectura en el paso "Envío", ver fetch
+  // en el useEffect de categorías/provincias/vendor más abajo.
+  const [vendorShippingServices, setVendorShippingServices] = useState<VendorService[]>([])
 
   const canPreview = mode === 'editar' && initialData?.product.status === 'draft'
 
@@ -578,18 +769,76 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     return { previewProduct, previewVariants }
   }
 
-  // Cargar categorías y provincias al montar
+  // Cargar categorías, provincias y datos del vendor (para la vista
+  // previa, ver más abajo) al montar. El vendor se carga de una vez acá
+  // -- ya no bajo demanda como antes -- porque ahora la vista previa
+  // (mini tarjeta del costado + paso "Vista previa") es un panel
+  // siempre visible, no algo que se abre ocasionalmente con un botón.
   useEffect(() => {
     Promise.all([
-      supabase.from('categories').select('id, name, name_en, name_fr, emoji, slug').order('sort_order'),
+      supabase.from('categories').select('id, name, name_en, name_fr, emoji, slug, parent_id').order('sort_order'),
       supabase.from('provinces_rd').select('id, name').order('name'),
-    ]).then(([{ data: cats }, { data: provs }]) => {
+      supabase.from('vendors').select('id, business_name, is_verified, whatsapp, rating_avg, total_sales').eq('id', vendorId).single(),
+      // Servicios de envío/entrega ya declarados por el vendor (nivel
+      // tienda, vendor_services) -- se muestran de solo lectura en el
+      // paso "Envío"; no hay (ni se inventa) un campo por producto para
+      // esto, ver comentario en ese paso.
+      supabase.from('vendor_services').select('service').eq('vendor_id', vendorId).in('service', ['national_shipping', 'delivery', 'pickup']),
+    ]).then(([{ data: cats }, { data: provs }, { data: vendorRow }, { data: shippingServices }]) => {
       setCategories(cats ?? [])
       setProvinces(provs ?? [])
+      if (vendorRow) setPreviewVendor(vendorRow)
+      setVendorShippingServices((shippingServices ?? []).map(s => s.service))
       setLoading(false)
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Deriva el "top" de la cascada Categoría→Subcategoría a partir del
+  // category_id (hoja) que ya trae el producto en editar — solo una
+  // vez, apenas cargan las categorías (no se puede antes: hace falta
+  // encontrar el parent_id real de esa hoja).
+  useEffect(() => {
+    if (topCategoryId || categories.length === 0 || !form.categoryId) return
+    const current = categories.find(c => String(c.id) === form.categoryId)
+    if (!current) return
+    setTopCategoryId(String(current.parent_id ?? current.id))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories])
+
+  const topCategories = categories.filter(c => !c.parent_id)
+  const subcategoriesByParent = new Map<number, Category[]>()
+  for (const c of categories) {
+    if (!c.parent_id) continue
+    const list = subcategoriesByParent.get(c.parent_id) ?? []
+    list.push(c)
+    subcategoriesByParent.set(c.parent_id, list)
+  }
+  const currentSubcategories = topCategoryId ? subcategoriesByParent.get(Number(topCategoryId)) ?? [] : []
+
+  // Elegir el nivel superior fija categoryId de una vez si esa categoría
+  // no tiene subcategorías (ej. "Otros") -- si sí tiene, categoryId
+  // queda vacío hasta que elija una subcategoría (el motor de atributos
+  // dinámicos, más abajo, es hoja-específico).
+  const handleTopCategoryChange = (value: string) => {
+    setTopCategoryId(value)
+    const subs = value ? subcategoriesByParent.get(Number(value)) ?? [] : []
+    setForm(f => ({ ...f, categoryId: subs.length === 0 ? value : '' }))
+  }
+
+  const handleSubcategoryChange = (value: string) => {
+    setForm(f => ({ ...f, categoryId: value }))
+  }
+
+  const handleWarrantySelectChange = (value: string) => {
+    if (value === WARRANTY_OTHER) {
+      setCustomWarranty(true)
+      setForm(f => ({ ...f, warranty: '' }))
+    } else {
+      setCustomWarranty(false)
+      setForm(f => ({ ...f, warranty: value }))
+    }
+  }
 
   // Libera el object URL del preview de video al desmontar o al reemplazarlo
   // — a diferencia de las fotos (FileReader → data URL), un video puede
@@ -719,7 +968,12 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     return url
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // targetStatus solo importa en modo crear -- en editar, "Guardar
+  // cambios" nunca toca status (eso sigue siendo el trabajo aparte de
+  // handlePublish, sin cambios). Firma de evento genérica porque el
+  // botón "Publicar producto" en crear no es un submit real (type=
+  // "button"), así que dispara esto desde un click, no un submit.
+  const handleSubmit = async (e: { preventDefault: () => void }, targetStatus: 'draft' | 'published' = 'draft') => {
     e.preventDefault()
     setError(null)
     setPlanLimitReached(false)
@@ -731,6 +985,15 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
 
     if (!form.name || !form.price || !form.categoryId) {
       setError(t('fillRequiredFields'))
+      return
+    }
+
+    // Mismo mínimo que enforce_minimum_product_photos() en la BD --
+    // chequeo instantáneo en el cliente antes de intentar guardar; el
+    // trigger sigue siendo la fuente de verdad real (ver catch abajo,
+    // que ya muestra el mensaje textual si este chequeo se saltara algo).
+    if (mode !== 'editar' && targetStatus === 'published' && totalImageCount < 4) {
+      setError(t('publishNeedsPhotosError', { count: totalImageCount }))
       return
     }
 
@@ -825,6 +1088,11 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
         video_url: finalVideoUrl,
         sku: form.sku.trim() || null,
         barcode: form.barcode.trim() || null,
+        warranty: form.warranty.trim() || null,
+        weight_kg: form.weightKg.trim() ? parseFloat(form.weightKg) : null,
+        length_cm: form.lengthCm.trim() ? parseFloat(form.lengthCm) : null,
+        width_cm: form.widthCm.trim() ? parseFloat(form.widthCm) : null,
+        height_cm: form.heightCm.trim() ? parseFloat(form.heightCm) : null,
       }
 
       let productId: string
@@ -844,12 +1112,15 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
 
         if (updateError) throw updateError
       } else {
-        // status: 'draft' por defecto — el flujo de borrador/preview/publicar
-        // se conecta en un bloque aparte; is_active se calcula solo a partir
-        // de status (columna generada), nunca se envía directamente.
+        // is_active se calcula solo a partir de status (columna
+        // generada), nunca se envía directamente. targetStatus viene
+        // del botón que se usó ("Guardar borrador" vs "Publicar
+        // producto") -- enforce_minimum_product_photos() en la BD
+        // sigue validando el mínimo real de fotos si se intenta
+        // publicar directo, sin importar el chequeo del cliente arriba.
         const { data: newProduct, error: insertError } = await supabase
           .from('products')
-          .insert({ ...productPayload, status: 'draft' })
+          .insert({ ...productPayload, status: targetStatus })
           .select('id')
           .single()
 
@@ -1012,11 +1283,39 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
       if (message.startsWith('PLAN_LIMIT_REACHED:')) {
         setError(message.replace('PLAN_LIMIT_REACHED:', '').trim())
         setPlanLimitReached(true)
+      } else if (message.startsWith('Necesitas al menos')) {
+        // Mensaje real de enforce_minimum_product_photos() en la BD —
+        // el chequeo del cliente arriba ya cubre el caso común, esto es
+        // por si igual llega a intentarse (ej. reintento tras subir menos
+        // fotos de las que el cliente alcanzó a contar).
+        setError(message)
       } else {
         setError(t('saveProductError'))
       }
       setSaving(false)
     }
+  }
+
+  // ─── Navegador de pasos — puramente de presentación, agrupa el mismo
+  // form/handlers de siempre en secciones; ningún paso tiene su propio
+  // estado ni validación aparte de la que ya existía. ────────────────
+  type StepId = 'photos' | 'basic' | 'price' | 'tiers' | 'variants' | 'shipping' | 'additional' | 'preview'
+  const STEPS: { id: StepId; label: string; subtitle: string }[] = [
+    { id: 'photos', label: t('stepPhotosLabel'), subtitle: t('stepPhotosSubtitle') },
+    { id: 'basic', label: t('stepBasicLabel'), subtitle: t('stepBasicSubtitle') },
+    { id: 'price', label: t('stepPriceLabel'), subtitle: t('stepPriceSubtitle') },
+    { id: 'tiers', label: t('stepTiersLabel'), subtitle: t('stepTiersSubtitle') },
+    { id: 'variants', label: t('stepVariantsLabel'), subtitle: t('stepVariantsSubtitle') },
+    { id: 'shipping', label: t('stepShippingLabel'), subtitle: t('stepShippingSubtitle') },
+    { id: 'additional', label: t('stepAdditionalLabel'), subtitle: t('stepAdditionalSubtitle') },
+    { id: 'preview', label: t('stepPreviewLabel'), subtitle: t('stepPreviewSubtitle') },
+  ]
+  const [activeStep, setActiveStep] = useState<StepId>('photos')
+  const activeStepIndex = STEPS.findIndex(s => s.id === activeStep)
+  const goToStep = (index: number) => {
+    if (index < 0 || index >= STEPS.length) return
+    setActiveStep(STEPS[index].id)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   // Publicar directamente (status: draft → published) — acción
@@ -1058,50 +1357,25 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     )
   }
 
+  const inputCls = (hasError?: boolean) =>
+    `w-full border rounded-lg px-4 py-2.5 text-sm outline-none ${hasError ? 'border-red-400' : 'border-gray-200'}`
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="max-w-[1400px] mx-auto px-4 py-6 lg:py-8">
 
         {/* Header */}
-        <div className="flex items-start justify-between mb-6 flex-wrap gap-3">
-          <div>
-            <a
-              href={mode === 'editar' ? '/dashboard/productos' : '/dashboard'}
-              className="text-sm no-underline"
-              style={{ color: BRAND.gray }}
-            >
-              {mode === 'editar' ? t('backToProductsLink') : t('backToDashboardLink')}
-            </a>
-            <h1 className="text-2xl font-bold text-gray-900 mt-1">
-              {mode === 'editar' ? t('editProductTitle') : t('newProductTitle')}
-            </h1>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 4,
-                background: QUALITY_TIER_COLOR[qualityTier(qualityPercent)].bg,
-                color: QUALITY_TIER_COLOR[qualityTier(qualityPercent)].text,
-                fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 10,
-              }}
-            >
-              {QUALITY_TIER_EMOJI[qualityTier(qualityPercent)]} {t('publishQualityLabel', { percent: qualityPercent })}
-            </span>
-            {canPreview && (
-              <button
-                type="button"
-                onClick={handleOpenPreview}
-                disabled={loadingPreviewVendor}
-                style={{
-                  fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 10,
-                  background: '#fff', border: `1px solid ${BRAND.blue}`, color: BRAND.blue,
-                  cursor: loadingPreviewVendor ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {t('previewButton')}
-              </button>
-            )}
-          </div>
+        <div className="mb-6">
+          <a
+            href={mode === 'editar' ? '/dashboard/productos' : '/dashboard'}
+            className="text-sm no-underline"
+            style={{ color: BRAND.gray }}
+          >
+            {mode === 'editar' ? t('backToProductsLink') : t('backToDashboardLink')}
+          </a>
+          <h1 className="text-2xl font-bold text-gray-900 mt-1">
+            {mode === 'editar' ? t('editProductTitle') : t('newProductTitle')}
+          </h1>
         </div>
 
         {showPreview && (() => {
@@ -1116,8 +1390,61 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           )
         })()}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_320px] gap-6 items-start">
 
+            {/* ─── Navegador de pasos ─────────────────────────── */}
+            <nav className="hidden lg:flex flex-col gap-1 bg-white rounded-2xl border border-gray-100 p-3 lg:sticky lg:top-6">
+              {STEPS.map((step, i) => {
+                const isActive = step.id === activeStep
+                return (
+                  <button
+                    key={step.id}
+                    type="button"
+                    onClick={() => goToStep(i)}
+                    className="flex items-start gap-2.5 text-left rounded-xl px-3 py-2.5 border-none cursor-pointer transition-colors"
+                    style={{ background: isActive ? BRAND.blue : 'transparent' }}
+                  >
+                    <span
+                      className="flex-shrink-0 flex items-center justify-center rounded-full text-xs font-bold"
+                      style={{
+                        width: 22, height: 22, marginTop: 1,
+                        background: isActive ? '#fff' : '#F3F4F6',
+                        color: isActive ? BRAND.blue : BRAND.gray,
+                      }}
+                    >
+                      {i + 1}
+                    </span>
+                    <span>
+                      <span className="block text-sm font-semibold" style={{ color: isActive ? '#fff' : BRAND.dark }}>
+                        {step.label}
+                      </span>
+                      <span className="block text-xs mt-0.5" style={{ color: isActive ? 'rgba(255,255,255,0.8)' : BRAND.gray }}>
+                        {step.subtitle}
+                      </span>
+                    </span>
+                  </button>
+                )
+              })}
+            </nav>
+
+            {/* Selector de paso compacto — mobile/tablet, sin el
+                navegador vertical (no entra en pantallas angostas) */}
+            <select
+              value={activeStep}
+              onChange={e => goToStep(STEPS.findIndex(s => s.id === e.target.value))}
+              className="lg:hidden w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-semibold outline-none bg-white"
+            >
+              {STEPS.map((step, i) => (
+                <option key={step.id} value={step.id}>{i + 1}. {step.label}</option>
+              ))}
+            </select>
+
+            {/* ─── Contenido del paso activo ──────────────────── */}
+            <div className="space-y-4 min-w-0">
+
+          {activeStep === 'photos' && (
+          <>
           {/* Imágenes */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6">
             <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('photosHeading')}</h2>
@@ -1190,7 +1517,11 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
             <p className="text-xs text-gray-400">{t('videoHint')}</p>
             {videoError && <p className="text-xs text-red-600 mt-2">{videoError}</p>}
           </div>
+          </>
+          )}
 
+          {activeStep === 'basic' && (
+          <>
           {/* Info básica */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
             <h2 className="text-sm font-semibold text-gray-700 mb-1">{t('basicInfoHeading')}</h2>
@@ -1201,34 +1532,38 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                 value={form.name}
                 onChange={handleChange}
                 placeholder={t('productNamePlaceholder')}
-                className={`w-full border rounded-lg px-4 py-2.5 text-sm outline-none ${nameError ? 'border-red-400' : 'border-gray-200'}`}
+                className={inputCls(!!nameError)}
               />
               {nameError && <p className="text-xs text-red-600 mt-1">{nameError}</p>}
             </div>
 
-            <div>
-              <textarea
-                name="description"
-                value={form.description}
-                onChange={handleChange}
-                placeholder={t('descriptionPlaceholder')}
-                rows={3}
-                className={`w-full border rounded-lg px-4 py-2.5 text-sm outline-none resize-none ${descriptionError ? 'border-red-400' : 'border-gray-200'}`}
-              />
-              {descriptionError && <p className="text-xs text-red-600 mt-1">{descriptionError}</p>}
-            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <select
+                value={topCategoryId}
+                onChange={e => handleTopCategoryChange(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none bg-white"
+              >
+                <option value="">{t('selectTopCategoryPlaceholder')}</option>
+                {topCategories.map(c => (
+                  <option key={c.id} value={c.id}>{c.emoji} {getCategoryName(c, language)}</option>
+                ))}
+              </select>
 
-            <select
-              name="categoryId"
-              value={form.categoryId}
-              onChange={handleChange}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none bg-white"
-            >
-              <option value="">{t('selectCategoryPlaceholder')}</option>
-              {categories.map(c => (
-                <option key={c.id} value={c.id}>{c.emoji} {getCategoryName(c, language)}</option>
-              ))}
-            </select>
+              {/* Subcategoría — solo si la categoría elegida tiene hijos
+                  en el mismo `categories` de siempre (parent_id) */}
+              {currentSubcategories.length > 0 && (
+                <select
+                  value={form.categoryId}
+                  onChange={e => handleSubcategoryChange(e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none bg-white"
+                >
+                  <option value="">{t('selectSubcategoryPlaceholder')}</option>
+                  {currentSubcategories.map(c => (
+                    <option key={c.id} value={c.id}>{getCategoryName(c, language)}</option>
+                  ))}
+                </select>
+              )}
+            </div>
 
             <select
               name="provinceId"
@@ -1261,10 +1596,14 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               />
             </div>
           )}
+          </>
+          )}
 
+          {activeStep === 'price' && (
+          <>
           {/* Precio y stock */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
-            <h2 className="text-sm font-semibold text-gray-700 mb-1">{t('priceInventoryHeading')}</h2>
+            <h2 className="text-sm font-semibold text-gray-700 mb-1">{t('priceSaleHeading')}</h2>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -1277,7 +1616,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                   value={form.price}
                   onChange={handleChange}
                   placeholder="0.00"
-                  className={`w-full border rounded-lg px-4 py-2.5 text-sm outline-none ${priceError ? 'border-red-400' : 'border-gray-200'}`}
+                  className={inputCls(!!priceError)}
                 />
                 {priceError && <p className="text-xs text-red-600 mt-1">{priceError}</p>}
               </div>
@@ -1295,6 +1634,10 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                 />
               </div>
             </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
+            <h2 className="text-sm font-semibold text-gray-700 mb-1">{t('inventoryHeading')}</h2>
 
             <div>
               <label className="text-xs text-gray-500 mb-1 block">{t('stockAvailableLabel')}</label>
@@ -1305,7 +1648,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                 value={form.stock}
                 onChange={handleChange}
                 placeholder="0"
-                className={`w-full border rounded-lg px-4 py-2.5 text-sm outline-none ${stockError ? 'border-red-400' : 'border-gray-200'}`}
+                className={inputCls(!!stockError)}
               />
               {stockError && <p className="text-xs text-red-600 mt-1">{stockError}</p>}
             </div>
@@ -1319,7 +1662,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                 value={form.lowStockThreshold}
                 onChange={handleChange}
                 placeholder={t('lowStockThresholdPlaceholder')}
-                className={`w-full border rounded-lg px-4 py-2.5 text-sm outline-none ${lowStockThresholdError ? 'border-red-400' : 'border-gray-200'}`}
+                className={inputCls(!!lowStockThresholdError)}
               />
               {lowStockThresholdError && <p className="text-xs text-red-600 mt-1">{lowStockThresholdError}</p>}
             </div>
@@ -1349,21 +1692,79 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               </div>
             </div>
           </div>
+          </>
+          )}
 
-          {/* Precios por cantidad — en editar pega directo contra
-              Supabase con el product_id real; en crear vive en memoria
-              (pendingPricingTiers) y se inserta en handleSubmit una vez
-              que el producto existe. */}
-          {mode === 'editar' ? (
+          {activeStep === 'tiers' && (
+          /* Precios por cantidad — en editar pega directo contra
+             Supabase con el product_id real; en crear vive en memoria
+             (pendingPricingTiers) y se inserta en handleSubmit una vez
+             que el producto existe. */
+          mode === 'editar' ? (
             initialData && <PricingTiersSection mode="editar" productId={initialData.product.id} />
           ) : (
             <PricingTiersSection mode="crear" pendingTiers={pendingPricingTiers} onPendingTiersChange={setPendingPricingTiers} />
+          )
+          )}
+
+          {activeStep === 'variants' && (
+          <>
+          {/* Generar combinaciones — solo tiene sentido en el sistema fijo
+              (Talla/Color); con atributos dinámicos de variante, cada
+              dimensión ya tiene su propio <select> por fila más abajo. */}
+          {variantCategoryAttributes.length === 0 && (
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
+              <h2 className="text-sm font-semibold text-gray-700">{t('variantsGenerateHeading')}</h2>
+              <div>
+                <label className="text-xs text-gray-500 mb-1.5 block">{t('variantsGenerateSizesLabel')}</label>
+                <div className="flex flex-wrap gap-2">
+                  {PRESET_SIZES.map(size => {
+                    const isSelected = autoGenSizes.includes(size)
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => toggleAutoGenSize(size)}
+                        className="text-xs font-semibold rounded-lg px-3 py-1.5 border cursor-pointer transition-colors"
+                        style={{
+                          background: isSelected ? BRAND.blue : '#fff',
+                          color: isSelected ? '#fff' : BRAND.dark,
+                          borderColor: isSelected ? BRAND.blue : '#E5E7EB',
+                        }}
+                      >
+                        {size}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">{t('variantsGenerateColorsLabel')}</label>
+                <input
+                  value={autoGenColorsText}
+                  onChange={e => setAutoGenColorsText(e.target.value)}
+                  placeholder={t('variantsGenerateColorsPlaceholder')}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={generateVariantCombinations}
+                disabled={autoGenSizes.length === 0 && !autoGenColorsText.trim()}
+                className="text-xs font-bold text-white rounded-lg px-4 py-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ background: BRAND.blue, border: 'none', cursor: 'pointer' }}
+              >
+                {t('variantsGenerateButton')}
+              </button>
+            </div>
           )}
 
           {/* Variantes */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
             <div className="flex items-center justify-between mb-1">
-              <h2 className="text-sm font-semibold text-gray-700">{t('variantsHeading')}</h2>
+              <h2 className="text-sm font-semibold text-gray-700">
+                {variantCategoryAttributes.length === 0 ? t('variantsManualHeading') : t('variantsHeading')}
+              </h2>
               <button
                 type="button"
                 onClick={variantCategoryAttributes.length > 0 ? addDynamicVariantRow : addVariantRow}
@@ -1601,6 +2002,205 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
             )}
             {variantImageError && <p className="text-xs text-red-600">{variantImageError}</p>}
           </div>
+          </>
+          )}
+
+          {activeStep === 'shipping' && (
+          <>
+          {/* Envío — informativo. El costo real ya se calcula por
+              provincia de destino (mismo mecanismo que usa todo el
+              sitio, ver ShippingEstimateLine/FreeShippingBadge); peso y
+              dimensiones NO alimentan ese cálculo todavía, así que se
+              guardan (migración 017) pero se dejan explícitamente
+              marcados como referenciales, no como algo que cambie el
+              envío hoy. */}
+          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
+            <p className="text-sm" style={{ color: BRAND.dark }}>🚚 {t('shippingRealMechanismNote')}</p>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
+            <h2 className="text-sm font-semibold text-gray-700 mb-1">{t('shippingWeightDimensionsHeading')}</h2>
+            <p className="text-xs text-gray-400">{t('shippingWeightDimensionsDisclaimer')}</p>
+
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">{t('shippingWeightLabel')}</label>
+              <input
+                name="weightKg"
+                type="number"
+                step="0.01"
+                min="0"
+                value={form.weightKg}
+                onChange={handleChange}
+                placeholder="0.00"
+                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none sm:w-1/2"
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">{t('shippingLengthLabel')}</label>
+                <input
+                  name="lengthCm"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={form.lengthCm}
+                  onChange={handleChange}
+                  placeholder="0"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">{t('shippingWidthLabel')}</label>
+                <input
+                  name="widthCm"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={form.widthCm}
+                  onChange={handleChange}
+                  placeholder="0"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">{t('shippingHeightLabel')}</label>
+                <input
+                  name="heightCm"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={form.heightCm}
+                  onChange={handleChange}
+                  placeholder="0"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Métodos de envío — no hay un campo por producto para esto
+              (es una configuración de la tienda, vendor_services); se
+              muestra en modo lectura lo que el vendor ya declaró ahí,
+              en vez de inventar un selector por producto que no existe. */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-2">
+            <h2 className="text-sm font-semibold text-gray-700">{t('shippingVendorServicesHeading')}</h2>
+            {vendorShippingServices.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {vendorShippingServices.map(s => (
+                  <span key={s} className="text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: '#EFF6FF', color: BRAND.blue }}>
+                    {tv(`service.${s}`)}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400">{t('shippingNoVendorServicesHint')}</p>
+            )}
+          </div>
+          </>
+          )}
+
+          {activeStep === 'additional' && (
+          <>
+          {/* Información adicional — descripción vive acá (no en
+              Información básica), junto con garantía y devoluciones. */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
+            <h2 className="text-sm font-semibold text-gray-700 mb-1">{t('stepAdditionalLabel')}</h2>
+            <div>
+              <textarea
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                placeholder={t('descriptionPlaceholder')}
+                rows={4}
+                className={`w-full border rounded-lg px-4 py-2.5 text-sm outline-none resize-none ${descriptionError ? 'border-red-400' : 'border-gray-200'}`}
+              />
+              {descriptionError && <p className="text-xs text-red-600 mt-1">{descriptionError}</p>}
+            </div>
+          </div>
+
+          {/* Garantía — texto libre del vendor, sin verificación del
+              sistema (migración 017), mismo patrón "Otra" que Talla. */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-2">
+            <h2 className="text-sm font-semibold text-gray-700">{t('warrantyLabel')}</h2>
+            <select
+              value={customWarranty ? WARRANTY_OTHER : (WARRANTY_PRESETS.includes(form.warranty) ? form.warranty : '')}
+              onChange={e => handleWarrantySelectChange(e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none bg-white"
+            >
+              <option value="" disabled>{t('warrantyLabel')}</option>
+              {WARRANTY_PRESETS.map(w => (
+                <option key={w} value={w}>{w === 'Sin garantía' ? t('warrantyNoneOption') : w}</option>
+              ))}
+              <option value={WARRANTY_OTHER}>{t('warrantyOtherOption')}</option>
+            </select>
+            {customWarranty && (
+              <input
+                value={form.warranty}
+                onChange={e => setForm(f => ({ ...f, warranty: e.target.value }))}
+                placeholder={t('warrantyOtherPlaceholder')}
+                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
+                autoFocus
+              />
+            )}
+          </div>
+
+          {/* Política de devolución — regla real de TODA la plataforma
+              (terminos/page.tsx §6), no configurable por producto; se
+              muestra a modo informativo, no como un campo editable, para
+              no inventar una configuración por producto que no existe. */}
+          <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4">
+            <h2 className="text-sm font-semibold text-gray-700 mb-1">{t('returnPolicyHeading')}</h2>
+            <p className="text-xs text-gray-500 mb-2">{t('returnPolicyText')}</p>
+            <a href="/terminos" target="_blank" rel="noopener noreferrer" className="text-xs font-semibold no-underline" style={{ color: BRAND.blue }}>
+              {t('returnPolicyLink')}
+            </a>
+          </div>
+          </>
+          )}
+
+          {activeStep === 'preview' && (() => {
+            const { previewProduct, previewVariants } = buildPreviewData()
+            return (
+              <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6">
+                <p className="text-xs text-gray-400 mb-4">👁️ {t('previewFullStepHint')}</p>
+                <ProductPageContent
+                  product={previewProduct as any}
+                  vendor={previewVendor ?? undefined}
+                  variants={previewVariants as any}
+                  hasDiscount={!!(previewProduct.compare_rdp && previewProduct.compare_rdp > previewProduct.price_rdp)}
+                  discount={previewProduct.compare_rdp && previewProduct.compare_rdp > previewProduct.price_rdp ? discountPercent(previewProduct.price_rdp, previewProduct.compare_rdp) : null}
+                  itbis={Math.round(previewProduct.price_rdp * 0.18)}
+                  totalConItbis={previewProduct.price_rdp + Math.round(previewProduct.price_rdp * 0.18)}
+                />
+              </div>
+            )
+          })()}
+
+          {/* Navegación entre pasos — el guardado real (Guardar
+              borrador / Publicar) vive abajo, siempre visible, no solo
+              en el último paso, para que el vendor pueda guardar en
+              cualquier momento sin tener que recorrer los 8 pasos. */}
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => goToStep(activeStepIndex - 1)}
+              disabled={activeStepIndex === 0}
+              className="text-sm font-semibold bg-transparent border-none cursor-pointer disabled:opacity-0 disabled:cursor-default"
+              style={{ color: BRAND.gray }}
+            >
+              {t('stepBackButton')}
+            </button>
+            <button
+              type="button"
+              onClick={() => goToStep(activeStepIndex + 1)}
+              disabled={activeStepIndex === STEPS.length - 1}
+              className="text-sm font-semibold bg-transparent border-none cursor-pointer disabled:opacity-0 disabled:cursor-default"
+              style={{ color: BRAND.blue }}
+            >
+              {t('stepNextButton')}
+            </button>
+          </div>
 
           {error && planLimitReached && (
             <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
@@ -1633,19 +2233,75 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                 : (saving ? t('savingDraft') : t('saveDraftButton'))}
             </button>
 
-            {canPreview && (
+            {mode === 'editar' ? (
+              canPreview && (
+                <button
+                  type="button"
+                  onClick={handlePublish}
+                  disabled={publishing}
+                  style={{ background: publishing ? '#ccc' : BRAND.green }}
+                  className="flex-1 text-white font-medium py-3.5 rounded-xl transition-colors"
+                >
+                  {publishing ? t('publishing') : t('publishProduct')}
+                </button>
+              )
+            ) : (
               <button
                 type="button"
-                onClick={handlePublish}
-                disabled={publishing}
-                style={{ background: publishing ? '#ccc' : BRAND.green }}
+                onClick={e => handleSubmit(e, 'published')}
+                disabled={saving}
+                style={{ background: saving ? '#ccc' : BRAND.green }}
                 className="flex-1 text-white font-medium py-3.5 rounded-xl transition-colors"
               >
-                {publishing ? t('publishing') : t('publishProduct')}
+                {saving ? t('publishing') : t('publishProduct')}
               </button>
             )}
           </div>
 
+            </div>
+
+            {/* ─── Sidebar: calidad + vista previa + tips + confianza ── */}
+            <aside className="space-y-4 lg:sticky lg:top-6">
+              <QualitySidebarCard
+                percent={qualityPercent}
+                checks={[
+                  { label: t('qualityCheckName'), done: form.name.trim() !== '' },
+                  { label: t('qualityCheckPhotos'), done: totalImageCount > 0 },
+                  { label: t('qualityCheckCategory'), done: form.categoryId !== '' },
+                  { label: t('qualityCheckAttributes'), done: requiredAttrs.length === 0 || requiredAttrs.every(isAttrFilled) },
+                  { label: t('qualityCheckPrice'), done: form.price.trim() !== '' && parseFloat(form.price) > 0 },
+                  { label: t('qualityCheckStock'), done: form.stock.trim() !== '' },
+                  { label: t('qualityCheckDescription'), done: form.description.trim() !== '' },
+                ]}
+                t={t}
+              />
+
+              <PreviewSidebarCard data={buildPreviewData()} t={t} />
+
+              <div className="bg-white rounded-2xl border border-gray-100 p-5">
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">💡 {t('tipsHeading')}</h3>
+                <ul className="space-y-1.5">
+                  {[t('tipPhotos'), t('tipCategory'), t('tipAttributes'), t('tipDescription')].map(tip => (
+                    <li key={tip} className="flex items-center gap-2 text-xs text-gray-600">
+                      <span style={{ color: BRAND.green }}>✓</span> {tip}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-gray-100 p-5">
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">🛡️ {tp('trustSecureTitle')}</h3>
+                <ul className="space-y-1.5">
+                  {[tp('trustSecureTitle'), tp('trustQualityTitle'), tp('trustShippingTitle'), tp('trustBuyersTitle')].map(txt => (
+                    <li key={txt} className="flex items-center gap-2 text-xs text-gray-600">
+                      <span style={{ color: BRAND.green }}>✓</span> {txt}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </aside>
+
+          </div>
         </form>
       </div>
     </div>

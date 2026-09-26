@@ -4,13 +4,20 @@
 // ============================================================
 // Fórmula simple, calculada en el frontend (sin función de Postgres):
 //   puntos_obtenidos = requeridos_llenos + recomendados_llenos*0.5
-//                       + (tiene_foto ? 1 : 0) + (tiene_descripción ? 1 : 0)
-//   puntos_totales   = total_requeridos + total_recomendados*0.5 + 1 + 1
-//   porcentaje       = puntos_obtenidos / puntos_totales * 100
+//                       + suma de checks fijos completados
+//   puntos_totales   = total_requeridos + total_recomendados*0.5
+//                       + cantidad de checks fijos
 // Si la categoría no tiene atributos definidos, total_requeridos y
-// total_recomendados son 0 — el cálculo simplemente se basa en foto +
-// descripción. Se usa tanto en la lista (app/dashboard/productos) como
-// en vivo dentro de ProductForm mientras el vendor llena el formulario.
+// total_recomendados son 0 — el cálculo se basa solo en los checks
+// fijos. Se usa tanto en la lista (app/dashboard/productos) como en
+// vivo dentro de ProductForm mientras el vendor llena el formulario.
+//
+// Checks fijos (nombre/categoría/precio/inventario) son campos que ya
+// son obligatorios para GUARDAR cualquier producto (ver handleSubmit
+// en ProductForm.tsx) — para un producto ya guardado en la lista
+// siempre valen su punto completo; su valor real es en el formulario
+// EN VIVO, mientras el vendor todavía los está llenando, mostrando el
+// progreso real en vez de saltar de 0% a "completo" recién al guardar.
 // ============================================================
 
 export interface QualityInput {
@@ -20,13 +27,19 @@ export interface QualityInput {
   filledRecommended: number
   hasPhoto: boolean
   hasDescription: boolean
+  hasName: boolean
+  hasCategory: boolean
+  hasPrice: boolean
+  hasStock: boolean
 }
 
 export function computePublishQuality({
-  totalRequired, filledRequired, totalRecommended, filledRecommended, hasPhoto, hasDescription,
+  totalRequired, filledRequired, totalRecommended, filledRecommended,
+  hasPhoto, hasDescription, hasName, hasCategory, hasPrice, hasStock,
 }: QualityInput): number {
-  const earnedPoints = filledRequired + filledRecommended * 0.5 + (hasPhoto ? 1 : 0) + (hasDescription ? 1 : 0)
-  const totalPoints = totalRequired + totalRecommended * 0.5 + 1 + 1
+  const fixedChecks = [hasPhoto, hasDescription, hasName, hasCategory, hasPrice, hasStock]
+  const earnedPoints = filledRequired + filledRecommended * 0.5 + fixedChecks.filter(Boolean).length
+  const totalPoints = totalRequired + totalRecommended * 0.5 + fixedChecks.length
   if (totalPoints <= 0) return 100
   return Math.round((earnedPoints / totalPoints) * 100)
 }

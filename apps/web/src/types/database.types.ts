@@ -210,6 +210,15 @@ export interface Product {
   // diferencia de created_at, no se mueve si el vendor tuvo el
   // producto en borrador semanas antes de publicarlo.
   published_at: string | null
+  // Texto libre declarado por el vendor, sin verificación del sistema
+  // (ver migración 017) — presets + "Otra" en el formulario.
+  warranty: string | null
+  // Solo informativo por ahora — el envío se calcula por provincia de
+  // destino, no por estas medidas (ver migración 017).
+  weight_kg: number | null
+  length_cm: number | null
+  width_cm: number | null
+  height_cm: number | null
 }
 
 export interface ProductVariant {

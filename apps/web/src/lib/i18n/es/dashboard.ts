@@ -216,6 +216,84 @@ export const dashboard = {
   nameInvalidChars: 'El nombre contiene caracteres no permitidos',
   descriptionLengthError: 'La descripción debe tener entre {min} y {max} caracteres',
   descriptionInvalidChars: 'La descripción contiene caracteres no permitidos',
+  publishNeedsPhotosError: 'Necesitas al menos 4 fotos para publicar (tienes {count})',
+
+  // ─── ProductForm — navegador de pasos ────────────────────────
+  stepPhotosLabel: 'Fotos y video',
+  stepPhotosSubtitle: 'Agrega imágenes y un video',
+  stepBasicLabel: 'Información básica',
+  stepBasicSubtitle: 'Categoría, atributos y nombre',
+  stepPriceLabel: 'Precio e inventario',
+  stepPriceSubtitle: 'Precio, stock y SKU',
+  stepTiersLabel: 'Precios por cantidad',
+  stepTiersSubtitle: 'Para proveedores (opcional)',
+  stepVariantsLabel: 'Variantes',
+  stepVariantsSubtitle: 'Talla, color, etc. (opcional)',
+  stepShippingLabel: 'Envío',
+  stepShippingSubtitle: 'Peso, dimensiones y métodos',
+  stepAdditionalLabel: 'Información adicional',
+  stepAdditionalSubtitle: 'Garantía y devoluciones',
+  stepPreviewLabel: 'Vista previa',
+  stepPreviewSubtitle: 'Revisa cómo se verá',
+  stepBackButton: '← Anterior',
+  stepNextButton: 'Siguiente →',
+
+  // ─── ProductForm — calidad del anuncio (sidebar) ─────────────
+  qualityChecklistHeading: 'Calidad del anuncio',
+  qualityHintComplete: '¡Tu anuncio está completo!',
+  qualityHintMissing: 'Completa lo que falta para mejorar tu anuncio.',
+  qualityCheckName: 'Nombre agregado',
+  qualityCheckPhotos: 'Fotos agregadas',
+  qualityCheckCategory: 'Categoría seleccionada',
+  qualityCheckAttributes: 'Características completas',
+  qualityCheckPrice: 'Precio configurado',
+  qualityCheckStock: 'Inventario configurado',
+  qualityCheckDescription: 'Descripción agregada',
+
+  // ─── ProductForm — Información básica (categoría/subcategoría) ──
+  selectTopCategoryPlaceholder: 'Selecciona una categoría *',
+  selectSubcategoryPlaceholder: 'Selecciona una subcategoría *',
+
+  // ─── ProductForm — Precio e inventario (subtítulos) ──────────
+  priceSaleHeading: 'Precio de venta',
+  inventoryHeading: 'Inventario',
+
+  // ─── ProductForm — Variantes (generar combinaciones) ─────────
+  variantsGenerateHeading: 'Generar combinaciones',
+  variantsGenerateSizesLabel: 'Tallas',
+  variantsGenerateColorsLabel: 'Colores (separados por coma)',
+  variantsGenerateColorsPlaceholder: 'Ej. Azul, Rojo, Negro',
+  variantsGenerateButton: 'Generar combinaciones',
+  variantsManualHeading: 'Filas',
+
+  // ─── ProductForm — Envío (informativo, sin backend real hoy) ──
+  shippingRealMechanismNote: 'El costo de envío que ve el comprador se calcula automáticamente según su provincia de destino — no necesitas configurar nada aquí para que tus productos tengan envío.',
+  shippingWeightDimensionsHeading: 'Peso y dimensiones (opcional)',
+  shippingWeightDimensionsDisclaimer: 'Por ahora esta información es solo referencial y no afecta el costo de envío — se guarda para cuando MercadoRD calcule envíos por peso/tamaño en el futuro.',
+  shippingWeightLabel: 'Peso (kg)',
+  shippingLengthLabel: 'Largo (cm)',
+  shippingWidthLabel: 'Ancho (cm)',
+  shippingHeightLabel: 'Alto (cm)',
+  shippingVendorServicesHeading: 'Tu tienda ya ofrece',
+  shippingNoVendorServicesHint: 'Configura tus métodos de envío y entrega desde Configuración de tienda.',
+
+  // ─── ProductForm — Información adicional (descripción/garantía) ──
+  warrantyLabel: 'Garantía',
+  warrantyNoneOption: 'Sin garantía',
+  warrantyOtherOption: 'Otra (escribir)',
+  warrantyOtherPlaceholder: 'Ej. 2 años del fabricante',
+  returnPolicyHeading: 'Política de devolución',
+  returnPolicyText: 'Regla general de MercadoRD (no configurable por producto): el comprador puede solicitar un reembolso dentro de los 7 días posteriores a la entrega si el producto no llega, llega dañado, o no corresponde a su descripción. Alimentos & Bebidas queda fuera de esta política por su naturaleza perecedera.',
+  returnPolicyLink: 'Ver términos completos →',
+
+  // ─── ProductForm — Vista previa (sidebar + paso) ─────────────
+  previewSidebarHeading: 'Vista previa del producto',
+  previewFullStepHint: 'Así es como un comprador vería tu producto publicado.',
+  tipsHeading: 'Consejos para un mejor anuncio',
+  tipPhotos: 'Usa fotos de buena calidad',
+  tipAttributes: 'Completa todos los atributos',
+  tipDescription: 'Agrega una descripción detallada',
+  tipCategory: 'Elige la subcategoría más específica',
 
   // ─── Atributos dinámicos por categoría (ProductAttributesSection) ──
   requiredAttributesHeading: 'Requerido',

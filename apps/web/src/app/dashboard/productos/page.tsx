@@ -88,6 +88,10 @@ export default async function VendorProductsPage() {
       filledRecommended: recommended.filter(a => filled.has(a.id)).length,
       hasPhoto: (p.images?.length ?? 0) > 0,
       hasDescription: !!p.description?.trim(),
+      hasName: !!p.name?.trim(),
+      hasCategory: p.category_id != null,
+      hasPrice: p.price_rdp > 0,
+      hasStock: p.stock != null,
     })
 
     return { ...p, qualityPercent, activeDeal: dealByProduct.get(p.id) ?? null }
