@@ -266,11 +266,33 @@ export function ProductSelectors() {
   return (
     <div className="flex flex-col gap-4">
 
-      {/* Selector de talla — dropdown, no pills */}
+      {/* Selector de talla — chips en mobile, dropdown en desktop (mismo
+          campo, presentación condicional por viewport, confirmado contra
+          la referencia mobile real). */}
       {needsSize && (
         <div>
           <p className="text-sm font-medium text-gray-700 mb-2">{t('sizeLabel')}</p>
-          <div className="relative">
+
+          <div className="flex flex-wrap gap-2 sm:hidden">
+            {sizes.map(size => (
+              <button
+                key={size}
+                type="button"
+                onClick={() => setSelectedSize(size)}
+                className={`px-4 py-1.5 text-sm font-medium ${selectedSize === size ? 'text-white' : 'text-gray-600 hover:border-gray-300'}`}
+                style={{
+                  borderRadius: 'var(--radius-pill)',
+                  border: `1px solid ${selectedSize === size ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                  background: selectedSize === size ? 'var(--color-primary)' : 'transparent',
+                  transition: 'all var(--transition-fast)',
+                }}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative hidden sm:block">
             <select
               value={selectedSize ?? ''}
               onChange={e => setSelectedSize(e.target.value || null)}
@@ -355,12 +377,33 @@ export function ProductSelectors() {
         const isColorDim = dim.attributeId === dynamicColorDim?.attributeId
         const isSizeLikeDim = sizeLikeKeys.includes(dim.key.toLowerCase())
 
-        // Talla / Size dinámica — mismo dropdown que el sistema viejo, en vez de pills
+        // Talla / Size dinámica — chips en mobile, dropdown en desktop,
+        // mismo criterio que el sistema viejo de arriba.
         if (isSizeLikeDim) {
           return (
             <div key={dim.attributeId}>
               <p className="text-sm font-medium text-gray-700 mb-2">{dim.label}</p>
-              <div className="relative">
+
+              <div className="flex flex-wrap gap-2 sm:hidden">
+                {dim.options.map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setSelectedDynamicValues(prev => ({ ...prev, [dim.attributeId]: opt.value }))}
+                    className={`px-4 py-1.5 text-sm font-medium ${selectedValue === opt.value ? 'text-white' : 'text-gray-600 hover:border-gray-300'}`}
+                    style={{
+                      borderRadius: 'var(--radius-pill)',
+                      border: `1px solid ${selectedValue === opt.value ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                      background: selectedValue === opt.value ? 'var(--color-primary)' : 'transparent',
+                      transition: 'all var(--transition-fast)',
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative hidden sm:block">
                 <select
                   value={selectedValue ?? ''}
                   onChange={e => setSelectedDynamicValues(prev => ({ ...prev, [dim.attributeId]: e.target.value || null }))}

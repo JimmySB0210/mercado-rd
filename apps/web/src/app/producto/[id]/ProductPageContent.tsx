@@ -25,7 +25,7 @@
 // ============================================================
 
 import { useEffect, useState } from 'react'
-import { Check, Truck } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, Truck } from 'lucide-react'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { AgeConfirmationModal } from '@/components/shop/AgeConfirmationModal'
 import { ProductActionsProvider, ProductSelectors, AddToCartButton, BuyNowButton, useOptionalProductActionsContext } from '@/components/product/ProductActions'
@@ -225,6 +225,143 @@ function DeliveryEstimateBox() {
   )
 }
 
+// Acordeón genérico — mobile-only (desktop sigue con su propio bloque
+// siempre visible, nunca usa esto). `header` es un ReactNode, no un
+// string plano, para que MobileShippingTeaser pueda meter ahí la línea
+// de envío real ya calculada, no un título estático.
+function MobileAccordion({ header, defaultOpen = false, children }: { header: React.ReactNode; defaultOpen?: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <div className="bg-gray-50 rounded-xl overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between gap-2 p-4 text-left bg-transparent border-none cursor-pointer"
+      >
+        <span className="text-sm font-semibold text-gray-700 flex-1 min-w-0">{header}</span>
+        {open ? <ChevronUp size={18} className="text-gray-400 flex-shrink-0" /> : <ChevronDown size={18} className="text-gray-400 flex-shrink-0" />}
+      </button>
+      {open && <div className="px-4 pb-4 -mt-1">{children}</div>}
+    </div>
+  )
+}
+
+// Reemplaza a FreeShippingBadge en mobile (desktop sigue con el badge
+// de siempre) — colapsado por default, igual que en la referencia real
+// (chevron apuntando al costado, no hacia arriba). El resumen del
+// encabezado usa el mismo costo real por provincia que
+// DeliveryEstimateBox; al expandir, ShippingEstimateLine ya trae la
+// MISMA lógica real de umbral que antes mostraba el badge ("te faltan
+// RD$X" / "Envío gratis") — no se reconstruye, se reusa.
+function MobileShippingTeaser({ basePriceRdp, pricingTiers }: { basePriceRdp: number; pricingTiers: PricingTierLike[] }) {
+  const { t } = useTranslation('products')
+  const shippingRate = useShippingRateForCurrentProvince()
+  const minRate = useMinShippingRate()
+  const knownProvinceAmount = shippingRate ?? null
+  const amount = knownProvinceAmount ?? (shippingRate === undefined ? minRate : null)
+
+  const headerText = amount != null
+    ? (knownProvinceAmount != null
+        ? t('shippingToProvinceLabel', { amount: formatPrice(amount) })
+        : t('shippingFromLabel', { amount: formatPrice(amount) }))
+    : t('freeShippingBoxHeading')
+
+  return (
+    <MobileAccordion
+      header={<span className="flex items-center gap-1.5"><Truck size={15} className="flex-shrink-0" aria-hidden="true" />{headerText}</span>}
+      defaultOpen={false}
+    >
+      <ShippingEstimateLine basePriceRdp={basePriceRdp} pricingTiers={pricingTiers} />
+    </MobileAccordion>
+  )
+}
+
+// Reemplaza las 3 cajas separadas (envío/entrega/confianza) en mobile
+// — desktop las sigue mostrando siempre visibles, sin cambios. Mismo
+// contenido real que esas 3 cajas, solo agrupado en un único acordeón
+// (expandido por default, como en la referencia). "Seguimiento del
+// pedido" y "Soporte MercadoRD" son el mismo texto genérico de
+// garantía de plataforma que YA se muestra hoy en la caja de
+// "Compra protegida" — no se agrega "24/7" ni un número de tracking
+// real porque no hay nada que lo respalde en esta vista (sin pedido
+// creado todavía).
+function MobileShippingSecurityAccordion({ isVendorVerified }: { isVendorVerified: boolean }) {
+  const { t } = useTranslation('products')
+  return (
+    <MobileAccordion header={t('securePurchaseBoxHeading')} defaultOpen={true}>
+      <div className="flex flex-col gap-3">
+        <ShippingEstimateLine />
+        <ul className="flex flex-col gap-1.5">
+          {isVendorVerified && <TrustItem>{t('trustVerifiedVendor')}</TrustItem>}
+          <TrustItem>{t('trustSecurePayment')}</TrustItem>
+          <TrustItem>{t('trustOrderTracking')}</TrustItem>
+          <TrustItem>{t('trustPlatformSupport')}</TrustItem>
+        </ul>
+      </div>
+    </MobileAccordion>
+  )
+}
+
+// Descripción truncada en mobile con "Ver más" — en desktop (lg+) el
+// clamp se cancela vía CSS y el botón queda oculto, mismo texto
+// completo de siempre. Un solo componente para los 2 viewports, no
+// dos bloques separados — nada que pueda desincronizarse.
+// Umbral aproximado de caracteres para 4 líneas a text-sm en el ancho
+// típico de esta tarjeta en mobile (~45-55 car/línea) -- no hay forma
+// barata de medir overflow real de line-clamp sin un ResizeObserver,
+// así que es una estimación: prefiere mostrar "Ver más" de más (no
+// pasa nada si no había nada que expandir) a nunca mostrarlo cuando sí
+// hace falta.
+const DESCRIPTION_TRUNCATE_THRESHOLD = 180
+
+function TruncatedDescription({ text }: { text: string }) {
+  const { t } = useTranslation('products')
+  const [expanded, setExpanded] = useState(false)
+  const needsTruncation = text.length > DESCRIPTION_TRUNCATE_THRESHOLD
+  return (
+    <div>
+      <p className={`text-sm text-gray-600 leading-relaxed whitespace-pre-line ${!expanded && needsTruncation ? 'line-clamp-4 lg:line-clamp-none' : ''}`}>
+        {text}
+      </p>
+      {!expanded && needsTruncation && (
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="lg:hidden mt-1 text-sm font-semibold bg-transparent border-none cursor-pointer p-0"
+          style={{ color: 'var(--color-primary)' }}
+        >
+          {t('showMoreDescriptionButton')}
+        </button>
+      )}
+    </div>
+  )
+}
+
+// Agregar al carrito / Comprar ahora / Preguntar al vendedor (o el
+// aviso de "es tu propio producto") — vive una vez en la columna de
+// confianza (desktop) y otra vez en el bloque mobile de abajo (oculta
+// la columna de confianza entera en mobile). Mismo contenido exacto en
+// los 2 lugares, extraído acá para que no puedan desincronizarse.
+function BuyActionsBlock({ isOwnProduct, vendor, product }: { isOwnProduct: boolean; vendor: VendorInfo | undefined; product: { id: string; name: string } }) {
+  const { t } = useTranslation('products')
+  if (isOwnProduct) {
+    return (
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
+        {t('ownProductNotice')}
+      </div>
+    )
+  }
+  return (
+    <div className="flex flex-col gap-2">
+      <AddToCartButton />
+      <BuyNowButton />
+      {vendor?.id && (
+        <ContactVendorButton vendorId={vendor.id} productId={product.id} productName={product.name} />
+      )}
+    </div>
+  )
+}
+
 export function ProductPageContent({
   product, vendor, variants, hasDiscount, discount, itbis, totalConItbis, specs = [],
   dynamicDimensions = [], variantDynamicValues = {}, parentCategory = null,
@@ -248,6 +385,10 @@ export function ProductPageContent({
 
   const [displayName, setDisplayName] = useState(product.name)
   const [displayDescription, setDisplayDescription] = useState(product.description)
+  // Especificaciones — colapsable en mobile (empieza abierto, igual que
+  // en la referencia); en desktop (md+) el contenido queda forzado
+  // visible vía CSS sin importar este estado, ver className del <dl>.
+  const [specsOpen, setSpecsOpen] = useState(true)
 
   useEffect(() => {
     if (language === 'es') {
@@ -364,11 +505,19 @@ export function ProductPageContent({
             columna y un buy-box aparte */}
         <div className="lg:col-span-4 flex flex-col gap-4">
 
-          {/* Envío gratis desde RD$2,500 — regla real, ver lib/shipping.ts */}
-          <FreeShippingBadge />
+          {/* Envío gratis desde RD$2,500 — regla real, ver lib/shipping.ts.
+              Desktop: badge de siempre. Mobile: línea colapsable (ver
+              MobileShippingTeaser) — ver orden más abajo, en mobile pasa
+              a vivir DESPUÉS del precio/stock, no antes de todo. */}
+          <div className="hidden lg:block lg:order-1">
+            <FreeShippingBadge />
+          </div>
+          <div className="lg:hidden order-5">
+            <MobileShippingTeaser basePriceRdp={product.price_rdp} pricingTiers={pricingTiers} />
+          </div>
 
           {/* Vendor */}
-          <div className="flex items-center gap-2">
+          <div className="order-3 lg:order-2 flex items-center gap-2">
             <a
               href={`/tienda/${vendor?.id}`}
               className="text-sm font-medium hover:underline"
@@ -398,13 +547,13 @@ export function ProductPageContent({
           </div>
 
           {/* Nombre */}
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+          <h1 className="order-1 lg:order-3 text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
             {displayName}
           </h1>
 
           {/* Rating */}
           {product.rating_count > 0 && (
-            <div className="flex items-center gap-2">
+            <div className="order-2 lg:order-4 flex items-center gap-2">
               <div className="flex">
                 {[1, 2, 3, 4, 5].map(star => (
                   <svg
@@ -427,7 +576,7 @@ export function ProductPageContent({
 
           {/* Precio — panel interno (no tarjeta propia), vive dentro de
               la misma superficie que el resto de la ficha */}
-          <div className="bg-gray-50 rounded-xl p-4">
+          <div className="order-4 lg:order-5 bg-gray-50 rounded-xl p-4">
             {showTiersAsMainPrice ? (
               // Llegó desde /proveedores (Productos) a un producto con
               // tramos reales -- ya decidió que quiere mayoreo, así que
@@ -505,16 +654,20 @@ export function ProductPageContent({
           </div>
 
           {/* Talla / color / dimensiones dinámicas / cantidad */}
-          <ProductSelectors />
+          <div className="order-6 lg:order-6">
+            <ProductSelectors />
+          </div>
         </div>
 
         {/* Confianza (3 cajas separadas) + acciones de compra + invitación
-            a volumen — los botones de acción y la identidad del vendedor
-            (antes acá, en una mini-tarjeta angosta) se movieron: los
-            botones bajan debajo de las 3 cajas, el vendedor ahora tiene su
-            propia barra a ancho completo (VendorInfoBar) entre este grid y
-            las pestañas. */}
-        <div className="lg:col-span-3 flex flex-col gap-4 lg:sticky lg:top-4">
+            a volumen — SOLO desktop (lg+). En mobile, este bloque entero
+            se reemplaza por el de más abajo (botones + acordeón único de
+            envío/seguridad) — los botones de acción y la identidad del
+            vendedor (antes acá, en una mini-tarjeta angosta) se movieron:
+            los botones bajan debajo de las cajas, el vendedor ahora tiene
+            su propia barra a ancho completo (VendorInfoBar) entre este
+            grid y las pestañas. */}
+        <div className="hidden lg:flex lg:col-span-3 flex-col gap-4 lg:sticky lg:top-4">
 
           <FreeShippingProgressBox basePriceRdp={product.price_rdp} pricingTiers={pricingTiers} />
           <DeliveryEstimateBox />
@@ -529,26 +682,7 @@ export function ProductPageContent({
             </ul>
           </div>
 
-          {/* Agregar al carrito (amarillo, acción principal) / Comprar
-              ahora (azul) / Preguntar al vendedor — debajo de las cajas de
-              envío/confianza, no en la columna de info del producto.
-              Si el usuario logueado es dueño de este producto, no tiene
-              sentido ninguna de las 3 (comprar su propio producto ya lo
-              rechaza el backend, y "preguntar al vendedor" sería
-              escribirse a sí mismo) — se reemplazan por un aviso. */}
-          {isOwnProduct ? (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
-              {t('ownProductNotice')}
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              <AddToCartButton />
-              <BuyNowButton />
-              {vendor?.id && (
-                <ContactVendorButton vendorId={vendor.id} productId={product.id} productName={product.name} />
-              )}
-            </div>
-          )}
+          <BuyActionsBlock isOwnProduct={isOwnProduct} vendor={vendor} product={product} />
 
           {/* Invitación a precios por volumen — reemplaza la tabla de
               product_pricing_tiers en esta vista normal (a pedido
@@ -561,6 +695,23 @@ export function ProductPageContent({
               muestra si ya se está mostrando la tabla de tramos como
               precio principal (showTiersAsMainPrice) — no hace falta
               invitarlo a algo que ya tiene enfrente. */}
+          {vendor && hasWholesaleOffering && !showTiersAsMainPrice && (
+            <VolumePricingBanner
+              vendorId={vendor.id}
+              productId={product.id}
+              productName={product.name}
+              vendorName={vendor.business_name}
+            />
+          )}
+        </div>
+
+        {/* Mismo contenido que la columna de arriba, pero SOLO mobile
+            (<lg): botones primero, después el acordeón único de
+            envío+seguridad (reemplaza las 3 cajas separadas), igual que
+            en la referencia mobile real. */}
+        <div className="lg:hidden flex flex-col gap-4">
+          <BuyActionsBlock isOwnProduct={isOwnProduct} vendor={vendor} product={product} />
+          <MobileShippingSecurityAccordion isVendorVerified={!!vendor?.is_verified} />
           {vendor && hasWholesaleOffering && !showTiersAsMainPrice && (
             <VolumePricingBanner
               vendorId={vendor.id}
@@ -603,13 +754,25 @@ export function ProductPageContent({
           {displayDescription && (
             <div>
               <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('descriptionHeading')}</h2>
-              <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{displayDescription}</p>
+              <TruncatedDescription text={displayDescription} />
             </div>
           )}
           {specs.length > 0 && (
             <div>
-              <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('specsHeading')}</h2>
-              <dl className="text-sm">
+              {/* Mobile: encabezado clicable que colapsa/expande.
+                  Desktop (md+): encabezado plano, sin botón, siempre
+                  visible — ver className del <dl> de abajo. */}
+              <button
+                type="button"
+                onClick={() => setSpecsOpen(o => !o)}
+                className="md:hidden w-full flex items-center justify-between gap-2 mb-3 bg-transparent border-none cursor-pointer p-0"
+              >
+                <h2 className="text-sm font-semibold text-gray-700">{t('specsHeading')}</h2>
+                {specsOpen ? <ChevronUp size={18} className="text-gray-400 flex-shrink-0" /> : <ChevronDown size={18} className="text-gray-400 flex-shrink-0" />}
+              </button>
+              <h2 className="hidden md:block text-sm font-semibold text-gray-700 mb-3">{t('specsHeading')}</h2>
+
+              <dl className={`text-sm ${specsOpen ? '' : 'hidden'} md:block`}>
                 {specs.map((spec, i) => (
                   <div key={i} className="flex items-center justify-between gap-4 py-1.5 border-b border-gray-50 last:border-0">
                     <dt className="text-gray-400">{spec.label}</dt>

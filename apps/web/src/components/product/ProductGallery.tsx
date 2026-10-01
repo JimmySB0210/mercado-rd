@@ -72,15 +72,16 @@ export function ProductGallery({ productId, images, name, videoUrl }: Props) {
   const goToNext = () => setSelected(i => (i + 1) % all.length)
 
   return (
-    // Mobile: imagen arriba, miniaturas en fila debajo (como siempre).
-    // Desde sm (640px): miniaturas en columna A LA IZQUIERDA de la
-    // imagen — mismo orden en el DOM (miniaturas primero), flex-col-reverse
-    // en mobile las manda debajo sin necesidad de order-*.
-    <div className="flex flex-col-reverse sm:flex-row gap-3">
+    // Miniaturas en columna a la izquierda de la imagen principal, en
+    // TODOS los tamaños de pantalla (antes mobile tenía su propio
+    // layout, fila horizontal debajo de la imagen — la referencia
+    // mobile real confirmó que debía ser igual a desktop). Esto deja la
+    // foto principal más angosta en pantallas chicas, a propósito.
+    <div className="flex flex-row gap-3">
 
       {/* Miniaturas — solo si hay más de un elemento */}
       {all.length > 1 && (
-        <div className="flex sm:flex-col gap-2 overflow-x-auto sm:overflow-x-visible sm:overflow-y-auto pb-1 sm:pb-0 sm:w-14 sm:flex-shrink-0 sm:max-h-[520px]">
+        <div className="flex flex-col gap-2 overflow-y-auto w-14 flex-shrink-0 max-h-[520px]">
           {all.map((item, i) => (
             <button
               key={i}

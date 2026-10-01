@@ -58,6 +58,7 @@ export const products = {
   inStockAvailable: '✓ In stock ({count} available)',
   askWhatsapp: 'Ask via WhatsApp',
   descriptionHeading: 'Description',
+  showMoreDescriptionButton: 'Show more',
   specsHeading: 'Specifications',
   specYes: 'Yes',
   specNo: 'No',
