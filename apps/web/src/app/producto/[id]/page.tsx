@@ -18,11 +18,27 @@ import { discountPercent } from '@/types/database.types'
 import type { Product } from '@/types'
 import type { ProductSpecItem, VariantDynamicDimension, VariantDynamicValuesMap, PricingTier } from './ProductPageContent'
 
-export const revalidate = 600
+// FIX URGENTE (2026-10-01): había un `export const revalidate = 600`
+// acá -- incompatible con leer `searchParams` (?origen=proveedores,
+// más abajo) en el mismo route segment. Next.js no puede reconciliar
+// "cachear esta ruta" con "leer un valor dinámico por request": en un
+// build de producción real (no en `next dev`, que no lo detecta) tira
+// DYNAMIC_SERVER_USAGE y la página entera devuelve 500 -- confirmado
+// reproduciendo el build real, los 16 productos activos fallaban sin
+// excepción.
+//
+// Quitar `revalidate` solo NO alcanzó -- re-verificado contra el mismo
+// build real, seguía tirando el mismo DYNAMIC_SERVER_USAGE en los 64
+// casos probados. generateStaticParams() (aunque devuelva []) sigue
+// marcando la ruta como candidata a estática por default; hace falta
+// `dynamic = 'force-dynamic'` explícito para que Next.js deje de
+// intentar optimizarla como estática. Recuperar el caché más adelante
+// requiere mover la parte que depende de searchParams a client-side
+// (useSearchParams() en ProductPageContent.tsx), no es para hoy.
+export const dynamic = 'force-dynamic'
 
 // Sin paths pre-construidos (el catálogo es muy grande para el build) —
-// cada producto se renderiza on-demand en su primera visita y queda
-// cacheado por `revalidate` a partir de ahí.
+// cada producto se renderiza on-demand en cada visita.
 export async function generateStaticParams() {
   return []
 }
