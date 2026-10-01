@@ -1,0 +1,59 @@
+-- ═══════════════════════════════════════════════════════════
+-- MercadoRD — Corregir regresión: is_vendor_order (orders_select)
+-- Base de datos: PostgreSQL 15 (Supabase)
+-- ═══════════════════════════════════════════════════════════
+-- REGRESIÓN CONFIRMADA EN VIVO durante la pasada de humo del checkout
+-- (post-ronda de seguridad de hoy), con tráfico real de red:
+--
+--   1. GET /rest/v1/orders?...&user_id=eq.<maria> -> 403, para la
+--      propia compradora viendo su propio historial
+--      (/perfil/pedidos), con pedidos suyos reales ya creados.
+--   2. El dashboard de pedidos de Carlos (vendor) mostraba "0 pedidos
+--      totales" por el mismo motivo, para los mismos pedidos reales.
+--
+-- CAUSA RAÍZ -- confirmada de forma literal contra la BD viva, no
+-- solo deducida: la política real de orders_select es
+--
+--   (user_id = auth.uid()) OR is_vendor_order(id) OR is_admin()
+--
+-- Con is_vendor_order sin EXECUTE (revocada hoy en 026/028 como
+-- "100% interna"), cualquier intento de evaluar esa cláusula OR lanza
+-- "permission denied" y aborta la política completa -- aunque
+-- (user_id = auth.uid()) sola hubiera calificado la fila. Exactamente
+-- el riesgo que yo mismo había anotado en el comentario de la 026
+-- ("usado desde otras funciones/policies") sin haberlo verificado
+-- entonces contra pg_policies.
+--
+-- payments (el 403 reportado también ahí durante el smoke test) NO
+-- tiene este mismo patrón -- su política usa una subconsulta directa
+-- contra orders.user_id, nunca llama a is_vendor_order. Confirmado
+-- que era un síntoma downstream de lo mismo (la subconsulta necesita
+-- poder leer orders, que estaba roto) -- no un segundo hueco
+-- independiente. Se resuelve solo con el GRANT de abajo.
+--
+-- is_vendor_order es un predicado de solo lectura (¿esta orden
+-- pertenece a este vendor?) -- no muta nada, no es un vector de
+-- fraude como record_payment/activate_pro_plan/reduce_variant_stock.
+-- Se le devuelve EXECUTE a authenticated (no a anon -- un visitante
+-- sin sesión nunca tiene pedidos propios que ver).
+--
+-- create_notification -- a propósito NO recibe su EXECUTE de vuelta
+-- acá. En vez de reabrir la función genérica (que si algún día acepta
+-- un p_user_id/p_target_user_id arbitrario sin comparar contra
+-- auth.uid(), sería el mismo patrón de hueco que
+-- activate_pro_plan/record_payment), se creó una función nueva
+-- notify_self(p_type, p_title, p_body, p_link, p_data) que NO recibe
+-- p_user_id como parámetro en absoluto -- usa auth.uid() internamente
+-- siempre, imposible de usar mal por construcción. create_notification
+-- se queda exactamente como estaba (022/026/028): uso 100% interno,
+-- sin EXECUTE para authenticated/anon. useAuth.ts y
+-- perfil/seguridad/page.tsx ya se migraron a notify_self en el
+-- frontend.
+--
+-- PENDIENTE: agregar a este repo el CREATE FUNCTION literal de
+-- notify_self (creada directo en la BD viva) en cuanto se comparta su
+-- texto exacto -- mismo criterio que 003/009/013/014/015/028: el repo
+-- debe quedar como registro fiel de lo que de verdad corrió.
+-- ═══════════════════════════════════════════════════════════
+
+GRANT EXECUTE ON FUNCTION public.is_vendor_order TO authenticated;

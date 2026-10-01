@@ -1,0 +1,57 @@
+-- ═══════════════════════════════════════════════════════════
+-- MercadoRD — Revocar EXECUTE público de funciones que mueven dinero/stock
+-- Base de datos: PostgreSQL 15 (Supabase)
+-- ═══════════════════════════════════════════════════════════
+-- Confirmado contra la BD viva (cuerpos exactos provistos por el
+-- usuario, sep-2026) — las 4 funciones de acá son SECURITY DEFINER
+-- llamables hoy por cualquier usuario autenticado vía /rest/v1/rpc,
+-- sin que el body verifique NADA que impida abusarlas:
+--
+--   record_payment — inserta p_status/p_amount_rdp tal cual los manda
+--   el cliente; si p_status = 'approved', confirma la orden solo.
+--   Cero llamadores en todo el frontend (grep completo) -- hoy
+--   checkout/page.tsx inserta en payments directo con
+--   supabase.from('payments').insert(...), no vía este RPC. No hay
+--   ningún flujo real que dependa de que siga siendo pública.
+--
+--   activate_pro_plan — confía ciegamente en p_azul_order_id/
+--   p_auth_code (cualquier string pasa) y activa plan='pro' +
+--   is_verified=true. Su único llamador real es
+--   dashboard/plan/page.tsx, INMEDIATAMENTE después de un pago
+--   simulado (el gateway Azul de este proyecto está en modo mock) —
+--   cualquier cuenta puede llamar el RPC directo con cualquier
+--   vendor_id y activarse Pro gratis. Revocar esto ROMPE el botón
+--   "Actualizar a Pro" hasta que exista una verificación real
+--   servidor-a-servidor con Azul (que hoy no existe en este proyecto,
+--   todo el gateway es un mock) -- es un trade-off consciente: cerrar
+--   el hueco ahora significa que "Actualizar a Pro" queda inoperante
+--   hasta construir esa verificación real, no hay forma de tener
+--   ambas cosas con el mock actual.
+--
+--   reduce_variant_stock — solo confirma que haya stock suficiente,
+--   nada más. Cero llamadores en todo el frontend (grep completo) —
+--   confirma lo que ya reportamos: el stock de variantes hoy no se
+--   descuenta en NINGÚN flujo real (ni siquiera vía este RPC, que
+--   nadie invoca). Ver migración de create_order_from_cart: el
+--   descuento de stock de variante se mueve DENTRO de esa función.
+--
+--   create_notification — cero verificación de quién llama. Se sigue
+--   pudiendo usar desde DENTRO de otras funciones SECURITY DEFINER
+--   (create_order_from_cart, accept_chat_quote, etc. via PERFORM) sin
+--   ningún cambio -- esas funciones corren con los privilegios del
+--   DUEÑO de la función, no con los del rol que las invocó, así que
+--   revocar EXECUTE de authenticated/anon no rompe esas llamadas
+--   internas. Solo cierra la puerta a que cualquier usuario cree
+--   notificaciones arbitrarias a nombre de quien quiera vía RPC
+--   directo.
+--
+-- No se especifica lista de argumentos -- si Postgres responde
+-- "function name is not unique" es porque hay más de un overload; en
+-- ese caso hace falta la firma exacta (el usuario tiene acceso a la
+-- BD viva para confirmarla antes de aplicar).
+-- ═══════════════════════════════════════════════════════════
+
+REVOKE EXECUTE ON FUNCTION public.record_payment FROM authenticated, anon;
+REVOKE EXECUTE ON FUNCTION public.activate_pro_plan FROM authenticated, anon;
+REVOKE EXECUTE ON FUNCTION public.reduce_variant_stock FROM authenticated, anon;
+REVOKE EXECUTE ON FUNCTION public.create_notification FROM authenticated, anon;
