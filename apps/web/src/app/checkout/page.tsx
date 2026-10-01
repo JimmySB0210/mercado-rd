@@ -4,7 +4,7 @@
 // Ruta: src/app/checkout/page.tsx
 // ============================================================
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ShieldCheck, ChevronDown } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
@@ -32,7 +32,13 @@ const PAYMENT_METHOD_KEYS: { id: string; labelKey: keyof CheckoutDict; emoji: st
   { id: 'cash',     labelKey: 'paymentCashLabel',      emoji: '💵' },
 ]
 
-export default function CheckoutPage() {
+// FIX URGENTE (2026-10-01): useSearchParams() sin <Suspense> alrededor
+// falla el build de producción real (next build), aunque funcione sin
+// problema en next dev -- bloqueaba el deploy entero en Vercel (el
+// mismo bug que ya había roto producto/[id] hoy). El wrapper de abajo
+// (CheckoutPage) es el fix estándar de Next.js para esto -- ningún
+// cambio de comportamiento, solo satisface el requisito de build.
+function CheckoutPageContent() {
   const { t } = useTranslation('checkout')
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -813,5 +819,13 @@ export default function CheckoutPage() {
         }
       `}</style>
     </div>
+  )
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={null}>
+      <CheckoutPageContent />
+    </Suspense>
   )
 }
