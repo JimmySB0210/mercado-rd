@@ -240,6 +240,9 @@ export default async function ProductPage(
     total_sales?: number
     logo_url?: string | null
     created_at?: string
+    // vendors(*) ya lo trae — se declara acá para que ProductPageContent
+    // pueda comparar contra el usuario logueado y bloquear la auto-compra.
+    user_id?: string
   }
 
   // Conteo real de reseñas — para la etiqueta de la pestaña ("Reseñas
@@ -254,13 +257,21 @@ export default async function ProductPage(
   // consultas que ya hace ProductFaqSection (ambas livianas) — se
   // duplican acá solo para decidir si el botón de la pestaña aparece;
   // el contenido en sí lo sigue resolviendo ese componente.
-  const [{ data: businessTypesRows }, { data: faqRows }] = vendor
+  // Conteo real de productos activos del vendedor y si ofrece envío
+  // nacional — para la barra de vendedor a ancho completo
+  // (VendorInfoBar). Nunca vendor.total_sales (confirmado sembrado, no
+  // actualizado, en la auditoría de seguridad) ni el largo de la lista
+  // ya limitada a 8 de VendorProductsCarousel.
+  const [{ data: businessTypesRows }, { data: faqRows }, { count: vendorProductCount }, { data: vendorServicesRows }] = vendor
     ? await Promise.all([
         supabase.from('vendor_business_types').select('business_type').eq('vendor_id', product.vendor_id),
         supabase.from('vendor_faqs').select('id').eq('vendor_id', product.vendor_id).eq('is_active', true),
+        supabase.from('products').select('id', { count: 'exact', head: true }).eq('vendor_id', product.vendor_id).eq('is_active', true),
+        supabase.from('vendor_services').select('service').eq('vendor_id', product.vendor_id).eq('service', 'national_shipping'),
       ])
-    : [{ data: [] }, { data: [] }]
+    : [{ data: [] }, { data: [] }, { count: 0 }, { data: [] }]
   const hasFaqContent = (businessTypesRows?.length ?? 0) > 0 || (faqRows?.length ?? 0) > 0
+  const vendorShipsNationwide = (vendorServicesRows?.length ?? 0) > 0
 
   // El banner de "¿Compras para revender?" solo invita a algo que el
   // vendor realmente ofrece: o ya tiene tramos de precio configurados
@@ -305,6 +316,8 @@ export default async function ProductPage(
           pricingTiers={pricingTiers}
           showTiersAsMainPrice={showTiersAsMainPrice}
           faqSlot={vendor ? <ProductFaqSection vendorId={product.vendor_id} vendorName={vendor.business_name} /> : null}
+          vendorProductCount={vendorProductCount ?? 0}
+          vendorShipsNationwide={vendorShipsNationwide}
         />
 
         {/* Productos de este vendedor / también te puede interesar —

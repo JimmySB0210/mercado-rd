@@ -25,20 +25,23 @@
 // ============================================================
 
 import { useEffect, useState } from 'react'
-import { Check } from 'lucide-react'
+import { Check, Truck } from 'lucide-react'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { AgeConfirmationModal } from '@/components/shop/AgeConfirmationModal'
-import { ProductActionsProvider, ProductSelectors, AddToCartButton } from '@/components/product/ProductActions'
+import { ProductActionsProvider, ProductSelectors, AddToCartButton, BuyNowButton, useOptionalProductActionsContext } from '@/components/product/ProductActions'
 import { FreeShippingBadge } from '@/components/product/FreeShippingBadge'
 import { ProductTabs, type ProductTabDef } from '@/components/product/ProductTabs'
 import { ShippingEstimateLine } from '@/components/product/ShippingEstimateLine'
 import { VolumePricingBanner } from '@/components/product/VolumePricingBanner'
 import { ContactVendorButton } from '@/components/product/ContactVendorButton'
 import { GiftListButton } from '@/components/product/GiftListButton'
-import { VendorTrustBar } from '@/components/shop/VendorTrustBar'
+import { VendorInfoBar } from '@/components/product/VendorInfoBar'
+import { useAuth } from '@/lib/hooks/useAuth'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { useCartSubtotal } from '@/lib/store/cart'
+import { useShippingRateForCurrentProvince, useMinShippingRate } from '@/lib/hooks/useShippingRate'
+import { qualifiesForFreeShipping, amountUntilFreeShippingRdp, resolveEffectiveUnitPriceRdp, type PricingTierLike } from '@/lib/shipping'
 import { formatPrice } from '@/types/database.types'
-import { formatDate } from '@/lib/utils'
 import type { Language } from '@/lib/store/language'
 import type { ProductVariant } from '@/types/database.types'
 import type { Product } from '@/types'
@@ -48,10 +51,11 @@ interface VendorInfo {
   business_name: string
   is_verified: boolean
   whatsapp?: string
-  rating_avg?: number
-  total_sales?: number
   logo_url?: string | null
-  created_at?: string
+  // Para comparar contra el usuario logueado y bloquear la auto-compra
+  // (un vendedor no puede comprar su propio producto) — opcional porque
+  // ProductPreviewModal.tsx no lo necesita (vista previa sin comprador real).
+  user_id?: string
 }
 
 // name_en/name_fr/requires_age_confirmation opcionales — ProductPreviewModal.tsx
@@ -148,6 +152,12 @@ interface Props {
   // "¿Compras para revender?" (ya no hace falta invitarlo a nada, ya
   // decidió que quiere mayoreo). Sin esto, la vista es la de siempre.
   showTiersAsMainPrice?: boolean
+  // Conteo real de productos activos del vendedor y si ofrece envío
+  // nacional (vendor_services) — para VendorInfoBar. 0/false por
+  // defecto para ProductPreviewModal (vista previa sin vendor real
+  // todavía consultado para esto).
+  vendorProductCount?: number
+  vendorShipsNationwide?: boolean
 }
 
 // Checklist de confianza — el primer ítem depende de un dato real del
@@ -163,13 +173,69 @@ function TrustItem({ children }: { children: React.ReactNode }) {
   )
 }
 
+// Envío gratis — progreso real hacia el umbral (misma regla que
+// create_order_from_cart, ver lib/shipping.ts), caja propia. Sin
+// contexto de compra (ProductPreviewModal, fuera del Provider) no
+// renderiza nada — no hay cantidad/variante real sobre la que calcular.
+function FreeShippingProgressBox({ basePriceRdp, pricingTiers }: { basePriceRdp: number; pricingTiers: PricingTierLike[] }) {
+  const { t } = useTranslation('products')
+  const cartSubtotal = useCartSubtotal()
+  const actions = useOptionalProductActionsContext()
+  if (!actions) return null
+
+  const unitPrice = resolveEffectiveUnitPriceRdp(basePriceRdp, pricingTiers, actions.quantity)
+  const projectedSubtotal = cartSubtotal + unitPrice * actions.quantity
+  const qualifies = qualifiesForFreeShipping(projectedSubtotal)
+
+  return (
+    <div className="bg-gray-50 rounded-xl p-4">
+      <h2 className="text-sm font-semibold text-gray-700 mb-1">{t('freeShippingBoxHeading')}</h2>
+      <p className="text-sm" style={{ color: qualifies ? 'var(--color-green)' : 'var(--color-text-secondary)' }}>
+        {qualifies
+          ? t('freeShippingQualifiedShort')
+          : t('freeShippingRemainingShort', { amount: formatPrice(amountUntilFreeShippingRdp(projectedSubtotal)) })}
+      </p>
+    </div>
+  )
+}
+
+// Entrega estimada — costo real por provincia (shipping_rates), nunca
+// una ruta origen→destino ni un rango de días: ese dato no existe en
+// el schema (mismo criterio que ShippingEstimateLine.tsx).
+function DeliveryEstimateBox() {
+  const { t } = useTranslation('products')
+  const shippingRate = useShippingRateForCurrentProvince()
+  const minRate = useMinShippingRate()
+  const knownProvinceAmount = shippingRate ?? null
+  const amount = knownProvinceAmount ?? (shippingRate === undefined ? minRate : null)
+  if (amount == null) return null
+
+  return (
+    <div className="bg-gray-50 rounded-xl p-4">
+      <h2 className="text-sm font-semibold text-gray-700 mb-1">{t('deliveryEstimateBoxHeading')}</h2>
+      <p className="flex items-center gap-1.5 text-sm text-gray-600">
+        <Truck size={15} className="flex-shrink-0" aria-hidden="true" />
+        {knownProvinceAmount != null
+          ? t('shippingToProvinceLabel', { amount: formatPrice(amount) })
+          : t('shippingFromLabel', { amount: formatPrice(amount) })}
+      </p>
+    </div>
+  )
+}
+
 export function ProductPageContent({
   product, vendor, variants, hasDiscount, discount, itbis, totalConItbis, specs = [],
   dynamicDimensions = [], variantDynamicValues = {}, parentCategory = null,
   reviewsSlot, reviewCount = 0, faqSlot = null, hasFaqContent = false,
   hasWholesaleOffering = false, pricingTiers = [], showTiersAsMainPrice = false,
+  vendorProductCount = 0, vendorShipsNationwide = false,
 }: Props) {
   const { t, language } = useTranslation('products')
+  const { user } = useAuth()
+  // Un vendedor no puede comprar su propio producto (create_order_from_cart
+  // ya lo rechaza, migración 020) — acá se bloquea proactivamente en vez de
+  // dejar que lo intente y falle recién en el checkout.
+  const isOwnProduct = !!(user && vendor?.user_id && user.id === vendor.user_id)
 
   const [displayName, setDisplayName] = useState(product.name)
   const [displayDescription, setDisplayDescription] = useState(product.description)
@@ -207,48 +273,10 @@ export function ProductPageContent({
     }
   }, [language, product.id, product.name, product.description])
 
-  // ─── Pestañas — solo se incluye un tab si hay contenido real detrás ───
+  // ─── Pestañas — Descripción/Especificaciones/Envío ya no son pestañas
+  // (ver bloque de 3 columnas siempre visibles más abajo); Reseñas sigue
+  // siendo la única pestaña real por ahora (pendiente su propio restyle).
   const tabs: ProductTabDef[] = []
-
-  if (displayDescription) {
-    tabs.push({
-      key: 'description',
-      label: t('descriptionHeading'),
-      content: (
-        <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{displayDescription}</p>
-      ),
-    })
-  }
-
-  if (specs.length > 0) {
-    tabs.push({
-      key: 'specs',
-      label: t('specsHeading'),
-      content: (
-        <dl className="text-sm">
-          {specs.map((spec, i) => (
-            <div key={i} className="flex items-center justify-between gap-4 py-1.5 border-b border-gray-50 last:border-0">
-              <dt className="text-gray-400">{spec.label}</dt>
-              <dd className="text-gray-700 font-medium text-right">
-                {spec.type === 'boolean' ? (spec.boolValue ? t('specYes') : t('specNo')) : spec.displayValue}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      ),
-    })
-  }
-
-  tabs.push({
-    key: 'shipping',
-    label: t('tabShipping'),
-    content: (
-      <div className="flex flex-col gap-3">
-        <ShippingEstimateLine />
-        <p className="text-sm text-gray-600">{t('shippingCoverageLine')}</p>
-      </div>
-    ),
-  })
 
   tabs.push({
     key: 'reviews',
@@ -258,14 +286,16 @@ export function ProductPageContent({
     content: reviewsSlot ?? <p className="text-sm text-gray-500 text-center py-6">{t('noReviewsYet')}</p>,
   })
 
-  if (hasFaqContent && faqSlot) {
-    tabs.push({ key: 'faq', label: t('tabFaqLabel'), content: faqSlot })
-  }
-
   const breadcrumbCrumbs = [
     parentCategory ? categoryLabel(parentCategory, language) : null,
     product.category ? categoryLabel(product.category, language) : t('breadcrumbCurrentProduct'),
   ].filter((c): c is string => !!c)
+
+  // Descripción / Especificaciones / Envío — cuántas de las 3 tienen
+  // contenido real (Envío siempre lo tiene), para que la grilla no deje
+  // una columna vacía cuando falta descripción o especificaciones.
+  const infoColCount = (displayDescription ? 1 : 0) + (specs.length > 0 ? 1 : 0) + 1
+  const infoGridColsClass = infoColCount === 3 ? 'md:grid-cols-3' : infoColCount === 2 ? 'md:grid-cols-2' : 'md:grid-cols-1'
 
   return (
     <>
@@ -284,11 +314,17 @@ export function ProductPageContent({
         ))}
       </nav>
 
-      {/* Contenido principal — 3 columnas en escritorio: galería+vendedor · info · buy-box.
-          ProductActionsProvider envuelve las dos columnas de la derecha:
-          ProductSelectors (talla/color/cantidad) vive en la columna de
-          info, AddToCartButton vive en el buy-box — mismo estado
-          compartido vía Context, ver el comentario en ProductActions.tsx. */}
+      {/* Contenido principal — ficha comercial única en 3 zonas: galería
+          (izquierda) · info + flujo de compra completo (centro) ·
+          confianza/vendedor + invitación a volumen (derecha). Antes cada
+          bloque era una tarjeta blanca propia flotando sobre el fondo
+          gris de la página (se sentían independientes); ahora las 3
+          zonas viven dentro de una sola superficie blanca, y los
+          sub-bloques (precio, vendedor, confianza) son paneles internos,
+          no tarjetas separadas.
+          ProductActionsProvider envuelve las 3 columnas: ProductSelectors
+          (talla/color/cantidad) y AddToCartButton comparten el mismo
+          estado vía Context, ver el comentario en ProductActions.tsx. */}
       <ProductActionsProvider
         product={{
           ...product,
@@ -299,62 +335,27 @@ export function ProductPageContent({
         dynamicDimensions={dynamicDimensions}
         variantDynamicValues={variantDynamicValues}
       >
+      <div
+        className="bg-[var(--color-card-bg)] p-4 sm:p-5 lg:p-6"
+        style={{ borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)' }}
+      >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
 
-        {/* Galería + info del vendedor */}
-        <div className="lg:col-span-5 flex flex-col gap-4">
+        {/* Galería — imagen principal, miniaturas y video (ProductGallery)
+            + compartir (ShareButton vive dentro de ese componente) +
+            favoritos, todo junto en la misma zona */}
+        <div className="lg:col-span-5 flex flex-col gap-3">
           <ProductGallery productId={product.id} images={product.images ?? []} name={displayName} videoUrl={product.video_url} />
-
-          {vendor && (
-            <div
-              className="bg-[var(--color-card-bg)] p-4"
-              style={{ borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)' }}
-            >
-              <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('vendorHeading')}</h2>
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div
-                    className="flex items-center justify-center flex-shrink-0 overflow-hidden font-bold text-gray-400"
-                    style={{ width: 40, height: 40, borderRadius: 'var(--radius-control)', background: 'var(--color-primary-subtle)' }}
-                  >
-                    {vendor.logo_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={vendor.logo_url} alt={vendor.business_name} className="w-full h-full object-cover" />
-                    ) : (
-                      vendor.business_name.charAt(0).toUpperCase()
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-medium text-gray-900 truncate">{vendor.business_name}</p>
-                    {vendor.rating_avg && vendor.rating_avg > 0 ? (
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        ⭐ {Number(vendor.rating_avg).toFixed(1)} · {vendor.total_sales ?? 0} {t('salesSuffix')}
-                      </p>
-                    ) : vendor.created_at ? (
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {t('vendorMemberSince', { date: formatDate(vendor.created_at, language, { month: 'long', year: 'numeric' }) })}
-                      </p>
-                    ) : null}
-                  </div>
-                </div>
-                <a
-                  href={`/tienda/${vendor.id}`}
-                  className="text-xs font-medium hover:underline flex-shrink-0"
-                  style={{ color: 'var(--brand-blue)' }}
-                >
-                  {t('viewStore')}
-                </a>
-              </div>
-            </div>
-          )}
-
-          {/* Confianza del vendedor — estilo grid de estadísticas */}
-          {vendor && <VendorTrustBar vendorId={vendor.id} />}
+          <GiftListButton productId={product.id} />
         </div>
 
-        {/* Info del producto */}
-        <div className="lg:col-span-4 flex flex-col gap-5">
+        {/* Info del producto + acciones de compra — todo el recorrido de
+            compra (precio → variantes → cantidad → agregar/preguntar)
+            queda junto en una sola columna, en vez de partido entre esta
+            columna y un buy-box aparte */}
+        <div className="lg:col-span-4 flex flex-col gap-4">
 
+          {/* Envío gratis desde RD$2,500 — regla real, ver lib/shipping.ts */}
           <FreeShippingBadge />
 
           {/* Vendor */}
@@ -415,11 +416,9 @@ export function ProductPageContent({
             </div>
           )}
 
-          {/* Precio */}
-          <div
-            className="bg-[var(--color-card-bg)] p-4"
-            style={{ borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)' }}
-          >
+          {/* Precio — panel interno (no tarjeta propia), vive dentro de
+              la misma superficie que el resto de la ficha */}
+          <div className="bg-gray-50 rounded-xl p-4">
             {showTiersAsMainPrice ? (
               // Llegó desde /proveedores (Productos) a un producto con
               // tramos reales -- ya decidió que quiere mayoreo, así que
@@ -496,6 +495,52 @@ export function ProductPageContent({
             </div>
           </div>
 
+          {/* Talla / color / dimensiones dinámicas / cantidad */}
+          <ProductSelectors />
+        </div>
+
+        {/* Confianza (3 cajas separadas) + acciones de compra + invitación
+            a volumen — los botones de acción y la identidad del vendedor
+            (antes acá, en una mini-tarjeta angosta) se movieron: los
+            botones bajan debajo de las 3 cajas, el vendedor ahora tiene su
+            propia barra a ancho completo (VendorInfoBar) entre este grid y
+            las pestañas. */}
+        <div className="lg:col-span-3 flex flex-col gap-4 lg:sticky lg:top-4">
+
+          <FreeShippingProgressBox basePriceRdp={product.price_rdp} pricingTiers={pricingTiers} />
+          <DeliveryEstimateBox />
+
+          <div className="bg-gray-50 rounded-xl p-4">
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('securePurchaseBoxHeading')}</h2>
+            <ul className="flex flex-col gap-1.5">
+              {vendor?.is_verified && <TrustItem>{t('trustVerifiedVendor')}</TrustItem>}
+              <TrustItem>{t('trustSecurePayment')}</TrustItem>
+              <TrustItem>{t('trustOrderTracking')}</TrustItem>
+              <TrustItem>{t('trustPlatformSupport')}</TrustItem>
+            </ul>
+          </div>
+
+          {/* Agregar al carrito (amarillo, acción principal) / Comprar
+              ahora (azul) / Preguntar al vendedor — debajo de las cajas de
+              envío/confianza, no en la columna de info del producto.
+              Si el usuario logueado es dueño de este producto, no tiene
+              sentido ninguna de las 3 (comprar su propio producto ya lo
+              rechaza el backend, y "preguntar al vendedor" sería
+              escribirse a sí mismo) — se reemplazan por un aviso. */}
+          {isOwnProduct ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
+              {t('ownProductNotice')}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <AddToCartButton />
+              <BuyNowButton />
+              {vendor?.id && (
+                <ContactVendorButton vendorId={vendor.id} productId={product.id} productName={product.name} />
+              )}
+            </div>
+          )}
+
           {/* Invitación a precios por volumen — reemplaza la tabla de
               product_pricing_tiers en esta vista normal (a pedido
               explícito). El único mecanismo real hoy para negociar un
@@ -515,44 +560,72 @@ export function ProductPageContent({
               vendorName={vendor.business_name}
             />
           )}
-
-          {/* Talla / color / dimensiones dinámicas / cantidad — el botón
-              de agregar vive en el buy-box, mismo estado compartido */}
-          <ProductSelectors />
         </div>
-
-        {/* Buy-box — acciones de compra, siempre a la vista */}
-        <div className="lg:col-span-3">
-          <div
-            className="bg-[var(--color-card-bg)] p-4 flex flex-col gap-4 lg:sticky lg:top-4"
-            style={{ borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)' }}
-          >
-            <ShippingEstimateLine />
-
-            <ul className="flex flex-col gap-1.5">
-              {vendor?.is_verified && <TrustItem>{t('trustVerifiedVendor')}</TrustItem>}
-              <TrustItem>{t('trustSecurePayment')}</TrustItem>
-              <TrustItem>{t('trustOrderTracking')}</TrustItem>
-              <TrustItem>{t('trustPlatformSupport')}</TrustItem>
-            </ul>
-
-            {/* Agregar al carrito — usa la talla/color/cantidad elegidos en ProductSelectors */}
-            <AddToCartButton />
-
-            {/* Chat interno */}
-            {vendor?.id && (
-              <ContactVendorButton vendorId={vendor.id} productId={product.id} productName={product.name} />
-            )}
-
-            {/* Lista de regalos */}
-            <GiftListButton productId={product.id} />
-          </div>
-        </div>
+      </div>
       </div>
       </ProductActionsProvider>
 
-      {/* Descripción / Especificaciones / Envío y entrega / Reseñas / Preguntas */}
+      {/* Barra de vendedor a ancho completo — reemplaza la mini-tarjeta
+          angosta que antes vivía en la columna de confianza. */}
+      {vendor && (
+        <VendorInfoBar
+          vendorId={vendor.id}
+          businessName={vendor.business_name}
+          logoUrl={vendor.logo_url}
+          isVerified={vendor.is_verified}
+          productCount={vendorProductCount}
+          shipsNationwide={vendorShipsNationwide}
+        />
+      )}
+
+      {/* Descripción / Especificaciones / Envío y entrega — las 3 siempre
+          visibles lado a lado, ya no son pestañas clicables. Cada una
+          solo ocupa un lugar si hay contenido real detrás (igual que
+          antes, cuando eran pestañas). */}
+      <div
+        className="bg-[var(--color-card-bg)] mt-6 p-5 sm:p-6"
+        style={{ borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)' }}
+      >
+        <div className={`grid grid-cols-1 gap-6 ${infoGridColsClass}`}>
+          {displayDescription && (
+            <div>
+              <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('descriptionHeading')}</h2>
+              <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{displayDescription}</p>
+            </div>
+          )}
+          {specs.length > 0 && (
+            <div>
+              <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('specsHeading')}</h2>
+              <dl className="text-sm">
+                {specs.map((spec, i) => (
+                  <div key={i} className="flex items-center justify-between gap-4 py-1.5 border-b border-gray-50 last:border-0">
+                    <dt className="text-gray-400">{spec.label}</dt>
+                    <dd className="text-gray-700 font-medium text-right">
+                      {spec.type === 'boolean' ? (spec.boolValue ? t('specYes') : t('specNo')) : spec.displayValue}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          )}
+          <div>
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('tabShipping')}</h2>
+            <div className="flex flex-col gap-3">
+              <ShippingEstimateLine />
+              <p className="text-sm text-gray-600">{t('shippingCoverageLine')}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Reseñas — única pestaña real por ahora (pendiente su propio
+          restyle, ver G del diagnóstico de layout). */}
       <ProductTabs tabs={tabs} />
+
+      {/* FAQ del vendedor (tipo de negocio + vendor_faqs) — sección propia,
+          no un tab llamado "Preguntas" (eso sugeriría Q&A de compradores,
+          que no existe). Mismo contenido de siempre, solo reubicado. */}
+      {hasFaqContent && faqSlot}
     </>
   )
 }
