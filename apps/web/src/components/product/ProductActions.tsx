@@ -27,9 +27,11 @@
 // ============================================================
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { ChevronDown, ShoppingCart } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { ChevronDown, ShoppingCart, Zap } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
 import { useCartStore } from '@/lib/store/cart'
+import { useExpressCheckoutStore } from '@/lib/store/expressCheckout'
 import { formatPrice } from '@/types/database.types'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import type { ProductVariant } from '@/types/database.types'
@@ -53,7 +55,9 @@ function useProductActionsState({
   product, variants = [], dynamicDimensions = [], variantDynamicValues = {},
 }: ProductActionsProps) {
   const { t } = useTranslation('products')
+  const router = useRouter()
   const addItem = useCartStore(s => s.addItem)
+  const setExpressItem = useExpressCheckoutStore(s => s.setItem)
   const hasVariants = variants.length > 0
   const hasDynamicDims = dynamicDimensions.length > 0
 
@@ -186,6 +190,29 @@ function useProductActionsState({
     setTimeout(() => setAdded(false), 2000)
   }
 
+  // "Comprar ahora" — NO toca el carrito real (ni lo suma, ni se fusiona
+  // con una línea existente de la misma variante). Guarda este único
+  // ítem en useExpressCheckoutStore y manda a /checkout?modo=express —
+  // ese flag es lo único que hace que checkout use este ítem aislado en
+  // vez del carrito completo (ver ese archivo). El id del producto va
+  // también en la URL para poder volver a su página si el ítem express
+  // ya no está (ej. sessionStorage se limpió entre el click y la carga).
+  const handleBuyNow = () => {
+    if (!canAdd) return
+
+    setExpressItem({
+      product,
+      quantity,
+      selected_size: hasDynamicDims ? undefined : (selectedSize ?? undefined),
+      selected_color: hasDynamicDims ? undefined : (selectedColor ?? undefined),
+      variant_id: activeMatchedVariant?.id,
+      variant_price_rdp: activeMatchedVariant?.price_rdp ?? undefined,
+      variant_label: dynamicVariantLabel,
+    })
+
+    router.push(`/checkout?modo=express&producto=${product.id}`)
+  }
+
   return {
     t, hasVariants, hasDynamicDims,
     sizes, colors, colorImageMap,
@@ -194,7 +221,7 @@ function useProductActionsState({
     dynamicColorDim, sizeLikeKeys, dynamicColorImageMap, dynamicMatchedVariant,
     quantity, quantityInput, setQuantityInput, setQuantity, handleQuantityBlur,
     needsSize, needsColor, matchedVariant, effectiveStock, isOutOfStock,
-    canAdd, added, handleAdd,
+    canAdd, added, handleAdd, handleBuyNow,
   }
 }
 
@@ -208,6 +235,16 @@ function useProductActionsContext(): ProductActionsState {
     throw new Error('ProductSelectors/AddToCartButton deben usarse dentro de <ProductActionsProvider>')
   }
   return ctx
+}
+
+// Variante que NO explota fuera del Provider — usada por componentes que
+// se reusan en dos lugares de la página de producto, uno adentro del
+// árbol de ProductActionsProvider (ej. el buy-box) y otro afuera (ej. la
+// pestaña "Envío y entrega", que vive en un array de tabs renderizado
+// como hermano del Provider, no como hijo). Devuelve null en ese segundo
+// caso en vez de forzar a todo lo demás a tolerar null.
+export function useOptionalProductActionsContext(): ProductActionsState | null {
+  return useContext(ProductActionsContext)
 }
 
 export function ProductActionsProvider({ children, ...props }: ProductActionsProps & { children: React.ReactNode }) {
@@ -438,7 +475,9 @@ export function ProductSelectors() {
   )
 }
 
-// Solo el botón — vive en el buy-box, lee el mismo estado que ProductSelectors
+// Acción principal — CTA amarillo (var(--color-yellow-cta)), acá vive
+// en el flujo de compra junto al resto de la ficha. Lee el mismo estado
+// que ProductSelectors.
 export function AddToCartButton() {
   const { t, hasVariants, hasDynamicDims, needsSize, selectedSize, canAdd, added, isOutOfStock, handleAdd } = useProductActionsContext()
 
@@ -446,15 +485,17 @@ export function AddToCartButton() {
     <button
       onClick={handleAdd}
       disabled={!canAdd}
-      className={`w-full py-3.5 font-semibold text-white flex items-center justify-center gap-2 ${
+      className={`w-full py-3.5 font-semibold flex items-center justify-center gap-2 ${
         added
-          ? 'bg-[var(--color-green)]'
+          ? 'bg-[var(--color-green)] text-white'
           : canAdd
-          ? 'bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] active:scale-[0.98]'
+          ? 'active:scale-[0.98]'
           : 'bg-gray-300 cursor-not-allowed text-white'
       }`}
       style={{
         borderRadius: 'var(--radius-control)',
+        background: canAdd && !added ? 'var(--color-yellow-cta)' : undefined,
+        color: canAdd && !added ? 'var(--color-text-primary)' : undefined,
         boxShadow: canAdd && !added ? 'var(--shadow-button)' : 'none',
         transition: 'background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast)',
       }}
@@ -467,6 +508,36 @@ export function AddToCartButton() {
         : added
         ? t('addedToCart')
         : t('addToCart')}
+    </button>
+  )
+}
+
+// "Comprar ahora" — agrega al carrito y va directo a /checkout, sin
+// quedarse en la página. Mismo estado/validación que AddToCartButton
+// (talla/color/cantidad/stock), nunca navega si la selección no está
+// completa.
+export function BuyNowButton() {
+  const { t, hasVariants, hasDynamicDims, needsSize, selectedSize, canAdd, isOutOfStock, handleBuyNow } = useProductActionsContext()
+
+  return (
+    <button
+      onClick={handleBuyNow}
+      disabled={!canAdd}
+      className={`w-full py-3.5 font-semibold text-white flex items-center justify-center gap-2 ${
+        canAdd ? 'bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] active:scale-[0.98]' : 'bg-gray-300 cursor-not-allowed'
+      }`}
+      style={{
+        borderRadius: 'var(--radius-control)',
+        boxShadow: canAdd ? 'var(--shadow-button)' : 'none',
+        transition: 'background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast)',
+      }}
+    >
+      {canAdd && <Zap size={18} />}
+      {isOutOfStock
+        ? (hasVariants ? t('outOfStock') : t('noStock'))
+        : !canAdd
+        ? (hasDynamicDims ? t('selectOption') : (needsSize && !selectedSize ? t('selectSize') : t('selectColor')))
+        : t('buyNowButton')}
     </button>
   )
 }

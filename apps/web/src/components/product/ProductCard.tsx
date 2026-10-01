@@ -21,6 +21,7 @@ import { useTranslation } from '@/lib/hooks/useTranslation'
 import { useShippingRateForCurrentProvince } from '@/lib/hooks/useShippingRate'
 import { useCartStore } from '@/lib/store/cart'
 import { useLocationStore } from '@/lib/store/location'
+import { FREE_SHIPPING_THRESHOLD_RDP } from '@/lib/shipping'
 import { PLACEHOLDER_PRODUCT_IMAGE } from '@/lib/utils'
 
 // Mismas 4 columnas que product_pricing_tiers en la BD — ver
@@ -64,10 +65,6 @@ interface Props {
   // siempre en cualquier otro lugar donde se usa esta tarjeta.
   origin?: string
 }
-
-// Mismo umbral real que ya usa todo el sitio (cart/page.tsx,
-// checkout/page.tsx, FreeShippingBadge.tsx)
-const FREE_SHIPPING_THRESHOLD_RDP = 250000 // RD$2,500
 
 // "Nuevo" — mismo criterio en todos lados donde se muestre: publicado
 // hace 14 días o menos. published_at (no created_at) porque no se mueve

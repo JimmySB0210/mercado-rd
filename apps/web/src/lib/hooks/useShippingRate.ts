@@ -56,3 +56,38 @@ export function useShippingRateForCurrentProvince(): number | null | undefined {
 
   return rate
 }
+
+// Tarifa real mínima entre todas las provincias — usada como fallback
+// honesto en la página de producto cuando todavía no se conoce la
+// provincia del comprador (en vez de ocultar el envío por completo).
+// Cacheada a nivel de módulo, igual que rateCache: una sola consulta
+// para toda la sesión del navegador, sin importar cuántos componentes
+// la usen.
+let minRateCache: number | null | undefined
+
+export function useMinShippingRate(): number | null | undefined {
+  const [minRate, setMinRate] = useState<number | null | undefined>(minRateCache)
+
+  useEffect(() => {
+    if (minRateCache !== undefined) return
+
+    let active = true
+    const supabase = createPublicClient()
+    supabase
+      .from('shipping_rates')
+      .select('price_rdp')
+      .order('price_rdp', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (error) { console.error('[useMinShippingRate]', error); return }
+        const value = data?.price_rdp ?? null
+        minRateCache = value
+        if (active) setMinRate(value)
+      })
+
+    return () => { active = false }
+  }, [])
+
+  return minRate
+}

@@ -6,9 +6,7 @@
 
 import { useCartSubtotal } from '@/lib/store/cart'
 import { useTranslation } from '@/lib/hooks/useTranslation'
-
-// Mismo umbral que cart/page.tsx y checkout/page.tsx
-const FREE_SHIPPING_THRESHOLD_RDP = 250000 // RD$2,500
+import { FREE_SHIPPING_THRESHOLD_RDP, qualifiesForFreeShipping } from '@/lib/shipping'
 
 export function FreeShippingBadge() {
   const { t } = useTranslation('products')
@@ -19,7 +17,7 @@ export function FreeShippingBadge() {
       className="flex items-center justify-center gap-2 w-full py-2.5 font-medium text-sm"
       style={{ background: 'var(--color-green-subtle)', color: 'var(--color-green)', borderRadius: 'var(--radius-pill)' }}
     >
-      {cartSubtotal >= FREE_SHIPPING_THRESHOLD_RDP
+      {qualifiesForFreeShipping(cartSubtotal)
         ? t('freeShippingApplied')
         : t('freeShippingProgress', {
             threshold: (FREE_SHIPPING_THRESHOLD_RDP / 100).toLocaleString('es-DO'),

@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { CartItem, Product } from '@/types'
 
-const ITBIS_RATE = 0.18 // 18% República Dominicana
+export const ITBIS_RATE = 0.18 // 18% República Dominicana
 
 // Identifica una línea del carrito: por variantId cuando existe (variante
 // real, fija o dinámica), si no por la combinación size+color del sistema
