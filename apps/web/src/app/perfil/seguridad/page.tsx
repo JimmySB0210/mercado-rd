@@ -120,8 +120,7 @@ export default function SecurityPage() {
     // Alerta de seguridad — fire and forget
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
-      supabase.rpc('create_notification', {
-        p_user_id: user.id,
+      supabase.rpc('notify_self', {
         p_type: 'security_alert',
         p_title: 'Contraseña cambiada 🔒',
         p_body: 'Tu contraseña fue cambiada. Si no fuiste tú, contacta soporte inmediatamente.',

@@ -65,8 +65,7 @@ export function useAuth() {
 
     // Alerta de seguridad — fire and forget, no bloquea el login
     if (data.user && !error) {
-      supabase.rpc('create_notification', {
-        p_user_id: data.user.id,
+      supabase.rpc('notify_self', {
         p_type: 'security_alert',
         p_title: 'Nuevo inicio de sesión 🔐',
         p_body: 'Iniciaste sesión en MercadoRD. Si no fuiste tú, cambia tu contraseña inmediatamente.',
