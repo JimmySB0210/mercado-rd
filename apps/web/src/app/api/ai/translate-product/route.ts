@@ -22,6 +22,7 @@
 import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createServerClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/serviceRole'
 import { checkAiTranslateProductRateLimit, AI_TRANSLATE_PRODUCT_RATE_LIMIT_MESSAGE } from '@/lib/ai/translateProductRateLimiter'
 
 export const runtime = 'nodejs'
@@ -148,7 +149,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'La IA no devolvió una traducción válida. Intenta de nuevo.' }, { status: 502 })
     }
 
-    const { error: saveError } = await supabase.rpc('save_product_translation', {
+    // service role, no el cliente de este visitante: save_product_translation
+    // ahora tiene EXECUTE revocado de anon/authenticated (migración 025) —
+    // esta caché es la misma para cualquiera que pida este producto+idioma,
+    // no depende de auth.uid() de quien disparó la traducción.
+    const { error: saveError } = await createServiceRoleClient().rpc('save_product_translation', {
       p_product_id: product_id,
       p_language: target_language,
       p_name: parsed.name,
