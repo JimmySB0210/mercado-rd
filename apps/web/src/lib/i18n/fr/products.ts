@@ -151,6 +151,8 @@ export const products = {
   // ── Refonte de la page produit (galerie, buy-box, onglets) ──
   shareProductAria: "Partager le produit",
   linkCopied: "Lien copié",
+  previousMediaAria: "Photo ou vidéo précédente",
+  nextMediaAria: "Photo ou vidéo suivante",
   volumePricingTitle: "🏪 Vous achetez pour revendre ?",
   volumePricingSubtitle: "Obtenez des prix spéciaux par volume en négociant directement avec {vendorName}.",
   volumePricingCta: "Demander un devis par volume",
@@ -171,6 +173,7 @@ export const products = {
   vendorProductCount: "{count} produits",
   vendorRespondsIn: "Répond en {time}",
   shipsNationwideLabel: "Livre dans tout le pays",
+  vendorRatingOverviewHeading: "Découvrez {vendorName}",
   vendorProductsTitle: "Plus de ce vendeur",
   breadcrumbCurrentProduct: "Produit",
 } satisfies ProductsDict

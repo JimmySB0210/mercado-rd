@@ -47,6 +47,17 @@ export function useVendorTrustStats(vendorId: string) {
   useEffect(() => {
     let cancelled = false
     setLoading(true)
+
+    // Sin vendorId real (ej. ProductPreviewModal, que no tiene vendor
+    // guardado todavía) -- no hay nada que pedir.
+    if (!vendorId) {
+      setRating(null)
+      setResponse(null)
+      setOnTime(null)
+      setLoading(false)
+      return
+    }
+
     const supabase = createClient()
 
     Promise.all([

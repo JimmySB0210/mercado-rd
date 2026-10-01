@@ -36,7 +36,9 @@ import { VolumePricingBanner } from '@/components/product/VolumePricingBanner'
 import { ContactVendorButton } from '@/components/product/ContactVendorButton'
 import { GiftListButton } from '@/components/product/GiftListButton'
 import { VendorInfoBar } from '@/components/product/VendorInfoBar'
+import { VendorRatingOverview } from '@/components/product/VendorRatingOverview'
 import { useAuth } from '@/lib/hooks/useAuth'
+import { useVendorTrustStats } from '@/lib/hooks/useVendorTrustStats'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { useCartSubtotal } from '@/lib/store/cart'
 import { useShippingRateForCurrentProvince, useMinShippingRate } from '@/lib/hooks/useShippingRate'
@@ -236,6 +238,13 @@ export function ProductPageContent({
   // ya lo rechaza, migración 020) — acá se bloquea proactivamente en vez de
   // dejar que lo intente y falle recién en el checkout.
   const isOwnProduct = !!(user && vendor?.user_id && user.id === vendor.user_id)
+
+  // Una sola vez acá arriba -- VendorInfoBar y VendorRatingOverview
+  // ("Conoce a {vendedor}", más abajo) muestran la MISMA fila de
+  // rating/respuesta a propósito; si cada uno llamara al hook por su
+  // cuenta serían 6 llamadas RPC en vez de 3 para la misma info.
+  const { rating: vendorRating, response: vendorResponse, showRating: showVendorRating, showResponse: showVendorResponse } =
+    useVendorTrustStats(vendor?.id ?? '')
 
   const [displayName, setDisplayName] = useState(product.name)
   const [displayDescription, setDisplayDescription] = useState(product.description)
@@ -575,6 +584,10 @@ export function ProductPageContent({
           isVerified={vendor.is_verified}
           productCount={vendorProductCount}
           shipsNationwide={vendorShipsNationwide}
+          rating={vendorRating}
+          response={vendorResponse}
+          showRating={showVendorRating}
+          showResponse={showVendorResponse}
         />
       )}
 
@@ -621,6 +634,24 @@ export function ProductPageContent({
       {/* Reseñas — única pestaña real por ahora (pendiente su propio
           restyle, ver G del diagnóstico de layout). */}
       <ProductTabs tabs={tabs} />
+
+      {/* "Conoce a {vendedor}" — justo después de Opiniones de compradores
+          (pestaña Reseñas de arriba) y antes de Productos de este vendedor
+          (VendorProductsCarousel, vive en page.tsx como hermano de este
+          componente). Repite a propósito los mismos datos de VendorInfoBar,
+          como refuerzo antes del carrusel. */}
+      {vendor && (
+        <VendorRatingOverview
+          vendorId={vendor.id}
+          businessName={vendor.business_name}
+          productCount={vendorProductCount}
+          shipsNationwide={vendorShipsNationwide}
+          rating={vendorRating}
+          response={vendorResponse}
+          showRating={showVendorRating}
+          showResponse={showVendorResponse}
+        />
+      )}
 
       {/* FAQ del vendedor (tipo de negocio + vendor_faqs) — sección propia,
           no un tab llamado "Preguntas" (eso sugeriría Q&A de compradores,

@@ -5,17 +5,23 @@
 // ============================================================
 // Vive entre el grid principal (galería/info/confianza) y las
 // pestañas — reemplaza la mini-tarjeta angosta que antes vivía en la
-// columna de confianza. Rating y tiempo de respuesta vienen de
-// useVendorTrustStats (mismo hook que VendorTrustBar.tsx) para no
-// repetir las llamadas RPC en la misma página — nunca de
-// vendor.rating_avg/total_sales, confirmados sembrados/no
-// actualizados en la auditoría de seguridad. Sin conteo de
-// "seguidores": no existe ningún concepto de seguir a un vendedor en
-// el schema (sin tabla, sin RPC) — mostrarlo sería inventar un dato.
+// columna de confianza.
+//
+// rating/response ya NO se piden acá adentro: ProductPageContent.tsx
+// llama a useVendorTrustStats UNA sola vez y los pasa como props —
+// tanto a este componente como a VendorRatingOverview.tsx ("Conoce a
+// {vendedor}", más abajo en la página), que repite esta misma fila de
+// datos a propósito. Si cada uno llamara al hook por su cuenta, serían
+// 6 llamadas RPC en vez de 3 para la misma info en la misma carga de
+// página. Nunca vendor.rating_avg/total_sales, confirmados
+// sembrados/no actualizados en la auditoría de seguridad. Sin conteo
+// de "seguidores": no existe ningún concepto de seguir a un vendedor
+// en el schema (sin tabla, sin RPC) — mostrarlo sería inventar un dato.
 // ============================================================
 
 import { useTranslation } from '@/lib/hooks/useTranslation'
-import { useVendorTrustStats, responseTimeKey } from '@/lib/hooks/useVendorTrustStats'
+import type { VendorRatingData, VendorResponseData } from '@/lib/hooks/useVendorTrustStats'
+import { VendorStatsLine } from '@/components/product/VendorStatsLine'
 
 interface Props {
   vendorId: string
@@ -28,11 +34,19 @@ interface Props {
   // vendor_services.service = 'national_shipping' para este vendedor —
   // real, no asumido.
   shipsNationwide: boolean
+  // Resueltos una sola vez en ProductPageContent.tsx vía
+  // useVendorTrustStats — ver nota de arriba.
+  rating: VendorRatingData | null
+  response: VendorResponseData | null
+  showRating: boolean
+  showResponse: boolean
 }
 
-export function VendorInfoBar({ vendorId, businessName, logoUrl, isVerified, productCount, shipsNationwide }: Props) {
+export function VendorInfoBar({
+  vendorId, businessName, logoUrl, isVerified, productCount, shipsNationwide,
+  rating, response, showRating, showResponse,
+}: Props) {
   const { t } = useTranslation('products')
-  const { rating, response, showRating, showResponse } = useVendorTrustStats(vendorId)
 
   return (
     <div
@@ -64,11 +78,15 @@ export function VendorInfoBar({ vendorId, businessName, logoUrl, isVerified, pro
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-x-3 gap-y-1 flex-wrap text-xs text-gray-500 mt-1">
-              {showRating && <span>⭐ {rating!.average.toFixed(1)} ({rating!.count} {t('reviewsSuffix')})</span>}
-              <span>{t('vendorProductCount', { count: productCount })}</span>
-              {showResponse && <span>{t('vendorRespondsIn', { time: t(responseTimeKey(response!.median_minutes!)) })}</span>}
-              {shipsNationwide && <span>🚚 {t('shipsNationwideLabel')}</span>}
+            <div className="mt-1">
+              <VendorStatsLine
+                rating={rating}
+                response={response}
+                showRating={showRating}
+                showResponse={showResponse}
+                productCount={productCount}
+                shipsNationwide={shipsNationwide}
+              />
             </div>
           </div>
         </div>

@@ -39,15 +39,15 @@ function Stars({ value }: { value: number }) {
   )
 }
 
-// Desglose real por estrella — sobre el array completo (reviews), no
-// sobre `visible` (que solo son las primeras 5 antes de "Ver más").
-function RatingBreakdown({ reviews }: { reviews: ReviewViewModel[] }) {
-  const total = reviews.length
-  const average = reviews.reduce((sum, r) => sum + r.rating, 0) / total
-  const counts = [5, 4, 3, 2, 1].map(stars => reviews.filter(r => r.rating === stars).length)
-
+// Desglose por estrella — recibe los agregados ya resueltos (average,
+// total, counts[5,4,3,2,1]) en vez de un array de reseñas, para que
+// VendorRatingOverview.tsx (desglose a nivel VENDEDOR, alimentado por
+// get_vendor_rating_breakdown en vez de las reseñas de un solo
+// producto) pueda reusar exactamente el mismo componente visual sin
+// duplicar el marcado de las barras.
+export function RatingBreakdown({ average, total, counts }: { average: number; total: number; counts: number[] }) {
   return (
-    <div className="flex flex-col sm:flex-row gap-6 sm:gap-10 mb-6 pb-6 border-b border-gray-100">
+    <div className="flex flex-col sm:flex-row gap-6 sm:gap-10">
       <div className="flex flex-col items-center sm:items-start flex-shrink-0">
         <span className="text-4xl font-bold text-gray-900">{average.toFixed(1)}</span>
         <Stars value={Math.round(average)} />
@@ -76,6 +76,9 @@ export function ProductReviewsList({ reviews }: { reviews: ReviewViewModel[] }) 
   const [showAll, setShowAll] = useState(false)
 
   const visible = showAll ? reviews : reviews.slice(0, INITIAL_COUNT)
+  const total = reviews.length
+  const average = total > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / total : 0
+  const counts = [5, 4, 3, 2, 1].map(stars => reviews.filter(r => r.rating === stars).length)
 
   return (
     <div>
@@ -83,7 +86,9 @@ export function ProductReviewsList({ reviews }: { reviews: ReviewViewModel[] }) 
         <p className="text-sm text-gray-500 text-center py-6">{t('noReviewsYet')}</p>
       ) : (
         <>
-          <RatingBreakdown reviews={reviews} />
+          <div className="mb-6 pb-6 border-b border-gray-100">
+            <RatingBreakdown average={average} total={total} counts={counts} />
+          </div>
           <div className="flex flex-col gap-3">
             {visible.map(r => (
               <div

@@ -170,6 +170,8 @@ export const products = {
   // ── Rediseño de la página de producto (galería, buy-box, tabs) ──
   shareProductAria: "Compartir producto",
   linkCopied: "Enlace copiado",
+  previousMediaAria: "Foto o video anterior",
+  nextMediaAria: "Foto o video siguiente",
   volumePricingTitle: "🏪 ¿Compras para revender?",
   volumePricingSubtitle: "Obtén precios especiales por volumen negociando directo con {vendorName}.",
   volumePricingCta: "Solicitar cotización por volumen",
@@ -190,6 +192,7 @@ export const products = {
   vendorProductCount: "{count} productos",
   vendorRespondsIn: "Responde en {time}",
   shipsNationwideLabel: "Envía a todo RD",
+  vendorRatingOverviewHeading: "Conoce a {vendorName}",
   vendorProductsTitle: "Productos de este vendedor",
   breadcrumbCurrentProduct: "Producto",
 }

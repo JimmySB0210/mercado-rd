@@ -151,6 +151,8 @@ export const products = {
   // ── Product page redesign (gallery, buy-box, tabs) ──
   shareProductAria: "Share product",
   linkCopied: "Link copied",
+  previousMediaAria: "Previous photo or video",
+  nextMediaAria: "Next photo or video",
   volumePricingTitle: "🏪 Buying to resell?",
   volumePricingSubtitle: "Get special volume pricing by negotiating directly with {vendorName}.",
   volumePricingCta: "Request a volume quote",
@@ -171,6 +173,7 @@ export const products = {
   vendorProductCount: "{count} products",
   vendorRespondsIn: "Responds in {time}",
   shipsNationwideLabel: "Ships nationwide",
+  vendorRatingOverviewHeading: "Get to know {vendorName}",
   vendorProductsTitle: "More from this seller",
   breadcrumbCurrentProduct: "Product",
 } satisfies ProductsDict
