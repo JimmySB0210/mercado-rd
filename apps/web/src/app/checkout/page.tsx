@@ -5,18 +5,22 @@
 // ============================================================
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ShieldCheck, ChevronDown } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
-import { useCartStore, useCartSubtotal, useCartItbis, useCartTotal } from '@/lib/store/cart'
+import { useCartStore, ITBIS_RATE } from '@/lib/store/cart'
+import { useExpressCheckoutStore, useExpressCheckoutHydrated } from '@/lib/store/expressCheckout'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { Navbar } from '@/components/shop/Navbar'
 import { createClient } from '@/lib/supabase/client'
 import { useLocationStore } from '@/lib/store/location'
 import type { Province } from '@/types/database.types'
+import type { CartItem } from '@/types'
 import { notifyOrderConfirmed } from '@/lib/whatsapp/notifications'
 import { processPayment, type PaymentResult } from '@/lib/payments/azul'
 import { DANGEROUS_PATTERN } from '@/lib/validation'
+import { qualifiesForFreeShipping } from '@/lib/shipping'
+import { resolveKnownError, KNOWN_ORDER_ERRORS, type SupabaseErrorLike } from '@/lib/orderErrors'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import type { CheckoutDict } from '@/lib/i18n/es/checkout'
 import Image from 'next/image'
@@ -31,11 +35,42 @@ const PAYMENT_METHOD_KEYS: { id: string; labelKey: keyof CheckoutDict; emoji: st
 export default function CheckoutPage() {
   const { t } = useTranslation('checkout')
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, profile } = useAuth()
-  const { items, clearCart } = useCartStore()
-  const subtotal = useCartSubtotal()
-  const itbis = useCartItbis()
-  const total = useCartTotal()
+  const { items: cartItems, clearCart } = useCartStore()
+
+  // Modo "Comprar ahora" — activo SOLO con ?modo=express en la URL. Sin
+  // ese flag, checkout usa el carrito real de siempre, sin importar si
+  // quedó un ítem express viejo dando vueltas en sessionStorage. Con el
+  // flag, usa ÚNICAMENTE ese ítem — nunca el carrito completo, ni
+  // siquiera como fallback (ver el useEffect de abajo para el caso en
+  // que el flag está pero el ítem no existe).
+  const isExpressMode = searchParams.get('modo') === 'express'
+  const expressItem = useExpressCheckoutStore(s => s.item)
+  const clearExpressItem = useExpressCheckoutStore(s => s.clearItem)
+  const expressHydrated = useExpressCheckoutHydrated()
+
+  const items: CartItem[] = isExpressMode ? (expressItem ? [expressItem] : []) : cartItems
+
+  // Mismo cálculo que useCartSubtotal/useCartItbis/useCartTotal, pero
+  // sobre `items` (que en modo express es un array de un solo ítem, no
+  // el carrito persistido) — no se puede reusar esos hooks acá porque
+  // leen useCartStore directo, sin importar el modo.
+  const subtotal = items.reduce((acc, i) => acc + (i.variant_price_rdp ?? i.product.price_rdp) * i.quantity, 0)
+  const itbis = Math.round(subtotal * ITBIS_RATE)
+  const total = subtotal + itbis
+
+  // Si el flag express está pero sessionStorage no tiene ningún ítem
+  // (ej. se limpió entre el click y esta carga, o alguien pegó la URL a
+  // mano) — nunca caer al carrito completo por error: volver a la
+  // página del producto (el id viaja en la misma URL) o, si tampoco
+  // está, a inicio. Espera a que la hidratación de sessionStorage
+  // termine antes de decidir "no hay ítem" (si no, redirige en cada F5).
+  useEffect(() => {
+    if (!isExpressMode || !expressHydrated || expressItem) return
+    const productId = searchParams.get('producto')
+    router.replace(productId ? `/producto/${productId}` : '/')
+  }, [isExpressMode, expressHydrated, expressItem, searchParams, router])
 
   const [form, setForm] = useState({
     fullName:   profile?.full_name || '',
@@ -84,17 +119,17 @@ export default function CheckoutPage() {
   // si alguna provincia no tuviera tarifa cargada en shipping_rates
   const SHIPPING_FALLBACK_RDP = 25000
 
-  // Mismo umbral que create_order_from_cart aplica en el backend — se
-  // replica aquí para que lo que se muestra y lo que se cobra vía la
-  // pasarela de pago coincidan con lo que el RPC termina persistiendo.
-  const FREE_SHIPPING_THRESHOLD_RDP = 250000 // RD$2,500
-  const qualifiesForFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD_RDP
+  // Mismo umbral que create_order_from_cart aplica en el backend —
+  // lib/shipping.ts es la única fuente de este número, para que lo que
+  // se muestra acá, en la página de producto y en las tarjetas nunca se
+  // desincronice de lo que el RPC termina cobrando.
+  const qualifiesFreeShipping = qualifiesForFreeShipping(subtotal)
 
   const rawShipping = items.length === 0
     ? 0
     : shippingRate?.price_rdp ?? (form.province && !shippingLoading ? SHIPPING_FALLBACK_RDP : 0)
 
-  const ENVIO = qualifiesForFreeShipping ? 0 : rawShipping
+  const ENVIO = qualifiesFreeShipping ? 0 : rawShipping
 
   const discountRdp = appliedCoupon?.discount_rdp ?? 0
 
@@ -183,7 +218,11 @@ export default function CheckoutPage() {
   }
 
   const handleSubmit = async () => {
-    if (!user) { router.push('/login?redirect=/checkout'); return }
+    if (!user) {
+      const redirectTo = isExpressMode ? `/checkout?${searchParams.toString()}` : '/checkout'
+      router.push(`/login?redirect=${encodeURIComponent(redirectTo)}`)
+      return
+    }
     if (!form.fullName || !form.phone || !form.address || !form.province) {
       setError(t('requiredFieldsError'))
       return
@@ -298,23 +337,31 @@ export default function CheckoutPage() {
         throw new Error('Provincia inválida')
       }
 
-      // Armar el payload de items para la función RPC
+      // Armar el payload de items para la función RPC — vendor_id y
+      // price_rdp van solo de referencia informativa, la función real
+      // los ignora y resuelve todo del lado del servidor (migración
+      // 020). variant_id nuevo: el descuento de stock de variante
+      // también se movió adentro de la función, ya no existe una
+      // llamada aparte a reduce_variant_stock.
       const itemsPayload = items.map(item => ({
         product_id: item.product.id,
         vendor_id: item.product.vendor_id,
+        variant_id: item.variant_id ?? null,
         quantity: item.quantity,
         price_rdp: item.variant_price_rdp ?? item.product.price_rdp,
         size: item.selected_size ?? null,
         color: item.selected_color ?? null,
       }))
 
+      // p_discount_rdp ya no existe como parámetro — el descuento se
+      // recalcula del lado del servidor contra la fila real del cupón,
+      // nunca contra lo que este cliente haya mostrado en pantalla.
       const { data: orderId, error: rpcError } = await supabase.rpc('create_order_from_cart', {
         p_delivery_address: form.address,
         p_province_id: provinceRow.id,
         p_payment_method: form.payMethod,
         p_notes: form.notes || null,
         p_items: itemsPayload,
-        p_discount_rdp: discountRdp,
         p_coupon_id: appliedCoupon?.coupon_id ?? null,
         p_recipient_name: form.isForSomeoneElse ? form.recipientName.trim() : null,
         p_recipient_phone: form.isForSomeoneElse ? form.recipientPhone.trim() : null,
@@ -366,13 +413,31 @@ export default function CheckoutPage() {
           notifyOrderConfirmed(data as any)
         }, () => {})
 
-      clearCart()
+      // En modo express solo se limpia el ítem efímero — el carrito real
+      // de la persona (si tenía algo adentro) queda intacto, nunca se tocó.
+      if (isExpressMode) {
+        clearExpressItem()
+      } else {
+        clearCart()
+      }
       router.push(`/confirm?order=${orderId}`)
     } catch (err) {
       console.error('[checkout]', err)
-      setError(t('genericOrderError'))
+      // Nunca el texto crudo del RPC — solo errores conocidos (por
+      // ERRCODE) se traducen a un mensaje específico, el resto cae al
+      // genérico de siempre. Ver lib/orderErrors.ts.
+      const knownKey = resolveKnownError(err as SupabaseErrorLike, KNOWN_ORDER_ERRORS)
+      setError(knownKey === 'SELF_PURCHASE' ? t('selfPurchaseError') : t('genericOrderError'))
       setLoading(false)
     }
+  }
+
+  // Mientras sessionStorage todavía no terminó de hidratar en modo
+  // express, no se sabe todavía si el ítem existe — no mostrar "carrito
+  // vacío" por un instante en el caso normal (ítem sí existe). El
+  // useEffect de arriba ya se encarga de redirigir si en verdad no está.
+  if (isExpressMode && !expressHydrated) {
+    return <div style={{ minHeight: '100vh', background: BRAND.bg }}><Navbar /></div>
   }
 
   if (items.length === 0) {
@@ -667,7 +732,7 @@ export default function CheckoutPage() {
                     ? t('selectProvinceHint')
                     : shippingLoading
                       ? t('calculatingShipping')
-                      : qualifiesForFreeShipping
+                      : qualifiesFreeShipping
                         ? (
                           <>
                             <span style={{ textDecoration: 'line-through', color: BRAND.gray, marginRight: 6 }}>
@@ -679,6 +744,11 @@ export default function CheckoutPage() {
                         : `RD$${(ENVIO / 100).toLocaleString('es-DO')}`}
                 </span>
               </div>
+              {form.province && !shippingLoading && !qualifiesFreeShipping && (
+                <p style={{ fontSize: 11, color: BRAND.gray, margin: '-2px 0 0', textAlign: 'right' }}>
+                  {t('freeShippingThresholdNote')}
+                </p>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: BRAND.dark }}>
                 <span>{t('itbisLabel')}</span><span>RD${(itbis / 100).toLocaleString('es-DO')}</span>
               </div>

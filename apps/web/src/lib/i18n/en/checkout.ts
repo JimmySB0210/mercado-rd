@@ -48,7 +48,8 @@ export const checkout = {
   shippingDaysRange: '{min}-{max} days',
   selectProvinceHint: 'Select a province',
   calculatingShipping: 'Calculating...',
-  freeBadge: 'FREE 🎉',
+  freeBadge: 'FREE',
+  freeShippingThresholdNote: 'Free shipping on orders over RD$2,500',
   itbisLabel: 'ITBIS (18%)',
   discountLabel: 'Discount ({code})',
   totalLabel: 'Total',
@@ -75,6 +76,7 @@ export const checkout = {
   paymentDeclined: 'Transaction declined — check your card details and try again',
   paymentErrorGeneric: "We couldn't process the payment. Try again.",
   genericOrderError: 'There was an error processing your order. Try again.',
+  selfPurchaseError: "You can't buy your own products.",
 
   orderNotFound: 'Order number not found.',
   backToHome: 'Back to home',

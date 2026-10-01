@@ -48,7 +48,8 @@ export const checkout = {
   shippingDaysRange: '{min}-{max} jours',
   selectProvinceHint: 'Choisissez une province',
   calculatingShipping: 'Calcul en cours...',
-  freeBadge: 'GRATUIT 🎉',
+  freeBadge: 'GRATUIT',
+  freeShippingThresholdNote: 'Livraison gratuite dès RD$2,500 par commande',
   itbisLabel: 'ITBIS (18 %)',
   discountLabel: 'Réduction ({code})',
   totalLabel: 'Total',
@@ -75,6 +76,7 @@ export const checkout = {
   paymentDeclined: 'Transaction refusée — vérifiez les informations de votre carte et réessayez',
   paymentErrorGeneric: "Le paiement n'a pas pu être traité. Réessayez.",
   genericOrderError: "Une erreur s'est produite lors du traitement de votre commande. Réessayez.",
+  selfPurchaseError: "Vous ne pouvez pas acheter vos propres produits.",
 
   orderNotFound: "Le numéro de commande n'a pas été trouvé.",
   backToHome: "Retour à l'accueil",

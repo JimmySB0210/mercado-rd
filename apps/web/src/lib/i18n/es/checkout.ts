@@ -56,7 +56,8 @@ export const checkout = {
   shippingDaysRange: '{min}-{max} días',
   selectProvinceHint: 'Selecciona provincia',
   calculatingShipping: 'Calculando...',
-  freeBadge: 'GRATIS 🎉',
+  freeBadge: 'GRATIS',
+  freeShippingThresholdNote: 'Envío gratis desde RD$2,500 por pedido',
   itbisLabel: 'ITBIS (18%)',
   discountLabel: 'Descuento ({code})',
   totalLabel: 'Total',
@@ -86,6 +87,7 @@ export const checkout = {
   paymentDeclined: 'Transacción rechazada — verifica los datos de tu tarjeta e intenta de nuevo',
   paymentErrorGeneric: 'No se pudo procesar el pago. Intenta de nuevo.',
   genericOrderError: 'Ocurrió un error al procesar tu pedido. Intenta de nuevo.',
+  selfPurchaseError: 'No puedes comprar tus propios productos.',
 
   // confirm/page.tsx
   orderNotFound: 'No se encontró el número de pedido.',
