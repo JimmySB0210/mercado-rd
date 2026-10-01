@@ -59,7 +59,7 @@ export function Footer() {
 
   return (
     <footer style={{ background: '#0a1628', color: '#fff', marginTop: 'auto' }}>
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '48px 24px' }}>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
 
           {/* MercadoRD */}

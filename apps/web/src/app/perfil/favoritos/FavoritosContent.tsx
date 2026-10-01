@@ -18,7 +18,7 @@ export function FavoritosContent({ products }: { products: any[] }) {
   const variantsById = useHasVariantsMap(products.map((p: any) => p.id))
 
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main style={{ maxWidth: 1400, margin: '0 auto', padding: '32px 24px' }}>
       <h1 className="text-2xl font-bold text-gray-900 mb-1">{t('favoritesPageTitle')}</h1>
       <p className="text-sm text-gray-400 mb-6">
         {products.length} {products.length === 1 ? t('savedProductSingular') : t('savedProductPlural')}

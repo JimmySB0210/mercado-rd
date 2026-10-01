@@ -8,8 +8,8 @@
 // VendorProductsCarouselSection.tsx ("Productos de este vendedor") no
 // dupliquen el mismo carrusel con flechas dos veces. A diferencia de
 // FeaturedProductsGrid, no necesita el fix de width:100% (este vive
-// dentro de max-w-7xl mx-auto en producto/[id]/page.tsx, no es un flex
-// item de una columna raíz).
+// dentro del contenedor maxWidth:1400 de producto/[id]/page.tsx, no es
+// un flex item de una columna raíz).
 // ============================================================
 
 import { useRef } from 'react'

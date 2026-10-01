@@ -30,7 +30,7 @@ export function CategoryContent({ categoryNames, fallbackTitle, emoji, categoryI
   const resolvedTitle = categoryNames ? getCategoryName(categoryNames, language) : (fallbackTitle ?? t('defaultCategoryTitle'))
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: '32px 24px' }}>
 
       <AgeConfirmationModal requiresConfirmation={requiresAgeConfirmation} />
 

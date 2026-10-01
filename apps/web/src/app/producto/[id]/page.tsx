@@ -295,7 +295,7 @@ export default async function ProductPage(
     <main className="min-h-screen bg-gray-50">
       <Navbar />
       <ProductViewTracker productId={product.id} />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '32px 24px' }}>
 
         <ProductPageContent
           product={product as any}
