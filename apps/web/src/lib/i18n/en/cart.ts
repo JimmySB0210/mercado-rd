@@ -21,6 +21,8 @@ export const cart = {
   totalLabel: 'Total',
 
   proceedToCheckout: 'Proceed to checkout',
+  ownProductWarning: "This is your own product",
+  checkoutBlockedOwnProducts: 'Your cart has products of your own — remove them to check out.',
   continueShopping: '← Continue shopping',
 
   protectedPurchaseTitle: 'Protected purchase',

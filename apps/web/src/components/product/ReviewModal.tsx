@@ -7,6 +7,8 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BRAND } from '@/lib/colors'
+import { useTranslation } from '@/lib/hooks/useTranslation'
+import { resolveKnownError, KNOWN_REVIEW_ERRORS } from '@/lib/orderErrors'
 
 interface Props {
   orderId: string
@@ -18,6 +20,7 @@ interface Props {
 }
 
 export function ReviewModal({ orderId, productId, vendorId, productName, onClose, onSuccess }: Props) {
+  const { t } = useTranslation('products')
   const supabase = createClient()
   const [rating, setRating] = useState(0)
   const [hoverRating, setHoverRating] = useState(0)
@@ -50,12 +53,16 @@ export function ReviewModal({ orderId, productId, vendorId, productName, onClose
 
     if (insertError) {
       console.error('[ReviewModal]', insertError)
-      // validate_real_review() en Supabase ya devuelve mensajes pensados
-      // para el usuario final (ej. "Solo puedes dejar una reseña de un
-      // producto que hayas comprado y recibido realmente") — se muestran
-      // tal cual en vez de un genérico. Solo se cae al genérico si por
-      // algún motivo no viene mensaje (ej. error de red).
-      setError(insertError.message || 'No se pudo enviar tu reseña. Intenta de nuevo.')
+      // Nunca el texto crudo de Postgres — validate_real_review() (ver
+      // migración 013) tiene 2 mensajes fijos y conocidos, mapeados acá
+      // a copy traducido (ES/EN/FR). Cualquier otro error cae al
+      // genérico. Ver lib/orderErrors.ts.
+      const knownKey = resolveKnownError(insertError, KNOWN_REVIEW_ERRORS)
+      setError(
+        knownKey === 'REVIEW_NOT_DELIVERED' ? t('reviewNotDeliveredError') :
+        knownKey === 'REVIEW_OWN_PRODUCT' ? t('reviewOwnProductError') :
+        t('reviewGenericError')
+      )
       setSaving(false)
       return
     }

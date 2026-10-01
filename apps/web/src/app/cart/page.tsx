@@ -4,10 +4,13 @@
 // Ruta: src/app/cart/page.tsx
 // ============================================================
 
-import { ShoppingCart, Trash2, Minus, Plus, ShieldCheck } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ShoppingCart, Trash2, Minus, Plus, ShieldCheck, AlertTriangle } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
 import { useCartStore, useCartSubtotal, useCartItbis, useCartTotal } from '@/lib/store/cart'
 import { Navbar } from '@/components/shop/Navbar'
+import { useAuth } from '@/lib/hooks/useAuth'
+import { createClient } from '@/lib/supabase/client'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import Image from 'next/image'
 
@@ -17,6 +20,29 @@ export default function CartPage() {
   const subtotal = useCartSubtotal()
   const itbis = useCartItbis()
   const total = useCartTotal()
+  const { user } = useAuth()
+
+  // Un vendedor no puede comprar su propio producto (create_order_from_cart
+  // ya lo rechaza, migración 020) — acá se detecta ANTES de llegar a
+  // checkout, para marcar la línea y bloquear "Proceder al pago" con un
+  // mensaje claro en vez de dejar que falle recién al pagar.
+  const [ownVendorId, setOwnVendorId] = useState<string | null | undefined>(undefined)
+  useEffect(() => {
+    if (!user) { setOwnVendorId(null); return }
+    let cancelled = false
+    createClient()
+      .from('vendors')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => { if (!cancelled) setOwnVendorId(data?.id ?? null) })
+    return () => { cancelled = true }
+  }, [user])
+
+  const ownProductItems = ownVendorId
+    ? items.filter(i => i.product.vendor_id === ownVendorId)
+    : []
+  const hasOwnProducts = ownProductItems.length > 0
   // Mismo umbral que checkout/page.tsx y el RPC create_order_from_cart —
   // esto es solo una estimación (el checkout calcula el envío real según
   // provincia), pero debe ser consistente con el aviso de arriba.
@@ -49,11 +75,16 @@ export default function CartPage() {
           ) : (
             items.map((item) => {
               const image = item.product.images?.[0]
+              const isOwn = ownVendorId != null && item.product.vendor_id === ownVendorId
               return (
                 <div
                   key={`${item.product.id}-${item.variant_id ?? `${item.selected_size}-${item.selected_color}`}`}
                   className="cart-item"
-                  style={{ background: 'var(--color-card-bg)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)', padding: 16, marginBottom: 12, display: 'flex', gap: 14, alignItems: 'center' }}
+                  style={{
+                    background: 'var(--color-card-bg)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)',
+                    padding: 16, marginBottom: 12, display: 'flex', gap: 14, alignItems: 'center',
+                    border: isOwn ? '1px solid #FDBA74' : undefined,
+                  }}
                 >
                   {/* Imagen */}
                   <div style={{ width: 64, height: 64, borderRadius: 8, background: BRAND.bg, flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
@@ -80,6 +111,11 @@ export default function CartPage() {
                     <div style={{ fontSize: 12, color: BRAND.blue, fontWeight: 600 }}>
                       RD${((item.variant_price_rdp ?? item.product.price_rdp) / 100).toLocaleString('es-DO')}
                     </div>
+                    {isOwn && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, fontSize: 11, color: '#C2410C', fontWeight: 600 }}>
+                        <AlertTriangle size={12} /> {t('ownProductWarning')}
+                      </div>
+                    )}
                   </div>
 
                   {/* Acciones */}
@@ -158,12 +194,21 @@ export default function CartPage() {
                 </span>
               </div>
 
-              <a
-                href="/checkout"
-                style={{ display: 'block', background: 'var(--color-primary)', color: '#fff', textDecoration: 'none', textAlign: 'center', padding: 14, borderRadius: 'var(--radius-control)', fontWeight: 700, fontSize: 15, marginBottom: 10, boxShadow: 'var(--shadow-button)' }}
-              >
-                {t('proceedToCheckout')}
-              </a>
+              {hasOwnProducts ? (
+                <div
+                  style={{ background: '#FFF7ED', border: '1px solid #FDBA74', borderRadius: 'var(--radius-control)', padding: 12, marginBottom: 10, display: 'flex', gap: 8, alignItems: 'flex-start', color: '#C2410C' }}
+                >
+                  <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+                  <span style={{ fontSize: 12, fontWeight: 500 }}>{t('checkoutBlockedOwnProducts')}</span>
+                </div>
+              ) : (
+                <a
+                  href="/checkout"
+                  style={{ display: 'block', background: 'var(--color-primary)', color: '#fff', textDecoration: 'none', textAlign: 'center', padding: 14, borderRadius: 'var(--radius-control)', fontWeight: 700, fontSize: 15, marginBottom: 10, boxShadow: 'var(--shadow-button)' }}
+                >
+                  {t('proceedToCheckout')}
+                </a>
+              )}
               <a href="/" style={{ display: 'block', textAlign: 'center', fontSize: 13, color: BRAND.gray, textDecoration: 'none' }}>
                 {t('continueShopping')}
               </a>

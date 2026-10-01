@@ -22,6 +22,8 @@ export const cart = {
   totalLabel: 'Total',
 
   proceedToCheckout: 'Proceder al pago',
+  ownProductWarning: 'Es tu propio producto',
+  checkoutBlockedOwnProducts: 'Tu carrito tiene productos propios — quítalos para poder pagar.',
   continueShopping: '← Seguir comprando',
 
   protectedPurchaseTitle: 'Compra protegida',
