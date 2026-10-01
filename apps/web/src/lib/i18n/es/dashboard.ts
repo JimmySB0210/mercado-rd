@@ -117,11 +117,13 @@ export const dashboard = {
   dealDeactivateError: 'No se pudo desactivar. Intenta de nuevo.',
 
   // ─── PricingTiersSection ────────────────────────────────────
-  pricingTiersHeading: 'Precios por cantidad',
-  pricingTiersHint: 'Opcional — ofrece precios especiales según la cantidad comprada.',
-  pricingTiersPendingHint: 'Opcional — se guardarán cuando guardes el producto.',
+  pricingTiersHeading: 'Precios para proveedores',
+  pricingTiersHint: 'Opcional · Estos precios aparecerán en la sección Proveedores.',
+  pricingTiersPendingHint: 'Opcional · Se guardarán al publicar y aparecerán en la sección Proveedores.',
   pricingTiersEmptyHint: 'Aún no has agregado precios por cantidad.',
-  addTierRowBtn: '+ Agregar fila',
+  addTierRowBtn: '+ Agregar nivel de precio',
+  tierTableQuantityHeader: 'Cantidad',
+  tierTablePriceHeader: 'Precio',
   tierMinQuantityLabel: 'Cantidad mínima',
   tierMaxQuantityLabel: 'Cantidad máxima',
   tierMaxQuantityPlaceholder: 'En adelante',

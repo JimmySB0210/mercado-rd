@@ -102,11 +102,13 @@ export const dashboard = {
   dealDeactivateError: 'Could not deactivate. Try again.',
 
   // ─── PricingTiersSection ────────────────────────────────────
-  pricingTiersHeading: 'Quantity pricing',
-  pricingTiersHint: 'Optional — offer special prices based on quantity purchased.',
-  pricingTiersPendingHint: 'Optional — these will be saved when you save the product.',
+  pricingTiersHeading: 'Pricing for suppliers',
+  pricingTiersHint: 'Optional · These prices will appear in the Suppliers section.',
+  pricingTiersPendingHint: 'Optional · Saved on publish, and will appear in the Suppliers section.',
   pricingTiersEmptyHint: "You haven't added any quantity pricing yet.",
-  addTierRowBtn: '+ Add row',
+  addTierRowBtn: '+ Add price tier',
+  tierTableQuantityHeader: 'Quantity',
+  tierTablePriceHeader: 'Price',
   tierMinQuantityLabel: 'Minimum quantity',
   tierMaxQuantityLabel: 'Maximum quantity',
   tierMaxQuantityPlaceholder: 'And up',

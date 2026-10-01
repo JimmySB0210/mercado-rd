@@ -73,7 +73,6 @@ export function PricingTiersSection({ mode, productId, pendingTiers, onPendingTi
 
   const [savedTiers, setSavedTiers] = useState<TierRow[]>([])
   const [loading, setLoading] = useState(mode === 'editar')
-  const [open, setOpen] = useState(false)
 
   const [addingOpen, setAddingOpen] = useState(false)
   const [addForm, setAddForm] = useState<TierFormValues>(EMPTY_FORM)
@@ -241,137 +240,142 @@ export function PricingTiersSection({ mode, productId, pendingTiers, onPendingTi
   const inputStyle: React.CSSProperties = { width: '100%', border: '1px solid #ddd', borderRadius: 6, padding: '6px 8px', fontSize: 12, boxSizing: 'border-box' }
   const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: '#555', display: 'block', marginBottom: 3 }
 
+  // Ya es su propio paso del formulario ("Precios por cantidad" en el
+  // navegador de pasos) — a diferencia de cuando este componente vivía
+  // como una sección más entre varias, acá no hace falta un acordeón
+  // para ahorrar espacio: el contenido siempre está visible.
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
-      <button
-        type="button"
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between bg-transparent border-none cursor-pointer p-0"
-      >
-        <span className="text-sm font-semibold text-gray-700">
-          {t('pricingTiersHeading')}
+    <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 space-y-4">
+      <div>
+        <div className="flex items-center gap-2">
+          <h2 className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--color-blue-dark)' }}>
+            {t('pricingTiersHeading')}
+          </h2>
           {!loading && tiers.length > 0 && (
-            <span className="ml-2 text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#EFF6FF', color: BRAND.blue }}>
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--color-primary-subtle)', color: BRAND.blue }}>
               {tiers.length}
             </span>
           )}
-        </span>
-        <span className="text-gray-400 text-xs">{open ? '▲' : '▼'}</span>
-      </button>
-
-      {open && (
-        <div className="pt-1 space-y-3">
-          <p className="text-xs text-gray-400">
-            {mode === 'crear' ? t('pricingTiersPendingHint') : t('pricingTiersHint')}
-          </p>
-
-          {loading ? (
-            <p className="text-xs text-gray-400">...</p>
-          ) : (
-            <>
-              {tiers.length === 0 && !addingOpen && (
-                <p className="text-xs text-gray-400">{t('pricingTiersEmptyHint')}</p>
-              )}
-
-              {tiers.map(row => (
-                <div key={row.id} className="border border-gray-100 rounded-lg p-3">
-                  {editingId === row.id ? (
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label style={labelStyle}>{t('tierMinQuantityLabel')}</label>
-                          <input type="number" min={1} step={1} value={editForm.minQuantity} onChange={e => setEditForm({ ...editForm, minQuantity: e.target.value })} style={inputStyle} />
-                        </div>
-                        <div>
-                          <label style={labelStyle}>{t('tierMaxQuantityLabel')}</label>
-                          <input type="number" min={1} step={1} placeholder={t('tierMaxQuantityPlaceholder')} value={editForm.maxQuantity} onChange={e => setEditForm({ ...editForm, maxQuantity: e.target.value })} style={inputStyle} />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label style={labelStyle}>{t('tierPriceLabel')}</label>
-                          <input type="number" min={0} step="0.01" value={editForm.price} onChange={e => setEditForm({ ...editForm, price: e.target.value })} style={inputStyle} />
-                        </div>
-                        <div>
-                          <label style={labelStyle}>{t('tierUnitLabel')}</label>
-                          <input type="text" placeholder={t('tierUnitPlaceholder')} value={editForm.unitLabel} onChange={e => setEditForm({ ...editForm, unitLabel: e.target.value })} style={inputStyle} />
-                        </div>
-                      </div>
-                      {editError && <p className="text-xs" style={{ color: BRAND.red }}>{editError}</p>}
-                      <div className="flex gap-2">
-                        <button type="button" onClick={handleSaveEdit} disabled={editSaving} className="flex-1 text-xs font-bold text-white rounded-md py-1.5" style={{ background: editSaving ? '#ccc' : BRAND.blue, cursor: editSaving ? 'not-allowed' : 'pointer' }}>
-                          {editSaving ? t('tierSaving') : t('tierSaveButton')}
-                        </button>
-                        <button type="button" onClick={() => { setEditingId(null); setEditError(null) }} disabled={editSaving} className="text-xs font-semibold rounded-md py-1.5 px-3 border border-gray-200">
-                          {t('tierCancelButton')}
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <span className="text-xs text-gray-700">
-                        <strong>{row.min_quantity}{row.max_quantity !== null ? `–${row.max_quantity}` : '+'} {row.unit_label}</strong>
-                        {' — '}
-                        {(row.price_rdp / 100).toLocaleString('es-DO', { style: 'currency', currency: 'DOP', minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
-                      <div className="flex gap-3">
-                        <button type="button" onClick={() => startEdit(row)} className="text-xs font-semibold bg-transparent border-none cursor-pointer" style={{ color: BRAND.blue }}>
-                          {t('tierEditButton')}
-                        </button>
-                        <button type="button" onClick={() => handleRemove(row.id)} disabled={removingId === row.id} className="text-xs font-semibold bg-transparent border-none cursor-pointer" style={{ color: BRAND.red }}>
-                          {removingId === row.id ? t('tierRemoving') : t('tierRemoveButton')}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-
-              {addingOpen ? (
-                <div className="border border-gray-100 rounded-lg p-3 space-y-2" style={{ background: '#F9FAFB' }}>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label style={labelStyle}>{t('tierMinQuantityLabel')}</label>
-                      <input type="number" min={1} step={1} value={addForm.minQuantity} onChange={e => setAddForm({ ...addForm, minQuantity: e.target.value })} style={inputStyle} />
-                    </div>
-                    <div>
-                      <label style={labelStyle}>{t('tierMaxQuantityLabel')}</label>
-                      <input type="number" min={1} step={1} placeholder={t('tierMaxQuantityPlaceholder')} value={addForm.maxQuantity} onChange={e => setAddForm({ ...addForm, maxQuantity: e.target.value })} style={inputStyle} />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label style={labelStyle}>{t('tierPriceLabel')}</label>
-                      <input type="number" min={0} step="0.01" value={addForm.price} onChange={e => setAddForm({ ...addForm, price: e.target.value })} style={inputStyle} />
-                    </div>
-                    <div>
-                      <label style={labelStyle}>{t('tierUnitLabel')}</label>
-                      <input type="text" placeholder={t('tierUnitPlaceholder')} value={addForm.unitLabel} onChange={e => setAddForm({ ...addForm, unitLabel: e.target.value })} style={inputStyle} />
-                    </div>
-                  </div>
-                  {addError && <p className="text-xs" style={{ color: BRAND.red }}>{addError}</p>}
-                  <div className="flex gap-2">
-                    <button type="button" onClick={handleAdd} disabled={addSaving} className="flex-1 text-xs font-bold text-white rounded-md py-1.5" style={{ background: addSaving ? '#ccc' : BRAND.blue, cursor: addSaving ? 'not-allowed' : 'pointer' }}>
-                      {addSaving ? t('tierSaving') : t('tierSaveButton')}
-                    </button>
-                    <button type="button" onClick={() => { setAddingOpen(false); setAddError(null); setAddForm(EMPTY_FORM) }} disabled={addSaving} className="text-xs font-semibold rounded-md py-1.5 px-3 border border-gray-200">
-                      {t('tierCancelButton')}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setAddingOpen(true)}
-                  className="text-xs font-semibold bg-transparent border-none cursor-pointer"
-                  style={{ color: BRAND.blue }}
-                >
-                  {t('addTierRowBtn')}
-                </button>
-              )}
-            </>
-          )}
         </div>
+        <p className="text-xs text-gray-400 mt-1">
+          {mode === 'crear' ? t('pricingTiersPendingHint') : t('pricingTiersHint')}
+        </p>
+      </div>
+
+      {loading ? (
+        <p className="text-xs text-gray-400">...</p>
+      ) : (
+        <>
+          {tiers.length === 0 && !addingOpen && (
+            <p className="text-xs text-gray-400">{t('pricingTiersEmptyHint')}</p>
+          )}
+
+          {tiers.length > 0 && (
+            <div className="rounded-xl border border-gray-100 overflow-hidden">
+              <div className="grid grid-cols-[1fr_1fr_auto] gap-2 px-3 py-2 bg-gray-50 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                <span>{t('tierTableQuantityHeader')}</span>
+                <span>{t('tierTablePriceHeader')}</span>
+                <span />
+              </div>
+              {tiers.map(row => (
+                editingId === row.id ? (
+                  <div key={row.id} className="p-3 space-y-2 border-t border-gray-100" style={{ background: '#F9FAFB' }}>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label style={labelStyle}>{t('tierMinQuantityLabel')}</label>
+                        <input type="number" min={1} step={1} value={editForm.minQuantity} onChange={e => setEditForm({ ...editForm, minQuantity: e.target.value })} style={inputStyle} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>{t('tierMaxQuantityLabel')}</label>
+                        <input type="number" min={1} step={1} placeholder={t('tierMaxQuantityPlaceholder')} value={editForm.maxQuantity} onChange={e => setEditForm({ ...editForm, maxQuantity: e.target.value })} style={inputStyle} />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label style={labelStyle}>{t('tierPriceLabel')}</label>
+                        <input type="number" min={0} step="0.01" value={editForm.price} onChange={e => setEditForm({ ...editForm, price: e.target.value })} style={inputStyle} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>{t('tierUnitLabel')}</label>
+                        <input type="text" placeholder={t('tierUnitPlaceholder')} value={editForm.unitLabel} onChange={e => setEditForm({ ...editForm, unitLabel: e.target.value })} style={inputStyle} />
+                      </div>
+                    </div>
+                    {editError && <p className="text-xs" style={{ color: BRAND.red }}>{editError}</p>}
+                    <div className="flex gap-2">
+                      <button type="button" onClick={handleSaveEdit} disabled={editSaving} className="flex-1 text-xs font-bold text-white rounded-md py-1.5" style={{ background: editSaving ? '#ccc' : BRAND.blue, cursor: editSaving ? 'not-allowed' : 'pointer' }}>
+                        {editSaving ? t('tierSaving') : t('tierSaveButton')}
+                      </button>
+                      <button type="button" onClick={() => { setEditingId(null); setEditError(null) }} disabled={editSaving} className="text-xs font-semibold rounded-md py-1.5 px-3 border border-gray-200">
+                        {t('tierCancelButton')}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div key={row.id} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center px-3 py-2.5 border-t border-gray-100">
+                    <span className="text-sm font-semibold text-gray-800">
+                      {row.min_quantity}{row.max_quantity !== null ? `–${row.max_quantity}` : '+'}
+                      <span className="text-xs font-normal text-gray-400"> {row.unit_label}</span>
+                    </span>
+                    <span className="text-sm font-semibold" style={{ color: BRAND.blue }}>
+                      {(row.price_rdp / 100).toLocaleString('es-DO', { style: 'currency', currency: 'DOP', minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                    <div className="flex gap-3 justify-end">
+                      <button type="button" onClick={() => startEdit(row)} className="text-xs font-semibold bg-transparent border-none cursor-pointer" style={{ color: BRAND.blue }}>
+                        {t('tierEditButton')}
+                      </button>
+                      <button type="button" onClick={() => handleRemove(row.id)} disabled={removingId === row.id} className="text-xs font-semibold bg-transparent border-none cursor-pointer" style={{ color: BRAND.red }}>
+                        {removingId === row.id ? t('tierRemoving') : t('tierRemoveButton')}
+                      </button>
+                    </div>
+                  </div>
+                )
+              ))}
+            </div>
+          )}
+
+          {addingOpen ? (
+            <div className="border border-gray-100 rounded-lg p-3 space-y-2" style={{ background: '#F9FAFB' }}>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label style={labelStyle}>{t('tierMinQuantityLabel')}</label>
+                  <input type="number" min={1} step={1} value={addForm.minQuantity} onChange={e => setAddForm({ ...addForm, minQuantity: e.target.value })} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>{t('tierMaxQuantityLabel')}</label>
+                  <input type="number" min={1} step={1} placeholder={t('tierMaxQuantityPlaceholder')} value={addForm.maxQuantity} onChange={e => setAddForm({ ...addForm, maxQuantity: e.target.value })} style={inputStyle} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label style={labelStyle}>{t('tierPriceLabel')}</label>
+                  <input type="number" min={0} step="0.01" value={addForm.price} onChange={e => setAddForm({ ...addForm, price: e.target.value })} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>{t('tierUnitLabel')}</label>
+                  <input type="text" placeholder={t('tierUnitPlaceholder')} value={addForm.unitLabel} onChange={e => setAddForm({ ...addForm, unitLabel: e.target.value })} style={inputStyle} />
+                </div>
+              </div>
+              {addError && <p className="text-xs" style={{ color: BRAND.red }}>{addError}</p>}
+              <div className="flex gap-2">
+                <button type="button" onClick={handleAdd} disabled={addSaving} className="flex-1 text-xs font-bold text-white rounded-md py-1.5" style={{ background: addSaving ? '#ccc' : BRAND.blue, cursor: addSaving ? 'not-allowed' : 'pointer' }}>
+                  {addSaving ? t('tierSaving') : t('tierSaveButton')}
+                </button>
+                <button type="button" onClick={() => { setAddingOpen(false); setAddError(null); setAddForm(EMPTY_FORM) }} disabled={addSaving} className="text-xs font-semibold rounded-md py-1.5 px-3 border border-gray-200">
+                  {t('tierCancelButton')}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setAddingOpen(true)}
+              className="text-xs font-semibold bg-transparent border-none cursor-pointer"
+              style={{ color: BRAND.blue }}
+            >
+              {t('addTierRowBtn')}
+            </button>
+          )}
+        </>
       )}
     </div>
   )

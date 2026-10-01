@@ -21,6 +21,7 @@ import { ProductAttributesSection, type AttributeValue, type AttributeValuesStat
 import { PricingTiersSection, type TierRow } from '@/components/vendor/PricingTiersSection'
 import { ProductPreviewModal } from '@/components/dashboard/ProductPreviewModal'
 import { ProductPageContent } from '@/app/producto/[id]/ProductPageContent'
+import { Navbar } from '@/components/shop/Navbar'
 import { computePublishQuality, qualityTier, QUALITY_TIER_EMOJI, QUALITY_TIER_COLOR } from '@/lib/productQuality'
 import { BRAND } from '@/lib/colors'
 import { formatPrice, discountPercent } from '@/types/database.types'
@@ -140,6 +141,7 @@ function PreviewSidebarCard({ data, t }: {
   const sizes = [...new Set(previewVariants.map(v => v.size).filter(Boolean))] as string[]
   const colors = [...new Set(previewVariants.map(v => v.color).filter(Boolean))] as string[]
   const hasDiscount = !!(previewProduct.compare_rdp && previewProduct.compare_rdp > previewProduct.price_rdp)
+  const chipCls = 'text-xs font-semibold rounded-full px-2.5 py-1 border border-gray-200 text-gray-700'
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-5">
@@ -153,7 +155,15 @@ function PreviewSidebarCard({ data, t }: {
       <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 mb-1">
         {previewProduct.name || t('previewUntitledProduct')}
       </p>
-      <p className="text-xs text-gray-400 mb-2">⭐ {(previewProduct.rating_avg ?? 0).toFixed(1)}</p>
+      {/* Mismo criterio honesto que la página real: sin reseñas todavía
+          (previewProduct.rating_count siempre 0 acá, producto nuevo) no
+          se inventa una calificación — la línea simplemente no aparece,
+          igual que le pasaría a un producto recién publicado. */}
+      {previewProduct.rating_count > 0 && (
+        <p className="text-xs text-gray-400 mb-1">
+          ⭐ {previewProduct.rating_avg.toFixed(1)} · {previewProduct.sold_count} {tp('soldSuffix')}
+        </p>
+      )}
 
       <div className="flex items-baseline gap-2 mb-3">
         <span className="text-lg font-extrabold" style={{ color: BRAND.blue }}>
@@ -165,19 +175,30 @@ function PreviewSidebarCard({ data, t }: {
       </div>
 
       {sizes.length > 0 && (
-        <div className="mb-2">
-          <p className="text-xs text-gray-400 mb-1">{sizes.join(' · ')}</p>
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {sizes.map(s => <span key={s} className={chipCls}>{s}</span>)}
         </div>
       )}
       {colors.length > 0 && (
-        <div className="mb-3">
-          <p className="text-xs text-gray-400 mb-1">{colors.join(' · ')}</p>
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {colors.map(c => <span key={c} className={chipCls}>{c}</span>)}
         </div>
       )}
 
+      {/* Selector de cantidad — decorativo (mismo look que verá el
+          comprador en ProductSelectors), sin estado propio acá */}
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-xs text-gray-400">{tp('quantityLabel')}</span>
+        <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+          <button type="button" disabled className="w-7 h-7 flex items-center justify-center text-gray-400 cursor-default bg-white">−</button>
+          <span className="w-7 h-7 flex items-center justify-center text-xs font-semibold text-gray-700 border-x border-gray-200">1</span>
+          <button type="button" disabled className="w-7 h-7 flex items-center justify-center text-gray-400 cursor-default bg-white">+</button>
+        </div>
+      </div>
+
       <div className="space-y-1.5">
         <div
-          className="w-full text-center text-xs font-semibold text-white rounded-lg py-2"
+          className="w-full text-center text-xs font-semibold text-white rounded-lg py-2 flex items-center justify-center gap-1.5"
           style={{ background: BRAND.blue }}
         >
           🛒 {tp('addToCart')}
@@ -1382,8 +1403,11 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-400 text-sm">{t('loadingForm')}</div>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="flex items-center justify-center py-24">
+          <div className="text-gray-400 text-sm">{t('loadingForm')}</div>
+        </div>
       </div>
     )
   }
@@ -1393,6 +1417,10 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Mismo Navbar real de todo el sitio (ya es azul --color-primary) —
+          este formulario no tenía ningún header antes; no se crea un
+          componente nuevo, se reusa el existente tal cual. */}
+      <Navbar />
       <div className="max-w-[1400px] mx-auto px-4 py-6 lg:py-8">
 
         {/* Header */}
@@ -1424,8 +1452,9 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_320px] gap-6 items-start">
 
-            {/* ─── Navegador de pasos ─────────────────────────── */}
-            <nav className="hidden lg:flex flex-col gap-1 bg-white rounded-2xl border border-gray-100 p-3 lg:sticky lg:top-6">
+            {/* ─── Navegador de pasos — compacto, no debe pesar más
+                que el propio formulario ────────────────────────── */}
+            <nav className="hidden lg:flex flex-col gap-0.5 bg-white rounded-2xl border border-gray-100 p-2 lg:sticky lg:top-6">
               {STEPS.map((step, i) => {
                 const isActive = step.id === activeStep
                 return (
@@ -1433,24 +1462,24 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                     key={step.id}
                     type="button"
                     onClick={() => goToStep(i)}
-                    className="flex items-start gap-2.5 text-left rounded-xl px-3 py-2.5 border-none cursor-pointer transition-colors"
+                    className="flex items-center gap-2 text-left rounded-lg px-2.5 py-2 border-none cursor-pointer transition-colors"
                     style={{ background: isActive ? BRAND.blue : 'transparent' }}
                   >
                     <span
-                      className="flex-shrink-0 flex items-center justify-center rounded-full text-xs font-bold"
+                      className="flex-shrink-0 flex items-center justify-center rounded-full text-[11px] font-bold"
                       style={{
-                        width: 22, height: 22, marginTop: 1,
+                        width: 18, height: 18,
                         background: isActive ? '#fff' : '#F3F4F6',
                         color: isActive ? BRAND.blue : BRAND.gray,
                       }}
                     >
                       {i + 1}
                     </span>
-                    <span>
-                      <span className="block text-sm font-semibold" style={{ color: isActive ? '#fff' : BRAND.dark }}>
+                    <span className="min-w-0">
+                      <span className="block text-[13px] font-semibold leading-tight" style={{ color: isActive ? '#fff' : 'var(--color-blue-dark)' }}>
                         {step.label}
                       </span>
-                      <span className="block text-xs mt-0.5" style={{ color: isActive ? 'rgba(255,255,255,0.8)' : BRAND.gray }}>
+                      <span className="block text-[11px] leading-snug" style={{ color: isActive ? 'rgba(255,255,255,0.8)' : BRAND.gray }}>
                         {step.subtitle}
                       </span>
                     </span>
@@ -1477,8 +1506,8 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           {activeStep === 'photos' && (
           <>
           {/* Imágenes */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('photosHeading')}</h2>
+          <div className="bg-white rounded-2xl border border-gray-100 p-5">
+            <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-blue-dark)' }}>{t('photosHeading')}</h2>
             <div className="flex flex-wrap gap-3 mb-3">
               {existingImageUrls.map((src, i) => (
                 <div key={`existing-${i}`} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
@@ -1519,8 +1548,8 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           </div>
 
           {/* Video (opcional) — complementa la galería de fotos, no la reemplaza */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('videoHeading')}</h2>
+          <div className="bg-white rounded-2xl border border-gray-100 p-5">
+            <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-blue-dark)' }}>{t('videoHeading')}</h2>
             <div className="mb-3">
               {(videoPreviewUrl || existingVideoUrl) ? (
                 <div className="relative w-48 aspect-video rounded-lg overflow-hidden border border-gray-200 bg-black">
@@ -1554,8 +1583,8 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           {activeStep === 'basic' && (
           <>
           {/* Info básica */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
-            <h2 className="text-sm font-semibold text-gray-700 mb-1">{t('basicInfoHeading')}</h2>
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
+            <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-blue-dark)' }}>{t('basicInfoHeading')}</h2>
 
             <div>
               <input
@@ -1605,11 +1634,11 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           {/* Atributos dinámicos de la categoría — solo aparece si el tipo
               de producto seleccionado tiene category_attributes definidos */}
           {loadingAttributes ? (
-            <div className="bg-white rounded-2xl border border-gray-100 p-6">
+            <div className="bg-white rounded-2xl border border-gray-100 p-5">
               <p className="text-xs text-gray-400">{t('loadingAttributes')}</p>
             </div>
           ) : fixedCategoryAttributes.length > 0 && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-6">
+            <div className="bg-white rounded-2xl border border-gray-100 p-5">
               <ProductAttributesSection
                 attributes={fixedCategoryAttributes}
                 optionsMap={attributeOptionsMap}
@@ -1626,8 +1655,8 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           {activeStep === 'price' && (
           <>
           {/* Precio y stock */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
-            <h2 className="text-sm font-semibold text-gray-700 mb-1">{t('priceSaleHeading')}</h2>
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
+            <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-blue-dark)' }}>{t('priceSaleHeading')}</h2>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -1660,8 +1689,8 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
-            <h2 className="text-sm font-semibold text-gray-700 mb-1">{t('inventoryHeading')}</h2>
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
+            <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-blue-dark)' }}>{t('inventoryHeading')}</h2>
 
             <div>
               <label className="text-xs text-gray-500 mb-1 block">{t('stockAvailableLabel')}</label>
@@ -1737,8 +1766,8 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               (Talla/Color); con atributos dinámicos de variante, cada
               dimensión ya tiene su propio <select> por fila más abajo. */}
           {variantCategoryAttributes.length === 0 && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
-              <h2 className="text-sm font-semibold text-gray-700">{t('variantsGenerateHeading')}</h2>
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
+              <h2 className="text-sm font-semibold" style={{ color: 'var(--color-blue-dark)' }}>{t('variantsGenerateHeading')}</h2>
               <div>
                 <label className="text-xs text-gray-500 mb-1.5 block">{t('variantsGenerateSizesLabel')}</label>
                 <div className="flex flex-wrap gap-2">
@@ -1784,9 +1813,9 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           )}
 
           {/* Variantes */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
             <div className="flex items-center justify-between mb-1">
-              <h2 className="text-sm font-semibold text-gray-700">
+              <h2 className="text-sm font-semibold" style={{ color: 'var(--color-blue-dark)' }}>
                 {variantCategoryAttributes.length === 0 ? t('variantsManualHeading') : t('variantsHeading')}
               </h2>
               <button
@@ -2038,12 +2067,12 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               guardan (migración 017) pero se dejan explícitamente
               marcados como referenciales, no como algo que cambie el
               envío hoy. */}
-          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
+          <div className="rounded-2xl p-4" style={{ background: 'var(--color-primary-subtle)' }}>
             <p className="text-sm" style={{ color: BRAND.dark }}>🚚 {t('shippingRealMechanismNote')}</p>
           </div>
 
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
-            <h2 className="text-sm font-semibold text-gray-700 mb-1">{t('shippingWeightDimensionsHeading')}</h2>
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
+            <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-blue-dark)' }}>{t('shippingWeightDimensionsHeading')}</h2>
             <p className="text-xs text-gray-400">{t('shippingWeightDimensionsDisclaimer')}</p>
 
             <div>
@@ -2107,12 +2136,12 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               (es una configuración de la tienda, vendor_services); se
               muestra en modo lectura lo que el vendor ya declaró ahí,
               en vez de inventar un selector por producto que no existe. */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-2">
-            <h2 className="text-sm font-semibold text-gray-700">{t('shippingVendorServicesHeading')}</h2>
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-2">
+            <h2 className="text-sm font-semibold" style={{ color: 'var(--color-blue-dark)' }}>{t('shippingVendorServicesHeading')}</h2>
             {vendorShippingServices.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {vendorShippingServices.map(s => (
-                  <span key={s} className="text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: '#EFF6FF', color: BRAND.blue }}>
+                  <span key={s} className="text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: 'var(--color-primary-subtle)', color: BRAND.blue }}>
                     {tv(`service.${s}`)}
                   </span>
                 ))}
@@ -2128,8 +2157,8 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           <>
           {/* Información adicional — descripción vive acá (no en
               Información básica), junto con garantía y devoluciones. */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
-            <h2 className="text-sm font-semibold text-gray-700 mb-1">{t('stepAdditionalLabel')}</h2>
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
+            <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-blue-dark)' }}>{t('stepAdditionalLabel')}</h2>
             <div>
               <textarea
                 name="description"
@@ -2145,8 +2174,8 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
 
           {/* Garantía — texto libre del vendor, sin verificación del
               sistema (migración 017), mismo patrón "Otra" que Talla. */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-2">
-            <h2 className="text-sm font-semibold text-gray-700">{t('warrantyLabel')}</h2>
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-2">
+            <h2 className="text-sm font-semibold" style={{ color: 'var(--color-blue-dark)' }}>{t('warrantyLabel')}</h2>
             <select
               value={customWarranty ? WARRANTY_OTHER : (WARRANTY_PRESETS.includes(form.warranty) ? form.warranty : '')}
               onChange={e => handleWarrantySelectChange(e.target.value)}
@@ -2174,7 +2203,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               muestra a modo informativo, no como un campo editable, para
               no inventar una configuración por producto que no existe. */}
           <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4">
-            <h2 className="text-sm font-semibold text-gray-700 mb-1">{t('returnPolicyHeading')}</h2>
+            <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-blue-dark)' }}>{t('returnPolicyHeading')}</h2>
             <p className="text-xs text-gray-500 mb-2">{t('returnPolicyText')}</p>
             <a href="/terminos" target="_blank" rel="noopener noreferrer" className="text-xs font-semibold no-underline" style={{ color: BRAND.blue }}>
               {t('returnPolicyLink')}
@@ -2186,7 +2215,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           {activeStep === 'preview' && (() => {
             const { previewProduct, previewVariants } = buildPreviewData()
             return (
-              <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6">
+              <div className="bg-gray-50 rounded-2xl p-4 sm:p-6">
                 <p className="text-xs text-gray-400 mb-4">👁️ {t('previewFullStepHint')}</p>
                 <ProductPageContent
                   product={previewProduct as any}
