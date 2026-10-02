@@ -27,8 +27,9 @@ export default async function VendorStorePage(
   if (error || !vendor) notFound()
 
   const [
-    { data: products }, { data: reviewsRaw }, { count: reviewCount },
+    { data: products }, { data: reviewsRaw },
     { data: businessTypesRaw }, { data: vendorCategoriesRaw }, { data: servicesRaw }, { data: targetCustomersRaw },
+    { data: realStats },
   ] = await Promise.all([
     supabase
       .from('products')
@@ -42,14 +43,15 @@ export default async function VendorStorePage(
       .eq('vendor_id', id)
       .order('created_at', { ascending: false })
       .limit(5),
-    supabase
-      .from('reviews')
-      .select('*', { count: 'exact', head: true })
-      .eq('vendor_id', id),
     supabase.from('vendor_business_types').select('business_type').eq('vendor_id', id),
     supabase.from('vendor_categories').select('category_id, category:categories(id, name, name_en, name_fr, emoji, slug)').eq('vendor_id', id),
     supabase.from('vendor_services').select('service').eq('vendor_id', id),
     supabase.from('vendor_target_customers').select('customer_type').eq('vendor_id', id),
+    // vendor_real_stats reemplaza vendors.rating_avg/total_sales
+    // (sembrados, nunca actualizados) -- mismo criterio que ya aplica
+    // el dashboard del vendor. real_rating_avg null = sin reseñas
+    // reales todavía, se muestra honesto, nunca como 0.
+    supabase.from('vendor_real_stats').select('real_rating_avg, real_total_sales, real_rating_count').eq('vendor_id', id).maybeSingle(),
   ])
 
   // Nombres de compradores — consulta separada (no embebida). users tiene
@@ -102,7 +104,9 @@ export default async function VendorStorePage(
         vendor={vendor as any}
         productsWithVendor={productsWithVendor}
         reviews={reviews as any}
-        reviewCount={reviewCount ?? 0}
+        realRatingAvg={realStats?.real_rating_avg ?? null}
+        realTotalSales={realStats?.real_total_sales ?? 0}
+        realRatingCount={realStats?.real_rating_count ?? 0}
         businessTypes={businessTypes}
         vendorCategories={vendorCategories}
         services={services}

@@ -47,6 +47,7 @@ export const directory = {
   whatsappButton: 'WhatsApp',
   instagramButton: 'Instagram',
   totalSalesLabel: 'Ventes totales',
+  noRatingYetStore: 'Pas encore de note',
   memberSinceLabel: 'Membre depuis ({duration})',
   membershipNew: 'nouveau',
   membershipMonthsSingular: 'il y a {count} mois',

@@ -44,8 +44,6 @@ interface VendorRow {
   whatsapp: string | null
   instagram: string | null
   verification_level: number | null
-  rating_avg: number | null
-  total_sales: number | null
   created_at: string
   min_order_quantity: number | null
   min_order_unit: string | null
@@ -60,7 +58,14 @@ interface Props {
   vendor: VendorRow
   productsWithVendor: any[]
   reviews: ReviewRow[]
-  reviewCount: number
+  // vendor_real_stats, no las columnas sembradas vendors.rating_avg/
+  // total_sales -- mismo criterio que el dashboard (ver dashboard/
+  // page.tsx + lib/queries/vendor-dashboard.ts: getVendorRealStats).
+  // realRatingAvg null = sin reseñas reales todavía, nunca se muestra
+  // como 0 ni como guion.
+  realRatingAvg: number | null
+  realTotalSales: number
+  realRatingCount: number
   businessTypes: BusinessType[]
   vendorCategories: CategoryRow[]
   services: VendorService[]
@@ -71,7 +76,7 @@ interface Props {
 }
 
 export function VendorStoreContent({
-  vendor, productsWithVendor, reviews, reviewCount, businessTypes, vendorCategories,
+  vendor, productsWithVendor, reviews, realRatingAvg, realTotalSales, realRatingCount, businessTypes, vendorCategories,
   services, targetCustomers, showsManufacturing, hasProviderInfo, memberSinceRaw,
 }: Props) {
   const { t, language } = useTranslation('directory')
@@ -126,13 +131,13 @@ export function VendorStoreContent({
               </p>
             )}
 
-            {Number(vendor.rating_avg) > 0 && (
+            {realRatingAvg != null ? (
               <div className="flex items-center gap-1.5 mt-2">
                 <div className="flex">
                   {[1, 2, 3, 4, 5].map(star => (
                     <svg
                       key={star}
-                      className={`w-4 h-4 ${star <= Math.round(vendor.rating_avg ?? 0) ? 'text-amber-400' : 'text-gray-200'}`}
+                      className={`w-4 h-4 ${star <= Math.round(realRatingAvg) ? 'text-amber-400' : 'text-gray-200'}`}
                       fill="currentColor" viewBox="0 0 20 20"
                     >
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -140,9 +145,11 @@ export function VendorStoreContent({
                   ))}
                 </div>
                 <span className="text-sm text-gray-500">
-                  {Number(vendor.rating_avg).toFixed(1)} ({reviewCount} {reviewCount === 1 ? t('reviewCountSingular') : t('reviewCountPlural')})
+                  {realRatingAvg.toFixed(1)} ({realRatingCount} {realRatingCount === 1 ? t('reviewCountSingular') : t('reviewCountPlural')})
                 </span>
               </div>
+            ) : (
+              <p className="text-sm text-gray-400 mt-2">{t('noRatingYetStore')}</p>
             )}
           </div>
         </div>
@@ -186,7 +193,7 @@ export function VendorStoreContent({
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3 mt-5 pt-5 border-t border-gray-100">
           <div className="text-center">
-            <p className="text-lg font-bold text-gray-900">{vendor.total_sales ?? 0}</p>
+            <p className="text-lg font-bold text-gray-900">{realTotalSales}</p>
             <p className="text-xs text-gray-400">{t('totalSalesLabel')}</p>
           </div>
           <div className="text-center">
