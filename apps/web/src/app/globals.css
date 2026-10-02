@@ -92,6 +92,37 @@
   --transition-base: 250ms ease;
 }
 
+/* ============================================================
+   Dashboard del vendor — variantes de brillo EXPERIMENTALES
+   (2026-10-02), escopeadas a .dashboard-grid únicamente. NO tocan
+   --color-primary/--color-yellow-cta ni ningún otro lugar del sitio.
+   Mismo tono (H/S) que el oficial, solo con L (luminosidad HSL)
+   aumentada -- no es "más saturado", es más CLARO. 3 niveles
+   calculados en HSL (no a ojo), para que Jimmy elija uno viendo el
+   dashboard real con cada uno:
+
+     AZUL oficial #0458B4 = H211° L36% S96%
+       sutil   L+10% -> #0570E6
+       medio   L+20% -> #248AFA
+       marcado L+30% -> #56A5FB
+
+     AMARILLO oficial #F5BD0F = H45° L51% S92%
+       sutil   L+6%  -> #F6C52C
+       medio   L+12% -> #F7CD4A
+       marcado L+18% -> #F9D567
+     (deltas más chicas que el azul -- el amarillo oficial ya parte de
+     L51%, mucho más alto que el azul; con los mismos +10/20/30% se
+     lavaría hacia blanco antes de los 3 niveles)
+
+   Decisión final de Jimmy (2026-10-02): azul en "sutil", amarillo en
+   "medio" -- no es necesario que ambos colores compartan el mismo
+   nivel de brillo.
+   ============================================================ */
+.dashboard-grid {
+  --dashboard-blue: #0570E6;   /* sutil, elegido */
+  --dashboard-yellow: #F7CD4A; /* medio, elegido */
+}
+
 * {
   margin: 0;
   padding: 0;

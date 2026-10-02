@@ -21,8 +21,9 @@ const RevenueChart = dynamic(
 
 interface Props {
   data: { month: string; revenue: number }[]
+  height?: number
 }
 
-export function RevenueChartLoader({ data }: Props) {
-  return <RevenueChart data={data} />
+export function RevenueChartLoader({ data, height }: Props) {
+  return <RevenueChart data={data} height={height} />
 }

@@ -11,13 +11,16 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { formatPrice } from '@/types/database.types'
 import { useTranslation } from '@/lib/hooks/useTranslation'
-import { BRAND } from '@/lib/colors'
 
 interface Props {
   data: { month: string; revenue: number }[]
+  // Opcional -- default 260px (comportamiento de siempre). El rediseño
+  // del dashboard de resumen la pide más compacta (comparte fila con
+  // "Productos más vendidos"), sin tocar ningún otro uso del gráfico.
+  height?: number
 }
 
-export function RevenueChart({ data }: Props) {
+export function RevenueChart({ data, height = 260 }: Props) {
   const { t } = useTranslation('dashboard')
   const hasRevenue = data.some(p => p.revenue > 0)
 
@@ -31,7 +34,7 @@ export function RevenueChart({ data }: Props) {
   }
 
   return (
-    <div style={{ width: '100%', height: 260, padding: '12px 8px' }}>
+    <div style={{ width: '100%', height, padding: '12px 8px' }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
@@ -53,7 +56,7 @@ export function RevenueChart({ data }: Props) {
             labelStyle={{ color: '#111', fontWeight: 700 }}
             contentStyle={{ borderRadius: 8, border: '1px solid #eee', fontSize: 13 }}
           />
-          <Bar dataKey="revenue" fill={BRAND.blue} radius={[6, 6, 0, 0]} />
+          <Bar dataKey="revenue" fill="var(--dashboard-blue)" radius={[6, 6, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

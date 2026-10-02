@@ -40,9 +40,11 @@ export async function getCurrentVendor() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
+  // province embebida (provinces_rd(name)) -- mismo patrón que ya usa
+  // getVendorOrders más abajo -- para "Tu tienda" (ciudad/provincia real).
   const { data: vendor, error } = await supabase
     .from('vendors')
-    .select('*')
+    .select('*, province:provinces_rd(name)')
     .eq('user_id', user.id)
     .single()
 
@@ -125,6 +127,11 @@ export async function getVendorOrders(vendorId: string): Promise<VendorOrderRow[
 }
 
 // ─── KPIs del mes actual ────────────────────────────────────────
+// rating/totalSales YA NO viven acá -- vendors.rating_avg/total_sales
+// están confirmados sembrados (auditoría de seguridad, 2026-10-01);
+// ver getVendorRealStats más abajo, que usa vendor_real_stats (la
+// vista real, ya aplicada). avgTicket tampoco -- la referencia visual
+// reemplaza esa tarjeta por "Productos" (ver getVendorProducts).
 export async function getVendorKPIs(vendorId: string) {
   const supabase = await createServerClient()
 
@@ -144,21 +151,83 @@ export async function getVendorKPIs(vendorId: string) {
 
   const uniqueOrders = new Set((items ?? []).map(i => i.order_id))
   const orderCount = uniqueOrders.size
-  const avgTicket = orderCount > 0 ? Math.round(monthlyRevenue / orderCount) : 0
 
-  const { data: vendor } = await supabase
-    .from('vendors')
-    .select('rating_avg, total_sales')
-    .eq('id', vendorId)
-    .single()
+  return { monthlyRevenue, orderCount }
+}
+
+// ─── Estadísticas reales del vendedor (vendor_real_stats) ───────
+// Reemplaza vendors.rating_avg/total_sales (sembrados, nunca
+// actualizados) por el cálculo real: SUM(products.sold_count) +
+// AVG(reviews.rating) -- la vista ya está aplicada en la BD real
+// (confirmado en vivo, 2026-10-01). realRatingAvg es null cuando el
+// vendedor todavía no tiene ninguna reseña real -- nunca se debe
+// mostrar como 0, es un estado distinto ("sin calificación todavía").
+export interface VendorRealStats {
+  realTotalSales: number
+  realRatingAvg: number | null
+  realRatingCount: number
+}
+
+export async function getVendorRealStats(vendorId: string): Promise<VendorRealStats> {
+  const supabase = await createServerClient()
+  const { data, error } = await supabase
+    .from('vendor_real_stats')
+    .select('real_total_sales, real_rating_avg, real_rating_count')
+    .eq('vendor_id', vendorId)
+    .maybeSingle()
+
+  if (error) console.error('[getVendorRealStats]', error)
 
   return {
-    monthlyRevenue,
-    orderCount,
-    avgTicket,
-    rating: vendor?.rating_avg ?? 0,
-    totalSales: vendor?.total_sales ?? 0,
+    realTotalSales: data?.real_total_sales ?? 0,
+    realRatingAvg: data?.real_rating_avg ?? null,
+    realRatingCount: data?.real_rating_count ?? 0,
   }
+}
+
+// ─── Insumos reales para la fórmula de completitud de tienda ────
+// Ver lib/vendorCompleteness.ts para la fórmula en sí -- acá solo se
+// resuelven los 8 booleanos reales contra la BD. 3 consultas en
+// paralelo (existencia de fila, no el contenido) + los campos que ya
+// trae el propio `vendor` (logo_url, description, whatsapp/instagram,
+// bank_name/bank_account).
+export async function getVendorCompletenessFlags(vendorId: string, userId: string) {
+  const supabase = await createServerClient()
+
+  const [{ count: categoriesCount }, { count: businessTypesCount }, { count: servicesCount }, { data: kyc }] =
+    await Promise.all([
+      supabase.from('vendor_categories').select('vendor_id', { count: 'exact', head: true }).eq('vendor_id', vendorId),
+      supabase.from('vendor_business_types').select('vendor_id', { count: 'exact', head: true }).eq('vendor_id', vendorId),
+      supabase.from('vendor_services').select('vendor_id', { count: 'exact', head: true }).eq('vendor_id', vendorId),
+      supabase
+        .from('external_verifications')
+        .select('id')
+        .eq('verification_type', 'identity_kyc')
+        .eq('target_type', 'user')
+        .eq('target_id', userId)
+        .limit(1)
+        .maybeSingle(),
+    ])
+
+  return {
+    hasCategories: (categoriesCount ?? 0) > 0,
+    hasBusinessType: (businessTypesCount ?? 0) > 0,
+    hasServices: (servicesCount ?? 0) > 0,
+    hasIdentitySubmitted: !!kyc,
+  }
+}
+
+// ─── Mensajes sin responder (conversations.vendor_unread, real) ──
+export async function getVendorUnreadMessagesCount(vendorId: string): Promise<number> {
+  const supabase = await createServerClient()
+  const { data, error } = await supabase
+    .from('conversations')
+    .select('vendor_unread')
+    .eq('vendor_id', vendorId)
+    .gt('vendor_unread', 0)
+
+  if (error) { console.error('[getVendorUnreadMessagesCount]', error); return 0 }
+  return (data ?? []).reduce((acc, c) => acc + (c.vendor_unread ?? 0), 0)
 }
 
 // ─── Ingresos de los últimos 6 meses (incluye el mes actual) ───
