@@ -93,11 +93,11 @@ export function HomeCategoryStrip() {
     <div id="categorias" className="w-full max-w-[1400px] mx-auto px-4 md-860:px-6">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 0 16px' }}>
         <h2
-          style={{ margin: 0, fontFamily: 'var(--font-heading)', fontSize: 24, fontWeight: 800, color: 'var(--color-blue-dark)' }}
+          style={{ margin: 0, fontFamily: 'var(--font-heading)', fontSize: 'var(--text-h2)', fontWeight: 700, color: 'var(--color-blue-dark)' }}
         >
           {t('exploreCategoriesTitle')}
         </h2>
-        <a href="/categorias" style={{ color: 'var(--color-primary)', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+        <a href="/categorias" style={{ color: 'var(--color-primary)', fontSize: 'var(--text-ui)', fontWeight: 600, textDecoration: 'none' }}>
           {t('viewAll')}
         </a>
       </div>
@@ -127,7 +127,7 @@ export function HomeCategoryStrip() {
               <div style={{ ...iconWrapStyle(bg), width: 44, height: 44 }} className="hidden md-860:flex">
                 <Icon size={20} color={icon} strokeWidth={1.75} />
               </div>
-              <span className="text-[10px] md-860:text-sm font-semibold text-gray-900 line-clamp-2 leading-snug">
+              <span className="text-caption md-860:text-sm font-semibold text-gray-900 line-clamp-2 leading-snug">
                 {getCategoryName(cat, language)}
               </span>
             </a>
@@ -145,7 +145,7 @@ export function HomeCategoryStrip() {
           <div style={{ ...iconWrapStyle(CATEGORY_TILE_COLORS[0].bg), width: 44, height: 44 }} className="hidden md-860:flex">
             <LayoutGrid size={20} color={CATEGORY_TILE_COLORS[0].icon} strokeWidth={1.75} />
           </div>
-          <span className="text-[10px] md-860:text-sm font-semibold text-gray-900 leading-snug">
+          <span className="text-caption md-860:text-sm font-semibold text-gray-900 leading-snug">
             {t('moreCategoriesLabel')}
           </span>
         </a>

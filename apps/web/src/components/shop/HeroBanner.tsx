@@ -93,16 +93,16 @@ function BrandSlide({ imageUrl }: { imageUrl: string | null }) {
           columna de texto normal, dejando ver la foto de fondo/modelo
           a la derecha en vez de un vacío. */}
       <div style={{position:'relative',zIndex:1,flex:'0 1 580px',minWidth:280}}>
-        <span style={{display:'inline-block',fontSize:12,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--color-yellow-cta)',marginBottom:8}}>
+        <span style={{display:'inline-block',fontSize:'var(--text-caption)',fontWeight:600,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--color-yellow-cta)',marginBottom:8}}>
           {t('heroKicker')}
         </span>
-        <h1 style={{fontFamily:'var(--font-heading)',letterSpacing:'var(--tracking-heading)',fontSize:36,fontWeight:800,lineHeight:1.15,margin:'0 0 10px',textShadow:'0 2px 12px rgba(0,0,0,0.2)'}}>
+        <h1 style={{fontFamily:'var(--font-heading)',letterSpacing:'var(--tracking-heading)',fontSize:'var(--text-display)',fontWeight:700,lineHeight:'var(--leading-display)',margin:'0 0 10px',textShadow:'0 2px 12px rgba(0,0,0,0.2)'}}>
           {t('welcomeTitle')}
         </h1>
-        <p style={{color:'rgba(255,255,255,0.85)',fontSize:14,lineHeight:1.45,margin:'0 0 18px',maxWidth:360}}>
+        <p style={{color:'rgba(255,255,255,0.85)',fontSize:'var(--text-body)',lineHeight:'var(--leading-body)',margin:'0 0 18px',maxWidth:360}}>
           {t('welcomeSubtitle')}
         </p>
-        <a href='#categorias' style={{display:'inline-block',background:'var(--color-yellow-cta)',color:'var(--color-primary)',textDecoration:'none',padding:'12px 26px',borderRadius:'var(--radius-control)',fontWeight:700,fontSize:14,boxShadow:'0 4px 14px rgba(232,185,35,0.4)'}}>
+        <a href='#categorias' style={{display:'inline-block',background:'var(--color-yellow-cta)',color:'var(--color-primary)',textDecoration:'none',padding:'12px 26px',borderRadius:'var(--radius-control)',fontWeight:600,fontSize:'var(--text-ui)',boxShadow:'0 4px 14px rgba(232,185,35,0.4)'}}>
           {t('exploreCta')}
         </a>
 
@@ -112,7 +112,7 @@ function BrandSlide({ imageUrl }: { imageUrl: string | null }) {
             blanco apagado, no en el amarillo del CTA. */}
         <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
           {HERO_PERKS.map(({ Icon, key }) => (
-            <span key={key} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, fontWeight: 500, color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap' }}>
+            <span key={key} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 'var(--text-caption)', fontWeight: 500, color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap' }}>
               <Icon size={12} color="rgba(255,255,255,0.8)" />
               {t(key)}
             </span>
@@ -124,7 +124,7 @@ function BrandSlide({ imageUrl }: { imageUrl: string | null }) {
           dominicana pedida en el brief. Siempre encima de lo que haya de
           fondo (gradiente, modelo, o foto configurada desde admin). */}
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, marginLeft: 'auto' }}>
-        <span style={{ fontFamily: 'var(--font-body)', fontSize: 16, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.35)', textAlign: 'right', maxWidth: 220 }}>
+        <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-h4)', color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.35)', textAlign: 'right', maxWidth: 220 }}>
           {t('heroTagline')}
         </span>
         <span style={{ fontSize: 40, lineHeight: 1 }} role="img" aria-label="República Dominicana">🇩🇴</span>
@@ -146,7 +146,7 @@ function WelcomeSlide({ imageUrl }: { imageUrl: string | null }) {
       position:'relative', width:'100%', height:'100%', overflow:'hidden',
       background: imageUrl ? undefined : `linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%)`,
       display:'flex', flexDirection:'column', alignItems:'flex-start', justifyContent:'center',
-      padding:'0 20px', color:'#fff', gap:6,
+      padding:'0 20px', color:'#fff', gap:4,
     }}>
       {imageUrl && (
         <>
@@ -163,15 +163,15 @@ function WelcomeSlide({ imageUrl }: { imageUrl: string | null }) {
           }} />
         </>
       )}
-      <h1 style={{position:'relative',zIndex:1,fontFamily:'var(--font-heading)',letterSpacing:'var(--tracking-heading)',fontSize:19,fontWeight:800,lineHeight:1.2,margin:0,textShadow:'0 1px 8px rgba(0,0,0,0.2)'}}>
+      <h1 style={{position:'relative',zIndex:1,fontFamily:'var(--font-heading)',letterSpacing:'var(--tracking-heading)',fontSize:'var(--text-h1)',fontWeight:700,lineHeight:'var(--leading-h1)',margin:0,textShadow:'0 1px 8px rgba(0,0,0,0.2)'}}>
         {t('welcomeTitle')}
       </h1>
       <p
-        style={{position:'relative',zIndex:1,color:'rgba(255,255,255,0.85)',fontSize:12,lineHeight:1.4,margin:0,maxWidth:300,display:'-webkit-box',WebkitLineClamp:1,WebkitBoxOrient:'vertical',overflow:'hidden',textOverflow:'ellipsis'}}
+        style={{position:'relative',zIndex:1,color:'rgba(255,255,255,0.85)',fontSize:'var(--text-caption)',lineHeight:'var(--leading-caption)',margin:0,maxWidth:300,display:'-webkit-box',WebkitLineClamp:1,WebkitBoxOrient:'vertical',overflow:'hidden',textOverflow:'ellipsis'}}
       >
         {t('welcomeSubtitle')}
       </p>
-      <a href='#categorias' style={{position:'relative',zIndex:1,display:'inline-block',background:'var(--color-yellow-cta)',color:'var(--color-primary)',textDecoration:'none',padding:'8px 18px',borderRadius:'var(--radius-control)',fontWeight:700,fontSize:12,marginTop:6}}>
+      <a href='#categorias' style={{position:'relative',zIndex:1,display:'inline-block',background:'var(--color-yellow-cta)',color:'var(--color-primary)',textDecoration:'none',padding:'6px 16px',borderRadius:'var(--radius-control)',fontWeight:600,fontSize:'var(--text-ui)',lineHeight:1}}>
         {t('exploreCta')}
       </a>
     </div>

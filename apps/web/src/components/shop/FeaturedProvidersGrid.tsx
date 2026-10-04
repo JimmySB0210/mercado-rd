@@ -20,10 +20,10 @@ export function FeaturedProvidersGrid({ providers }: { providers: Vendor[] }) {
   return (
     <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '24px 0 16px' }}>
-        <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--color-blue-dark)', fontFamily: 'var(--font-heading)', margin: 0 }}>
+        <h2 style={{ fontSize: 'var(--text-h2)', fontWeight: 700, color: 'var(--color-blue-dark)', fontFamily: 'var(--font-heading)', margin: 0 }}>
           {t('featuredProvidersTitle')}
         </h2>
-        <a href="/proveedores" style={{ color: 'var(--color-primary)', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+        <a href="/proveedores" style={{ color: 'var(--color-primary)', fontSize: 'var(--text-ui)', fontWeight: 600, textDecoration: 'none' }}>
           {t('viewAll')}
         </a>
       </div>
@@ -45,9 +45,9 @@ export function FeaturedProvidersGrid({ providers }: { providers: Vendor[] }) {
               )}
             </div>
             <div>
-              <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-text-primary)' }}>{v.business_name}</div>
+              <div style={{ fontWeight: 600, fontSize: 'var(--text-small)', color: 'var(--color-text-primary)' }}>{v.business_name}</div>
               {v.is_verified && (
-                <div style={{ fontSize: 11, color: 'var(--color-primary)', fontWeight: 600 }}>{t('verifiedBadge')}</div>
+                <div style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary)', fontWeight: 600 }}>{t('verifiedBadge')}</div>
               )}
             </div>
             {Number(v.rating_avg) > 0 && (

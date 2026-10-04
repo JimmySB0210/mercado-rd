@@ -169,13 +169,13 @@ export function PromoBannersRow() {
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <h3
                   style={{
-                    fontSize: 17, fontWeight: 800, lineHeight: 1.2, margin: '0 0 4px',
+                    fontSize: 'var(--text-h3)', fontWeight: 700, lineHeight: 'var(--leading-h3)', margin: '0 0 4px',
                     color: card.textColor, fontFamily: 'var(--font-heading)', whiteSpace: 'pre-line',
                   }}
                 >
                   {t(card.titleKey)}
                 </h3>
-                <p style={{ fontSize: 12, lineHeight: 1.35, margin: 0, color: card.textColor, opacity: 0.85, whiteSpace: 'pre-line' }}>
+                <p style={{ fontSize: 'var(--text-caption)', lineHeight: 1.35, margin: 0, color: card.textColor, opacity: 0.85, whiteSpace: 'pre-line' }}>
                   {t(card.subtitleKey)}
                 </p>
               </div>
@@ -186,7 +186,7 @@ export function PromoBannersRow() {
                   position: 'relative', zIndex: 1,
                   marginTop: 'auto', background: card.ctaBg, color: card.ctaColor,
                   padding: '7px 14px', borderRadius: 'var(--radius-control)',
-                  fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap',
+                  fontWeight: 600, fontSize: 'var(--text-ui)', whiteSpace: 'nowrap',
                 }}
               >
                 {t(card.ctaKey)}

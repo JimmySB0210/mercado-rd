@@ -174,7 +174,7 @@ export default async function SearchPage(
           </div>
         ) : (
           <>
-            <h1 className="text-xl font-bold text-gray-900 mb-1">
+            <h1 className="text-h2 font-bold text-gray-900 mb-1">
               {hasQuery ? <>Resultados para &ldquo;{query}&rdquo;</> : 'Resultados de búsqueda'}
             </h1>
             <p className={`text-sm text-gray-400 ${suggestion ? 'mb-1' : 'mb-6'}`}>

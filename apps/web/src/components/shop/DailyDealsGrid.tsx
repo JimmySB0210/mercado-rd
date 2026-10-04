@@ -75,13 +75,13 @@ function DealCard({ deal, onExpire }: { deal: DealViewModel; onExpire: () => voi
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
         />
         <span
-          className="absolute top-2 left-2 text-white text-xs font-bold px-2.5 py-1"
+          className="absolute top-2 left-2 text-white text-badge font-semibold px-2.5 py-1"
           style={{ background: 'var(--color-orange)', borderRadius: 'var(--radius-pill)' }}
         >
           -{deal.discountPercent}%
         </span>
         <span
-          className="absolute bottom-2 right-2 flex items-center gap-1 text-white text-xs font-bold px-2 py-1"
+          className="absolute bottom-2 right-2 flex items-center gap-1 text-white text-badge font-semibold px-2 py-1"
           style={{ background: 'rgba(0,0,0,0.72)', borderRadius: 'var(--radius-pill)' }}
         >
           ⏱ {countdown}
@@ -90,24 +90,24 @@ function DealCard({ deal, onExpire }: { deal: DealViewModel; onExpire: () => voi
 
       <div className="p-3">
         {deal.vendorName && (
-          <span className="text-xs truncate block mb-1" style={{ color: 'var(--color-text-secondary)' }}>
+          <span className="text-small font-medium truncate block mb-1" style={{ color: 'var(--color-text-secondary)' }}>
             {deal.vendorName}
           </span>
         )}
         <p
-          className="text-sm font-medium text-gray-900 line-clamp-2 mb-1 leading-snug"
+          className="text-body font-semibold text-gray-900 line-clamp-2 mb-1 leading-snug"
           style={{ fontFamily: 'var(--font-body)' }}
         >
           {deal.productName}
         </p>
         <div className="flex items-baseline gap-2">
           <span
-            className="text-lg font-bold"
+            className="text-xl font-bold"
             style={{ color: 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}
           >
             {formatPrice(deal.dealPriceRdp)}
           </span>
-          <span className="text-xs text-gray-400 line-through">
+          <span className="text-small font-normal text-gray-400 line-through">
             {formatPrice(deal.originalPriceRdp)}
           </span>
         </div>
@@ -131,14 +131,14 @@ export function DailyDealsGrid({ deals }: { deals: DealViewModel[] }) {
     <div id="ofertas" style={{ maxWidth: 1400, margin: '0 auto', padding: '24px 24px 0' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', margin: '20px 0 16px' }}>
         <div>
-          <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--color-blue-dark)', fontFamily: 'var(--font-heading)', margin: '0 0 4px' }}>
+          <h2 style={{ fontSize: 'var(--text-h2)', fontWeight: 700, color: 'var(--color-blue-dark)', fontFamily: 'var(--font-heading)', margin: '0 0 4px' }}>
             {t('dailyDealsTitle')}
           </h2>
-          <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', margin: 0 }}>
+          <p style={{ fontSize: 'var(--text-small)', color: 'var(--color-text-secondary)', margin: 0 }}>
             {t('dailyDealsSubtitle')}
           </p>
         </div>
-        <a href="#ofertas" style={{ color: 'var(--color-primary)', fontSize: 13, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+        <a href="#ofertas" style={{ color: 'var(--color-primary)', fontSize: 'var(--text-ui)', fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
           {t('viewOffersCta')}
         </a>
       </div>

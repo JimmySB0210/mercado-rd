@@ -37,7 +37,7 @@ export function CategoriasContent({ categories }: { categories: CategoryRow[] })
       </nav>
 
       <h1
-        className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1"
+        className="text-h1 font-bold text-gray-900 mb-1"
         style={{ fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}
       >
         {t('pageTitle')}

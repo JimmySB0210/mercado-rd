@@ -36,7 +36,7 @@ export function ProductCarouselSection({ title, products }: Props) {
   return (
     <section className="mt-8">
       <div className="flex items-center justify-between mb-4 gap-4">
-        <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-blue-dark)', fontFamily: 'var(--font-heading)', margin: 0 }}>
+        <h2 style={{ fontSize: 'var(--text-h2)', fontWeight: 700, color: 'var(--color-blue-dark)', fontFamily: 'var(--font-heading)', margin: 0 }}>
           {title}
         </h2>
         {products.length > 3 && (
