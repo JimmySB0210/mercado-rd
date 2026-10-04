@@ -452,8 +452,8 @@ function CheckoutPageContent() {
         <Navbar />
         <div style={{ maxWidth: 480, margin: '80px auto', textAlign: 'center', padding: '0 24px' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🛒</div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: BRAND.dark, marginBottom: 8 }}>{t('emptyCartTitle')}</h2>
-          <p style={{ color: BRAND.gray, fontSize: 14, marginBottom: 24 }}>{t('emptyCartSub')}</p>
+          <h2 style={{ fontSize: 'var(--text-h3)', fontWeight: 700, color: BRAND.dark, marginBottom: 8 }}>{t('emptyCartTitle')}</h2>
+          <p style={{ color: BRAND.gray, fontSize: 'var(--text-ui)', marginBottom: 24 }}>{t('emptyCartSub')}</p>
           <a href="/" style={{ display: 'inline-block', background: 'var(--color-primary)', color: '#fff', textDecoration: 'none', padding: '12px 28px', borderRadius: 'var(--radius-control)', fontWeight: 600, boxShadow: 'var(--shadow-button)' }}>
             {t('exploreProducts')}
           </a>
@@ -473,21 +473,21 @@ function CheckoutPageContent() {
 
           {/* Dirección */}
           <div style={{ background: 'var(--color-card-bg)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)', padding: 24, marginBottom: 16 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 18, color: BRAND.dark }}>{t('deliveryAddressHeading')}</h2>
+            <h2 style={{ fontSize: 'var(--text-h4)', fontWeight: 700, marginBottom: 18, color: BRAND.dark }}>{t('deliveryAddressHeading')}</h2>
             <div style={{ display: 'grid', gap: 12 }}>
               <input
                 name="fullName"
                 value={form.fullName}
                 onChange={handleChange}
                 placeholder={t('fullNamePlaceholder')}
-                style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
               />
               <input
                 name="phone"
                 value={form.phone}
                 onChange={handleChange}
                 placeholder={t('phonePlaceholder')}
-                style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
               />
               <div>
                 <input
@@ -495,16 +495,16 @@ function CheckoutPageContent() {
                   value={form.address}
                   onChange={handleChange}
                   placeholder={t('addressPlaceholder')}
-                  style={{ width: '100%', border: `1px solid ${addressError ? BRAND.red : 'var(--color-border)'}`, borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', border: `1px solid ${addressError ? BRAND.red : 'var(--color-border)'}`, borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
                 />
-                {addressError && <p style={{ fontSize: 12, color: BRAND.red, margin: '4px 0 0' }}>{addressError}</p>}
+                {addressError && <p style={{ fontSize: 'var(--text-caption)', color: BRAND.red, margin: '4px 0 0' }}>{addressError}</p>}
               </div>
               <div style={{ position: 'relative' }}>
                 <select
                   name="province"
                   value={form.province}
                   onChange={handleChange}
-                  style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box', appearance: 'none', background: '#fff', color: form.province ? BRAND.dark : BRAND.gray }}
+                  style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box', appearance: 'none', background: '#fff', color: form.province ? BRAND.dark : BRAND.gray }}
                 >
                   <option value="">{t('selectProvincePlaceholder')}</option>
                   {provinces.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
@@ -512,7 +512,7 @@ function CheckoutPageContent() {
                 <ChevronDown size={16} color={BRAND.gray} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
               </div>
 
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: BRAND.dark, cursor: 'pointer' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--text-ui)', color: BRAND.dark, cursor: 'pointer' }}>
                 <input
                   type="checkbox"
                   checked={form.isForSomeoneElse}
@@ -529,14 +529,14 @@ function CheckoutPageContent() {
                     value={form.recipientName}
                     onChange={handleChange}
                     placeholder={t('recipientNamePlaceholder')}
-                    style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                    style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
                   />
                   <input
                     name="recipientPhone"
                     value={form.recipientPhone}
                     onChange={handleChange}
                     placeholder={t('recipientPhonePlaceholder')}
-                    style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                    style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
                   />
                 </>
               )}
@@ -548,16 +548,16 @@ function CheckoutPageContent() {
                   onChange={handleChange}
                   placeholder={t('notesPlaceholder')}
                   rows={2}
-                  style={{ width: '100%', border: `1px solid ${notesError ? BRAND.red : 'var(--color-border)'}`, borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }}
+                  style={{ width: '100%', border: `1px solid ${notesError ? BRAND.red : 'var(--color-border)'}`, borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }}
                 />
-                {notesError && <p style={{ fontSize: 12, color: BRAND.red, margin: '4px 0 0' }}>{notesError}</p>}
+                {notesError && <p style={{ fontSize: 'var(--text-caption)', color: BRAND.red, margin: '4px 0 0' }}>{notesError}</p>}
               </div>
             </div>
           </div>
 
           {/* Método de pago */}
           <div style={{ background: 'var(--color-card-bg)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)', padding: 24 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 18, color: BRAND.dark }}>{t('paymentMethodHeading')}</h2>
+            <h2 style={{ fontSize: 'var(--text-h4)', fontWeight: 700, marginBottom: 18, color: BRAND.dark }}>{t('paymentMethodHeading')}</h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               {PAYMENT_METHOD_KEYS.map(m => (
                 <label
@@ -579,7 +579,7 @@ function CheckoutPageContent() {
                     style={{ display: 'none' }}
                   />
                   <span style={{ fontSize: 18 }}>{m.emoji}</span>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: form.payMethod === m.id ? '#fff' : BRAND.dark }}>{t(m.labelKey)}</span>
+                  <span style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: form.payMethod === m.id ? '#fff' : BRAND.dark }}>{t(m.labelKey)}</span>
                 </label>
               ))}
             </div>
@@ -592,7 +592,7 @@ function CheckoutPageContent() {
                   onChange={handleChange}
                   placeholder={t('cardNumberPlaceholder')}
                   inputMode="numeric"
-                  style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
                 />
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <input
@@ -602,7 +602,7 @@ function CheckoutPageContent() {
                     placeholder={t('cardExpirationPlaceholder')}
                     maxLength={4}
                     inputMode="numeric"
-                    style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                    style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
                   />
                   <input
                     name="cardCvc"
@@ -611,17 +611,17 @@ function CheckoutPageContent() {
                     placeholder={t('cardCvcPlaceholder')}
                     maxLength={4}
                     inputMode="numeric"
-                    style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                    style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
                   />
                 </div>
-                <p style={{ fontSize: 11, color: BRAND.gray, margin: 0 }}>
+                <p style={{ fontSize: 'var(--text-badge)', color: BRAND.gray, margin: 0 }}>
                   {t('mockModeNotice')}
                 </p>
               </div>
             )}
 
             {form.payMethod === 'cardnet' && (
-              <div style={{ marginTop: 14, padding: 12, background: '#FFF8E1', borderRadius: 8, border: '1px solid #FFE082', fontSize: 12, color: '#5D4037' }}>
+              <div style={{ marginTop: 14, padding: 12, background: '#FFF8E1', borderRadius: 8, border: '1px solid #FFE082', fontSize: 'var(--text-caption)', color: '#5D4037' }}>
                 {t('cardnetRedirectNotice')}
               </div>
             )}
@@ -631,7 +631,7 @@ function CheckoutPageContent() {
         {/* Resumen lateral */}
         <div style={{ position: 'sticky', top: 20 }}>
           <div style={{ background: 'var(--color-card-bg)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)', padding: 20, marginBottom: 12 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 14, color: BRAND.dark }}>
+            <h2 style={{ fontSize: 'var(--text-h4)', fontWeight: 700, marginBottom: 14, color: BRAND.dark }}>
               {items.length === 1
                 ? t('orderItemsCountOne', { count: items.length })
                 : t('orderItemsCountOther', { count: items.length })}
@@ -649,10 +649,10 @@ function CheckoutPageContent() {
                     )}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 12, fontWeight: 600, color: BRAND.dark, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <p style={{ fontSize: 'var(--text-caption)', fontWeight: 600, color: BRAND.dark, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {item.product.name}
                     </p>
-                    <p style={{ fontSize: 11, color: BRAND.gray, margin: '2px 0 0' }}>
+                    <p style={{ fontSize: 'var(--text-badge)', color: BRAND.gray, margin: '2px 0 0' }}>
                       x{item.quantity}
                       {item.variant_label
                         ? ` · ${item.variant_label}`
@@ -662,7 +662,7 @@ function CheckoutPageContent() {
                           </>}
                     </p>
                   </div>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: BRAND.dark, flexShrink: 0 }}>
+                  <span style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color: BRAND.dark, flexShrink: 0 }}>
                     RD${(((item.variant_price_rdp ?? item.product.price_rdp) * item.quantity) / 100).toLocaleString('es-DO')}
                   </span>
                 </div>
@@ -671,7 +671,7 @@ function CheckoutPageContent() {
 
             {/* Cupón */}
             <div style={{ borderTop: '1px solid #EEE', paddingTop: 12, marginBottom: 12 }}>
-              <label style={{ fontSize: 12, color: BRAND.gray, display: 'block', marginBottom: 6 }}>
+              <label style={{ fontSize: 'var(--text-caption)', color: BRAND.gray, display: 'block', marginBottom: 6 }}>
                 {t('couponQuestion')}
               </label>
               <div style={{ display: 'flex', gap: 8 }}>
@@ -682,7 +682,7 @@ function CheckoutPageContent() {
                   disabled={!!appliedCoupon}
                   style={{
                     flex: 1, border: '1px solid #E0E0E0', borderRadius: 8, padding: '9px 12px',
-                    fontSize: 13, outline: 'none', boxSizing: 'border-box', textTransform: 'uppercase',
+                    fontSize: 'var(--text-small)', outline: 'none', boxSizing: 'border-box', textTransform: 'uppercase',
                     background: appliedCoupon ? '#F5F5F5' : '#fff',
                   }}
                 />
@@ -690,7 +690,7 @@ function CheckoutPageContent() {
                   <button
                     type="button"
                     onClick={handleRemoveCoupon}
-                    style={{ border: '1px solid #E0E0E0', background: '#fff', color: BRAND.gray, borderRadius: 8, padding: '9px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    style={{ border: '1px solid #E0E0E0', background: '#fff', color: BRAND.gray, borderRadius: 8, padding: '9px 14px', fontSize: 'var(--text-small)', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
                   >
                     {t('removeCoupon')}
                   </button>
@@ -700,7 +700,7 @@ function CheckoutPageContent() {
                     onClick={handleApplyCoupon}
                     disabled={couponApplying || !couponCode.trim()}
                     style={{
-                      border: 'none', borderRadius: 8, padding: '9px 14px', fontSize: 13, fontWeight: 600,
+                      border: 'none', borderRadius: 8, padding: '9px 14px', fontSize: 'var(--text-small)', fontWeight: 600,
                       color: '#fff', whiteSpace: 'nowrap',
                       background: couponApplying || !couponCode.trim() ? '#ccc' : BRAND.dark,
                       cursor: couponApplying || !couponCode.trim() ? 'not-allowed' : 'pointer',
@@ -710,23 +710,23 @@ function CheckoutPageContent() {
                   </button>
                 )}
               </div>
-              {couponError && <p style={{ fontSize: 12, color: BRAND.red, margin: '6px 0 0' }}>{couponError}</p>}
+              {couponError && <p style={{ fontSize: 'var(--text-caption)', color: BRAND.red, margin: '6px 0 0' }}>{couponError}</p>}
               {appliedCoupon && (
-                <p style={{ fontSize: 12, color: '#2E7D32', margin: '6px 0 0', fontWeight: 600 }}>
+                <p style={{ fontSize: 'var(--text-caption)', color: '#2E7D32', margin: '6px 0 0', fontWeight: 600 }}>
                   {t('couponAppliedMsg', { code: appliedCoupon.code })}
                 </p>
               )}
             </div>
 
             <div style={{ borderTop: '1px solid #EEE', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: BRAND.dark }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-small)', color: BRAND.dark }}>
                 <span>{t('subtotalLabel')}</span><span>RD${(subtotal / 100).toLocaleString('es-DO')}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: BRAND.dark }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-small)', color: BRAND.dark }}>
                 <span>
                   {t('shippingLabel')}
                   {shippingRate && (
-                    <span style={{ display: 'block', fontSize: 11, color: BRAND.gray }}>
+                    <span style={{ display: 'block', fontSize: 'var(--text-badge)', color: BRAND.gray }}>
                       {shippingRate.estimated_days_min === shippingRate.estimated_days_max
                         ? t(shippingRate.estimated_days_min === 1 ? 'shippingDaysOne' : 'shippingDaysOther', { count: shippingRate.estimated_days_min })
                         : t('shippingDaysRange', { min: shippingRate.estimated_days_min, max: shippingRate.estimated_days_max })}
@@ -751,22 +751,22 @@ function CheckoutPageContent() {
                 </span>
               </div>
               {form.province && !shippingLoading && !qualifiesFreeShipping && (
-                <p style={{ fontSize: 11, color: BRAND.gray, margin: '-2px 0 0', textAlign: 'right' }}>
+                <p style={{ fontSize: 'var(--text-badge)', color: BRAND.gray, margin: '-2px 0 0', textAlign: 'right' }}>
                   {t('freeShippingThresholdNote')}
                 </p>
               )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: BRAND.dark }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-small)', color: BRAND.dark }}>
                 <span>{t('itbisLabel')}</span><span>RD${(itbis / 100).toLocaleString('es-DO')}</span>
               </div>
               {appliedCoupon && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--color-green)', fontWeight: 600 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-small)', color: 'var(--color-green)', fontWeight: 600 }}>
                   <span>{t('discountLabel', { code: appliedCoupon.code })}</span>
                   <span>-RD${(discountRdp / 100).toLocaleString('es-DO')}</span>
                 </div>
               )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontWeight: 700, fontSize: 14, borderTop: '1px solid #EEE', paddingTop: 10, marginTop: 4, color: BRAND.dark }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontWeight: 700, fontSize: 'var(--text-ui)', borderTop: '1px solid #EEE', paddingTop: 10, marginTop: 4, color: BRAND.dark }}>
                 <span>{t('totalLabel')}</span>
-                <span style={{ fontSize: 19, color: 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}>
+                <span style={{ fontSize: 'var(--text-price-card)', fontWeight: 700, lineHeight: 'var(--leading-price)', color: 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}>
                   RD${(Math.max(0, total + ENVIO - discountRdp) / 100).toLocaleString('es-DO')}
                 </span>
               </div>
@@ -774,12 +774,12 @@ function CheckoutPageContent() {
           </div>
 
           {error && (
-            <div style={{ background: '#FFF0F0', border: '1px solid #FFCDD2', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#C62828', marginBottom: 12 }}>
+            <div style={{ background: '#FFF0F0', border: '1px solid #FFCDD2', borderRadius: 8, padding: '10px 14px', fontSize: 'var(--text-small)', color: '#C62828', marginBottom: 12 }}>
               {error}
             </div>
           )}
 
-          <p style={{ fontSize: 11, color: BRAND.gray, textAlign: 'center', marginBottom: 10 }}>
+          <p style={{ fontSize: 'var(--text-badge)', color: BRAND.gray, textAlign: 'center', marginBottom: 10 }}>
             {t('acceptTermsPrefix')}{' '}
             <a href="/terminos" target="_blank" style={{ color: BRAND.blue, textDecoration: 'underline' }}>
               {t('termsOfServiceLink')}
@@ -796,7 +796,7 @@ function CheckoutPageContent() {
             style={{
               display: 'block', width: '100%', background: (loading || shippingLoading || rateLimited) ? '#ccc' : 'var(--color-primary)',
               color: '#fff', border: 'none', padding: 14, borderRadius: 'var(--radius-control)',
-              fontWeight: 700, fontSize: 15, cursor: (loading || shippingLoading || rateLimited) ? 'not-allowed' : 'pointer',
+              fontWeight: 600, fontSize: 'var(--text-body)', cursor: (loading || shippingLoading || rateLimited) ? 'not-allowed' : 'pointer',
               marginBottom: 10,
               boxShadow: (loading || shippingLoading || rateLimited) ? 'none' : 'var(--shadow-button)',
             }}
@@ -806,7 +806,7 @@ function CheckoutPageContent() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 12, background: 'var(--color-green-subtle)', borderRadius: 'var(--radius-control)', color: 'var(--color-green)' }}>
             <ShieldCheck size={15} color="currentColor" style={{ flexShrink: 0 }} />
-            <span style={{ fontSize: 11 }}>{t('securePaymentNotice')}</span>
+            <span style={{ fontSize: 'var(--text-badge)' }}>{t('securePaymentNotice')}</span>
           </div>
         </div>
       </div>
