@@ -46,7 +46,7 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
       <a
         href={href}
         className="hover:text-[var(--color-yellow-cta)] hover:underline transition-colors"
-        style={{ color: '#B0B8C4', textDecoration: 'none', fontSize: 13 }}
+        style={{ color: '#B0B8C4', textDecoration: 'none', fontSize: 'var(--text-small)' }}
       >
         {children}
       </a>
@@ -67,7 +67,7 @@ export function Footer() {
             <div style={{ marginBottom: 12 }}>
               <Logo variant="white" fontSize={22} />
             </div>
-            <p style={{ color: '#B0B8C4', fontSize: 13, lineHeight: 1.6, maxWidth: 240 }}>
+            <p style={{ color: '#B0B8C4', fontSize: 'var(--text-small)', lineHeight: 1.6, maxWidth: 240 }}>
               {t('footerTagline')}
             </p>
             <div className="flex items-center gap-4" style={{ marginTop: 16 }}>
@@ -88,7 +88,7 @@ export function Footer() {
 
           {/* Comprar */}
           <div>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <h3 style={{ fontSize: 'var(--text-small)', fontWeight: 600, color: '#fff', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.5 }}>
               {t('footerSectionBuy')}
             </h3>
             <ul style={{ display: 'flex', flexDirection: 'column', gap: 10, listStyle: 'none', padding: 0, margin: 0 }}>
@@ -101,7 +101,7 @@ export function Footer() {
 
           {/* Vender */}
           <div>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <h3 style={{ fontSize: 'var(--text-small)', fontWeight: 600, color: '#fff', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.5 }}>
               {t('footerSectionSell')}
             </h3>
             <ul style={{ display: 'flex', flexDirection: 'column', gap: 10, listStyle: 'none', padding: 0, margin: 0 }}>
@@ -111,7 +111,7 @@ export function Footer() {
 
           {/* Ayuda */}
           <div>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <h3 style={{ fontSize: 'var(--text-small)', fontWeight: 600, color: '#fff', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.5 }}>
               {t('footerSectionHelp')}
             </h3>
             <ul style={{ display: 'flex', flexDirection: 'column', gap: 10, listStyle: 'none', padding: 0, margin: 0 }}>
@@ -125,7 +125,7 @@ export function Footer() {
           {/* Nosotros — anclas a #categoría en /acerca-de (mismas 4
               categorías nuevas de help_articles, ver AboutContent.tsx) */}
           <div>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <h3 style={{ fontSize: 'var(--text-small)', fontWeight: 600, color: '#fff', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.5 }}>
               {t('footerSectionAbout')}
             </h3>
             <ul style={{ display: 'flex', flexDirection: 'column', gap: 10, listStyle: 'none', padding: 0, margin: 0 }}>
@@ -143,10 +143,10 @@ export function Footer() {
           className="flex flex-col sm:flex-row items-center justify-between gap-2"
           style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: 32, paddingTop: 20 }}
         >
-          <p style={{ color: '#8A93A3', fontSize: 12, margin: 0 }}>
+          <p style={{ color: '#8A93A3', fontSize: 'var(--text-caption)', margin: 0 }}>
             {t('copyright')}
           </p>
-          <p style={{ color: '#8A93A3', fontSize: 12, margin: 0 }}>
+          <p style={{ color: '#8A93A3', fontSize: 'var(--text-caption)', margin: 0 }}>
             {t('securePayments')}
           </p>
         </div>

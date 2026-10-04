@@ -70,6 +70,7 @@
   --text-small: 13px;
   --leading-small: 1.45;
   --text-ui: 14px;
+  --text-badge: 11px;
   --text-body: 15px;
   --leading-body: 1.5;
   --text-h4: 16px;
@@ -117,6 +118,8 @@
 
 @media (max-width: 640px) {
   :root {
+    --text-h3: 17px;
+    --text-body: 14px;
     --text-h2: 20px;
     --text-h1: 24px;
     --text-display: 32px;

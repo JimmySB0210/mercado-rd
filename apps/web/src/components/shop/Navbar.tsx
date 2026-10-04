@@ -143,9 +143,9 @@ export function Navbar() {
         >
           {!compact && (
             <div style={{ lineHeight: 1.3 }}>
-              <div style={{ fontSize: 11, color: BRAND.gray }}>{t('shipTo')}</div>
+              <div style={{ fontSize: 'var(--text-caption)', color: BRAND.gray }}>{t('shipTo')}</div>
               <div className="flex items-center gap-0.5">
-                <span style={{ fontSize: 13, fontWeight: 600, color: BRAND.dark }}>{locationLabel}</span>
+                <span style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.dark }}>{locationLabel}</span>
                 <ChevronDown size={14} color={BRAND.gray} />
               </div>
             </div>
@@ -196,7 +196,7 @@ export function Navbar() {
       {itemCount > 0 && (
         <span
           className="absolute -top-1.5 -right-2 text-white rounded-full flex items-center justify-center"
-          style={{ background: BRAND.red, width: 17, height: 17, fontSize: 10, fontWeight: 700 }}
+          style={{ background: BRAND.red, width: 17, height: 17, fontSize: 'var(--text-badge)', fontWeight: 600 }}
         >
           {itemCount > 9 ? '9+' : itemCount}
         </span>
@@ -210,7 +210,7 @@ export function Navbar() {
       {favoritesCount > 0 && (
         <span
           className="absolute -top-1.5 -right-2 text-white rounded-full flex items-center justify-center"
-          style={{ background: BRAND.red, width: 17, height: 17, fontSize: 10, fontWeight: 700 }}
+          style={{ background: BRAND.red, width: 17, height: 17, fontSize: 'var(--text-badge)', fontWeight: 600 }}
         >
           {favoritesCount > 9 ? '9+' : favoritesCount}
         </span>
@@ -231,7 +231,7 @@ export function Navbar() {
       <div className="hidden md-860:block" style={{ background: 'var(--color-primary)', color: '#fff' }}>
         <div
           className="flex items-center justify-between"
-          style={{ maxWidth: 1400, margin: '0 auto', padding: '7px 24px', fontSize: 12, fontWeight: 500 }}
+          style={{ maxWidth: 1400, margin: '0 auto', padding: '7px 24px', fontSize: 'var(--text-caption)', fontWeight: 500 }}
         >
           <div className="flex items-center" style={{ gap: 20 }}>
             <span className="flex items-center gap-1.5">
@@ -421,7 +421,7 @@ export function Navbar() {
               )}
             </div>
           ) : (
-            <a href='/login' style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 14, whiteSpace: 'nowrap' }}>
+            <a href='/login' style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 'var(--text-ui)', fontWeight: 500, whiteSpace: 'nowrap' }}>
               {t('login')}
             </a>
           )}
@@ -452,7 +452,7 @@ export function Navbar() {
                     displayName.charAt(0).toUpperCase()
                   )}
                 </div>
-                <span style={{ fontSize: 12, fontWeight: 600 }}>{displayName}</span>
+                <span style={{ fontSize: 'var(--text-caption)', fontWeight: 600 }}>{displayName}</span>
               </a>
             ) : (
               <LocationSelector compact />
@@ -470,7 +470,7 @@ export function Navbar() {
         <a
           href='/vendor/register'
           className="block text-center bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]"
-          style={{ marginTop: 10, color: '#fff', textDecoration: 'none', padding: '10px 16px', borderRadius: 'var(--radius-control)', fontWeight: 600, fontSize: 13, boxShadow: 'var(--shadow-button)', transition: 'background-color var(--transition-fast)' }}
+          style={{ marginTop: 10, color: '#fff', textDecoration: 'none', padding: '10px 16px', borderRadius: 'var(--radius-control)', fontWeight: 600, fontSize: 'var(--text-ui)', boxShadow: 'var(--shadow-button)', transition: 'background-color var(--transition-fast)' }}
         >
           {t('sellCta')}
         </a>
@@ -498,7 +498,7 @@ export function Navbar() {
                   if (isMobile) { e.preventDefault(); setShowCategoryMenu(true) }
                 }}
                 className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]"
-                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, borderRadius: 'var(--radius-pill)', whiteSpace: 'nowrap', transition: 'background-color var(--transition-fast)' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', color: '#fff', textDecoration: 'none', fontSize: 'var(--text-ui)', fontWeight: 600, borderRadius: 'var(--radius-pill)', whiteSpace: 'nowrap', transition: 'background-color var(--transition-fast)' }}
               >
                 ☰ {t('allCategories')}
               </a>
@@ -522,7 +522,7 @@ export function Navbar() {
                         onPointerEnter={e => e.pointerType === 'mouse' && setHoveredCategoryId(cat.id)}
                         style={{
                           display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px',
-                          color: '#333', textDecoration: 'none', fontSize: 13, borderRadius: 6, whiteSpace: 'nowrap',
+                          color: '#333', textDecoration: 'none', fontSize: 'var(--text-ui)', borderRadius: 6, whiteSpace: 'nowrap',
                           background: hoveredCategoryId === cat.id ? '#f5f5f5' : 'transparent',
                         }}
                       >
@@ -547,7 +547,7 @@ export function Navbar() {
                         key={sub.id}
                         href={`/categoria/${sub.slug}`}
                         onClick={() => setShowCategoryMenu(false)}
-                        style={{ display: 'flex', alignItems: 'center', padding: '9px 10px', color: '#555', textDecoration: 'none', fontSize: 13, borderRadius: 6, whiteSpace: 'nowrap' }}
+                        style={{ display: 'flex', alignItems: 'center', padding: '9px 10px', color: '#555', textDecoration: 'none', fontSize: 'var(--text-ui)', borderRadius: 6, whiteSpace: 'nowrap' }}
                       >
                         {getCategoryName(sub, language)}
                       </a>
@@ -561,19 +561,19 @@ export function Navbar() {
             {/* Enlaces de navegación — solo desktop, en mobile no hay espacio
                 junto al botón de categorías */}
             <div className="hidden md-860:flex items-center" style={{ gap: 24 }}>
-              <a href='/proveedores' className="hover:text-[var(--color-primary)] transition-colors" style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>
+              <a href='/proveedores' className="hover:text-[var(--color-primary)] transition-colors" style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 'var(--text-ui)', fontWeight: 500, whiteSpace: 'nowrap' }}>
                 {t('providers')}
               </a>
-              <a href='/#ofertas' className="hover:text-[var(--color-primary)] transition-colors" style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>
+              <a href='/#ofertas' className="hover:text-[var(--color-primary)] transition-colors" style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 'var(--text-ui)', fontWeight: 500, whiteSpace: 'nowrap' }}>
                 {t('offers')}
               </a>
-              <a href='/tiendas' className="hover:text-[var(--color-primary)] transition-colors" style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>
+              <a href='/tiendas' className="hover:text-[var(--color-primary)] transition-colors" style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 'var(--text-ui)', fontWeight: 500, whiteSpace: 'nowrap' }}>
                 {t('officialStores')}
               </a>
-              <a href='/vendor/register' className="hover:text-[var(--color-primary)] transition-colors" style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>
+              <a href='/vendor/register' className="hover:text-[var(--color-primary)] transition-colors" style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 'var(--text-ui)', fontWeight: 500, whiteSpace: 'nowrap' }}>
                 {t('sellCta')}
               </a>
-              <a href='/centro-ayuda' className="hover:text-[var(--color-primary)] transition-colors" style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap' }}>
+              <a href='/centro-ayuda' className="hover:text-[var(--color-primary)] transition-colors" style={{ color: BRAND.dark, textDecoration: 'none', fontSize: 'var(--text-ui)', fontWeight: 500, whiteSpace: 'nowrap' }}>
                 {t('helpNav')}
               </a>
             </div>
@@ -584,14 +584,14 @@ export function Navbar() {
           <a
             href='/vendor/register'
             className="hidden md-860:block bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)]"
-            style={{ color: '#fff', textDecoration: 'none', padding: '9px 20px', borderRadius: 'var(--radius-control)', fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', flexShrink: 0, boxShadow: 'var(--shadow-button)', transition: 'background-color var(--transition-fast)' }}
+            style={{ color: '#fff', textDecoration: 'none', padding: '9px 20px', borderRadius: 'var(--radius-control)', fontWeight: 600, fontSize: 'var(--text-ui)', whiteSpace: 'nowrap', flexShrink: 0, boxShadow: 'var(--shadow-button)', transition: 'background-color var(--transition-fast)' }}
           >
             {t('sellCta')}
           </a>
 
           {/* Proveedores — solo mobile, a la derecha del botón de categorías
               (en desktop ya está incluido en el clúster de enlaces de arriba) */}
-          <a href='/proveedores' className="block md-860:hidden" style={{ padding: '11px 16px', color: BRAND.dark, textDecoration: 'none', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>
+          <a href='/proveedores' className="block md-860:hidden" style={{ padding: '11px 16px', color: BRAND.dark, textDecoration: 'none', fontSize: 'var(--text-ui)', fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0 }}>
             {t('providers')}
           </a>
         </div>
@@ -622,7 +622,7 @@ export function Navbar() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #eee', flexShrink: 0 }}>
-              <span style={{ fontWeight: 700, fontSize: 16, color: BRAND.dark }}>{t('categoriesDrawerTitle')}</span>
+              <span style={{ fontWeight: 600, fontSize: 'var(--text-h4)', color: BRAND.dark }}>{t('categoriesDrawerTitle')}</span>
               <button
                 type="button"
                 onClick={() => setShowCategoryMenu(false)}
@@ -640,7 +640,7 @@ export function Navbar() {
                     key={cat.id}
                     href={`/categoria/${cat.slug}`}
                     onClick={() => setShowCategoryMenu(false)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 10px', color: '#333', textDecoration: 'none', fontSize: 14, borderRadius: 6, whiteSpace: 'nowrap' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 10px', color: '#333', textDecoration: 'none', fontSize: 'var(--text-ui)', borderRadius: 6, whiteSpace: 'nowrap' }}
                   >
                     <Icon size={18} color="var(--color-primary)" strokeWidth={1.75} />
                     {getCategoryName(cat, language)}

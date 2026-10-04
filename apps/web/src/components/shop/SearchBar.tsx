@@ -40,8 +40,8 @@ interface Props {
 }
 
 const SIZES = {
-  desktop: { padding: '11px 50px 11px 18px', fontSize: 14, buttonSize: 38, iconSize: 16 },
-  mobile: { padding: '10px 44px 10px 16px', fontSize: 13, buttonSize: 32, iconSize: 14 },
+  desktop: { padding: '11px 50px 11px 18px', fontSize: 'var(--text-ui)', buttonSize: 38, iconSize: 16 },
+  mobile: { padding: '10px 44px 10px 16px', fontSize: 'var(--text-ui)', buttonSize: 32, iconSize: 14 },
 } as const
 
 export function SearchBar({ variant = 'desktop' }: Props) {

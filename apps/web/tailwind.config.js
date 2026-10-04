@@ -15,6 +15,7 @@ module.exports = {
         caption: ['var(--text-caption)', { lineHeight: 'var(--leading-caption)' }],
         small: ['var(--text-small)', { lineHeight: 'var(--leading-small)' }],
         ui: 'var(--text-ui)',
+        badge: 'var(--text-badge)',
         body: ['var(--text-body)', { lineHeight: 'var(--leading-body)' }],
         h4: ['var(--text-h4)', { lineHeight: 'var(--leading-h4)' }],
         h3: ['var(--text-h3)', { lineHeight: 'var(--leading-h3)' }],

@@ -190,7 +190,7 @@ export function ProductCard({ product, hasVariants, isBestSeller, pricingTiers, 
           {/* Un solo badge — ver prioridad calculada arriba (`badge`) */}
           {badge && (
             <span
-              className="absolute top-2 left-2 text-white text-xs font-bold px-2.5 py-1"
+              className="absolute top-2 left-2 text-white text-badge font-semibold px-2.5 py-1"
               style={{ background: badge.bg, borderRadius: 'var(--radius-pill)' }}
             >
               {badge.label}
@@ -211,7 +211,7 @@ export function ProductCard({ product, hasVariants, isBestSeller, pricingTiers, 
 
           {/* Vendor */}
           <div className="flex items-center gap-1 mb-1">
-            <span className="text-xs truncate" style={{ color: 'var(--color-text-secondary)' }}>{product.vendor?.business_name}</span>
+            <span className="text-small font-medium truncate" style={{ color: 'var(--color-text-secondary)' }}>{product.vendor?.business_name}</span>
             {product.vendor?.is_verified && (
               <svg
                 className="w-3 h-3 flex-shrink-0"
@@ -226,7 +226,7 @@ export function ProductCard({ product, hasVariants, isBestSeller, pricingTiers, 
 
           {/* Nombre — min-h de 2 líneas (2 × leading-snug 1.375em) */}
           <p
-            className="text-sm font-medium text-gray-900 line-clamp-2 mb-2 leading-snug min-[641px]:min-h-[2.75em]"
+            className="text-body font-semibold text-gray-900 line-clamp-2 mb-2 leading-snug min-[641px]:min-h-[2.75em]"
             style={{ fontFamily: 'var(--font-body)' }}
           >
             {product.name}
@@ -238,7 +238,7 @@ export function ProductCard({ product, hasVariants, isBestSeller, pricingTiers, 
               azul de marca en cualquier otro caso). */}
           {pricingTiers && pricingTiers.length > 0 ? (
             <div>
-              <p className="text-[11px] font-semibold mb-1" style={{ color: 'var(--color-text-secondary)' }}>
+              <p className="text-caption font-semibold mb-1" style={{ color: 'var(--color-text-secondary)' }}>
                 {t('pricingTiersTitle')}
               </p>
               <div className="space-y-0.5">
@@ -250,7 +250,7 @@ export function ProductCard({ product, hasVariants, isBestSeller, pricingTiers, 
                         : t('pricingTiersRangeAndUp', { min: tier.min_quantity, unit: tier.unit_label })}
                     </span>
                     <span
-                      className="text-sm font-extrabold"
+                      className="text-sm font-bold"
                       style={{ color: 'var(--color-primary)', fontFamily: 'var(--font-heading)' }}
                     >
                       {formatPrice(tier.price_rdp)}
@@ -262,13 +262,13 @@ export function ProductCard({ product, hasVariants, isBestSeller, pricingTiers, 
           ) : (
             <div className="flex items-baseline gap-2">
               <span
-                className="text-xl font-extrabold"
+                className="text-xl font-bold"
                 style={{ color: hasDiscount ? 'var(--brand-red)' : 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}
               >
                 {formatPrice(product.price_rdp)}
               </span>
               {hasDiscount && (
-                <span className="text-xs text-gray-400 line-through">
+                <span className="text-small font-normal text-gray-400 line-through">
                   {formatPrice(product.compare_rdp!)}
                 </span>
               )}
@@ -298,7 +298,7 @@ export function ProductCard({ product, hasVariants, isBestSeller, pricingTiers, 
             <button
               type="button"
               onClick={handleAddToCart}
-              className="flex items-center justify-center gap-1.5 w-full text-white text-xs font-semibold py-2.5 transition-colors"
+              className="flex items-center justify-center gap-1.5 w-full text-white text-small font-semibold py-2.5 transition-colors"
               style={{
                 background: added ? 'var(--color-green)' : 'var(--color-primary)',
                 borderRadius: 'var(--radius-control)',
@@ -324,7 +324,7 @@ export function ProductCard({ product, hasVariants, isBestSeller, pricingTiers, 
             {product.vendor?.id && (
               <Link
                 href={`/tienda/${product.vendor.id}`}
-                className="block text-center text-xs font-medium py-1.5 mt-2 hover:underline truncate"
+                className="block text-center text-small font-medium py-1.5 mt-2 hover:underline truncate"
                 style={{ color: 'var(--color-text-secondary)' }}
               >
                 {t('viewStore')}
@@ -338,7 +338,7 @@ export function ProductCard({ product, hasVariants, isBestSeller, pricingTiers, 
           <button
             type="button"
             disabled
-            className="flex items-center justify-center gap-1.5 w-full text-xs font-semibold py-2.5"
+            className="flex items-center justify-center gap-1.5 w-full text-small font-semibold py-2.5"
             style={{
               background: 'var(--color-divider)',
               color: 'var(--color-text-tertiary)',
@@ -359,7 +359,7 @@ export function ProductCard({ product, hasVariants, isBestSeller, pricingTiers, 
             {needsOptions && (
               <Link
                 href={productHref}
-                className="hidden min-[641px]:flex items-center justify-center w-full h-9 text-xs font-semibold transition-colors hover:bg-[var(--color-primary-subtle)]"
+                className="hidden min-[641px]:flex items-center justify-center w-full h-9 text-small font-semibold transition-colors hover:bg-[var(--color-primary-subtle)]"
                 style={{
                   color: 'var(--color-primary)',
                   border: '1.5px solid var(--color-primary)',
@@ -379,7 +379,7 @@ export function ProductCard({ product, hasVariants, isBestSeller, pricingTiers, 
             {product.vendor?.id && (
               <Link
                 href={`/tienda/${product.vendor.id}`}
-                className="block text-xs font-medium mb-2 hover:underline text-[color:var(--brand-blue)] min-[641px]:mb-0 min-[641px]:mt-2 min-[641px]:py-1.5 min-[641px]:text-center min-[641px]:truncate min-[641px]:text-[color:var(--color-text-secondary)]"
+                className="block text-small font-medium mb-2 hover:underline text-[color:var(--brand-blue)] min-[641px]:mb-0 min-[641px]:mt-2 min-[641px]:py-1.5 min-[641px]:text-center min-[641px]:truncate min-[641px]:text-[color:var(--color-text-secondary)]"
               >
                 {t('viewStore')}
               </Link>
