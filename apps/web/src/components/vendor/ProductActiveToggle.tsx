@@ -31,6 +31,7 @@ export function ProductActiveToggle({ productId, status }: Props) {
   // formulario (con la advertencia de calidad de publicación).
   const [active, setActive] = useState(status === 'published')
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   if (status === 'draft') return null
 
@@ -39,11 +40,13 @@ export function ProductActiveToggle({ productId, status }: Props) {
     if (!confirmed) return
 
     setSaving(true)
-    const { error } = await supabase.from('products').update({ status: 'paused' }).eq('id', productId)
+    setError(null)
+    const { error: updateError } = await supabase.from('products').update({ status: 'paused' }).eq('id', productId)
     setSaving(false)
 
-    if (error) {
-      console.error('[ProductActiveToggle]', error)
+    if (updateError) {
+      console.error('[ProductActiveToggle]', updateError)
+      setError(updateError.message || t('productStatusUpdateFailed'))
       return
     }
 
@@ -53,11 +56,14 @@ export function ProductActiveToggle({ productId, status }: Props) {
 
   const handleReactivate = async () => {
     setSaving(true)
-    const { error } = await supabase.from('products').update({ status: 'published' }).eq('id', productId)
+    setError(null)
+    const { error: updateError } = await supabase.from('products').update({ status: 'published' }).eq('id', productId)
     setSaving(false)
 
-    if (error) {
-      console.error('[ProductActiveToggle]', error)
+    if (updateError) {
+      console.error('[ProductActiveToggle]', updateError)
+      // Mensaje real de la base (p.ej. el trigger de mínimo de fotos), no genérico.
+      setError(updateError.message || t('productStatusUpdateFailed'))
       return
     }
 
@@ -65,8 +71,13 @@ export function ProductActiveToggle({ productId, status }: Props) {
     router.refresh()
   }
 
+  const errorLine = error && (
+    <span style={{ display: 'block', fontSize: 11, color: BRAND.red, marginTop: 4, lineHeight: 1.35 }}>{error}</span>
+  )
+
   if (active) {
     return (
+      <div>
       <button
         type="button"
         onClick={handleDeactivate}
@@ -77,12 +88,15 @@ export function ProductActiveToggle({ productId, status }: Props) {
           opacity: saving ? 0.6 : 1, padding: 0,
         }}
       >
-        {t('deleteButton')}
+        {t('pauseProductButton')}
       </button>
+      {errorLine}
+      </div>
     )
   }
 
   return (
+    <div>
     <button
       type="button"
       onClick={handleReactivate}
@@ -95,5 +109,7 @@ export function ProductActiveToggle({ productId, status }: Props) {
     >
       {saving ? '...' : t('reactivateButton')}
     </button>
+    {errorLine}
+    </div>
   )
 }

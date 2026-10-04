@@ -15,8 +15,8 @@ import type { DashboardDict } from '@/lib/i18n/es/dashboard'
 const STATUS_OPTION_KEYS: { value: string; labelKey: keyof DashboardDict; bg: string; text: string }[] = [
   { value: 'pending',   labelKey: 'statusPendingLabel',   bg: '#FEF9C3', text: '#713f12' },
   { value: 'confirmed', labelKey: 'statusConfirmedLabel', bg: '#DBEAFE', text: '#1e3a8a' },
-  { value: 'preparing', labelKey: 'statusPreparingLabel', bg: '#E0E7FF', text: '#3730a3' },
-  { value: 'shipped',   labelKey: 'statusShippedLabel',   bg: '#DBEAFE', text: '#1e3a8a' },
+  { value: 'preparing', labelKey: 'statusPreparingLabel', bg: 'color-mix(in srgb, var(--color-orange) 16%, white)', text: 'color-mix(in srgb, var(--color-orange) 60%, black)' },
+  { value: 'shipped',   labelKey: 'statusShippedLabel',   bg: '#EDE9FE', text: '#5B21B6' },
   { value: 'delivered', labelKey: 'selectDeliveredLabel', bg: '#DCFCE7', text: '#166534' },
   { value: 'cancelled', labelKey: 'selectCancelledLabel', bg: '#FEE2E2', text: '#991B1B' },
 ]

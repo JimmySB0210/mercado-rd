@@ -3,8 +3,12 @@
 // MercadoRD — Pedidos (vendor dashboard)
 // Ruta: src/app/dashboard/pedidos/page.tsx
 // ============================================================
+// La carga de datos (order_items → orders → users) no cambió: sin
+// .limit() ni paginación, así que los contadores son el total real.
+// Búsqueda, chips y orden operan sobre el arreglo ya cargado.
+// ============================================================
 
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { DashboardSidebar } from '@/components/vendor/DashboardSidebar'
@@ -43,14 +47,14 @@ interface OrderRow {
   vendor_subtotal_rdp: number
 }
 
-const STATUS_FILTER_KEYS: { value: string; labelKey: keyof DashboardDict }[] = [
-  { value: 'all', labelKey: 'filterAll' },
-  { value: 'pending', labelKey: 'statusPendingLabel' },
-  { value: 'confirmed', labelKey: 'statusConfirmedLabel' },
-  { value: 'preparing', labelKey: 'statusPreparingLabel' },
-  { value: 'shipped', labelKey: 'statusShippedLabel' },
-  { value: 'delivered', labelKey: 'filterDeliveredLabel' },
-  { value: 'cancelled', labelKey: 'filterCancelledLabel' },
+const STATUS_CHIPS: { value: string; labelKey: keyof DashboardDict }[] = [
+  { value: 'all', labelKey: 'orderChipAll' },
+  { value: 'pending', labelKey: 'orderChipPending' },
+  { value: 'confirmed', labelKey: 'orderChipConfirmed' },
+  { value: 'preparing', labelKey: 'orderChipPreparing' },
+  { value: 'shipped', labelKey: 'orderChipShipped' },
+  { value: 'delivered', labelKey: 'orderChipDelivered' },
+  { value: 'cancelled', labelKey: 'orderChipCancelled' },
 ]
 
 export default function VendorOrdersPage() {
@@ -61,6 +65,7 @@ export default function VendorOrdersPage() {
   const [orders, setOrders] = useState<OrderRow[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
+  const [search, setSearch] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -158,9 +163,18 @@ export default function VendorOrdersPage() {
     load()
   }, [router, supabase])
 
-  const filteredOrders = filter === 'all'
-    ? orders
-    : orders.filter(o => o.status === filter)
+  const countByStatus = (status: string) => status === 'all' ? orders.length : orders.filter(o => o.status === status).length
+
+  const q = search.trim().toLowerCase()
+  const filteredOrders = orders
+    .filter(o => filter === 'all' || o.status === filter)
+    .filter(o => {
+      if (!q) return true
+      const shortId = o.order_id.split('-')[0].toLowerCase()
+      return shortId.includes(q.replace(/^#?rd-?/, ''))
+        || o.buyer_name.toLowerCase().includes(q)
+        || o.items.some(i => i.product_name.toLowerCase().includes(q))
+    })
 
   const PAYMENT_LABELS: Record<string, string> = {
     azul: t('paymentAzul'), cardnet: t('paymentCardnet'), transfer: t('paymentTransfer'), cash: t('paymentCash'),
@@ -174,150 +188,237 @@ export default function VendorOrdersPage() {
     )
   }
 
+  const renderDetail = (order: OrderRow) => (
+    <div style={{ borderTop: '1px solid #EEF2F6', padding: '14px 16px', background: '#FAFBFC' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 14 }}>
+        <div>
+          <p style={{ fontSize: 11, color: '#818F98', textTransform: 'uppercase', marginBottom: 4 }}>{t('deliveryLabel')}</p>
+          <p style={{ fontSize: 13, color: '#333' }}>{order.delivery_address}</p>
+          <p style={{ fontSize: 12, color: '#818F98' }}>{order.province_name}</p>
+        </div>
+        <div>
+          <p style={{ fontSize: 11, color: '#818F98', textTransform: 'uppercase', marginBottom: 4 }}>{t('contactLabel')}</p>
+          <p style={{ fontSize: 13, color: '#333' }}>{order.buyer_phone || t('notAvailable')}</p>
+          <p style={{ fontSize: 12, color: '#818F98' }}>{PAYMENT_LABELS[order.payment_method] ?? order.payment_method}</p>
+        </div>
+      </div>
+
+      {order.recipient_name && (
+        <div style={{ marginBottom: 12, padding: 10, background: '#EFF6FF', borderRadius: 8, fontSize: 12, color: '#1e3a8a' }}>
+          👤 {t('recipientBanner', { buyer: order.buyer_name, recipient: order.recipient_name, phone: order.recipient_phone ?? t('notAvailable') })}
+        </div>
+      )}
+
+      {order.notes && (
+        <div style={{ marginBottom: 12, padding: 10, background: '#FFF8E1', borderRadius: 8, fontSize: 12, color: '#5D4037' }}>
+          📝 {order.notes}
+        </div>
+      )}
+
+      <p style={{ fontSize: 11, color: '#818F98', textTransform: 'uppercase', marginBottom: 8 }}>
+        {t('orderProductsCount', { count: order.items.length })}
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {order.items.map(item => (
+          <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#fff', padding: 8, borderRadius: 8 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 6, background: BRAND.bg, flexShrink: 0, overflow: 'hidden' }}>
+              {item.product_image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={item.product_image} alt={item.product_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : null}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: '#111' }}>{item.product_name}</p>
+              <p style={{ fontSize: 11, color: '#818F98' }}>
+                x{item.quantity}
+                {item.size && ` · ${item.size}`}
+                {item.color && ` · ${item.color}`}
+              </p>
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>
+              {formatPrice(item.price_rdp * item.quantity)}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {order.status === 'confirmed' && (
+        <TrackingForm
+          orderId={order.order_id}
+          initialTracking={order.tracking_number}
+          initialCourier={order.courier}
+        />
+      )}
+
+      {order.status === 'shipped' && (
+        <DeliveryOtpForm orderId={order.order_id} />
+      )}
+    </div>
+  )
+
+  const productsSummary = (order: OrderRow) => {
+    const first = order.items[0]
+    if (!first) return null
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+        <div style={{ width: 36, height: 36, borderRadius: 6, background: BRAND.bg, flexShrink: 0, overflow: 'hidden' }}>
+          {first.product_image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={first.product_image} alt={first.product_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : null}
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <p style={{ fontSize: 12.5, fontWeight: 600, color: '#131A18', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {first.product_name} <span style={{ color: '#818F98', fontWeight: 500 }}>x{first.quantity}</span>
+          </p>
+          {order.items.length > 1 && (
+            <p style={{ fontSize: 11, color: '#818F98' }}>{t('productSummaryMore', { count: order.items.length - 1 })}</p>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  const shortIdOf = (order: OrderRow) => order.order_id.split('-')[0].toUpperCase()
+
   return (
     <div className="dashboard-grid" style={{ minHeight: '100vh', fontFamily: 'inherit' }}>
 
       <DashboardSidebar />
 
-      <div style={{ padding: 28, background: '#f5f5f5' }}>
-        <div style={{ marginBottom: 20 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 4 }}>{t('ordersPageTitle')}</h1>
-          <p style={{ color: '#666', fontSize: 14 }}>
-            {orders.length === 1 ? t('orderCountOne', { count: orders.length }) : t('orderCountOther', { count: orders.length })}
-          </p>
+      <div style={{ padding: 24, background: '#f5f5f5', minWidth: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14, flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 2, color: '#131A18', lineHeight: 1.2 }}>{t('ordersPageTitle')}</h1>
+            <p style={{ color: '#818F98', fontSize: 13 }}>
+              {orders.length === 1 ? t('orderCountOne', { count: orders.length }) : t('orderCountOther', { count: orders.length })}
+            </p>
+          </div>
         </div>
 
-        {/* Filtros */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-          {STATUS_FILTER_KEYS.map(f => (
-            <button
-              key={f.value}
-              onClick={() => setFilter(f.value)}
-              style={{
-                padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600,
-                border: `1.5px solid ${filter === f.value ? BRAND.blue : '#e0e0e0'}`,
-                background: filter === f.value ? BRAND.blue : '#fff',
-                color: filter === f.value ? '#fff' : '#666',
-                cursor: 'pointer', transition: 'all .15s',
-              }}
-            >
-              {t(f.labelKey)}
-            </button>
-          ))}
+        {/* Buscador */}
+        <input
+          type="search"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder={t('ordersSearchPlaceholder')}
+          style={{ width: '100%', border: '1px solid #E0E4E9', borderRadius: 8, padding: '9px 12px', fontSize: 13, background: '#fff', color: '#131A18', marginBottom: 12, boxSizing: 'border-box' }}
+        />
+
+        {/* Chips de estado con contadores reales */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 14, overflowX: 'auto', paddingBottom: 2 }}>
+          {STATUS_CHIPS.map(f => {
+            const active = filter === f.value
+            return (
+              <button
+                key={f.value}
+                onClick={() => setFilter(f.value)}
+                style={{
+                  padding: '6px 12px', borderRadius: 999, fontSize: 12.5, fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0,
+                  border: `1px solid ${active ? 'var(--dashboard-blue)' : '#E0E4E9'}`,
+                  background: active ? 'var(--dashboard-blue)' : '#fff',
+                  color: active ? '#fff' : '#3D5361', cursor: 'pointer',
+                }}
+              >
+                {t(f.labelKey)} <span style={{ opacity: 0.8, marginLeft: 4 }}>{countByStatus(f.value)}</span>
+              </button>
+            )
+          })}
         </div>
 
-        {/* Lista de pedidos */}
         {filteredOrders.length === 0 ? (
-          <div style={{ background: '#fff', borderRadius: 12, padding: 48, textAlign: 'center', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
-            <p style={{ color: '#999', fontSize: 14 }}>
-              {filter === 'all' ? t('ordersEmptyAll') : t('ordersEmptyFiltered')}
+          <div style={{ background: '#fff', borderRadius: 12, padding: 40, textAlign: 'center', border: '1px solid #EEF2F6' }}>
+            <div style={{ fontSize: 36, marginBottom: 10 }}>📭</div>
+            <p style={{ color: '#818F98', fontSize: 13.5 }}>
+              {orders.length === 0
+                ? t('ordersEmptyAll')
+                : q
+                  ? t('noOrdersMatchSearch')
+                  : t('ordersEmptyFiltered')}
             </p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {filteredOrders.map(order => {
-              const shortId = order.order_id.split('-')[0].toUpperCase()
-              const isExpanded = expandedId === order.order_id
-              const date = formatDate(order.created_at, language, {
-                day: 'numeric', month: 'short', year: 'numeric',
-              })
+          <>
+            {/* Escritorio: tabla */}
+            <div className="hidden md:block" style={{ background: '#fff', borderRadius: 12, border: '1px solid #EEF2F6', overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: '#FAFBFC' }}>
+                    {[t('tableOrder'), t('tableClient'), t('tableProducts'), t('tableDate'), t('tableProvince'), t('tableAmount'), t('tableStatus'), t('tableActions')].map(h => (
+                      <th key={h} style={{ padding: '9px 12px', textAlign: 'left', fontSize: 10.5, color: '#818F98', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 700, borderBottom: '1px solid #EEF2F6', whiteSpace: 'nowrap' }}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredOrders.map(order => {
+                    const isExpanded = expandedId === order.order_id
+                    const date = formatDate(order.created_at, language, { day: 'numeric', month: 'short', year: 'numeric' })
+                    return (
+                      <Fragment key={order.order_id}>
+                        <tr style={{ borderBottom: isExpanded ? 'none' : '1px solid #F3F5F7', verticalAlign: 'middle' }}>
+                          <td style={{ padding: '10px 12px', color: 'var(--dashboard-blue)', fontWeight: 700, whiteSpace: 'nowrap' }}>#RD-{shortIdOf(order)}</td>
+                          <td style={{ padding: '10px 12px', color: '#3D5361', whiteSpace: 'nowrap' }}>{order.buyer_name}</td>
+                          <td style={{ padding: '10px 12px', maxWidth: 260 }}>{productsSummary(order)}</td>
+                          <td style={{ padding: '10px 12px', color: '#3D5361', whiteSpace: 'nowrap' }}>{date}</td>
+                          <td style={{ padding: '10px 12px', color: '#3D5361', whiteSpace: 'nowrap' }}>{order.province_name ?? '—'}</td>
+                          <td style={{ padding: '10px 12px', fontWeight: 700, color: '#131A18', whiteSpace: 'nowrap' }}>{formatPrice(order.vendor_subtotal_rdp)}</td>
+                          <td style={{ padding: '10px 12px' }}><OrderStatusSelect orderId={order.order_id} currentStatus={order.status} /></td>
+                          <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>
+                            <button
+                              type="button"
+                              onClick={() => setExpandedId(isExpanded ? null : order.order_id)}
+                              style={{ background: 'none', border: 'none', color: 'var(--dashboard-blue)', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', padding: 0 }}
+                            >
+                              {t('viewOrderCta')}
+                            </button>
+                          </td>
+                        </tr>
+                        {isExpanded && (
+                          <tr style={{ borderBottom: '1px solid #F3F5F7' }}>
+                            <td colSpan={8} style={{ padding: 0 }}>{renderDetail(order)}</td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
 
-              return (
-                <div
-                  key={order.order_id}
-                  style={{ background: '#fff', borderRadius: 12, boxShadow: '0 1px 8px rgba(0,0,0,0.06)', overflow: 'hidden' }}
-                >
-                  {/* Header de la fila — clickeable para expandir */}
-                  <div
-                    onClick={() => setExpandedId(isExpanded ? null : order.order_id)}
-                    style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', flexWrap: 'wrap', gap: 10 }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-                      <span style={{ color: BRAND.blue, fontWeight: 700, fontSize: 14 }}>#RD-{shortId}</span>
-                      <span style={{ fontSize: 13, color: '#666' }}>{order.buyer_name}</span>
-                      <span style={{ fontSize: 12, color: '#999' }}>{date}</span>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>
-                        {formatPrice(order.vendor_subtotal_rdp)}
-                      </span>
+            {/* Móvil: tarjetas */}
+            <div className="md:hidden flex flex-col gap-2.5">
+              {filteredOrders.map(order => {
+                const isExpanded = expandedId === order.order_id
+                const date = formatDate(order.created_at, language, { day: 'numeric', month: 'short', year: 'numeric' })
+                return (
+                  <div key={order.order_id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #EEF2F6', overflow: 'hidden' }}>
+                    <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                        <span style={{ color: 'var(--dashboard-blue)', fontWeight: 700, fontSize: 13.5 }}>#RD-{shortIdOf(order)}</span>
+                        <span style={{ fontSize: 11.5, color: '#818F98' }}>{date}</span>
+                      </div>
+                      <div style={{ fontSize: 13, color: '#3D5361' }}>{order.buyer_name}{order.province_name ? ` · ${order.province_name}` : ''}</div>
+                      {productsSummary(order)}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <span style={{ fontWeight: 800, fontSize: 14, color: '#131A18' }}>{formatPrice(order.vendor_subtotal_rdp)}</span>
+                        <OrderStatusSelect orderId={order.order_id} currentStatus={order.status} />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setExpandedId(isExpanded ? null : order.order_id)}
+                        style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--dashboard-blue)', fontWeight: 700, fontSize: 13, cursor: 'pointer', padding: 0 }}
+                      >
+                        {t('viewOrderCta')}
+                      </button>
                     </div>
-                    <div onClick={e => e.stopPropagation()}>
-                      <OrderStatusSelect orderId={order.order_id} currentStatus={order.status} />
-                    </div>
+                    {isExpanded && renderDetail(order)}
                   </div>
-
-                  {/* Detalle expandido */}
-                  {isExpanded && (
-                    <div style={{ borderTop: '1px solid #f0f0f0', padding: '16px 20px', background: '#fafafa' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 16 }}>
-                        <div>
-                          <p style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 4 }}>{t('deliveryLabel')}</p>
-                          <p style={{ fontSize: 13, color: '#333' }}>{order.delivery_address}</p>
-                          <p style={{ fontSize: 12, color: '#999' }}>{order.province_name}</p>
-                        </div>
-                        <div>
-                          <p style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 4 }}>{t('contactLabel')}</p>
-                          <p style={{ fontSize: 13, color: '#333' }}>{order.buyer_phone || t('notAvailable')}</p>
-                          <p style={{ fontSize: 12, color: '#999' }}>{PAYMENT_LABELS[order.payment_method] ?? order.payment_method}</p>
-                        </div>
-                      </div>
-
-                      {order.recipient_name && (
-                        <div style={{ marginBottom: 16, padding: 10, background: '#EFF6FF', borderRadius: 8, fontSize: 12, color: '#1e3a8a' }}>
-                          👤 {t('recipientBanner', { buyer: order.buyer_name, recipient: order.recipient_name, phone: order.recipient_phone ?? t('notAvailable') })}
-                        </div>
-                      )}
-
-                      {order.notes && (
-                        <div style={{ marginBottom: 16, padding: 10, background: '#FFF8E1', borderRadius: 8, fontSize: 12, color: '#5D4037' }}>
-                          📝 {order.notes}
-                        </div>
-                      )}
-
-                      <p style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 8 }}>
-                        {t('orderProductsCount', { count: order.items.length })}
-                      </p>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        {order.items.map(item => (
-                          <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#fff', padding: 10, borderRadius: 8 }}>
-                            <div style={{ width: 40, height: 40, borderRadius: 6, background: BRAND.bg, flexShrink: 0, overflow: 'hidden' }}>
-                              {item.product_image ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={item.product_image} alt={item.product_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                              ) : null}
-                            </div>
-                            <div style={{ flex: 1 }}>
-                              <p style={{ fontSize: 13, fontWeight: 600, color: '#111' }}>{item.product_name}</p>
-                              <p style={{ fontSize: 11, color: '#999' }}>
-                                x{item.quantity}
-                                {item.size && ` · ${item.size}`}
-                                {item.color && ` · ${item.color}`}
-                              </p>
-                            </div>
-                            <span style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>
-                              {formatPrice(item.price_rdp * item.quantity)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-
-                      {order.status === 'confirmed' && (
-                        <TrackingForm
-                          orderId={order.order_id}
-                          initialTracking={order.tracking_number}
-                          initialCourier={order.courier}
-                        />
-                      )}
-
-                      {order.status === 'shipped' && (
-                        <DeliveryOtpForm orderId={order.order_id} />
-                      )}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+          </>
         )}
       </div>
     </div>
