@@ -1,31 +1,14 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { Poppins, Plus_Jakarta_Sans, Inter, Playfair_Display, Manrope } from 'next/font/google'
+import { Inter, Playfair_Display } from 'next/font/google'
 import { MobileTabBar } from '../components/shop/MobileTabBar'
 import { Footer } from '../components/shop/Footer'
 import { InactivityWarning } from '../components/shop/InactivityWarning'
 import { AbandonedCartTracker } from '../components/shop/AbandonedCartTracker'
 import { BRAND } from '@/lib/colors'
 
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-poppins',
-  display: 'swap',
-})
-
-// Sistema de diseño "Caribe Premium Minimal" (Fase 1 — fundación): estas
-// dos fuentes quedan disponibles como variables CSS (--font-plus-jakarta-sans,
-// --font-inter) para que lib/design-tokens.css pueda referenciarlas, pero
-// TODAVÍA no se aplican a ningún elemento — Poppins sigue siendo la fuente
-// activa en <body> hasta que empiece la Fase 2.
-const plusJakartaSans = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-plus-jakarta-sans',
-  display: 'swap',
-})
-
+// Inter es la única fuente de interfaz. Pesos 400–700 estáticos; 800 y 900 se
+// muestran como 700. Sin cursiva: next/font 14.2 no la declara para Inter.
 const inter = Inter({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
@@ -33,23 +16,11 @@ const inter = Inter({
   display: 'swap',
 })
 
-// Wordmark "MercadoRD" — serif elegante para el logo (Navbar, Footer,
-// sidebar del dashboard), separado de --font-heading (ahora Manrope,
-// ver más abajo — sigue usándose para títulos grandes de página/precio).
+// Wordmark "MercadoRD", único uso: --font-logo en Logo.tsx.
 const playfairDisplay = Playfair_Display({
   subsets: ['latin'],
   weight: ['700'],
   variable: '--font-playfair-display',
-  display: 'swap',
-})
-
-// Nueva tipografía del sistema — --font-heading y --font-body en
-// globals.css apuntan aquí ahora. Plus Jakarta Sans e Inter se dejan
-// cargados (arriba) pero sin uso mientras no haga falta revertir.
-const manrope = Manrope({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-manrope',
   display: 'swap',
 })
 
@@ -89,7 +60,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" className={`${poppins.variable} ${plusJakartaSans.variable} ${inter.variable} ${playfairDisplay.variable} ${manrope.variable}`}>
+    <html lang="es" className={`${inter.variable} ${playfairDisplay.variable}`}>
       <head>
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>
@@ -98,7 +69,7 @@ export default function RootLayout({
         style={{
           margin: 0,
           padding: 0,
-          fontFamily: 'var(--font-poppins), sans-serif',
+          fontFamily: 'var(--font-body)',
           background: '#FAFBFC',
           '--brand-red': BRAND.red,
           '--brand-blue': BRAND.blue,

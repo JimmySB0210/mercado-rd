@@ -14,11 +14,9 @@
    password/restablecer-password) no viven en este :root — se
    resuelven a los valores de BRAND en tiempo de render.
 
-   Tipografía: --font-heading y --font-body apuntan a --font-manrope
-   (Manrope, pesos 400/500/600/700/800), expuesta por next/font en
-   app/layout.tsx. Plus Jakarta Sans e Inter (--font-plus-jakarta-sans,
-   --font-inter) se dejan cargadas ahí mismo pero sin uso por ahora —
-   no se quitaron por si hace falta revertir.
+   Tipografía: Inter para toda la interfaz (--font-body y --font-heading,
+   cargada por next/font en app/layout.tsx). --font-logo es Playfair
+   Display, solo para el wordmark.
    ============================================================ */
 :root {
   /* ── Colores — paleta oficial de MercadoRD ──
@@ -56,8 +54,8 @@
   --color-divider: #EAECED;
 
   /* ── Tipografía ── */
-  --font-heading: var(--font-manrope), sans-serif;
-  --font-body: var(--font-manrope), sans-serif;
+  --font-body: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-heading: var(--font-body);
   --font-logo: var(--font-playfair-display), serif;
   --tracking-heading: -0.02em;
   --font-weight-regular: 400;

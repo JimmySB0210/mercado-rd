@@ -124,7 +124,7 @@ function BrandSlide({ imageUrl }: { imageUrl: string | null }) {
           dominicana pedida en el brief. Siempre encima de lo que haya de
           fondo (gradiente, modelo, o foto configurada desde admin). */}
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, marginLeft: 'auto' }}>
-        <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 16, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.35)', textAlign: 'right', maxWidth: 220 }}>
+        <span style={{ fontFamily: 'var(--font-body)', fontSize: 16, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.35)', textAlign: 'right', maxWidth: 220 }}>
           {t('heroTagline')}
         </span>
         <span style={{ fontSize: 40, lineHeight: 1 }} role="img" aria-label="República Dominicana">🇩🇴</span>

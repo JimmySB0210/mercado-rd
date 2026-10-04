@@ -1,6 +1,6 @@
 export default function ComingSoonPage() {
   return (
-    <div style={{minHeight:'100vh',fontFamily:'sans-serif',background:'#111',display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',padding:24}}>
+    <div style={{minHeight:'100vh',fontFamily:'var(--font-body)',background:'#111',display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',padding:24}}>
       <div style={{textAlign:'center',maxWidth:600}}>
         <div style={{fontWeight:900,fontSize:32,color:'#fff',marginBottom:8}}>
           Mercado<span style={{color:'#E31837'}}>RD</span>

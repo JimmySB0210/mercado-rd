@@ -11,9 +11,6 @@ module.exports = {
         // Breakpoint custom que unifica Navbar (860px) y MobileTabBar
         'md-860': '860px',
       },
-      fontFamily: {
-        poppins: ['var(--font-poppins)', 'sans-serif'],
-      },
       fontSize: {
         caption: ['var(--text-caption)', { lineHeight: 'var(--leading-caption)' }],
         small: ['var(--text-small)', { lineHeight: 'var(--leading-small)' }],
