@@ -165,11 +165,11 @@ export default function CartPage() {
               </div>
 
               {subtotal < FREE_SHIPPING_THRESHOLD_RDP ? (
-                <div style={{ fontSize: 'var(--text-caption)', color: 'var(--color-primary)', background: 'var(--color-primary-subtle)', borderRadius: 'var(--radius-control)', padding: '8px 10px', marginBottom: 12 }}>
+                <div style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: 'var(--color-primary)', background: 'var(--color-primary-subtle)', borderRadius: 'var(--radius-control)', padding: '8px 10px', marginBottom: 12 }}>
                   {t('freeShippingMissing', { amount: ((FREE_SHIPPING_THRESHOLD_RDP - subtotal) / 100).toLocaleString('es-DO') })}
                 </div>
               ) : (
-                <div style={{ fontSize: 'var(--text-caption)', color: 'var(--color-green)', background: 'var(--color-green-subtle)', borderRadius: 'var(--radius-control)', padding: '8px 10px', marginBottom: 12, fontWeight: 600 }}>
+                <div style={{ fontSize: 'var(--text-small)', color: 'var(--color-green)', background: 'var(--color-green-subtle)', borderRadius: 'var(--radius-control)', padding: '8px 10px', marginBottom: 12, fontWeight: 600 }}>
                   {t('freeShippingApplied')}
                 </div>
               )}

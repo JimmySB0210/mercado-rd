@@ -497,7 +497,7 @@ function CheckoutPageContent() {
                   placeholder={t('addressPlaceholder')}
                   style={{ width: '100%', border: `1px solid ${addressError ? BRAND.red : 'var(--color-border)'}`, borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
                 />
-                {addressError && <p style={{ fontSize: 'var(--text-caption)', color: BRAND.red, margin: '4px 0 0' }}>{addressError}</p>}
+                {addressError && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, margin: '4px 0 0' }}>{addressError}</p>}
               </div>
               <div style={{ position: 'relative' }}>
                 <select
@@ -550,7 +550,7 @@ function CheckoutPageContent() {
                   rows={2}
                   style={{ width: '100%', border: `1px solid ${notesError ? BRAND.red : 'var(--color-border)'}`, borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }}
                 />
-                {notesError && <p style={{ fontSize: 'var(--text-caption)', color: BRAND.red, margin: '4px 0 0' }}>{notesError}</p>}
+                {notesError && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, margin: '4px 0 0' }}>{notesError}</p>}
               </div>
             </div>
           </div>
@@ -621,7 +621,7 @@ function CheckoutPageContent() {
             )}
 
             {form.payMethod === 'cardnet' && (
-              <div style={{ marginTop: 14, padding: 12, background: '#FFF8E1', borderRadius: 8, border: '1px solid #FFE082', fontSize: 'var(--text-caption)', color: '#5D4037' }}>
+              <div style={{ marginTop: 14, padding: 12, background: '#FFF8E1', borderRadius: 8, border: '1px solid #FFE082', fontSize: 'var(--text-small)', color: '#5D4037' }}>
                 {t('cardnetRedirectNotice')}
               </div>
             )}
@@ -710,9 +710,9 @@ function CheckoutPageContent() {
                   </button>
                 )}
               </div>
-              {couponError && <p style={{ fontSize: 'var(--text-caption)', color: BRAND.red, margin: '6px 0 0' }}>{couponError}</p>}
+              {couponError && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, margin: '6px 0 0' }}>{couponError}</p>}
               {appliedCoupon && (
-                <p style={{ fontSize: 'var(--text-caption)', color: '#2E7D32', margin: '6px 0 0', fontWeight: 600 }}>
+                <p style={{ fontSize: 'var(--text-small)', color: '#2E7D32', margin: '6px 0 0', fontWeight: 600 }}>
                   {t('couponAppliedMsg', { code: appliedCoupon.code })}
                 </p>
               )}
