@@ -12,14 +12,13 @@ import {
   getCurrentVendor, getVendorOrders, getVendorKPIs, getVendorMonthlyRevenue,
   getVendorProducts, getVendorRealStats, getVendorCompletenessFlags, getVendorUnreadMessagesCount,
 } from '@/lib/queries/vendor-dashboard'
-import { computeStoreCompleteness } from '@/lib/vendorCompleteness'
+import { computeVendorCompleteness } from '@/lib/vendorCompleteness'
+import { isStockAlert } from '@/lib/productStock'
 import { DashboardSidebar } from '@/components/vendor/DashboardSidebar'
 import { DashboardContent, NoStoreNotice } from './DashboardContent'
 
 // Pedidos que todavía no se despacharon -- "necesita tu atención".
 const UNSHIPPED_STATUSES = new Set(['pending', 'confirmed', 'preparing'])
-// Mismo umbral que ya usa producto/[id] para "Quedan pocas unidades".
-const LOW_STOCK_THRESHOLD = 5
 
 export default async function DashboardPage() {
   const supabase = await createServerClient()
@@ -51,8 +50,7 @@ export default async function DashboardPage() {
   const orders = allOrders.slice(0, 5)
   const firstName = vendor.business_name.split(' ')[0]
 
-  const activeProducts = products.filter((p: any) => p.is_active)
-  const lowStockProducts = activeProducts.filter((p: any) => p.stock <= LOW_STOCK_THRESHOLD)
+  const lowStockProducts = products.filter((p: any) => isStockAlert(p))
   const pendingShipmentCount = allOrders.filter(o => UNSHIPPED_STATUSES.has(o.status)).length
 
   // Top vendidos — solo si hay al menos un producto con ventas reales.
@@ -63,16 +61,7 @@ export default async function DashboardPage() {
     .sort((a: any, b: any) => (b.sold_count ?? 0) - (a.sold_count ?? 0))
     .slice(0, 3)
 
-  const completeness = computeStoreCompleteness({
-    hasLogo: !!vendor.logo_url,
-    hasDescription: !!(vendor.description && vendor.description.trim()),
-    hasContactChannel: !!(vendor.whatsapp || vendor.instagram),
-    hasCategories: completenessFlags.hasCategories,
-    hasBusinessType: completenessFlags.hasBusinessType,
-    hasServices: completenessFlags.hasServices,
-    hasBankInfo: !!(vendor.bank_name && vendor.bank_account),
-    hasIdentitySubmitted: completenessFlags.hasIdentitySubmitted,
-  })
+  const completeness = computeVendorCompleteness(vendor, completenessFlags)
 
   return (
     <div className="dashboard-grid" style={{ minHeight: '100vh', fontFamily: 'inherit' }}>

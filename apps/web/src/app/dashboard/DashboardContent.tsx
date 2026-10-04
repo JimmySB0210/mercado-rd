@@ -16,6 +16,7 @@
 
 import { OrderStatusSelect } from '@/components/vendor/OrderStatusSelect'
 import { RevenueChartLoader } from '@/components/vendor/RevenueChartLoader'
+import { StoreSummaryCard } from '@/components/vendor/StoreSummaryCard'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { formatPrice } from '@/types/database.types'
 import type { CompletenessCheck } from '@/lib/vendorCompleteness'
@@ -225,54 +226,11 @@ export function DashboardContent({
         </div>
 
         {/* Tu tienda */}
-        <div style={{ ...cardStyle, padding: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-            <div style={{
-              width: 44, height: 44, borderRadius: 10, background: 'var(--color-primary-subtle)', flexShrink: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: 'var(--dashboard-blue)', overflow: 'hidden',
-            }}>
-              {vendor.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={vendor.logoUrl} alt={vendor.businessName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : vendor.businessName.charAt(0).toUpperCase()}
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontWeight: 800, fontSize: 14, color: '#131A18', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {vendor.businessName}
-              </div>
-              {vendor.provinceName && <div style={{ fontSize: 11.5, color: '#818F98' }}>{vendor.provinceName}</div>}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: 12, fontSize: 12, color: '#3D5361', marginBottom: 12, flexWrap: 'wrap' }}>
-            {realStats.realRatingAvg != null && <span>⭐ {realStats.realRatingAvg.toFixed(1)}</span>}
-            <span>{t('salesCountShort', { count: realStats.realTotalSales })}</span>
-            {realStats.realRatingCount > 0 && <span>{t('reviewsCountShort', { count: realStats.realRatingCount })}</span>}
-          </div>
-
-          <div style={{ marginBottom: 4, fontSize: 11, color: '#818F98', display: 'flex', justifyContent: 'space-between' }}>
-            <span>{t('storeProfileLabel')}</span>
-            <span style={{ fontWeight: 700, color: '#131A18' }}>{completeness.percent}%</span>
-          </div>
-          <div style={{ height: 6, borderRadius: 3, background: '#EEF2F6', overflow: 'hidden', marginBottom: 14 }}>
-            <div style={{ height: '100%', width: `${completeness.percent}%`, background: completeness.percent >= 100 ? 'var(--color-green)' : 'var(--dashboard-yellow)', borderRadius: 3 }} />
-          </div>
-
-          <div style={{ display: 'flex', gap: 8 }}>
-            <a href={`/tienda/${vendor.id}`} style={{
-              flex: 1, textAlign: 'center', fontSize: 12.5, fontWeight: 700, padding: '8px 10px', borderRadius: 8,
-              border: '1px solid var(--dashboard-blue)', color: 'var(--dashboard-blue)', textDecoration: 'none',
-            }}>
-              {t('viewMyStoreCta')}
-            </a>
-            <a href="/dashboard/configuracion" style={{
-              flex: 1, textAlign: 'center', fontSize: 12.5, fontWeight: 700, padding: '8px 10px', borderRadius: 8,
-              background: 'var(--dashboard-blue)', color: '#fff', textDecoration: 'none',
-            }}>
-              {t('editStoreCta')}
-            </a>
-          </div>
-        </div>
+        <StoreSummaryCard
+          vendor={{ id: vendor.id, businessName: vendor.businessName, logoUrl: vendor.logoUrl, provinceName: vendor.provinceName }}
+          realStats={realStats}
+          completenessPercent={completeness.percent}
+        />
       </div>
 
       {/* Necesita tu atención */}
@@ -294,9 +252,11 @@ export function DashboardContent({
           <RevenueChartLoader data={monthlyRevenue} height={190} />
         </div>
 
-        {topSelling.length > 0 && (
-          <div style={cardStyle}>
-            <SectionHeader title={t('topSellingTitle')} />
+        <div style={cardStyle}>
+          <SectionHeader title={t('topSellingTitle')} />
+          {topSelling.length === 0 ? (
+            <p style={{ padding: '28px 16px', fontSize: 12.5, color: '#818F98', textAlign: 'center' }}>{t('topSellingEmpty')}</p>
+          ) : (
             <div style={{ padding: '6px 0' }}>
               {topSelling.map((p, i) => (
                 <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px' }}>
@@ -313,8 +273,8 @@ export function DashboardContent({
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Tus productos */}

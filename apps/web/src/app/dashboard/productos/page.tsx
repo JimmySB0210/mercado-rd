@@ -12,8 +12,11 @@
 
 import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
-import { getCurrentVendor, getVendorProducts } from '@/lib/queries/vendor-dashboard'
+import {
+  getCurrentVendor, getVendorProducts, getVendorRealStats, getVendorCompletenessFlags,
+} from '@/lib/queries/vendor-dashboard'
 import { computePublishQuality } from '@/lib/productQuality'
+import { computeVendorCompleteness } from '@/lib/vendorCompleteness'
 import { DashboardSidebar } from '@/components/vendor/DashboardSidebar'
 import { ProductosContent } from './ProductosContent'
 
@@ -31,7 +34,11 @@ export default async function VendorProductsPage() {
   const categoryIds = [...new Set(products.map((p: any) => p.category_id).filter((id): id is number => id != null))]
   const productIds = products.map((p: any) => p.id)
 
-  const [{ data: categoryAttrs }, { data: attrValues }, { data: activeDeals }] = await Promise.all([
+  const [
+    { data: categoryAttrs }, { data: attrValues }, { data: activeDeals },
+    { data: tierRows }, { data: categoryRows },
+    realStats, completenessFlags,
+  ] = await Promise.all([
     categoryIds.length > 0
       ? supabase
           .from('category_attributes')
@@ -52,6 +59,21 @@ export default async function VendorProductsPage() {
           .in('product_id', productIds)
           .eq('is_active', true)
       : Promise.resolve({ data: [] as any[] }),
+    productIds.length > 0
+      ? supabase
+          .from('product_pricing_tiers')
+          .select('product_id')
+          .in('product_id', productIds)
+      : Promise.resolve({ data: [] as any[] }),
+    categoryIds.length > 0
+      ? supabase
+          .from('categories')
+          .select('id, name, name_en, name_fr, emoji')
+          .in('id', categoryIds)
+          .order('sort_order')
+      : Promise.resolve({ data: [] as any[] }),
+    getVendorRealStats(vendor.id),
+    getVendorCompletenessFlags(vendor.id, user.id),
   ])
 
   // Oferta activa por producto (RLS de daily_deals ya la restringe a
@@ -60,6 +82,8 @@ export default async function VendorProductsPage() {
   for (const d of activeDeals ?? []) {
     dealByProduct.set(d.product_id, { id: d.id, deal_price_rdp: d.deal_price_rdp, expires_at: d.expires_at })
   }
+
+  const productsWithTiers = new Set((tierRows ?? []).map((r: any) => r.product_id as string))
 
   const attrsByCategory = new Map<number, { id: number; is_required: boolean; is_recommended: boolean }[]>()
   for (const attr of categoryAttrs ?? []) {
@@ -94,13 +118,34 @@ export default async function VendorProductsPage() {
       hasStock: p.stock != null,
     })
 
-    return { ...p, qualityPercent, activeDeal: dealByProduct.get(p.id) ?? null }
+    return {
+      ...p,
+      qualityPercent,
+      activeDeal: dealByProduct.get(p.id) ?? null,
+      hasTiers: productsWithTiers.has(p.id),
+    }
   })
+
+  const completeness = computeVendorCompleteness(vendor, completenessFlags)
 
   return (
     <div className="dashboard-grid" style={{ minHeight: '100vh', fontFamily: 'inherit' }}>
       <DashboardSidebar />
-      <ProductosContent products={productsWithQuality as any} isPro={vendor.plan === 'pro'} />
+      <ProductosContent
+        products={productsWithQuality as any}
+        isPro={vendor.plan === 'pro'}
+        categories={(categoryRows ?? []) as any}
+        store={{
+          vendor: {
+            id: vendor.id,
+            businessName: vendor.business_name,
+            logoUrl: vendor.logo_url,
+            provinceName: (vendor.province as any)?.name ?? null,
+          },
+          realStats,
+          completenessPercent: completeness.percent,
+        }}
+      />
     </div>
   )
 }

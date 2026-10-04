@@ -28,24 +28,41 @@ const UNSHIPPED_STATUSES = ['pending', 'confirmed', 'preparing']
 // mismas rutas y permisos de siempre, cero cambios funcionales) --
 // pedido explícito del brief: que se sienta como centro de negocio,
 // no una lista plana de 9 links.
-const NAV_GROUPS: { icon: string; labelKey: keyof DashboardDict; href: string }[][] = [
-  [
-    { icon: '📊', labelKey: 'navSummary', href: '/dashboard' },
-    { icon: '📦', labelKey: 'navMyProducts', href: '/dashboard/productos' },
-    { icon: '🛒', labelKey: 'navOrders', href: '/dashboard/pedidos' },
-    { icon: '💬', labelKey: 'navMessages', href: '/dashboard/mensajes' },
-  ],
-  [
-    { icon: '💰', labelKey: 'navIncome', href: '/dashboard/ingresos' },
-    { icon: '🎟️', labelKey: 'navCoupons', href: '/dashboard/cupones' },
-    { icon: '⭐', labelKey: 'navReviews', href: '/dashboard/resenas' },
-  ],
-  [
-    { icon: '👑', labelKey: 'navMyPlan', href: '/dashboard/plan' },
-    { icon: '⚙️', labelKey: 'navSettings', href: '/dashboard/configuracion' },
-  ],
+type NavItem = { icon: string; labelKey: keyof DashboardDict; href: string }
+type NavGroup = { groupLabelKey: keyof DashboardDict | null; items: NavItem[] }
+
+// Grupos según el panel de referencia: Resumen solo, después VENDER,
+// CRECER y CUENTA con etiqueta. Mismas rutas y permisos de siempre.
+const NAV_GROUPS: NavGroup[] = [
+  {
+    groupLabelKey: null,
+    items: [{ icon: '📊', labelKey: 'navSummary', href: '/dashboard' }],
+  },
+  {
+    groupLabelKey: 'navGroupSell',
+    items: [
+      { icon: '📦', labelKey: 'navMyProducts', href: '/dashboard/productos' },
+      { icon: '🛒', labelKey: 'navOrders', href: '/dashboard/pedidos' },
+      { icon: '💬', labelKey: 'navMessages', href: '/dashboard/mensajes' },
+    ],
+  },
+  {
+    groupLabelKey: 'navGroupGrow',
+    items: [
+      { icon: '💰', labelKey: 'navIncome', href: '/dashboard/ingresos' },
+      { icon: '🎟️', labelKey: 'navCoupons', href: '/dashboard/cupones' },
+      { icon: '⭐', labelKey: 'navReviews', href: '/dashboard/resenas' },
+    ],
+  },
+  {
+    groupLabelKey: 'navGroupAccount',
+    items: [
+      { icon: '👑', labelKey: 'navMyPlan', href: '/dashboard/plan' },
+      { icon: '⚙️', labelKey: 'navSettings', href: '/dashboard/configuracion' },
+    ],
+  },
 ]
-const NAV_ITEM_KEYS = NAV_GROUPS.flat()
+const NAV_ITEM_KEYS = NAV_GROUPS.flatMap(g => g.items)
 
 export function DashboardSidebar() {
   const { t } = useTranslation('dashboard')
@@ -166,7 +183,12 @@ export function DashboardSidebar() {
   let globalIndex = 0
   const navGroups = (onClick?: () => void) => NAV_GROUPS.map((group, gi) => (
     <div key={gi} style={gi > 0 ? { marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.12)' } : undefined}>
-      {group.map(item => navLink(item, globalIndex++, onClick))}
+      {group.groupLabelKey && (
+        <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: 0.6, color: 'rgba(255,255,255,0.55)', padding: '6px 20px 4px' }}>
+          {t(group.groupLabelKey)}
+        </div>
+      )}
+      {group.items.map(item => navLink(item, globalIndex++, onClick))}
     </div>
   ))
 

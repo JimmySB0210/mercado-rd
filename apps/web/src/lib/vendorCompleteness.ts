@@ -59,3 +59,28 @@ export function computeStoreCompleteness(inputs: VendorCompletenessInputs): {
 
   return { percent, checks }
 }
+
+interface VendorCompletenessSource {
+  logo_url: string | null
+  description: string | null
+  whatsapp: string | null
+  instagram: string | null
+  bank_name: string | null
+  bank_account: string | null
+}
+
+export function computeVendorCompleteness(
+  vendor: VendorCompletenessSource,
+  flags: { hasCategories: boolean; hasBusinessType: boolean; hasServices: boolean; hasIdentitySubmitted: boolean },
+) {
+  return computeStoreCompleteness({
+    hasLogo: !!vendor.logo_url,
+    hasDescription: !!(vendor.description && vendor.description.trim()),
+    hasContactChannel: !!(vendor.whatsapp || vendor.instagram),
+    hasCategories: flags.hasCategories,
+    hasBusinessType: flags.hasBusinessType,
+    hasServices: flags.hasServices,
+    hasBankInfo: !!(vendor.bank_name && vendor.bank_account),
+    hasIdentitySubmitted: flags.hasIdentitySubmitted,
+  })
+}
