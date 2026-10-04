@@ -57,17 +57,17 @@ export default function CartPage() {
 
         {/* Lista de items */}
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 20, color: BRAND.dark }}>
+          <h1 style={{ fontSize: 'var(--text-h1)', fontWeight: 700, lineHeight: 'var(--leading-h1)', marginBottom: 20, color: BRAND.dark }}>
             {t('cartTitle', { count: items.length })}
           </h1>
 
           {items.length === 0 ? (
             <div style={{ background: 'var(--color-card-bg)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)', padding: 40, textAlign: 'center' }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>🛒</div>
-              <p style={{ color: BRAND.gray, fontSize: 14, marginBottom: 16 }}>{t('emptyCart')}</p>
+              <p style={{ color: BRAND.gray, fontSize: 'var(--text-ui)', marginBottom: 16 }}>{t('emptyCart')}</p>
               <a
                 href="/"
-                style={{ display: 'inline-block', background: 'var(--color-primary)', color: '#fff', textDecoration: 'none', padding: '10px 24px', borderRadius: 'var(--radius-control)', fontWeight: 600, fontSize: 14, boxShadow: 'var(--shadow-button)' }}
+                style={{ display: 'inline-block', background: 'var(--color-primary)', color: '#fff', textDecoration: 'none', padding: '10px 24px', borderRadius: 'var(--radius-control)', fontWeight: 600, fontSize: 'var(--text-ui)', boxShadow: 'var(--shadow-button)' }}
               >
                 {t('exploreProducts')}
               </a>
@@ -99,20 +99,20 @@ export default function CartPage() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <a
                       href={`/producto/${item.product.id}`}
-                      style={{ fontWeight: 600, fontSize: 14, marginBottom: 2, color: BRAND.dark, overflowWrap: 'break-word', textDecoration: 'none', display: 'block' }}
+                      style={{ fontWeight: 600, fontSize: 'var(--text-body)', marginBottom: 2, color: BRAND.dark, overflowWrap: 'break-word', textDecoration: 'none', display: 'block' }}
                     >
                       {item.product.name}
                     </a>
                     {(item.variant_label || item.selected_size || item.selected_color) && (
-                      <div style={{ fontSize: 12, color: BRAND.gray, marginBottom: 2 }}>
+                      <div style={{ fontSize: 'var(--text-caption)', color: BRAND.gray, marginBottom: 2 }}>
                         {item.variant_label ?? [item.selected_size, item.selected_color].filter(Boolean).join(' · ')}
                       </div>
                     )}
-                    <div style={{ fontSize: 12, color: BRAND.blue, fontWeight: 600 }}>
+                    <div style={{ fontSize: 'var(--text-caption)', color: BRAND.blue, fontWeight: 600 }}>
                       RD${((item.variant_price_rdp ?? item.product.price_rdp) / 100).toLocaleString('es-DO')}
                     </div>
                     {isOwn && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, fontSize: 11, color: '#C2410C', fontWeight: 600 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, fontSize: 'var(--text-badge)', color: '#C2410C', fontWeight: 600 }}>
                         <AlertTriangle size={12} /> {t('ownProductWarning')}
                       </div>
                     )}
@@ -120,7 +120,7 @@ export default function CartPage() {
 
                   {/* Acciones */}
                   <div className="cart-item-actions" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, flexShrink: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: 15, color: BRAND.dark }}>
+                    <div style={{ fontWeight: 700, fontSize: 'var(--text-price-card)', lineHeight: 'var(--leading-price)', color: BRAND.dark }}>
                       RD${(((item.variant_price_rdp ?? item.product.price_rdp) * item.quantity) / 100).toLocaleString('es-DO')}
                     </div>
                     <div style={{ display: 'flex', border: '1px solid #E0E0E0', borderRadius: 6, overflow: 'hidden' }}>
@@ -130,7 +130,7 @@ export default function CartPage() {
                       >
                         <Minus size={13} />
                       </button>
-                      <span style={{ width: 30, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 600 }}>
+                      <span style={{ width: 30, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--text-small)', fontWeight: 600 }}>
                         {item.quantity}
                       </span>
                       <button
@@ -142,7 +142,7 @@ export default function CartPage() {
                     </div>
                     <button
                       onClick={() => removeItem(item.product.id, item.variant_id, item.selected_size, item.selected_color)}
-                      style={{ background: 'none', border: 'none', color: BRAND.gray, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}
+                      style={{ background: 'none', border: 'none', color: BRAND.gray, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-caption)' }}
                     >
                       <Trash2 size={13} /> {t('removeItem')}
                     </button>
@@ -157,24 +157,24 @@ export default function CartPage() {
         {items.length > 0 && (
           <div>
             <div style={{ background: '#fff', borderRadius: 10, padding: 20, border: '1px solid #EEE', position: 'sticky', top: 20 }}>
-              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16, color: BRAND.dark }}>{t('orderSummary')}</div>
+              <div style={{ fontWeight: 700, fontSize: 'var(--text-h4)', marginBottom: 16, color: BRAND.dark }}>{t('orderSummary')}</div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8, color: BRAND.dark }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-small)', marginBottom: 8, color: BRAND.dark }}>
                 <span>{t('subtotalLabel', { count: items.reduce((a, i) => a + i.quantity, 0) })}</span>
                 <span>RD${(subtotal / 100).toLocaleString('es-DO')}</span>
               </div>
 
               {subtotal < FREE_SHIPPING_THRESHOLD_RDP ? (
-                <div style={{ fontSize: 12, color: 'var(--color-primary)', background: 'var(--color-primary-subtle)', borderRadius: 'var(--radius-control)', padding: '8px 10px', marginBottom: 12 }}>
+                <div style={{ fontSize: 'var(--text-caption)', color: 'var(--color-primary)', background: 'var(--color-primary-subtle)', borderRadius: 'var(--radius-control)', padding: '8px 10px', marginBottom: 12 }}>
                   {t('freeShippingMissing', { amount: ((FREE_SHIPPING_THRESHOLD_RDP - subtotal) / 100).toLocaleString('es-DO') })}
                 </div>
               ) : (
-                <div style={{ fontSize: 12, color: 'var(--color-green)', background: 'var(--color-green-subtle)', borderRadius: 'var(--radius-control)', padding: '8px 10px', marginBottom: 12, fontWeight: 600 }}>
+                <div style={{ fontSize: 'var(--text-caption)', color: 'var(--color-green)', background: 'var(--color-green-subtle)', borderRadius: 'var(--radius-control)', padding: '8px 10px', marginBottom: 12, fontWeight: 600 }}>
                   {t('freeShippingApplied')}
                 </div>
               )}
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8, color: BRAND.dark }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-small)', marginBottom: 8, color: BRAND.dark }}>
                 <span>{t('shippingLabel')}</span>
                 <span>
                   {items.length > 0 && subtotal >= FREE_SHIPPING_THRESHOLD_RDP
@@ -182,14 +182,14 @@ export default function CartPage() {
                     : `RD$${(ENVIO / 100).toLocaleString('es-DO')}`}
                 </span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 16, color: BRAND.dark }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-small)', marginBottom: 16, color: BRAND.dark }}>
                 <span>{t('itbisLabel')}</span>
                 <span>RD${(itbis / 100).toLocaleString('es-DO')}</span>
               </div>
 
-              <div style={{ borderTop: '1px solid #eee', paddingTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontWeight: 700, fontSize: 15, marginBottom: 16, color: BRAND.dark }}>
+              <div style={{ borderTop: '1px solid #eee', paddingTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontWeight: 700, fontSize: 'var(--text-h4)', marginBottom: 16, color: BRAND.dark }}>
                 <span>{t('totalLabel')}</span>
-                <span style={{ fontSize: 20, color: 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}>
+                <span style={{ fontSize: 'var(--text-price-card)', fontWeight: 700, lineHeight: 'var(--leading-price)', color: 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}>
                   RD${((total + ENVIO) / 100).toLocaleString('es-DO')}
                 </span>
               </div>
@@ -199,7 +199,7 @@ export default function CartPage() {
                   style={{ background: '#FFF7ED', border: '1px solid #FDBA74', borderRadius: 'var(--radius-control)', padding: 12, marginBottom: 10, display: 'flex', gap: 8, alignItems: 'flex-start', color: '#C2410C' }}
                 >
                   <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
-                  <span style={{ fontSize: 12, fontWeight: 500 }}>{t('checkoutBlockedOwnProducts')}</span>
+                  <span style={{ fontSize: 'var(--text-caption)', fontWeight: 500 }}>{t('checkoutBlockedOwnProducts')}</span>
                 </div>
               ) : (
                 <a
@@ -209,19 +209,19 @@ export default function CartPage() {
                   {t('proceedToCheckout')}
                 </a>
               )}
-              <a href="/" style={{ display: 'block', textAlign: 'center', fontSize: 13, color: BRAND.gray, textDecoration: 'none' }}>
+              <a href="/" style={{ display: 'block', textAlign: 'center', fontSize: 'var(--text-small)', color: BRAND.gray, textDecoration: 'none' }}>
                 {t('continueShopping')}
               </a>
 
               <div style={{ marginTop: 14, padding: 12, background: 'var(--color-green-subtle)', borderRadius: 'var(--radius-control)', display: 'flex', gap: 8, alignItems: 'flex-start', color: 'var(--color-green)' }}>
                 <ShieldCheck size={16} color="currentColor" style={{ flexShrink: 0, marginTop: 1 }} />
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 2 }}>{t('protectedPurchaseTitle')}</div>
-                  <div style={{ fontSize: 11 }}>{t('protectedPurchaseSub')}</div>
+                  <div style={{ fontSize: 'var(--text-caption)', fontWeight: 600, marginBottom: 2 }}>{t('protectedPurchaseTitle')}</div>
+                  <div style={{ fontSize: 'var(--text-badge)' }}>{t('protectedPurchaseSub')}</div>
                 </div>
               </div>
 
-              <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center', gap: 12, fontSize: 11, color: BRAND.gray }}>
+              <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center', gap: 12, fontSize: 'var(--text-badge)', color: BRAND.gray }}>
                 <span>💳 Azul</span>
                 <span>🏦 CardNet</span>
                 <span>{t('paymentTransfer')}</span>
