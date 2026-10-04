@@ -11,7 +11,7 @@ import type { HomeDict } from '@/lib/i18n/es/home'
 export const home = {
   heroKicker: 'Your trusted marketplace',
   heroTagline: 'What you need, right here',
-  welcomeTitle: 'Unique products, from all over the world',
+  welcomeTitle: "Everything you're looking for, in one place",
   welcomeSubtitle: 'Connect with thousands of vendors and find what you need, without leaving the Dominican Republic.',
   exploreCta: 'Explore categories →',
   heroModelAlt: 'Customer smiling while using MercadoRD on her phone',

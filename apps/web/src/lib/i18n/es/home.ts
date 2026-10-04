@@ -9,7 +9,7 @@
 export const home = {
   heroKicker: 'Tu marketplace de confianza',
   heroTagline: 'Lo que necesitas, está aquí',
-  welcomeTitle: 'Productos únicos, de todo el mundo',
+  welcomeTitle: 'Todo lo que buscas en un solo lugar',
   welcomeSubtitle: 'Conecta con miles de proveedores y encuentra lo que necesitas, sin salir de República Dominicana.',
   exploreCta: 'Explorar categorías →',
   heroModelAlt: 'Clienta sonriendo mientras usa MercadoRD desde su celular',
