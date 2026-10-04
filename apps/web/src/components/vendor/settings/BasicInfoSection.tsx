@@ -4,7 +4,7 @@
 // Ruta: src/components/vendor/settings/BasicInfoSection.tsx
 // ============================================================
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { validateText } from '@/lib/validation'
@@ -25,6 +25,9 @@ interface Props {
     municipio: string
     sector: string
   }
+  onRegisterSave?: (save: (() => Promise<boolean>) | null) => void
+  hideOwnButton?: boolean
+  bare?: boolean
 }
 
 const inputStyle: React.CSSProperties = {
@@ -32,7 +35,7 @@ const inputStyle: React.CSSProperties = {
 }
 const labelStyle: React.CSSProperties = { fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }
 
-export function BasicInfoSection({ vendorId, provinces, initial }: Props) {
+export function BasicInfoSection({ vendorId, provinces, initial, onRegisterSave, hideOwnButton, bare }: Props) {
   const router = useRouter()
   const supabase = createClient()
 
@@ -48,7 +51,7 @@ export function BasicInfoSection({ vendorId, provinces, initial }: Props) {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
   }
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     setError(null)
     setBusinessNameError(null)
     setDescriptionError(null)
@@ -56,14 +59,14 @@ export function BasicInfoSection({ vendorId, provinces, initial }: Props) {
     setSuccess(false)
 
     const businessNameErr = validateText(form.businessName, 'El nombre de la tienda', 3, 80)
-    if (businessNameErr) { setBusinessNameError(businessNameErr); return }
+    if (businessNameErr) { setBusinessNameError(businessNameErr); return false }
 
     const descriptionErr = validateText(form.description, 'La descripción', 0, 500)
-    if (descriptionErr) { setDescriptionError(descriptionErr); return }
+    if (descriptionErr) { setDescriptionError(descriptionErr); return false }
 
     if (form.address.trim().length > 0) {
       const addressErr = validateText(form.address, 'Dirección', 10, 200)
-      if (addressErr) { setAddressError(addressErr); return }
+      if (addressErr) { setAddressError(addressErr); return false }
     }
 
     setSaving(true)
@@ -85,14 +88,20 @@ export function BasicInfoSection({ vendorId, provinces, initial }: Props) {
     if (updateError) {
       console.error('[BasicInfoSection]', updateError)
       setError('Ocurrió un error al guardar. Intenta de nuevo.')
-      return
+      return false
     }
     setSuccess(true)
     router.refresh()
-  }
+    return true
+  }, [form, vendorId, supabase, router])
+
+  useEffect(() => {
+    onRegisterSave?.(handleSave)
+    return () => onRegisterSave?.(null)
+  }, [handleSave, onRegisterSave])
 
   return (
-    <SectionCard title="Información de la tienda">
+    <SectionCard title="Información de la tienda" bare={bare}>
       <div style={{ marginBottom: 12 }}>
         <label style={labelStyle}>Nombre de la tienda *</label>
         <input name="businessName" value={form.businessName} onChange={handleChange}
@@ -101,7 +110,7 @@ export function BasicInfoSection({ vendorId, provinces, initial }: Props) {
       </div>
 
       <div style={{ marginBottom: 12 }}>
-        <label style={labelStyle}>Descripción</label>
+        <label style={labelStyle}>Descripción *</label>
         <textarea name="description" value={form.description} onChange={handleChange} rows={3}
           style={{ ...inputStyle, border: `1px solid ${descriptionError ? '#c00' : '#ddd'}`, resize: 'vertical', fontFamily: 'inherit' }} />
         {descriptionError && <p style={{ fontSize: 12, color: '#c00', marginTop: 6 }}>{descriptionError}</p>}
@@ -147,7 +156,7 @@ export function BasicInfoSection({ vendorId, provinces, initial }: Props) {
         {addressError && <p style={{ fontSize: 12, color: '#c00', marginTop: 6 }}>{addressError}</p>}
       </div>
 
-      <SaveSectionButton onClick={handleSave} saving={saving} error={error} success={success} />
+      <SaveSectionButton onClick={handleSave} saving={saving} error={error} success={success} showButton={!hideOwnButton} />
     </SectionCard>
   )
 }

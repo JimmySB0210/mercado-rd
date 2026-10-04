@@ -23,7 +23,6 @@ import { validateImageFile, uploadIdentityDocument, type IdentityDocumentKind } 
 import { useLanguageStore } from '@/lib/store/language'
 import { formatDate } from '@/lib/utils'
 import { SectionCard } from './SectionCard'
-import { BRAND } from '@/lib/colors'
 
 interface Props {
   userId: string
@@ -172,7 +171,7 @@ export function IdentityVerificationSection({ userId }: Props) {
   }
 
   const filePicker = (kind: IdentityDocumentKind, label: string, file: File | null) => (
-    <div style={{ marginBottom: 12 }}>
+    <div>
       <label style={labelStyle}>{label}</label>
       <label style={{ cursor: 'pointer', display: 'block' }}>
         <span style={{
@@ -203,9 +202,13 @@ export function IdentityVerificationSection({ userId }: Props) {
         <input value={cedula} onChange={e => setCedula(e.target.value)} placeholder="XXX-XXXXXXX-X" style={inputStyle} />
       </div>
 
-      {filePicker('front', 'Foto de cédula (frontal)', frontFile)}
-      {filePicker('back', 'Foto de cédula (trasera)', backFile)}
-      {filePicker('selfie', 'Selfie', selfieFile)}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" style={{ marginBottom: 12 }}>
+        {filePicker('front', 'Foto de cédula (frontal)', frontFile)}
+        {filePicker('back', 'Foto de cédula (trasera)', backFile)}
+      </div>
+      <div style={{ marginBottom: 12 }}>
+        {filePicker('selfie', 'Selfie', selfieFile)}
+      </div>
 
       {error && (
         <div style={{ background: '#fee', border: '1px solid #fcc', borderRadius: 8, padding: '9px 12px', fontSize: 12, color: '#c00', marginTop: 4, marginBottom: 10 }}>
@@ -218,7 +221,7 @@ export function IdentityVerificationSection({ userId }: Props) {
         onClick={handleSubmit}
         disabled={submitting}
         style={{
-          marginTop: 4, background: submitting ? '#ccc' : BRAND.blue, color: '#fff', border: 'none', padding: '9px 18px',
+          marginTop: 4, background: submitting ? '#ccc' : 'var(--dashboard-blue)', color: '#fff', border: 'none', padding: '9px 18px',
           borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: submitting ? 'not-allowed' : 'pointer',
         }}
       >

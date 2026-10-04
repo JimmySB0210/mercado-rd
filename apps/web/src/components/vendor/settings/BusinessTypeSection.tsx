@@ -4,23 +4,32 @@
 // Ruta: src/components/vendor/settings/BusinessTypeSection.tsx
 // ============================================================
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { BUSINESS_TYPE_OPTIONS } from '@/lib/vendorWizardOptions'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import type { BusinessType } from '@/types/database.types'
-import { CheckboxGrid } from '@/components/vendor/wizard/sharedUI'
+import { YesNoToggle } from '@/components/vendor/wizard/sharedUI'
+import { BusinessTypeCards } from './BusinessTypeCards'
 import { SectionCard, SaveSectionButton } from './SectionCard'
 
 interface Props {
   vendorId: string
   initialBusinessTypes: BusinessType[]
+  onRegisterSave?: (save: (() => Promise<boolean>) | null) => void
+  hideOwnButton?: boolean
 }
 
-export function BusinessTypeSection({ vendorId, initialBusinessTypes }: Props) {
+// "Prestador de servicios" no es un rol excluyente como los otros 8 --
+// una tienda minorista normal también puede prestar servicios, por
+// eso la referencia lo separa como pregunta propia en vez de una
+// tarjeta más dentro de la grilla de roles.
+const CARD_TYPES = BUSINESS_TYPE_OPTIONS.filter(v => v !== 'service_provider')
+
+export function BusinessTypeSection({ vendorId, initialBusinessTypes, onRegisterSave, hideOwnButton }: Props) {
   const { t } = useTranslation('vendorOptions')
-  const options = BUSINESS_TYPE_OPTIONS.map(value => ({ value, label: t(`businessType.${value}`) }))
+  const options = CARD_TYPES.map(value => ({ value, label: t(`businessType.${value}`) }))
   const router = useRouter()
   const supabase = createClient()
 
@@ -33,7 +42,7 @@ export function BusinessTypeSection({ vendorId, initialBusinessTypes }: Props) {
     setBusinessTypes(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value])
   }
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     setError(null)
     setSuccess(false)
     setSaving(true)
@@ -43,7 +52,7 @@ export function BusinessTypeSection({ vendorId, initialBusinessTypes }: Props) {
       setSaving(false)
       console.error('[BusinessTypeSection]', deleteError)
       setError('Ocurrió un error al guardar. Intenta de nuevo.')
-      return
+      return false
     }
 
     if (businessTypes.length > 0) {
@@ -54,19 +63,45 @@ export function BusinessTypeSection({ vendorId, initialBusinessTypes }: Props) {
         setSaving(false)
         console.error('[BusinessTypeSection]', insertError)
         setError('Ocurrió un error al guardar. Intenta de nuevo.')
-        return
+        return false
       }
     }
 
     setSaving(false)
     setSuccess(true)
     router.refresh()
-  }
+    return true
+  }, [businessTypes, vendorId, supabase, router])
+
+  useEffect(() => {
+    onRegisterSave?.(handleSave)
+    return () => onRegisterSave?.(null)
+  }, [handleSave, onRegisterSave])
+
+  const isServiceProvider = businessTypes.includes('service_provider')
 
   return (
     <SectionCard title="Tipo de negocio" subtitle="Selecciona todas las que apliquen.">
-      <CheckboxGrid options={options} selected={businessTypes} onToggle={toggle} />
-      <SaveSectionButton onClick={handleSave} saving={saving} error={error} success={success} />
+      <p style={{ fontSize: 13, fontWeight: 600, color: '#131A18', marginBottom: 10 }}>¿Qué tipo de negocio eres? *</p>
+      <BusinessTypeCards options={options} selected={businessTypes} onToggle={toggle} />
+
+      <div style={{ marginTop: 20 }}>
+        <YesNoToggle
+          label="Prestador de servicios"
+          value={isServiceProvider ? true : null}
+          onChange={(v) => setBusinessTypes(prev => {
+            const withoutServiceProvider = prev.filter(t => t !== 'service_provider')
+            return v ? [...withoutServiceProvider, 'service_provider'] : withoutServiceProvider
+          })}
+          accentColor="var(--dashboard-blue)"
+        />
+        <p style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12.5, color: '#3D5361', background: '#F3F7FC', borderRadius: 8, padding: '10px 12px', marginTop: 10 }}>
+          <span>ℹ️</span>
+          <span>Tu tienda puede vender tanto a clientes minoristas como a compradores por volumen.</span>
+        </p>
+      </div>
+
+      <SaveSectionButton onClick={handleSave} saving={saving} error={error} success={success} showButton={!hideOwnButton} />
     </SectionCard>
   )
 }

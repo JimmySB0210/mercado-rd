@@ -4,7 +4,7 @@
 // Ruta: src/components/vendor/settings/ManufacturingSection.tsx
 // ============================================================
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { MANUFACTURING_STATUS_OPTIONS, PRODUCTION_TIME_OPTIONS } from '@/lib/vendorWizardOptions'
@@ -23,11 +23,13 @@ interface Props {
     acceptsPrivateLabel: boolean | null
     allowsCustomization: CustomizationOption | null
   }
+  onRegisterSave?: (save: (() => Promise<boolean>) | null) => void
+  hideOwnButton?: boolean
 }
 
 const CUSTOMIZATION_VALUES = ['yes', 'no', 'depends'] as const
 
-export function ManufacturingSection({ vendorId, initial }: Props) {
+export function ManufacturingSection({ vendorId, initial, onRegisterSave, hideOwnButton }: Props) {
   const { t } = useTranslation('vendorOptions')
   const manufacturingOptions = MANUFACTURING_STATUS_OPTIONS.map(value => ({ value, label: t(`manufacturingStatus.${value}`) }))
   const customizationOptions = CUSTOMIZATION_VALUES.map(value => ({ value, label: t(`customizationOption.${value}`) }))
@@ -45,7 +47,7 @@ export function ManufacturingSection({ vendorId, initial }: Props) {
 
   const showManufacturingFields = manufacturingStatus === 'fabricates_own' || manufacturingStatus === 'mixed'
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     setError(null)
     setSuccess(false)
     setSaving(true)
@@ -65,21 +67,53 @@ export function ManufacturingSection({ vendorId, initial }: Props) {
     if (updateError) {
       console.error('[ManufacturingSection]', updateError)
       setError('Ocurrió un error al guardar. Intenta de nuevo.')
-      return
+      return false
     }
     setSuccess(true)
     router.refresh()
-  }
+    return true
+  }, [manufacturingStatus, productionTime, productionTimeCustom, acceptsPrivateLabel, allowsCustomization, showManufacturingFields, vendorId, supabase, router])
+
+  useEffect(() => {
+    onRegisterSave?.(handleSave)
+    return () => onRegisterSave?.(null)
+  }, [handleSave, onRegisterSave])
 
   return (
     <SectionCard title="Fabricación">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <SegmentedChoice
-          label="¿Tú fabricas alguno de los productos que ofreces?"
-          options={manufacturingOptions}
-          value={manufacturingStatus}
-          onChange={setManufacturingStatus}
-        />
+        <div>
+          <label style={labelStyle}>¿Tú fabricas alguno de los productos que ofreces?</label>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
+            {manufacturingOptions.map(opt => {
+              const checked = manufacturingStatus === opt.value
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setManufacturingStatus(opt.value)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8, flex: '1 1 0', minWidth: 140,
+                    padding: '9px 14px', borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                    border: checked ? '1.5px solid var(--dashboard-blue)' : '1px solid #E0E0E0',
+                    background: checked ? 'color-mix(in srgb, var(--dashboard-blue) 8%, white)' : '#fff',
+                    color: checked ? 'var(--dashboard-blue)' : BRAND.dark,
+                  }}
+                >
+                  <span style={{
+                    width: 16, height: 16, borderRadius: '50%', flexShrink: 0,
+                    border: checked ? 'none' : '1.5px solid #ccc',
+                    background: checked ? 'var(--dashboard-blue)' : '#fff',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {checked && <span style={{ color: '#fff', fontSize: 10, fontWeight: 700, lineHeight: 1 }}>✓</span>}
+                  </span>
+                  {opt.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
 
         {showManufacturingFields && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 14, background: BRAND.bg, borderRadius: 8 }}>
@@ -107,19 +141,22 @@ export function ManufacturingSection({ vendorId, initial }: Props) {
               )}
             </div>
 
-            <YesNoToggle label="¿Fabricas bajo la marca del cliente?" value={acceptsPrivateLabel} onChange={setAcceptsPrivateLabel} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <YesNoToggle label="¿Fabricas bajo la marca del cliente?" value={acceptsPrivateLabel} onChange={setAcceptsPrivateLabel} accentColor="var(--dashboard-blue)" />
 
-            <SegmentedChoice
-              label="¿Permites personalización?"
-              options={customizationOptions}
-              value={allowsCustomization}
-              onChange={setAllowsCustomization}
-            />
+              <SegmentedChoice
+                label="¿Permites personalización?"
+                options={customizationOptions}
+                value={allowsCustomization}
+                onChange={setAllowsCustomization}
+                accentColor="var(--dashboard-blue)"
+              />
+            </div>
           </div>
         )}
       </div>
 
-      <SaveSectionButton onClick={handleSave} saving={saving} error={error} success={success} />
+      <SaveSectionButton onClick={handleSave} saving={saving} error={error} success={success} showButton={!hideOwnButton} />
     </SectionCard>
   )
 }

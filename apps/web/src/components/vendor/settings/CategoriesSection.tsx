@@ -4,7 +4,7 @@
 // Ruta: src/components/vendor/settings/CategoriesSection.tsx
 // ============================================================
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Category } from '@/types/database.types'
@@ -15,9 +15,11 @@ interface Props {
   vendorId: string
   categories: Category[]
   initialCategoryIds: number[]
+  onRegisterSave?: (save: (() => Promise<boolean>) | null) => void
+  hideOwnButton?: boolean
 }
 
-export function CategoriesSection({ vendorId, categories, initialCategoryIds }: Props) {
+export function CategoriesSection({ vendorId, categories, initialCategoryIds, onRegisterSave, hideOwnButton }: Props) {
   const router = useRouter()
   const supabase = createClient()
 
@@ -26,7 +28,7 @@ export function CategoriesSection({ vendorId, categories, initialCategoryIds }: 
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState(false)
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     setError(null)
     setSuccess(false)
     setSaving(true)
@@ -36,7 +38,7 @@ export function CategoriesSection({ vendorId, categories, initialCategoryIds }: 
       setSaving(false)
       console.error('[CategoriesSection]', deleteError)
       setError('Ocurrió un error al guardar. Intenta de nuevo.')
-      return
+      return false
     }
 
     if (categoryIds.length > 0) {
@@ -47,19 +49,25 @@ export function CategoriesSection({ vendorId, categories, initialCategoryIds }: 
         setSaving(false)
         console.error('[CategoriesSection]', insertError)
         setError('Ocurrió un error al guardar. Intenta de nuevo.')
-        return
+        return false
       }
     }
 
     setSaving(false)
     setSuccess(true)
     router.refresh()
-  }
+    return true
+  }, [categoryIds, vendorId, supabase, router])
+
+  useEffect(() => {
+    onRegisterSave?.(handleSave)
+    return () => onRegisterSave?.(null)
+  }, [handleSave, onRegisterSave])
 
   return (
     <SectionCard title="Categorías" subtitle="¿Qué categorías de productos vendes?">
       <CategoryMultiSelect categories={categories} selectedIds={categoryIds} onChange={setCategoryIds} />
-      <SaveSectionButton onClick={handleSave} saving={saving} error={error} success={success} />
+      <SaveSectionButton onClick={handleSave} saving={saving} error={error} success={success} showButton={!hideOwnButton} />
     </SectionCard>
   )
 }

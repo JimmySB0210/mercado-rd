@@ -60,11 +60,12 @@ export function StepNavButtons({ onBack, onNext, saving, nextLabel = 'Continuar'
 
 interface CheckboxOption<T extends string> { value: T; label: string }
 
-export function CheckboxGrid<T extends string>({ options, selected, onToggle, columns = 2 }: {
+export function CheckboxGrid<T extends string>({ options, selected, onToggle, columns = 2, accentColor = BRAND.blue }: {
   options: CheckboxOption<T>[]
   selected: T[]
   onToggle: (value: T) => void
   columns?: number
+  accentColor?: string
 }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: 8 }}>
@@ -78,15 +79,15 @@ export function CheckboxGrid<T extends string>({ options, selected, onToggle, co
             style={{
               display: 'flex', alignItems: 'center', gap: 8, textAlign: 'left',
               padding: '10px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 13,
-              border: checked ? `1.5px solid ${BRAND.blue}` : '1px solid #E0E0E0',
-              background: checked ? 'color-mix(in srgb, ' + BRAND.blue + ' 6%, white)' : '#fff',
+              border: checked ? `1.5px solid ${accentColor}` : '1px solid #E0E0E0',
+              background: checked ? 'color-mix(in srgb, ' + accentColor + ' 6%, white)' : '#fff',
               color: BRAND.dark,
             }}
           >
             <span style={{
               width: 16, height: 16, borderRadius: 4, flexShrink: 0,
               border: checked ? 'none' : '1.5px solid #ccc',
-              background: checked ? BRAND.blue : '#fff',
+              background: checked ? accentColor : '#fff',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               {checked && <span style={{ color: '#fff', fontSize: 11, fontWeight: 700, lineHeight: 1 }}>✓</span>}
@@ -99,7 +100,46 @@ export function CheckboxGrid<T extends string>({ options, selected, onToggle, co
   )
 }
 
-export function YesNoToggle({ label, value, onChange }: { label: string; value: boolean | null; onChange: (v: boolean) => void }) {
+// Lista de checkboxes plana y compacta -- distinta de CheckboxGrid (que
+// renderiza cada opción como un botón con borde/fondo, tipo tarjeta).
+// Usada por Configuración (Servicios, Clientes) donde el wizard de
+// vendor real pide una lista simple de una columna, no tarjetas.
+// CheckboxGrid NO se toca -- la sigue usando el wizard de onboarding.
+export function PlainCheckboxList<T extends string>({ options, selected, onToggle, accentColor = BRAND.blue }: {
+  options: CheckboxOption<T>[]
+  selected: T[]
+  onToggle: (value: T) => void
+  accentColor?: string
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {options.map(opt => {
+        const checked = selected.includes(opt.value)
+        return (
+          <label
+            key={opt.value}
+            style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13.5, color: BRAND.dark, cursor: 'pointer' }}
+          >
+            <span
+              onClick={() => onToggle(opt.value)}
+              style={{
+                width: 16, height: 16, borderRadius: 4, flexShrink: 0, cursor: 'pointer',
+                border: checked ? 'none' : '1.5px solid #ccc',
+                background: checked ? accentColor : '#fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              {checked && <span style={{ color: '#fff', fontSize: 10.5, fontWeight: 700, lineHeight: 1 }}>✓</span>}
+            </span>
+            <span onClick={() => onToggle(opt.value)}>{opt.label}</span>
+          </label>
+        )
+      })}
+    </div>
+  )
+}
+
+export function YesNoToggle({ label, value, onChange, accentColor = BRAND.blue }: { label: string; value: boolean | null; onChange: (v: boolean) => void; accentColor?: string }) {
   return (
     <div>
       <span style={labelStyle}>{label}</span>
@@ -111,9 +151,9 @@ export function YesNoToggle({ label, value, onChange }: { label: string; value: 
             onClick={() => onChange(opt.v)}
             style={{
               flex: 1, padding: '9px 0', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-              border: value === opt.v ? `1.5px solid ${BRAND.blue}` : '1px solid #E0E0E0',
-              background: value === opt.v ? 'color-mix(in srgb, ' + BRAND.blue + ' 8%, white)' : '#fff',
-              color: value === opt.v ? BRAND.blue : BRAND.dark,
+              border: value === opt.v ? `1.5px solid ${accentColor}` : '1px solid #E0E0E0',
+              background: value === opt.v ? 'color-mix(in srgb, ' + accentColor + ' 8%, white)' : '#fff',
+              color: value === opt.v ? accentColor : BRAND.dark,
             }}
           >
             {opt.text}
@@ -124,11 +164,12 @@ export function YesNoToggle({ label, value, onChange }: { label: string; value: 
   )
 }
 
-export function SegmentedChoice<T extends string>({ label, options, value, onChange }: {
+export function SegmentedChoice<T extends string>({ label, options, value, onChange, accentColor = BRAND.blue }: {
   label: string
   options: { value: T; label: string }[]
   value: T | null
   onChange: (v: T) => void
+  accentColor?: string
 }) {
   return (
     <div>
@@ -141,9 +182,9 @@ export function SegmentedChoice<T extends string>({ label, options, value, onCha
             onClick={() => onChange(opt.value)}
             style={{
               flex: '1 1 0', minWidth: 90, padding: '9px 10px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-              border: value === opt.value ? `1.5px solid ${BRAND.blue}` : '1px solid #E0E0E0',
-              background: value === opt.value ? 'color-mix(in srgb, ' + BRAND.blue + ' 8%, white)' : '#fff',
-              color: value === opt.value ? BRAND.blue : BRAND.dark,
+              border: value === opt.value ? `1.5px solid ${accentColor}` : '1px solid #E0E0E0',
+              background: value === opt.value ? 'color-mix(in srgb, ' + accentColor + ' 8%, white)' : '#fff',
+              color: value === opt.value ? accentColor : BRAND.dark,
             }}
           >
             {opt.label}

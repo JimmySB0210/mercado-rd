@@ -4,7 +4,7 @@
 // Ruta: src/components/vendor/settings/ContactSection.tsx
 // ============================================================
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { validatePhone } from '@/lib/validation'
@@ -13,6 +13,8 @@ import { SectionCard, SaveSectionButton } from './SectionCard'
 interface Props {
   vendorId: string
   initial: { whatsapp: string; instagram: string }
+  onRegisterSave?: (save: (() => Promise<boolean>) | null) => void
+  hideOwnButton?: boolean
 }
 
 const inputStyle: React.CSSProperties = {
@@ -20,7 +22,7 @@ const inputStyle: React.CSSProperties = {
 }
 const labelStyle: React.CSSProperties = { fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }
 
-export function ContactSection({ vendorId, initial }: Props) {
+export function ContactSection({ vendorId, initial, onRegisterSave, hideOwnButton }: Props) {
   const router = useRouter()
   const supabase = createClient()
 
@@ -31,14 +33,14 @@ export function ContactSection({ vendorId, initial }: Props) {
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState(false)
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     setError(null)
     setWhatsappError(null)
     setSuccess(false)
 
     if (whatsapp.trim().length > 0) {
       const whatsappErr = validatePhone(whatsapp)
-      if (whatsappErr) { setWhatsappError(whatsappErr); return }
+      if (whatsappErr) { setWhatsappError(whatsappErr); return false }
     }
 
     setSaving(true)
@@ -51,11 +53,17 @@ export function ContactSection({ vendorId, initial }: Props) {
     if (updateError) {
       console.error('[ContactSection]', updateError)
       setError('Ocurrió un error al guardar. Intenta de nuevo.')
-      return
+      return false
     }
     setSuccess(true)
     router.refresh()
-  }
+    return true
+  }, [whatsapp, instagram, vendorId, supabase, router])
+
+  useEffect(() => {
+    onRegisterSave?.(handleSave)
+    return () => onRegisterSave?.(null)
+  }, [handleSave, onRegisterSave])
 
   return (
     <SectionCard title="Contacto">
@@ -71,7 +79,7 @@ export function ContactSection({ vendorId, initial }: Props) {
         <input value={instagram} onChange={e => setInstagram(e.target.value)} placeholder="mitiendard" style={inputStyle} />
       </div>
 
-      <SaveSectionButton onClick={handleSave} saving={saving} error={error} success={success} />
+      <SaveSectionButton onClick={handleSave} saving={saving} error={error} success={success} showButton={!hideOwnButton} />
     </SectionCard>
   )
 }

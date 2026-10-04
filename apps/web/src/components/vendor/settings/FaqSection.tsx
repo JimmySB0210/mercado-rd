@@ -182,7 +182,7 @@ export function FaqSection({ vendorId, categoryIds }: Props) {
                         <button
                           type="button"
                           onClick={() => { setAddingSuggestedId(row.id); setAnswerDraft(''); setError(null) }}
-                          style={{ fontSize: 12, fontWeight: 700, color: BRAND.blue, background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}
+                          style={{ fontSize: 12, fontWeight: 700, color: 'var(--dashboard-blue)', background: '#fff', border: '1px solid var(--dashboard-blue)', borderRadius: 999, padding: '5px 14px', cursor: 'pointer', flexShrink: 0 }}
                         >
                           {t('faqAddButton')}
                         </button>
@@ -203,7 +203,7 @@ export function FaqSection({ vendorId, categoryIds }: Props) {
                             type="button"
                             onClick={handleSaveSuggested}
                             disabled={saving}
-                            style={{ background: saving ? '#ccc' : BRAND.blue, color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer' }}
+                            style={{ background: saving ? '#ccc' : 'var(--dashboard-blue)', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer' }}
                           >
                             {saving ? t('faqSaving') : t('faqSaveButton')}
                           </button>
@@ -247,7 +247,7 @@ export function FaqSection({ vendorId, categoryIds }: Props) {
                     type="button"
                     onClick={handleSaveCustom}
                     disabled={saving}
-                    style={{ background: saving ? '#ccc' : BRAND.blue, color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer' }}
+                    style={{ background: saving ? '#ccc' : 'var(--dashboard-blue)', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer' }}
                   >
                     {saving ? t('faqSaving') : t('faqSaveButton')}
                   </button>
@@ -265,7 +265,7 @@ export function FaqSection({ vendorId, categoryIds }: Props) {
               <button
                 type="button"
                 onClick={() => { setAddingCustom(true); setError(null) }}
-                style={{ fontSize: 13, fontWeight: 700, color: BRAND.blue, background: 'none', border: 'none', cursor: 'pointer' }}
+                style={{ fontSize: 13, fontWeight: 700, color: 'var(--dashboard-blue)', background: '#fff', border: '1px solid var(--dashboard-blue)', borderRadius: 999, padding: '7px 16px', cursor: 'pointer' }}
               >
                 {t('faqAddCustomButton')}
               </button>
@@ -300,7 +300,7 @@ export function FaqSection({ vendorId, categoryIds }: Props) {
                           type="button"
                           onClick={() => handleToggleActive(faq)}
                           disabled={busyId === faq.id}
-                          style={{ fontSize: 11, fontWeight: 700, color: BRAND.blue, background: 'none', border: 'none', cursor: 'pointer' }}
+                          style={{ fontSize: 11, fontWeight: 700, color: 'var(--dashboard-blue)', background: 'none', border: 'none', cursor: 'pointer' }}
                         >
                           {faq.is_active ? t('faqDeactivateButton') : t('faqActivateButton')}
                         </button>

@@ -4,7 +4,7 @@
 // Ruta: src/components/vendor/settings/PaymentSection.tsx
 // ============================================================
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { SectionCard, SaveSectionButton } from './SectionCard'
@@ -12,6 +12,8 @@ import { SectionCard, SaveSectionButton } from './SectionCard'
 interface Props {
   vendorId: string
   initial: { bankName: string; bankAccount: string }
+  onRegisterSave?: (save: (() => Promise<boolean>) | null) => void
+  hideOwnButton?: boolean
 }
 
 const inputStyle: React.CSSProperties = {
@@ -19,7 +21,7 @@ const inputStyle: React.CSSProperties = {
 }
 const labelStyle: React.CSSProperties = { fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }
 
-export function PaymentSection({ vendorId, initial }: Props) {
+export function PaymentSection({ vendorId, initial, onRegisterSave, hideOwnButton }: Props) {
   const router = useRouter()
   const supabase = createClient()
 
@@ -29,7 +31,7 @@ export function PaymentSection({ vendorId, initial }: Props) {
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState(false)
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     setError(null)
     setSuccess(false)
     setSaving(true)
@@ -43,14 +45,20 @@ export function PaymentSection({ vendorId, initial }: Props) {
     if (updateError) {
       console.error('[PaymentSection]', updateError)
       setError('Ocurrió un error al guardar. Intenta de nuevo.')
-      return
+      return false
     }
     setSuccess(true)
     router.refresh()
-  }
+    return true
+  }, [bankName, bankAccount, vendorId, supabase, router])
+
+  useEffect(() => {
+    onRegisterSave?.(handleSave)
+    return () => onRegisterSave?.(null)
+  }, [handleSave, onRegisterSave])
 
   return (
-    <SectionCard title="Cuenta para recibir pagos" subtitle="Solo tú puedes ver esta información">
+    <SectionCard title="Cuenta para recibir pagos" subtitle="🔒 Solo tú y MercadoRD pueden ver esta información">
       <div style={{ marginBottom: 12 }}>
         <label style={labelStyle}>Banco</label>
         <input value={bankName} onChange={e => setBankName(e.target.value)} placeholder="Banco Popular, BHD, etc." style={inputStyle} />
@@ -61,7 +69,7 @@ export function PaymentSection({ vendorId, initial }: Props) {
         <input value={bankAccount} onChange={e => setBankAccount(e.target.value)} style={inputStyle} />
       </div>
 
-      <SaveSectionButton onClick={handleSave} saving={saving} error={error} success={success} />
+      <SaveSectionButton onClick={handleSave} saving={saving} error={error} success={success} showButton={!hideOwnButton} />
     </SectionCard>
   )
 }
