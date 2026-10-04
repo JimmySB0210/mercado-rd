@@ -180,4 +180,24 @@ Estas decisiones precisan la spec anterior para la implementación:
 - **Precios:** tarjeta 20/700. Precio anterior 13/400 tachado. Listados 28 en desktop y 24 en móvil, 700. Detalle de producto 32, line-height 1.15, 700. Métrica del dashboard 28/700. Los 22 y 26 observados se resuelven a 24 o 28 según el rol.
 - **Logo:** el subtítulo "De República Dominicana" usa Inter. El wordmark "MercadoRD" (Playfair Display) no se toca.
 - **Georgia del hero:** se reemplaza por Inter. Si la variable no carga itálica, se quita la cursiva en vez de dejar que el navegador la sintetice. `monospace` se mantiene para códigos e IDs.
-- **Pesos:** 900 pasa a 800 como piso mecánico. En cada bloque de implementación, los textos bajan a 700 salvo H1/hero y métricas extremas, que la spec autoriza a 800.
+- **Pesos:** 900 pasa a 800 como piso mecánico. En cada bloque de implementación, los textos bajan a 700 salvo H1/hero y métricas extremas, que la spec autoriza a 800. Ver la regla vigente abajo: el 800 no se habilita en la carga de Inter hasta el final de la fase 3.
+
+## Decisiones aprobadas (bloques de la fase 3)
+
+### Excepciones reutilizables
+
+- **Subtítulo del hero móvil en caption (12px).** El banner móvil del hero mide 112px de alto fijo, con H1 de 24px en 2 líneas. Con 14px el subtítulo no cabe y se colapsa, así que queda en `--text-caption` con `--leading-caption`. Excepción a la regla de párrafos móviles en 14px. Reutilizable para cualquier banner compacto de altura fija.
+- **Tablets (641 a 1009px):** el hero compacto sigue usando el H1 de 32px del token de escritorio, porque el breakpoint de los tokens móviles es 640px. Aprobado.
+- **Badges:** token `--text-badge` (11px), definido por la spec §8.
+- **Móvil H3 (17px) y body (14px):** overrides de los tokens existentes en el media query de 640px.
+
+### Reglas vigentes
+
+- **Peso 800:** la carga de Inter sigue en 400 a 700. El 800 se habilita al final de la fase 3, cuando no quede ningún 800 o 900 sin revisar, y solo si un elemento autorizado lo necesita. Esto reemplaza la instrucción anterior de habilitarlo por bloque.
+- **Emojis y tamaños de ícono** (22, 40, 48 px): fuera de la escala de texto, sin tokenizar.
+- **Cursiva:** next/font 14.2 no declara itálica para Inter. El Georgia del hero se reemplazó por Inter sin cursiva.
+
+### Pendientes
+
+- **Altura del hero en escritorio:** reducirla al estilo compacto del móvil. Hoy mide 307px a 1440. El H1 de 40px puede ocupar 2 líneas, así que el cambio tiene que contar con eso. Pedido de Jimmy para más adelante, sin implementar.
+  - **Hallazgo en FR a 1440 (previo, no causado por el titular):** el subtítulo ocupa 3 líneas (68px) y la fila de perks queda 14px fuera del banner, así que se recorta. Medido igual con el titular anterior. Sin tocar subtítulo ni CTA hasta que se decida el alto del hero.
