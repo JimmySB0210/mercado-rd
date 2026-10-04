@@ -547,7 +547,7 @@ export function ProductPageContent({
           </div>
 
           {/* Nombre */}
-          <h1 className="order-1 lg:order-3 text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+          <h1 className="order-1 lg:order-3 text-h1 font-bold text-gray-900">
             {displayName}
           </h1>
 
@@ -609,18 +609,18 @@ export function ProductPageContent({
               <>
                 <div className="flex items-baseline gap-3 flex-wrap">
                   <span
-                    className="text-3xl font-bold"
+                    className="text-price-detail font-bold"
                     style={{ color: 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}
                   >
                     {formatPrice(product.price_rdp)}
                   </span>
                   {hasDiscount && (
                     <>
-                      <span className="text-lg text-gray-400 line-through">
+                      <span className="text-small font-normal text-gray-400 line-through">
                         {formatPrice(product.compare_rdp!)}
                       </span>
                       <span
-                        className="text-sm font-bold px-2 py-0.5 rounded-full text-white"
+                        className="text-badge font-semibold px-2 py-0.5 rounded-full text-white"
                         style={{ background: 'var(--brand-red)' }}
                       >
                         -{discount}%

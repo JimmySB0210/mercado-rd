@@ -299,7 +299,7 @@ export function ProductSelectors() {
               className="w-full appearance-none"
               style={{
                 border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)',
-                padding: '11px 40px 11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box',
+                padding: '11px 40px 11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box',
                 background: '#fff', color: selectedSize ? BRAND.dark : BRAND.gray, cursor: 'pointer',
               }}
             >
@@ -410,7 +410,7 @@ export function ProductSelectors() {
                   className="w-full appearance-none"
                   style={{
                     border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)',
-                    padding: '11px 40px 11px 14px', fontSize: 14, outline: 'none', boxSizing: 'border-box',
+                    padding: '11px 40px 11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box',
                     background: '#fff', color: selectedValue ? BRAND.dark : BRAND.gray, cursor: 'pointer',
                   }}
                 >
@@ -528,7 +528,7 @@ export function AddToCartButton() {
     <button
       onClick={handleAdd}
       disabled={!canAdd}
-      className={`w-full py-3.5 font-semibold flex items-center justify-center gap-2 ${
+      className={`w-full py-3.5 font-semibold text-body flex items-center justify-center gap-2 ${
         added
           ? 'bg-[var(--color-green)] text-white'
           : canAdd
@@ -566,7 +566,7 @@ export function BuyNowButton() {
     <button
       onClick={handleBuyNow}
       disabled={!canAdd}
-      className={`w-full py-3.5 font-semibold text-white flex items-center justify-center gap-2 ${
+      className={`w-full py-3.5 font-semibold text-white text-body flex items-center justify-center gap-2 ${
         canAdd ? 'bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] active:scale-[0.98]' : 'bg-gray-300 cursor-not-allowed'
       }`}
       style={{
