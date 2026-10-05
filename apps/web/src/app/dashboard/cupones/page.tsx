@@ -157,7 +157,7 @@ export default function VendorCouponsPage() {
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: '#999', fontSize: 14 }}>{t('loadingGeneric')}</div>
+        <div style={{ color: '#999', fontSize: 'var(--text-ui)' }}>{t('loadingGeneric')}</div>
       </div>
     )
   }
@@ -169,20 +169,20 @@ export default function VendorCouponsPage() {
 
       <div style={{ padding: 28, background: '#f5f5f5' }}>
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 4 }}>{t('couponsPageTitle')}</h1>
-          <p style={{ color: '#666', fontSize: 14 }}>{t('couponsPageSub')}</p>
+          <h1 style={{ fontSize: 'var(--text-dash-title)', fontWeight: 700, lineHeight: 'var(--leading-h1)', marginBottom: 4 }}>{t('couponsPageTitle')}</h1>
+          <p style={{ color: '#666', fontSize: 'var(--text-ui)' }}>{t('couponsPageSub')}</p>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20 }} className="coupons-grid">
 
           {/* Lista */}
           <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-            <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 800, fontSize: 15 }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 600, fontSize: 'var(--text-h4)' }}>
               {t('yourCouponsHeading', { count: coupons.length })}
             </div>
 
             {coupons.length === 0 ? (
-              <div style={{ padding: 40, textAlign: 'center', fontSize: 13, color: '#999' }}>
+              <div style={{ padding: 40, textAlign: 'center', fontSize: 'var(--text-small)', color: '#999' }}>
                 {t('noCouponsYet')}
               </div>
             ) : (
@@ -191,7 +191,7 @@ export default function VendorCouponsPage() {
                   <thead>
                     <tr style={{ background: '#f8f8f8' }}>
                       {[t('tableCode'), t('tableType'), t('tableValue'), t('tableUses'), t('tableExpires'), t('tableStatus'), ''].map(h => (
-                        <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 10, color: '#999', textTransform: 'uppercase', fontWeight: 600, borderBottom: '1px solid #f0f0f0', whiteSpace: 'nowrap' }}>
+                        <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 'var(--text-caption)', color: '#999', textTransform: 'uppercase', fontWeight: 500, borderBottom: '1px solid #f0f0f0', whiteSpace: 'nowrap' }}>
                           {h}
                         </th>
                       ))}
@@ -200,17 +200,17 @@ export default function VendorCouponsPage() {
                   <tbody>
                     {coupons.map(c => (
                       <tr key={c.id} style={{ borderBottom: '1px solid #f8f8f8' }}>
-                        <td style={{ padding: '10px 12px', fontSize: 13, fontWeight: 700, color: BRAND.blue }}>{c.code}</td>
-                        <td style={{ padding: '10px 12px', fontSize: 12, color: '#666' }}>
+                        <td style={{ padding: '10px 12px', fontSize: 'var(--text-small)', fontWeight: 700, color: BRAND.blue }}>{c.code}</td>
+                        <td style={{ padding: '10px 12px', fontSize: 'var(--text-caption)', color: '#666' }}>
                           {c.type === 'percentage' ? t('typePercentage') : t('typeFixed')}
                         </td>
-                        <td style={{ padding: '10px 12px', fontSize: 12, color: '#666', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '10px 12px', fontSize: 'var(--text-caption)', color: '#666', whiteSpace: 'nowrap' }}>
                           {c.type === 'percentage' ? `${c.value}%` : formatPrice(c.value)}
                         </td>
-                        <td style={{ padding: '10px 12px', fontSize: 12, color: '#666', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '10px 12px', fontSize: 'var(--text-caption)', color: '#666', whiteSpace: 'nowrap' }}>
                           {c.uses_count}{c.max_uses ? ` / ${c.max_uses}` : ''}
                         </td>
-                        <td style={{ padding: '10px 12px', fontSize: 12, color: '#666', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '10px 12px', fontSize: 'var(--text-caption)', color: '#666', whiteSpace: 'nowrap' }}>
                           {c.expires_at
                             ? formatDate(c.expires_at, language, { day: 'numeric', month: 'short', year: 'numeric' })
                             : t('noExpiration')}
@@ -219,7 +219,7 @@ export default function VendorCouponsPage() {
                           <span style={{
                             background: c.is_active ? '#DCFCE7' : '#F3F4F6',
                             color: c.is_active ? '#166534' : '#666',
-                            fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10,
+                            fontSize: 'var(--text-badge)', fontWeight: 700, padding: '2px 8px', borderRadius: 10,
                           }}>
                             {c.is_active ? t('activeBadge') : t('inactiveBadge')}
                           </span>
@@ -229,7 +229,7 @@ export default function VendorCouponsPage() {
                             onClick={() => handleToggleActive(c)}
                             style={{
                               border: '1px solid #ddd', background: '#fff', borderRadius: 6,
-                              padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer', color: '#333',
+                              padding: '4px 10px', fontSize: 'var(--text-caption)', fontWeight: 600, cursor: 'pointer', color: '#333',
                             }}
                           >
                             {c.is_active ? t('deactivateBtn') : t('activateBtn')}
@@ -245,27 +245,27 @@ export default function VendorCouponsPage() {
 
           {/* Formulario */}
           <div style={{ background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 8px rgba(0,0,0,0.06)', alignSelf: 'start' }}>
-            <h2 style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>{t('newCouponHeading')}</h2>
+            <h2 style={{ fontSize: 'var(--text-ui)', fontWeight: 700, marginBottom: 14 }}>{t('newCouponHeading')}</h2>
 
             <form onSubmit={handleCreate} style={{ display: 'grid', gap: 10 }}>
               <div>
-                <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>{t('codeLabel')}</label>
+                <label style={{ fontSize: 'var(--text-caption)', color: '#666', display: 'block', marginBottom: 4 }}>{t('codeLabel')}</label>
                 <input
                   name="code"
                   value={form.code}
                   onChange={handleCodeChange}
                   placeholder={t('codePlaceholder')}
-                  style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '9px 12px', fontSize: 14, boxSizing: 'border-box', textTransform: 'uppercase' }}
+                  style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '9px 12px', fontSize: 'var(--text-ui)', boxSizing: 'border-box', textTransform: 'uppercase' }}
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>{t('typeLabel')}</label>
+                <label style={{ fontSize: 'var(--text-caption)', color: '#666', display: 'block', marginBottom: 4 }}>{t('typeLabel')}</label>
                 <select
                   name="type"
                   value={form.type}
                   onChange={handleChange}
-                  style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '9px 12px', fontSize: 14, boxSizing: 'border-box', background: '#fff' }}
+                  style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '9px 12px', fontSize: 'var(--text-ui)', boxSizing: 'border-box', background: '#fff' }}
                 >
                   <option value="percentage">{t('typePercentageOption')}</option>
                   <option value="fixed">{t('typeFixedOption')}</option>
@@ -273,7 +273,7 @@ export default function VendorCouponsPage() {
               </div>
 
               <div>
-                <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>
+                <label style={{ fontSize: 'var(--text-caption)', color: '#666', display: 'block', marginBottom: 4 }}>
                   {form.type === 'percentage' ? t('discountPercentLabel') : t('discountAmountLabel')}
                 </label>
                 <input
@@ -284,12 +284,12 @@ export default function VendorCouponsPage() {
                   value={form.value}
                   onChange={handleChange}
                   placeholder={form.type === 'percentage' ? '20' : '500.00'}
-                  style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '9px 12px', fontSize: 14, boxSizing: 'border-box' }}
+                  style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '9px 12px', fontSize: 'var(--text-ui)', boxSizing: 'border-box' }}
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>{t('minOrderLabel')}</label>
+                <label style={{ fontSize: 'var(--text-caption)', color: '#666', display: 'block', marginBottom: 4 }}>{t('minOrderLabel')}</label>
                 <input
                   name="minOrder"
                   type="number"
@@ -298,12 +298,12 @@ export default function VendorCouponsPage() {
                   value={form.minOrder}
                   onChange={handleChange}
                   placeholder="RD$"
-                  style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '9px 12px', fontSize: 14, boxSizing: 'border-box' }}
+                  style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '9px 12px', fontSize: 'var(--text-ui)', boxSizing: 'border-box' }}
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>{t('maxUsesLabel')}</label>
+                <label style={{ fontSize: 'var(--text-caption)', color: '#666', display: 'block', marginBottom: 4 }}>{t('maxUsesLabel')}</label>
                 <input
                   name="maxUses"
                   type="number"
@@ -311,23 +311,23 @@ export default function VendorCouponsPage() {
                   value={form.maxUses}
                   onChange={handleChange}
                   placeholder={t('maxUsesPlaceholder')}
-                  style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '9px 12px', fontSize: 14, boxSizing: 'border-box' }}
+                  style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '9px 12px', fontSize: 'var(--text-ui)', boxSizing: 'border-box' }}
                 />
               </div>
 
               <div>
-                <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>{t('expirationDateLabel')}</label>
+                <label style={{ fontSize: 'var(--text-caption)', color: '#666', display: 'block', marginBottom: 4 }}>{t('expirationDateLabel')}</label>
                 <input
                   name="expiresAt"
                   type="date"
                   value={form.expiresAt}
                   onChange={handleChange}
-                  style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '9px 12px', fontSize: 14, boxSizing: 'border-box' }}
+                  style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '9px 12px', fontSize: 'var(--text-ui)', boxSizing: 'border-box' }}
                 />
               </div>
 
               {error && (
-                <div style={{ background: '#fee', border: '1px solid #fcc', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#c00' }}>
+                <div style={{ background: '#fee', border: '1px solid #fcc', borderRadius: 8, padding: '8px 12px', fontSize: 'var(--text-small)', fontWeight: 500, color: '#c00' }}>
                   {error}
                 </div>
               )}
@@ -337,7 +337,7 @@ export default function VendorCouponsPage() {
                 disabled={saving}
                 style={{
                   width: '100%', background: saving ? '#ccc' : BRAND.blue, color: '#fff', border: 'none',
-                  padding: '11px', borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: saving ? 'not-allowed' : 'pointer', marginTop: 4,
+                  padding: '11px', borderRadius: 8, fontWeight: 700, fontSize: 'var(--text-ui)', cursor: saving ? 'not-allowed' : 'pointer', marginTop: 4,
                 }}
               >
                 {saving ? t('creatingCoupon') : t('createCouponBtn')}

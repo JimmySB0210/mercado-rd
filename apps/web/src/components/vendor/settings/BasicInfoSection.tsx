@@ -31,9 +31,9 @@ interface Props {
 }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box',
+  width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 'var(--text-ui)', boxSizing: 'border-box',
 }
-const labelStyle: React.CSSProperties = { fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }
+const labelStyle: React.CSSProperties = { fontSize: 'var(--text-ui)', fontWeight: 600, color: '#666', display: 'block', marginBottom: 4 }
 
 export function BasicInfoSection({ vendorId, provinces, initial, onRegisterSave, hideOwnButton, bare }: Props) {
   const router = useRouter()
@@ -106,14 +106,14 @@ export function BasicInfoSection({ vendorId, provinces, initial, onRegisterSave,
         <label style={labelStyle}>Nombre de la tienda *</label>
         <input name="businessName" value={form.businessName} onChange={handleChange}
           style={{ ...inputStyle, border: `1px solid ${businessNameError ? '#c00' : '#ddd'}` }} />
-        {businessNameError && <p style={{ fontSize: 12, color: '#c00', marginTop: 6 }}>{businessNameError}</p>}
+        {businessNameError && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: '#c00', marginTop: 6 }}>{businessNameError}</p>}
       </div>
 
       <div style={{ marginBottom: 12 }}>
         <label style={labelStyle}>Descripción *</label>
         <textarea name="description" value={form.description} onChange={handleChange} rows={3}
           style={{ ...inputStyle, border: `1px solid ${descriptionError ? '#c00' : '#ddd'}`, resize: 'vertical', fontFamily: 'inherit' }} />
-        {descriptionError && <p style={{ fontSize: 12, color: '#c00', marginTop: 6 }}>{descriptionError}</p>}
+        {descriptionError && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: '#c00', marginTop: 6 }}>{descriptionError}</p>}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
@@ -153,7 +153,7 @@ export function BasicInfoSection({ vendorId, provinces, initial, onRegisterSave,
         <textarea name="address" value={form.address} onChange={handleChange} rows={2}
           placeholder="Ej: Calle Duarte #45, Sector Villa Consuelo, cerca del colmado Los Hermanos"
           style={{ ...inputStyle, border: `1px solid ${addressError ? '#c00' : '#ddd'}`, resize: 'vertical', fontFamily: 'inherit' }} />
-        {addressError && <p style={{ fontSize: 12, color: '#c00', marginTop: 6 }}>{addressError}</p>}
+        {addressError && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: '#c00', marginTop: 6 }}>{addressError}</p>}
       </div>
 
       <SaveSectionButton onClick={handleSave} saving={saving} error={error} success={success} showButton={!hideOwnButton} />

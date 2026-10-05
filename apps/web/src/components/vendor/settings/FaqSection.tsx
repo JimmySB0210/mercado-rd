@@ -161,7 +161,7 @@ export function FaqSection({ vendorId, categoryIds }: Props) {
     setFaqs(prev => prev.filter(f => f.id !== id))
   }
 
-  const inputStyle: React.CSSProperties = { width: '100%', border: '1px solid #ddd', borderRadius: 6, padding: '8px 10px', fontSize: 13, boxSizing: 'border-box', fontFamily: 'inherit' }
+  const inputStyle: React.CSSProperties = { width: '100%', border: '1px solid #ddd', borderRadius: 6, padding: '8px 10px', fontSize: 'var(--text-small)', boxSizing: 'border-box', fontFamily: 'inherit' }
 
   return (
     <SectionCard title={t('faqSectionTitle')}>
@@ -172,17 +172,17 @@ export function FaqSection({ vendorId, categoryIds }: Props) {
 
           {availableSuggested.length > 0 && (
             <div>
-              <p style={{ fontSize: 12, fontWeight: 700, color: '#555', marginBottom: 8 }}>{t('faqSuggestedHeading')}</p>
+              <p style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color: '#555', marginBottom: 8 }}>{t('faqSuggestedHeading')}</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {availableSuggested.map(row => (
                   <div key={row.id} style={{ border: '1px solid #eee', borderRadius: 8, padding: 10 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                      <span style={{ fontSize: 13, color: '#333' }}>{row.suggested_question}</span>
+                      <span style={{ fontSize: 'var(--text-small)', color: '#333' }}>{row.suggested_question}</span>
                       {addingSuggestedId !== row.id && (
                         <button
                           type="button"
                           onClick={() => { setAddingSuggestedId(row.id); setAnswerDraft(''); setError(null) }}
-                          style={{ fontSize: 12, fontWeight: 700, color: 'var(--dashboard-blue)', background: '#fff', border: '1px solid var(--dashboard-blue)', borderRadius: 999, padding: '5px 14px', cursor: 'pointer', flexShrink: 0 }}
+                          style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color: 'var(--dashboard-blue)', background: '#fff', border: '1px solid var(--dashboard-blue)', borderRadius: 999, padding: '5px 14px', cursor: 'pointer', flexShrink: 0 }}
                         >
                           {t('faqAddButton')}
                         </button>
@@ -197,13 +197,13 @@ export function FaqSection({ vendorId, categoryIds }: Props) {
                           rows={2}
                           style={{ ...inputStyle, resize: 'vertical' }}
                         />
-                        {error && <p style={{ fontSize: 11, color: BRAND.red, margin: '4px 0 0' }}>{error}</p>}
+                        {error && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, margin: '4px 0 0' }}>{error}</p>}
                         <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
                           <button
                             type="button"
                             onClick={handleSaveSuggested}
                             disabled={saving}
-                            style={{ background: saving ? '#ccc' : 'var(--dashboard-blue)', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer' }}
+                            style={{ background: saving ? '#ccc' : 'var(--dashboard-blue)', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 'var(--text-caption)', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer' }}
                           >
                             {saving ? t('faqSaving') : t('faqSaveButton')}
                           </button>
@@ -211,7 +211,7 @@ export function FaqSection({ vendorId, categoryIds }: Props) {
                             type="button"
                             onClick={() => { setAddingSuggestedId(null); setError(null) }}
                             disabled={saving}
-                            style={{ background: '#fff', border: '1px solid #ddd', borderRadius: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                            style={{ background: '#fff', border: '1px solid #ddd', borderRadius: 6, padding: '6px 14px', fontSize: 'var(--text-caption)', fontWeight: 600, cursor: 'pointer' }}
                           >
                             {t('faqCancelButton')}
                           </button>
@@ -241,13 +241,13 @@ export function FaqSection({ vendorId, categoryIds }: Props) {
                   rows={2}
                   style={{ ...inputStyle, resize: 'vertical' }}
                 />
-                {error && <p style={{ fontSize: 11, color: BRAND.red, margin: '4px 0 0' }}>{error}</p>}
+                {error && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, margin: '4px 0 0' }}>{error}</p>}
                 <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
                   <button
                     type="button"
                     onClick={handleSaveCustom}
                     disabled={saving}
-                    style={{ background: saving ? '#ccc' : 'var(--dashboard-blue)', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer' }}
+                    style={{ background: saving ? '#ccc' : 'var(--dashboard-blue)', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 'var(--text-caption)', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer' }}
                   >
                     {saving ? t('faqSaving') : t('faqSaveButton')}
                   </button>
@@ -255,7 +255,7 @@ export function FaqSection({ vendorId, categoryIds }: Props) {
                     type="button"
                     onClick={() => { setAddingCustom(false); setCustomQuestion(''); setCustomAnswer(''); setError(null) }}
                     disabled={saving}
-                    style={{ background: '#fff', border: '1px solid #ddd', borderRadius: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                    style={{ background: '#fff', border: '1px solid #ddd', borderRadius: 6, padding: '6px 14px', fontSize: 'var(--text-caption)', fontWeight: 600, cursor: 'pointer' }}
                   >
                     {t('faqCancelButton')}
                   </button>
@@ -265,7 +265,7 @@ export function FaqSection({ vendorId, categoryIds }: Props) {
               <button
                 type="button"
                 onClick={() => { setAddingCustom(true); setError(null) }}
-                style={{ fontSize: 13, fontWeight: 700, color: 'var(--dashboard-blue)', background: '#fff', border: '1px solid var(--dashboard-blue)', borderRadius: 999, padding: '7px 16px', cursor: 'pointer' }}
+                style={{ fontSize: 'var(--text-small)', fontWeight: 700, color: 'var(--dashboard-blue)', background: '#fff', border: '1px solid var(--dashboard-blue)', borderRadius: 999, padding: '7px 16px', cursor: 'pointer' }}
               >
                 {t('faqAddCustomButton')}
               </button>
@@ -273,9 +273,9 @@ export function FaqSection({ vendorId, categoryIds }: Props) {
           </div>
 
           <div>
-            <p style={{ fontSize: 12, fontWeight: 700, color: '#555', marginBottom: 8 }}>{t('faqYourQuestionsHeading')}</p>
+            <p style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color: '#555', marginBottom: 8 }}>{t('faqYourQuestionsHeading')}</p>
             {faqs.length === 0 ? (
-              <p style={{ fontSize: 12, color: '#999' }}>{t('faqEmptyHint')}</p>
+              <p style={{ fontSize: 'var(--text-caption)', color: '#999' }}>{t('faqEmptyHint')}</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {faqs.map(faq => (
@@ -285,22 +285,22 @@ export function FaqSection({ vendorId, categoryIds }: Props) {
                   >
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: '#111', margin: 0 }}>
+                        <p style={{ fontSize: 'var(--text-small)', fontWeight: 600, color: '#111', margin: 0 }}>
                           {faq.question}
                           {!faq.is_active && (
-                            <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: '#999', textTransform: 'uppercase' }}>
+                            <span style={{ marginLeft: 8, fontSize: 'var(--text-badge)', fontWeight: 700, color: '#999', textTransform: 'uppercase' }}>
                               {t('faqInactiveLabel')}
                             </span>
                           )}
                         </p>
-                        <p style={{ fontSize: 12, color: '#666', margin: '4px 0 0' }}>{faq.answer}</p>
+                        <p style={{ fontSize: 'var(--text-caption)', color: '#666', margin: '4px 0 0' }}>{faq.answer}</p>
                       </div>
                       <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
                         <button
                           type="button"
                           onClick={() => handleToggleActive(faq)}
                           disabled={busyId === faq.id}
-                          style={{ fontSize: 11, fontWeight: 700, color: 'var(--dashboard-blue)', background: 'none', border: 'none', cursor: 'pointer' }}
+                          style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color: 'var(--dashboard-blue)', background: 'none', border: 'none', cursor: 'pointer' }}
                         >
                           {faq.is_active ? t('faqDeactivateButton') : t('faqActivateButton')}
                         </button>
@@ -308,7 +308,7 @@ export function FaqSection({ vendorId, categoryIds }: Props) {
                           type="button"
                           onClick={() => handleDelete(faq.id)}
                           disabled={busyId === faq.id}
-                          style={{ fontSize: 11, fontWeight: 700, color: BRAND.red, background: 'none', border: 'none', cursor: 'pointer' }}
+                          style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color: BRAND.red, background: 'none', border: 'none', cursor: 'pointer' }}
                         >
                           {t('faqDeleteButton')}
                         </button>

@@ -224,7 +224,7 @@ export function VendorSettingsWizard({
                 border: filled ? 'none' : '1.5px solid #D1D4D7',
                 background: filled ? 'var(--dashboard-blue)' : '#fff',
                 color: filled ? '#fff' : BRAND.gray,
-                fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 'var(--text-caption)', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
               {i + 1}
@@ -268,11 +268,11 @@ export function VendorSettingsWizard({
     <div style={{ maxWidth: 1180 }}>
       {/* Cabecera */}
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 900, marginBottom: 4, color: BRAND.dark }}>Configuración de tu tienda</h1>
-        <p style={{ color: BRAND.gray, fontSize: 13.5, marginBottom: 14 }}>
+        <h1 style={{ fontSize: 'var(--text-dash-title)', fontWeight: 700, lineHeight: 'var(--leading-h1)', marginBottom: 4, color: BRAND.dark }}>Configuración de tu tienda</h1>
+        <p style={{ color: BRAND.gray, fontSize: 'var(--text-small)', marginBottom: 14 }}>
           Completa la información de tu negocio para que los compradores puedan conocerte mejor.
         </p>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700, color: BRAND.dark, marginBottom: 6 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-caption)', fontWeight: 700, color: BRAND.dark, marginBottom: 6 }}>
           <span>Perfil {completeness.percent}% completo</span>
         </div>
         <div style={{ height: 6, borderRadius: 3, background: '#EEF2F6', overflow: 'hidden', maxWidth: 360 }}>
@@ -400,7 +400,7 @@ export function VendorSettingsWizard({
               onClick={() => goToStep(activeStepIndex - 1)}
               disabled={activeStepIndex === 0}
               style={{
-                fontSize: 13.5, fontWeight: 700, background: 'transparent', border: 'none', cursor: activeStepIndex === 0 ? 'default' : 'pointer',
+                fontSize: 'var(--text-small)', fontWeight: 700, background: 'transparent', border: 'none', cursor: activeStepIndex === 0 ? 'default' : 'pointer',
                 color: BRAND.gray, opacity: activeStepIndex === 0 ? 0 : 1, padding: '10px 4px',
               }}
             >
@@ -415,7 +415,7 @@ export function VendorSettingsWizard({
                   disabled={stepSaving}
                   style={{
                     background: '#fff', color: 'var(--dashboard-blue)', border: '1px solid var(--dashboard-blue)', padding: '10px 20px',
-                    borderRadius: 8, fontWeight: 700, fontSize: 13.5, cursor: stepSaving ? 'not-allowed' : 'pointer', opacity: stepSaving ? 0.6 : 1,
+                    borderRadius: 8, fontWeight: 700, fontSize: 'var(--text-small)', cursor: stepSaving ? 'not-allowed' : 'pointer', opacity: stepSaving ? 0.6 : 1,
                   }}
                 >
                   {stepSaving ? 'Guardando...' : 'Guardar cambios'}
@@ -428,7 +428,7 @@ export function VendorSettingsWizard({
                   onClick={() => goToStep(activeStepIndex + 1)}
                   style={{
                     background: 'var(--dashboard-blue)', color: '#fff', border: 'none', padding: '10px 20px',
-                    borderRadius: 8, fontWeight: 700, fontSize: 13.5, cursor: 'pointer',
+                    borderRadius: 8, fontWeight: 700, fontSize: 'var(--text-small)', cursor: 'pointer',
                   }}
                 >
                   Siguiente →
@@ -439,7 +439,7 @@ export function VendorSettingsWizard({
                   onClick={() => router.push('/dashboard')}
                   style={{
                     background: BRAND.green, color: '#fff', border: 'none', padding: '10px 20px',
-                    borderRadius: 8, fontWeight: 700, fontSize: 13.5, cursor: 'pointer',
+                    borderRadius: 8, fontWeight: 700, fontSize: 'var(--text-small)', cursor: 'pointer',
                   }}
                 >
                   Finalizar
@@ -458,8 +458,8 @@ export function VendorSettingsWizard({
 function StepHeading({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <h2 style={{ fontSize: 17, fontWeight: 800, color: BRAND.dark, marginBottom: 3 }}>{title}</h2>
-      <p style={{ fontSize: 13, color: BRAND.gray, margin: 0 }}>{subtitle}</p>
+      <h2 style={{ fontSize: 'var(--text-form-section)', fontWeight: 700, color: BRAND.dark, marginBottom: 3 }}>{title}</h2>
+      <p style={{ fontSize: 'var(--text-small)', color: BRAND.gray, margin: 0 }}>{subtitle}</p>
     </div>
   )
 }
@@ -472,7 +472,7 @@ function TipCard() {
   return (
     <div style={{ ...asideCardStyle(), display: 'flex', gap: 10 }}>
       <span style={{ fontSize: 18, flexShrink: 0 }}>💡</span>
-      <p style={{ fontSize: 12, color: BRAND.gray, margin: 0, lineHeight: 1.5 }}>
+      <p style={{ fontSize: 'var(--text-caption)', color: BRAND.gray, margin: 0, lineHeight: 1.5 }}>
         Un buen perfil genera más confianza y aumenta tus ventas.
       </p>
     </div>
@@ -508,7 +508,7 @@ function StorePreviewAside({ vendor, provinces, categories, categoryIds, busines
 
   return (
     <aside style={asideCardStyle()}>
-      <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: BRAND.gray, marginBottom: 12 }}>
+      <p style={{ fontSize: 'var(--text-caption)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: BRAND.gray, marginBottom: 12 }}>
         Vista previa de la tienda
       </p>
 
@@ -523,14 +523,14 @@ function StorePreviewAside({ vendor, provinces, categories, categoryIds, busines
           ) : '🏪'}
         </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 800, color: BRAND.dark, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: 'var(--text-small)', fontWeight: 700, color: BRAND.dark, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {vendor.business_name}
           </div>
-          {provinceName && <div style={{ fontSize: 11.5, color: BRAND.gray }}>📍 {provinceName}</div>}
+          {provinceName && <div style={{ fontSize: 'var(--text-caption)', color: BRAND.gray }}>📍 {provinceName}</div>}
         </div>
       </div>
 
-      <div style={{ fontSize: 12, color: BRAND.gray, marginBottom: 12 }}>
+      <div style={{ fontSize: 'var(--text-caption)', color: BRAND.gray, marginBottom: 12 }}>
         {realRatingAvg === undefined ? null : realRatingAvg != null ? `⭐ ${realRatingAvg.toFixed(1)}` : 'Sin calificación todavía'}
       </div>
 
@@ -538,7 +538,7 @@ function StorePreviewAside({ vendor, provinces, categories, categoryIds, busines
         <div style={{ marginBottom: 10 }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
             {businessTypes.slice(0, 3).map(bt => (
-              <span key={bt} style={{ fontSize: 10.5, fontWeight: 600, padding: '2px 8px', borderRadius: 999, background: '#F3F5F7', color: BRAND.dark }}>{t(`businessType.${bt}`)}</span>
+              <span key={bt} style={{ fontSize: 'var(--text-badge)', fontWeight: 600, padding: '2px 8px', borderRadius: 999, background: '#F3F5F7', color: BRAND.dark }}>{t(`businessType.${bt}`)}</span>
             ))}
           </div>
         </div>
@@ -548,7 +548,7 @@ function StorePreviewAside({ vendor, provinces, categories, categoryIds, busines
         <div style={{ marginBottom: 14 }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
             {categoryNames.map(name => (
-              <span key={name} style={{ fontSize: 10.5, fontWeight: 600, padding: '2px 8px', borderRadius: 999, background: '#F3F5F7', color: BRAND.dark }}>{name}</span>
+              <span key={name} style={{ fontSize: 'var(--text-badge)', fontWeight: 600, padding: '2px 8px', borderRadius: 999, background: '#F3F5F7', color: BRAND.dark }}>{name}</span>
             ))}
           </div>
         </div>
@@ -560,7 +560,7 @@ function StorePreviewAside({ vendor, provinces, categories, categoryIds, busines
         rel="noopener noreferrer"
         style={{
           display: 'block', textAlign: 'center', background: 'var(--dashboard-blue)', color: '#fff',
-          textDecoration: 'none', padding: '9px 10px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+          textDecoration: 'none', padding: '9px 10px', borderRadius: 8, fontSize: 'var(--text-small)', fontWeight: 700,
         }}
       >
         Ver tienda →
@@ -575,19 +575,19 @@ function BusinessTypeAside({ businessTypes }: { businessTypes: BusinessType[] })
   const { t } = useTranslation('vendorOptions')
   return (
     <aside style={asideCardStyle()}>
-      <p style={{ fontSize: 13, fontWeight: 800, color: BRAND.dark, marginBottom: 12 }}>Tu negocio</p>
+      <p style={{ fontSize: 'var(--text-small)', fontWeight: 700, color: BRAND.dark, marginBottom: 12 }}>Tu negocio</p>
       {businessTypes.length === 0 ? (
-        <p style={{ fontSize: 12, color: BRAND.gray }}>Aún no has seleccionado un tipo de negocio.</p>
+        <p style={{ fontSize: 'var(--text-caption)', color: BRAND.gray }}>Aún no has seleccionado un tipo de negocio.</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
           {businessTypes.map(bt => (
-            <div key={bt} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: BRAND.dark }}>
+            <div key={bt} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--text-small)', color: BRAND.dark }}>
               <span style={{ color: BRAND.green, fontWeight: 700 }}>✓</span>{t(`businessType.${bt}`)}
             </div>
           ))}
         </div>
       )}
-      <p style={{ display: 'flex', gap: 8, fontSize: 12, color: BRAND.gray, background: '#F3F7FC', borderRadius: 8, padding: '9px 11px', margin: 0 }}>
+      <p style={{ display: 'flex', gap: 8, fontSize: 'var(--text-caption)', color: BRAND.gray, background: '#F3F7FC', borderRadius: 8, padding: '9px 11px', margin: 0 }}>
         <span>ℹ️</span>
         <span>Esto te permitirá participar en las secciones correspondientes de MercadoRD.</span>
       </p>
@@ -600,13 +600,13 @@ function CategoriesAside({ categories, categoryIds }: { categories: Category[]; 
   const selected = categories.filter(c => categoryIds.includes(c.id))
   return (
     <aside style={asideCardStyle()}>
-      <p style={{ fontSize: 13, fontWeight: 800, color: BRAND.dark, marginBottom: 12 }}>Categorías seleccionadas</p>
+      <p style={{ fontSize: 'var(--text-small)', fontWeight: 700, color: BRAND.dark, marginBottom: 12 }}>Categorías seleccionadas</p>
       {selected.length === 0 ? (
-        <p style={{ fontSize: 12, color: BRAND.gray }}>Aún no has seleccionado categorías.</p>
+        <p style={{ fontSize: 'var(--text-caption)', color: BRAND.gray }}>Aún no has seleccionado categorías.</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
           {selected.map(c => (
-            <span key={c.id} style={{ fontSize: 12.5, fontWeight: 600, padding: '7px 10px', borderRadius: 8, background: '#F3F7FC', color: 'var(--dashboard-blue)' }}>
+            <span key={c.id} style={{ fontSize: 'var(--text-small)', fontWeight: 600, padding: '7px 10px', borderRadius: 8, background: '#F3F7FC', color: 'var(--dashboard-blue)' }}>
               {c.emoji} {c.name}
             </span>
           ))}
@@ -621,7 +621,7 @@ function HelpAside({ text }: { text: string }) {
   return (
     <aside style={{ ...asideCardStyle(), textAlign: 'center' }}>
       <div style={{ fontSize: 32, marginBottom: 10 }}>🤝</div>
-      <p style={{ fontSize: 12.5, color: BRAND.gray, lineHeight: 1.6, margin: 0 }}>{text}</p>
+      <p style={{ fontSize: 'var(--text-small)', color: BRAND.gray, lineHeight: 1.6, margin: 0 }}>{text}</p>
     </aside>
   )
 }

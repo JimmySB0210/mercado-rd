@@ -124,24 +124,24 @@ export default function VendorIncomePage() {
 
       <div style={{ padding: 28, background: '#f5f5f5' }}>
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 4 }}>{t('incomePageTitle')}</h1>
-          <p style={{ color: '#666', fontSize: 14 }}>{t('incomePageSub')}</p>
+          <h1 style={{ fontSize: 'var(--text-dash-title)', fontWeight: 700, lineHeight: 'var(--leading-h1)', marginBottom: 4 }}>{t('incomePageTitle')}</h1>
+          <p style={{ color: '#666', fontSize: 'var(--text-ui)' }}>{t('incomePageSub')}</p>
         </div>
 
         {/* KPIs principales */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>
           <div style={{ background: '#fff', borderRadius: 12, padding: 18, boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-            <div style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 8 }}>{t('totalIncomeLabel')}</div>
-            <div style={{ fontWeight: 900, fontSize: 22, color: BRAND.green }}>{formatPrice(totalIncome)}</div>
+            <div style={{ fontSize: 'var(--text-caption)', color: '#999', textTransform: 'uppercase', marginBottom: 8 }}>{t('totalIncomeLabel')}</div>
+            <div style={{ fontWeight: 700, fontSize: 'var(--text-metric)', lineHeight: 'var(--leading-price)', color: BRAND.green }}>{formatPrice(totalIncome)}</div>
           </div>
           <div style={{ background: '#fff', borderRadius: 12, padding: 18, boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-            <div style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 8 }}>{t('unitsSoldLabel')}</div>
-            <div style={{ fontWeight: 900, fontSize: 22, color: '#111' }}>{totalUnits}</div>
+            <div style={{ fontSize: 'var(--text-caption)', color: '#999', textTransform: 'uppercase', marginBottom: 8 }}>{t('unitsSoldLabel')}</div>
+            <div style={{ fontWeight: 700, fontSize: 'var(--text-metric)', lineHeight: 'var(--leading-price)', color: '#111' }}>{totalUnits}</div>
           </div>
           {lostToCancellations > 0 && (
             <div style={{ background: '#fff', borderRadius: 12, padding: 18, boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-              <div style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 8 }}>{t('lostToCancellationsLabel')}</div>
-              <div style={{ fontWeight: 900, fontSize: 22, color: BRAND.red }}>{formatPrice(lostToCancellations)}</div>
+              <div style={{ fontSize: 'var(--text-caption)', color: '#999', textTransform: 'uppercase', marginBottom: 8 }}>{t('lostToCancellationsLabel')}</div>
+              <div style={{ fontWeight: 700, fontSize: 'var(--text-metric)', lineHeight: 'var(--leading-price)', color: BRAND.red }}>{formatPrice(lostToCancellations)}</div>
             </div>
           )}
         </div>
@@ -149,21 +149,21 @@ export default function VendorIncomePage() {
         {items.length === 0 ? (
           <div style={{ background: '#fff', borderRadius: 12, padding: 48, textAlign: 'center', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>💰</div>
-            <p style={{ color: '#999', fontSize: 14 }}>{t('noIncomeYet')}</p>
+            <p style={{ color: '#999', fontSize: 'var(--text-ui)' }}>{t('noIncomeYet')}</p>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }} className="income-grid">
 
             {/* Por mes */}
             <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-              <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 800, fontSize: 15 }}>
+              <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 600, fontSize: 'var(--text-h4)' }}>
                 {t('byMonthHeading')}
               </div>
               <div>
                 {monthRows.map((row, i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 18px', borderBottom: i < monthRows.length - 1 ? '1px solid #f8f8f8' : 'none' }}>
-                    <span style={{ fontSize: 13, color: '#666' }}>{row.label}</span>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{formatPrice(row.total)}</span>
+                    <span style={{ fontSize: 'var(--text-small)', color: '#666' }}>{row.label}</span>
+                    <span style={{ fontSize: 'var(--text-small)', fontWeight: 700, color: '#111' }}>{formatPrice(row.total)}</span>
                   </div>
                 ))}
               </div>
@@ -171,17 +171,17 @@ export default function VendorIncomePage() {
 
             {/* Por producto */}
             <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-              <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 800, fontSize: 15 }}>
+              <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 600, fontSize: 'var(--text-h4)' }}>
                 {t('byProductHeading')}
               </div>
               <div>
                 {productRows.map(([name, data], i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 18px', borderBottom: i < productRows.length - 1 ? '1px solid #f8f8f8' : 'none' }}>
                     <div>
-                      <div style={{ fontSize: 13, color: '#333', fontWeight: 600 }}>{name}</div>
-                      <div style={{ fontSize: 11, color: '#999' }}>{t('soldCountLabel', { count: data.units })}</div>
+                      <div style={{ fontSize: 'var(--text-small)', color: '#333', fontWeight: 600 }}>{name}</div>
+                      <div style={{ fontSize: 'var(--text-caption)', color: '#999' }}>{t('soldCountLabel', { count: data.units })}</div>
                     </div>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{formatPrice(data.revenue)}</span>
+                    <span style={{ fontSize: 'var(--text-small)', fontWeight: 700, color: '#111' }}>{formatPrice(data.revenue)}</span>
                   </div>
                 ))}
               </div>

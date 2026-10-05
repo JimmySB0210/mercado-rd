@@ -31,9 +31,9 @@ interface Props {
 const CEDULA_REGEX = /^\d{3}-\d{7}-\d{1}$/
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box',
+  width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 'var(--text-ui)', boxSizing: 'border-box',
 }
-const labelStyle: React.CSSProperties = { fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }
+const labelStyle: React.CSSProperties = { fontSize: 'var(--text-ui)', fontWeight: 600, color: '#666', display: 'block', marginBottom: 4 }
 
 export function IdentityVerificationSection({ userId }: Props) {
   const language = useLanguageStore(s => s.language)
@@ -150,7 +150,7 @@ export function IdentityVerificationSection({ userId }: Props) {
   if (loadingInitial) {
     return (
       <SectionCard title="Verificación de identidad">
-        <p style={{ fontSize: 13, color: '#999' }}>Cargando...</p>
+        <p style={{ fontSize: 'var(--text-small)', color: '#999' }}>Cargando...</p>
       </SectionCard>
     )
   }
@@ -159,10 +159,10 @@ export function IdentityVerificationSection({ userId }: Props) {
     return (
       <SectionCard title="Verificación de identidad">
         <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10, padding: '14px 16px' }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: '#166534', marginBottom: 4 }}>
+          <p style={{ fontSize: 'var(--text-small)', fontWeight: 700, color: '#166534', marginBottom: 4 }}>
             ✓ Documentos enviados, verificación disponible próximamente
           </p>
-          <p style={{ fontSize: 12, color: '#166534' }}>
+          <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: '#166534' }}>
             Enviado el {formatDate(submittedAt, language, { day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
         </div>
@@ -176,7 +176,7 @@ export function IdentityVerificationSection({ userId }: Props) {
       <label style={{ cursor: 'pointer', display: 'block' }}>
         <span style={{
           display: 'flex', alignItems: 'center', gap: 8, border: `1px dashed ${file ? '#86EFAC' : '#ccc'}`,
-          borderRadius: 8, padding: '10px 12px', fontSize: 13,
+          borderRadius: 8, padding: '10px 12px', fontSize: 'var(--text-small)',
           color: file ? '#166534' : '#666', background: file ? '#F0FDF4' : '#fafafa',
         }}>
           {file ? `✓ ${file.name}` : '📷 Seleccionar foto'}
@@ -188,7 +188,7 @@ export function IdentityVerificationSection({ userId }: Props) {
 
   return (
     <SectionCard title="Verificación de identidad" subtitle="Solo tú y MercadoRD pueden acceder a estos documentos">
-      <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 10, padding: '12px 14px', marginBottom: 16, fontSize: 12, color: '#1e3a8a' }}>
+      <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 10, padding: '12px 14px', marginBottom: 16, fontSize: 'var(--text-caption)', color: '#1e3a8a' }}>
         Esta verificación estará disponible próximamente. Tus documentos quedan guardados de forma segura y privada mientras tanto.
       </div>
 
@@ -211,7 +211,7 @@ export function IdentityVerificationSection({ userId }: Props) {
       </div>
 
       {error && (
-        <div style={{ background: '#fee', border: '1px solid #fcc', borderRadius: 8, padding: '9px 12px', fontSize: 12, color: '#c00', marginTop: 4, marginBottom: 10 }}>
+        <div style={{ background: '#fee', border: '1px solid #fcc', borderRadius: 8, padding: '9px 12px', fontSize: 'var(--text-small)', fontWeight: 500, color: '#c00', marginTop: 4, marginBottom: 10 }}>
           {error}
         </div>
       )}
@@ -222,7 +222,7 @@ export function IdentityVerificationSection({ userId }: Props) {
         disabled={submitting}
         style={{
           marginTop: 4, background: submitting ? '#ccc' : 'var(--dashboard-blue)', color: '#fff', border: 'none', padding: '9px 18px',
-          borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: submitting ? 'not-allowed' : 'pointer',
+          borderRadius: 8, fontWeight: 700, fontSize: 'var(--text-small)', cursor: submitting ? 'not-allowed' : 'pointer',
         }}
       >
         {submitting ? 'Enviando documentos...' : 'Enviar para verificación'}

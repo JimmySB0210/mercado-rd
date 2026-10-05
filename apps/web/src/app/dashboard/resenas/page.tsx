@@ -84,7 +84,7 @@ export default function VendorReviewsPage() {
   const Stars = ({ value }: { value: number }) => (
     <div style={{ display: 'flex', gap: 2 }}>
       {[1, 2, 3, 4, 5].map(n => (
-        <span key={n} style={{ color: n <= value ? '#F5A200' : '#ddd', fontSize: 14 }}>★</span>
+        <span key={n} style={{ color: n <= value ? '#F5A200' : '#ddd', fontSize: 'var(--text-ui)' }}>★</span>
       ))}
     </div>
   )
@@ -104,15 +104,15 @@ export default function VendorReviewsPage() {
 
       <div style={{ padding: 28, background: '#f5f5f5' }}>
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 4 }}>{t('reviewsPageTitle')}</h1>
-          <p style={{ color: '#666', fontSize: 14 }}>{t('reviewsPageSub')}</p>
+          <h1 style={{ fontSize: 'var(--text-dash-title)', fontWeight: 700, lineHeight: 'var(--leading-h1)', marginBottom: 4 }}>{t('reviewsPageTitle')}</h1>
+          <p style={{ color: '#666', fontSize: 'var(--text-ui)' }}>{t('reviewsPageSub')}</p>
         </div>
 
         {reviews.length === 0 ? (
           <div style={{ background: '#fff', borderRadius: 12, padding: 48, textAlign: 'center', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>⭐</div>
-            <p style={{ color: '#333', fontSize: 15, fontWeight: 600, marginBottom: 6 }}>{t('noReviewsTitle')}</p>
-            <p style={{ color: '#999', fontSize: 13, maxWidth: 360, margin: '0 auto' }}>
+            <p style={{ color: '#333', fontSize: 'var(--text-body)', fontWeight: 600, marginBottom: 6 }}>{t('noReviewsTitle')}</p>
+            <p style={{ color: '#999', fontSize: 'var(--text-small)', maxWidth: 360, margin: '0 auto' }}>
               {t('noReviewsSubPrefix')}
               <strong> {t('statusDeliveredPlain')}</strong>{t('noReviewsSubSuffix')}
             </p>
@@ -122,18 +122,18 @@ export default function VendorReviewsPage() {
             {/* Resumen */}
             <div style={{ background: '#fff', borderRadius: 12, padding: 24, marginBottom: 20, boxShadow: '0 1px 8px rgba(0,0,0,0.06)', display: 'flex', gap: 32, alignItems: 'center', flexWrap: 'wrap' }}>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 40, fontWeight: 900, color: '#111' }}>{avgRating.toFixed(1)}</div>
+                <div style={{ fontSize: 40, fontWeight: 700, color: '#111' }}>{avgRating.toFixed(1)}</div>
                 <Stars value={Math.round(avgRating)} />
-                <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>{t('reviewsCountSuffix', { count: reviews.length })}</div>
+                <div style={{ fontSize: 'var(--text-caption)', color: '#999', marginTop: 4 }}>{t('reviewsCountSuffix', { count: reviews.length })}</div>
               </div>
               <div style={{ flex: 1, minWidth: 200 }}>
                 {distribution.map(d => (
                   <div key={d.stars} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 11, color: '#666', width: 12 }}>{d.stars}</span>
+                    <span style={{ fontSize: 'var(--text-caption)', color: '#666', width: 12 }}>{d.stars}</span>
                     <div style={{ flex: 1, height: 6, background: '#f0f0f0', borderRadius: 3, overflow: 'hidden' }}>
                       <div style={{ width: `${reviews.length > 0 ? (d.count / reviews.length) * 100 : 0}%`, height: '100%', background: '#F5A200' }} />
                     </div>
-                    <span style={{ fontSize: 11, color: '#999', width: 16 }}>{d.count}</span>
+                    <span style={{ fontSize: 'var(--text-caption)', color: '#999', width: 16 }}>{d.count}</span>
                   </div>
                 ))}
               </div>
@@ -147,14 +147,14 @@ export default function VendorReviewsPage() {
                   <div key={r.id} style={{ background: '#fff', borderRadius: 12, padding: 18, boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 8 }}>
                       <div>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{r.buyer_name}</span>
-                        <span style={{ fontSize: 12, color: '#999', marginLeft: 8 }}>{r.product_name}</span>
+                        <span style={{ fontSize: 'var(--text-small)', fontWeight: 700, color: '#111' }}>{r.buyer_name}</span>
+                        <span style={{ fontSize: 'var(--text-caption)', color: '#999', marginLeft: 8 }}>{r.product_name}</span>
                       </div>
-                      <span style={{ fontSize: 11, color: '#999' }}>{date}</span>
+                      <span style={{ fontSize: 'var(--text-caption)', color: '#999' }}>{date}</span>
                     </div>
                     <Stars value={r.rating} />
                     {r.comment && (
-                      <p style={{ fontSize: 13, color: '#444', marginTop: 8, lineHeight: 1.5 }}>{r.comment}</p>
+                      <p style={{ fontSize: 'var(--text-small)', color: '#444', marginTop: 8, lineHeight: 1.5 }}>{r.comment}</p>
                     )}
                   </div>
                 )

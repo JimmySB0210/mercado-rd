@@ -18,9 +18,9 @@ interface Props {
 }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box',
+  width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 'var(--text-ui)', boxSizing: 'border-box',
 }
-const labelStyle: React.CSSProperties = { fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }
+const labelStyle: React.CSSProperties = { fontSize: 'var(--text-ui)', fontWeight: 600, color: '#666', display: 'block', marginBottom: 4 }
 
 export function ContactSection({ vendorId, initial, onRegisterSave, hideOwnButton }: Props) {
   const router = useRouter()
@@ -71,7 +71,7 @@ export function ContactSection({ vendorId, initial, onRegisterSave, hideOwnButto
         <label style={labelStyle}>WhatsApp (con código de país, sin +)</label>
         <input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="18095550000"
           style={{ ...inputStyle, border: `1px solid ${whatsappError ? '#c00' : '#ddd'}` }} />
-        {whatsappError && <p style={{ fontSize: 12, color: '#c00', marginTop: 6 }}>{whatsappError}</p>}
+        {whatsappError && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: '#c00', marginTop: 6 }}>{whatsappError}</p>}
       </div>
 
       <div>
