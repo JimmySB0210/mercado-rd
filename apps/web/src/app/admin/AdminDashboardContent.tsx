@@ -259,7 +259,7 @@ export function AdminDashboardContent({ kpis, vendors, orders, paymentMetrics, o
                         {v.plan}
                       </span>
                     </td>
-                    <td style={{ padding: '10px 12px', fontSize: 'var(--text-caption)', color: '#666', whiteSpace: 'nowrap' }}>{v.total_sales}</td>
+                    <td style={{ padding: '10px 12px', fontSize: 'var(--text-caption)', color: '#666', whiteSpace: 'nowrap' }}>{v.realTotalSales ?? '—'}</td>
                     <td style={{ padding: '10px 12px' }}>
                       {v.verification_level >= 2
                         ? <VerificationBadge level={v.verification_level} />

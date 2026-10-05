@@ -15,12 +15,14 @@
 // ============================================================
 
 import { useCallback, useEffect, useState } from 'react'
-import { Star } from 'lucide-react'
 import { ProductCard } from '@/components/product/ProductCard'
+import { VendorRealStatsLine } from '@/components/shop/VendorRealStatsLine'
 import { createPublicClient } from '@/lib/supabase/public'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { useHasVariantsMap } from '@/lib/hooks/useHasVariantsMap'
 import { getBestSellerProductId } from '@/lib/utils'
+import { toVendorRealStats } from '@/lib/queries/vendorRealStatsBatch'
+import type { VendorRealStats, VendorRealStatsMap, VendorRealStatsRow } from '@/lib/queries/vendorRealStatsBatch'
 import type { Product } from '@/types'
 
 const PAGE_SIZE = 12
@@ -30,21 +32,48 @@ type FeaturedVendor = {
   business_name: string
   logo_url: string | null
   is_verified: boolean
-  rating_avg: number | null
-  total_sales: number | null
+  created_at: string
+  stats?: VendorRealStats
 }
+
+// "Tiendas destacadas" — ranking por ventas reales (vendor_real_stats),
+// no por vendors.total_sales (sembrado). Se leen las 15 primeras del
+// ranking, se traen sus tiendas con .in(ids) y se muestran 5. A igual
+// cantidad de ventas: verificadas primero, luego las más nuevas, y por
+// último el id, para que el orden sea estable entre cargas.
+const FEATURED_CANDIDATES = 15
+const FEATURED_SHOWN = 5
 
 async function fetchFeaturedVendors(): Promise<FeaturedVendor[]> {
   const supabase = createPublicClient()
+  const { data: ranking, error: rankingError } = await supabase
+    .from('vendor_real_stats')
+    .select('vendor_id, real_total_sales, real_rating_avg, real_rating_count')
+    .order('real_total_sales', { ascending: false })
+    .limit(FEATURED_CANDIDATES)
+
+  if (rankingError) { console.error('[HomeProductGrid] vendor_real_stats', rankingError); return [] }
+  if (!ranking || ranking.length === 0) return []
+
+  const statsById: VendorRealStatsMap = {}
+  for (const row of ranking as VendorRealStatsRow[]) statsById[row.vendor_id] = toVendorRealStats(row)
+
   const { data, error } = await supabase
     .from('vendors')
-    .select('id, business_name, logo_url, is_verified, rating_avg, total_sales')
-    .order('is_verified', { ascending: false })
-    .order('total_sales', { ascending: false })
-    .limit(5)
+    .select('id, business_name, logo_url, is_verified, created_at')
+    .in('id', Object.keys(statsById))
 
   if (error) { console.error('[HomeProductGrid] vendors', error); return [] }
-  return (data ?? []) as FeaturedVendor[]
+
+  const sales = (id: string) => statsById[id]?.realTotalSales ?? 0
+  return ((data ?? []) as Omit<FeaturedVendor, 'stats'>[])
+    .map(v => ({ ...v, stats: statsById[v.id] }))
+    .sort((a, b) =>
+      sales(b.id) - sales(a.id) ||
+      Number(b.is_verified) - Number(a.is_verified) ||
+      b.created_at.localeCompare(a.created_at) ||
+      a.id.localeCompare(b.id))
+    .slice(0, FEATURED_SHOWN)
 }
 
 type ProductsPageResult = { data: Product[]; ok: boolean }
@@ -243,12 +272,7 @@ export function HomeProductGrid() {
                   <div style={{fontSize:'var(--text-badge)', color:'var(--color-primary)', fontWeight:600}}>{t('verifiedBadge')}</div>
                 )}
               </div>
-              {Number(v.rating_avg) > 0 && (
-                <div style={{display:'flex', alignItems:'center', gap:4, fontSize:'var(--text-caption)', color:'var(--color-text-secondary)'}}>
-                  <Star size={12} fill='#F5A623' color='#F5A623' />
-                  {Number(v.rating_avg).toFixed(1)} · {v.total_sales ?? 0} {t('salesSuffix')}
-                </div>
-              )}
+              <VendorRealStatsLine stats={v.stats} salesLabel={t('salesSuffix')} />
             </a>
           ))}
         </div>

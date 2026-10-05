@@ -126,7 +126,7 @@ export default async function SearchPage(
         .from('products')
         .select(`
           *,
-          vendor:vendors(id, business_name, logo_url, is_verified, rating_avg, whatsapp),
+          vendor:vendors(id, business_name, logo_url, is_verified, whatsapp),
           category:categories(id, name, slug, emoji),
           province:provinces_rd(id, name)
         `)

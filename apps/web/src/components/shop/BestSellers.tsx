@@ -14,7 +14,7 @@ const SELECT = `
   id, vendor_id, category_id, province_id, name, description,
   price_rdp, compare_rdp, images, stock, sizes, colors, is_active,
   rating_avg, rating_count, sold_count, view_count, created_at, published_at,
-  vendor:vendors(id, business_name, logo_url, is_verified, rating_avg, whatsapp)
+  vendor:vendors(id, business_name, logo_url, is_verified, whatsapp)
 `
 
 export async function BestSellers() {

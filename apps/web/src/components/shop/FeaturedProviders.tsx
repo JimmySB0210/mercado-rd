@@ -3,12 +3,15 @@
 // Ruta: src/components/shop/FeaturedProviders.tsx
 // ============================================================
 // Nueva — no existía antes de la Fase 2A. Reusa search_providers()
-// (mismo RPC que ya usa /proveedores) sin filtros y p_limit: 6 — ya
-// ordena por verification_level DESC, rating_avg DESC por defecto,
-// no hizo falta tocar el RPC.
+// (mismo RPC que ya usa /proveedores) sin filtros y p_limit: 6. El
+// orden lo define el RPC: verification_level DESC y, después, la
+// calificación y las ventas reales de vendor_real_stats (migración 037).
+// Las cifras que se muestran salen de vendor_real_stats en lote, no de
+// las columnas sembradas que también devuelve el RPC.
 // ============================================================
 
 import { createPublicClient } from '@/lib/supabase/public'
+import { getVendorRealStatsBatch } from '@/lib/queries/vendorRealStatsBatch'
 import { FeaturedProvidersGrid } from '@/components/shop/FeaturedProvidersGrid'
 import type { Vendor } from '@/types/database.types'
 
@@ -29,5 +32,8 @@ export async function FeaturedProviders() {
   if (error) console.error('[FeaturedProviders]', error)
   if (!data || data.length === 0) return null
 
-  return <FeaturedProvidersGrid providers={data as Vendor[]} />
+  const providers = data as Vendor[]
+  const realStats = await getVendorRealStatsBatch(providers.map(v => v.id))
+
+  return <FeaturedProvidersGrid providers={providers} realStats={realStats} />
 }

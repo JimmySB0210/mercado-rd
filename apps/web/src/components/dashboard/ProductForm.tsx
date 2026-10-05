@@ -701,7 +701,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
   const [showPreview, setShowPreview] = useState(false)
   const [previewVendor, setPreviewVendor] = useState<{
     id: string; business_name: string; is_verified: boolean
-    whatsapp?: string; rating_avg?: number; total_sales?: number
+    whatsapp?: string
   } | null>(null)
   const [loadingPreviewVendor, setLoadingPreviewVendor] = useState(false)
 
@@ -717,7 +717,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
       setLoadingPreviewVendor(true)
       const { data } = await supabase
         .from('vendors')
-        .select('id, business_name, is_verified, whatsapp, rating_avg, total_sales')
+        .select('id, business_name, is_verified, whatsapp')
         .eq('id', vendorId)
         .single()
       setLoadingPreviewVendor(false)
@@ -803,7 +803,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     Promise.all([
       supabase.from('categories').select('id, name, name_en, name_fr, emoji, slug, parent_id').order('sort_order'),
       supabase.from('provinces_rd').select('id, name').order('name'),
-      supabase.from('vendors').select('id, business_name, is_verified, whatsapp, rating_avg, total_sales').eq('id', vendorId).single(),
+      supabase.from('vendors').select('id, business_name, is_verified, whatsapp').eq('id', vendorId).single(),
       // Servicios de envío/entrega ya declarados por el vendor (nivel
       // tienda, vendor_services) -- se muestran de solo lectura en el
       // paso "Envío"; no hay (ni se inventa) un campo por producto para

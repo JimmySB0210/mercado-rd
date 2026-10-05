@@ -22,8 +22,6 @@ interface VendorInfo {
   business_name: string
   is_verified: boolean
   whatsapp?: string
-  rating_avg?: number
-  total_sales?: number
 }
 
 interface Props {

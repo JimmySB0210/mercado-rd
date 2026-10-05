@@ -80,7 +80,6 @@ export default async function VendorStorePage(
       business_name: vendor.business_name,
       logo_url: vendor.logo_url,
       is_verified: vendor.is_verified,
-      rating_avg: vendor.rating_avg,
       whatsapp: vendor.whatsapp,
     },
   }))

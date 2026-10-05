@@ -10,11 +10,12 @@
 // a propósito, para que ambas franjas se vean como un mismo par.
 // ============================================================
 
-import { Star } from 'lucide-react'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { VendorRealStatsLine } from '@/components/shop/VendorRealStatsLine'
+import type { VendorRealStatsMap } from '@/lib/queries/vendorRealStatsBatch'
 import type { Vendor } from '@/types/database.types'
 
-export function FeaturedProvidersGrid({ providers }: { providers: Vendor[] }) {
+export function FeaturedProvidersGrid({ providers, realStats }: { providers: Vendor[]; realStats: VendorRealStatsMap }) {
   const { t } = useTranslation('products')
 
   return (
@@ -50,12 +51,7 @@ export function FeaturedProvidersGrid({ providers }: { providers: Vendor[] }) {
                 <div style={{ fontSize: 'var(--text-badge)', color: 'var(--color-primary)', fontWeight: 600 }}>{t('verifiedBadge')}</div>
               )}
             </div>
-            {Number(v.rating_avg) > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-caption)', color: 'var(--color-text-secondary)' }}>
-                <Star size={12} fill="#F5A623" color="#F5A623" />
-                {Number(v.rating_avg).toFixed(1)} · {v.total_sales ?? 0} {t('salesSuffix')}
-              </div>
-            )}
+            <VendorRealStatsLine stats={realStats[v.id]} salesLabel={t('salesSuffix')} />
           </a>
         ))}
       </div>

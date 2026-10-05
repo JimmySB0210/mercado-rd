@@ -4,6 +4,7 @@
 // ============================================================
 
 import { createServerClient } from '@/lib/supabase/server'
+import { getVendorRealStatsBatch } from '@/lib/queries/vendorRealStatsBatch'
 import type { Vendor, BusinessType, VendorService, CustomerType, ContentFlagTerm, FlaggedContent, HelpArticle } from '@/types/database.types'
 
 export async function isCurrentUserAdmin(): Promise<boolean> {
@@ -79,8 +80,9 @@ export interface AdminVendorRow {
   is_verified: boolean
   verification_level: number
   plan: string
-  rating_avg: number
-  total_sales: number
+  // Ventas reales (vendor_real_stats). null = no se pudo leer el dato:
+  // la tabla lo muestra como "—", nunca como 0.
+  realTotalSales: number | null
   created_at: string
   province_name: string | null
   product_count: number
@@ -91,7 +93,7 @@ export async function getAllVendors(): Promise<AdminVendorRow[]> {
 
   const { data: vendors, error } = await supabase
     .from('vendors')
-    .select('id, business_name, is_verified, verification_level, plan, rating_avg, total_sales, created_at, province:provinces_rd(name)')
+    .select('id, business_name, is_verified, verification_level, plan, created_at, province:provinces_rd(name)')
     .order('created_at', { ascending: false })
 
   if (error || !vendors) {
@@ -109,14 +111,15 @@ export async function getAllVendors(): Promise<AdminVendorRow[]> {
     countMap.set(p.vendor_id, (countMap.get(p.vendor_id) ?? 0) + 1)
   })
 
+  const realStats = await getVendorRealStatsBatch(vendors.map((v: any) => v.id))
+
   return vendors.map((v: any) => ({
     id: v.id,
     business_name: v.business_name,
     is_verified: v.is_verified,
     verification_level: v.verification_level,
     plan: v.plan,
-    rating_avg: v.rating_avg,
-    total_sales: v.total_sales,
+    realTotalSales: realStats[v.id]?.realTotalSales ?? null,
     created_at: v.created_at,
     province_name: v.province?.name ?? null,
     product_count: countMap.get(v.id) ?? 0,

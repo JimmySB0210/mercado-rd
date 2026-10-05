@@ -252,8 +252,6 @@ export default async function ProductPage(
     business_name: string
     is_verified: boolean
     whatsapp?: string
-    rating_avg?: number
-    total_sales?: number
     logo_url?: string | null
     created_at?: string
     // vendors(*) ya lo trae — se declara acá para que ProductPageContent

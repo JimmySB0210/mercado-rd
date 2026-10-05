@@ -14,7 +14,7 @@ export async function getFeaturedProducts(limit = 12): Promise<ProductWithVendor
     .from('products')
     .select(`
       *,
-      vendor:vendors(id, business_name, logo_url, is_verified, rating_avg, whatsapp),
+      vendor:vendors(id, business_name, logo_url, is_verified, whatsapp),
       category:categories(id, name, slug, emoji),
       province:provinces_rd(id, name)
     `)
@@ -42,7 +42,7 @@ export async function getProductsByCategory(
     .from('products')
     .select(`
       *,
-      vendor:vendors(id, business_name, logo_url, is_verified, rating_avg, whatsapp),
+      vendor:vendors(id, business_name, logo_url, is_verified, whatsapp),
       category:categories!inner(id, name, slug, emoji),
       province:provinces_rd(id, name)
     `)
@@ -68,7 +68,7 @@ export async function getProductById(id: string): Promise<ProductWithVendor | nu
     .from('products')
     .select(`
       *,
-      vendor:vendors(id, business_name, logo_url, is_verified, rating_avg, whatsapp),
+      vendor:vendors(id, business_name, logo_url, is_verified, whatsapp),
       category:categories(id, name, slug, emoji),
       province:provinces_rd(id, name)
     `)
@@ -100,7 +100,7 @@ export async function searchProducts(
     .from('products')
     .select(`
       *,
-      vendor:vendors(id, business_name, logo_url, is_verified, rating_avg, whatsapp),
+      vendor:vendors(id, business_name, logo_url, is_verified, whatsapp),
       category:categories(id, name, slug, emoji),
       province:provinces_rd(id, name)
     `)
@@ -129,7 +129,7 @@ export async function getVendorProducts(
     .from('products')
     .select(`
       *,
-      vendor:vendors(id, business_name, logo_url, is_verified, rating_avg, whatsapp),
+      vendor:vendors(id, business_name, logo_url, is_verified, whatsapp),
       category:categories(id, name, slug, emoji),
       province:provinces_rd(id, name)
     `)
@@ -154,7 +154,7 @@ export async function getNewProducts(limit = 8): Promise<ProductWithVendor[]> {
     .from('products')
     .select(`
       *,
-      vendor:vendors(id, business_name, logo_url, is_verified, rating_avg, whatsapp),
+      vendor:vendors(id, business_name, logo_url, is_verified, whatsapp),
       category:categories(id, name, slug, emoji),
       province:provinces_rd(id, name)
     `)

@@ -31,7 +31,7 @@ const PRODUCTS_PAGE_SIZE = 24
 // consulta trae vendor/category/province para hidratar ProductCard.
 const PRODUCT_HYDRATE_SELECT = `
   *,
-  vendor:vendors(id, business_name, logo_url, is_verified, rating_avg, whatsapp),
+  vendor:vendors(id, business_name, logo_url, is_verified, whatsapp),
   category:categories(id, name, slug, emoji),
   province:provinces_rd(id, name)
 `

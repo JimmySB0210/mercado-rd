@@ -38,7 +38,7 @@ export default function VendorReviewsPage() {
 
       const { data: vendor } = await supabase
         .from('vendors')
-        .select('id, rating_avg')
+        .select('id')
         .eq('user_id', user.id)
         .single()
 
