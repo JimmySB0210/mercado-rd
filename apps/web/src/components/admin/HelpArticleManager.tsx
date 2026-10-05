@@ -31,7 +31,7 @@ const cardStyle: React.CSSProperties = {
   background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)', marginBottom: 20,
 }
 const cardHeaderStyle: React.CSSProperties = {
-  padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 800, fontSize: 15,
+  padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 600, fontSize: 'var(--text-h4)',
 }
 
 export function HelpArticleManager({ initialArticles }: Props) {
@@ -94,7 +94,7 @@ export function HelpArticleManager({ initialArticles }: Props) {
           role="status"
           aria-live="polite"
           style={{
-            padding: '10px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, marginBottom: 16,
+            padding: '10px 14px', borderRadius: 8, fontSize: 'var(--text-small)', fontWeight: 600, marginBottom: 16,
             background: notice.kind === 'ok' ? '#DCFCE7' : '#FEE2E2',
             color: notice.kind === 'ok' ? '#166534' : '#991B1B',
           }}
@@ -116,7 +116,7 @@ export function HelpArticleManager({ initialArticles }: Props) {
                 onClick={() => setFilter(chip.slug)}
                 aria-pressed={active}
                 style={{
-                  fontSize: 12, fontWeight: 600, padding: '5px 11px', borderRadius: 999,
+                  fontSize: 'var(--text-caption)', fontWeight: 600, padding: '5px 11px', borderRadius: 999,
                   border: active ? `1px solid ${BRAND.blue}` : '1px solid #e5e5e5',
                   background: active ? BRAND.blue : '#fff',
                   color: active ? '#fff' : '#555',

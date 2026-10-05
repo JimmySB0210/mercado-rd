@@ -38,8 +38,8 @@ export function PromoCardImages({ initialSellImageUrl, initialShippingImageUrl, 
       }}
     >
       <div>
-        <div style={{ fontWeight: 700, fontSize: 14 }}>{t('promoCardImagesTitle')}</div>
-        <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>{t('promoCardImagesSub')}</div>
+        <div style={{ fontWeight: 700, fontSize: 'var(--text-ui)' }}>{t('promoCardImagesTitle')}</div>
+        <div style={{ fontSize: 'var(--text-caption)', color: '#888', marginTop: 2 }}>{t('promoCardImagesSub')}</div>
       </div>
 
       <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: 16, display: 'grid', gap: 16 }}>

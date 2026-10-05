@@ -77,7 +77,7 @@ export function ContentFlagTermsManager({ initialTerms }: Props) {
   return (
     <div>
       {terms.length === 0 ? (
-        <div style={{ padding: 32, textAlign: 'center', fontSize: 13, color: '#999' }}>
+        <div style={{ padding: 32, textAlign: 'center', fontSize: 'var(--text-small)', color: '#999' }}>
           {t('noFlagTermsYet')}
         </div>
       ) : (
@@ -87,7 +87,7 @@ export function ContentFlagTermsManager({ initialTerms }: Props) {
               key={term.id}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6,
-                background: '#F3F4F6', color: '#333', fontSize: 12, fontWeight: 600,
+                background: '#F3F4F6', color: '#333', fontSize: 'var(--text-caption)', fontWeight: 600,
                 padding: '5px 6px 5px 12px', borderRadius: 16,
                 opacity: deletingId === term.id ? 0.5 : 1,
               }}
@@ -100,7 +100,7 @@ export function ContentFlagTermsManager({ initialTerms }: Props) {
                 disabled={deletingId !== null}
                 style={{
                   width: 18, height: 18, borderRadius: '50%', border: 'none', background: '#e5e5e5',
-                  color: '#666', fontSize: 11, lineHeight: 1, cursor: deletingId !== null ? 'not-allowed' : 'pointer',
+                  color: '#666', fontSize: 'var(--text-caption)', lineHeight: 1, cursor: deletingId !== null ? 'not-allowed' : 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}
               >
@@ -117,27 +117,27 @@ export function ContentFlagTermsManager({ initialTerms }: Props) {
           value={termInput}
           onChange={e => setTermInput(e.target.value)}
           placeholder={t('flagTermPlaceholder')}
-          style={{ flex: 2, minWidth: 160, border: '1px solid #ddd', borderRadius: 8, padding: '8px 12px', fontSize: 13, outline: 'none' }}
+          style={{ flex: 2, minWidth: 160, border: '1px solid #ddd', borderRadius: 8, padding: '8px 12px', fontSize: 'var(--text-ui)', outline: 'none' }}
         />
         <input
           type="text"
           value={categoryInput}
           onChange={e => setCategoryInput(e.target.value)}
           placeholder={t('flagCategoryPlaceholder')}
-          style={{ flex: 1, minWidth: 140, border: '1px solid #ddd', borderRadius: 8, padding: '8px 12px', fontSize: 13, outline: 'none' }}
+          style={{ flex: 1, minWidth: 140, border: '1px solid #ddd', borderRadius: 8, padding: '8px 12px', fontSize: 'var(--text-ui)', outline: 'none' }}
         />
         <button
           type="submit"
           disabled={saving}
           style={{
             background: BRAND.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px',
-            fontSize: 13, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1,
+            fontSize: 'var(--text-small)', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1,
           }}
         >
           {saving ? t('savingButton') : t('addTermButton')}
         </button>
       </form>
-      {error && <p style={{ fontSize: 12, color: BRAND.red, padding: '0 18px 14px' }}>{error}</p>}
+      {error && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, padding: '0 18px 14px' }}>{error}</p>}
     </div>
   )
 }

@@ -67,15 +67,15 @@ export function DisputeAdminRow({ disputeId, orderId, vendorId, reason, descript
     <div style={{ padding: '14px 18px', borderBottom: '1px solid #f8f8f8' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: BRAND.blue }}>#RD-{shortId}</div>
-          <div style={{ fontSize: 11, color: '#999' }}>{buyerName} → {vendorName} · {date}</div>
+          <div style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color: BRAND.blue }}>#RD-{shortId}</div>
+          <div style={{ fontSize: 'var(--text-caption)', color: '#999' }}>{buyerName} → {vendorName} · {date}</div>
         </div>
-        <span style={{ background: '#FEF9C3', color: '#713f12', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>
+        <span style={{ background: '#FEF9C3', color: '#713f12', fontSize: 'var(--text-badge)', fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>
           {t(`disputeReason.${reason}` as 'disputeReason.other')}
         </span>
       </div>
 
-      <p style={{ fontSize: 12, color: '#444', marginBottom: 10, lineHeight: 1.5 }}>{description}</p>
+      <p style={{ fontSize: 'var(--text-caption)', color: '#444', marginBottom: 10, lineHeight: 1.5 }}>{description}</p>
 
       <div style={{ marginBottom: 10 }}>
         <DisputeEvidenceCard orderId={orderId} vendorId={vendorId} />
@@ -89,7 +89,7 @@ export function DisputeAdminRow({ disputeId, orderId, vendorId, reason, descript
         <select
           value={currentStatus}
           onChange={e => setCurrentStatus(e.target.value)}
-          style={{ border: '1px solid #ddd', borderRadius: 6, padding: '6px 10px', fontSize: 12, background: '#fff' }}
+          style={{ border: '1px solid #ddd', borderRadius: 6, padding: '6px 10px', fontSize: 'var(--text-caption)', background: '#fff' }}
         >
           {STATUS_VALUES.map(value => (
             <option key={value} value={value}>{t(`disputeStatusOption.${value}`)}</option>
@@ -100,7 +100,7 @@ export function DisputeAdminRow({ disputeId, orderId, vendorId, reason, descript
           value={resolution}
           onChange={e => setResolution(e.target.value)}
           placeholder={t('resolutionNotePlaceholder')}
-          style={{ flex: 1, minWidth: 160, border: '1px solid #ddd', borderRadius: 6, padding: '6px 10px', fontSize: 12 }}
+          style={{ flex: 1, minWidth: 160, border: '1px solid #ddd', borderRadius: 6, padding: '6px 10px', fontSize: 'var(--text-caption)' }}
         />
 
         <button
@@ -108,7 +108,7 @@ export function DisputeAdminRow({ disputeId, orderId, vendorId, reason, descript
           disabled={saving}
           style={{
             background: saving ? '#ccc' : BRAND.blue, color: '#fff', border: 'none',
-            padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 700,
+            padding: '6px 14px', borderRadius: 6, fontSize: 'var(--text-caption)', fontWeight: 700,
             cursor: saving ? 'not-allowed' : 'pointer',
           }}
         >
@@ -117,7 +117,7 @@ export function DisputeAdminRow({ disputeId, orderId, vendorId, reason, descript
       </div>
 
       {error && (
-        <div style={{ marginTop: 8, fontSize: 11, color: '#c00' }}>{error}</div>
+        <div style={{ marginTop: 8, fontSize: 'var(--text-small)', fontWeight: 500, color: '#c00' }}>{error}</div>
       )}
     </div>
   )

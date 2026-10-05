@@ -51,7 +51,7 @@ export function FlaggedContentQueue({ initialFlags }: Props) {
 
   if (flags.length === 0) {
     return (
-      <div style={{ padding: 32, textAlign: 'center', fontSize: 13, color: '#999' }}>
+      <div style={{ padding: 32, textAlign: 'center', fontSize: 'var(--text-small)', color: '#999' }}>
         {t('noFlaggedContent')}
       </div>
     )
@@ -59,7 +59,7 @@ export function FlaggedContentQueue({ initialFlags }: Props) {
 
   return (
     <div>
-      {error && <p style={{ fontSize: 12, color: BRAND.red, padding: '12px 18px 0' }}>{error}</p>}
+      {error && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, padding: '12px 18px 0' }}>{error}</p>}
       {flags.map((flag, i) => (
         <div
           key={flag.id}
@@ -71,7 +71,7 @@ export function FlaggedContentQueue({ initialFlags }: Props) {
         >
           <span
             style={{
-              fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 10, flexShrink: 0,
+              fontSize: 'var(--text-badge)', fontWeight: 700, padding: '3px 9px', borderRadius: 10, flexShrink: 0,
               background: flag.content_type === 'product' ? '#E0E7FF' : '#DBEAFE',
               color: flag.content_type === 'product' ? '#3730a3' : '#1e3a8a',
             }}
@@ -80,10 +80,10 @@ export function FlaggedContentQueue({ initialFlags }: Props) {
           </span>
 
           <div style={{ flex: 1, minWidth: 200 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: 'var(--text-small)', fontWeight: 600, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {flag.preview_text ?? t('deletedContentFallback')}
             </div>
-            <div style={{ fontSize: 11, color: '#999' }}>
+            <div style={{ fontSize: 'var(--text-caption)', color: '#999' }}>
               {t('matchedTermsLabel', { terms: flag.matched_terms.join(', ') })} · {formatDate(flag.created_at, language, { day: 'numeric', month: 'short' })}
             </div>
           </div>
@@ -94,7 +94,7 @@ export function FlaggedContentQueue({ initialFlags }: Props) {
                 href={flag.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ fontSize: 12, fontWeight: 600, color: BRAND.blue, textDecoration: 'none' }}
+                style={{ fontSize: 'var(--text-caption)', fontWeight: 600, color: BRAND.blue, textDecoration: 'none' }}
               >
                 {t('viewContentLink')}
               </a>
@@ -104,7 +104,7 @@ export function FlaggedContentQueue({ initialFlags }: Props) {
               onClick={() => handleMarkReviewed(flag)}
               disabled={loadingId !== null}
               style={{
-                fontSize: 11, fontWeight: 700, padding: '6px 12px', borderRadius: 6,
+                fontSize: 'var(--text-caption)', fontWeight: 700, padding: '6px 12px', borderRadius: 6,
                 background: '#fff', color: '#333', border: '1px solid #ddd',
                 cursor: loadingId !== null ? 'not-allowed' : 'pointer',
               }}

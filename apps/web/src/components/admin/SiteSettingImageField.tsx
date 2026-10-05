@@ -93,7 +93,7 @@ export function SiteSettingImageField({ settingKey, label, hint, previewWidth, p
 
   return (
     <div>
-      <label style={{ fontSize: 12, fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
+      <label style={{ fontSize: 'var(--text-form-label)', fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
         {label}
       </label>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -101,7 +101,7 @@ export function SiteSettingImageField({ settingKey, label, hint, previewWidth, p
           // eslint-disable-next-line @next/next/no-img-element
           <img src={url} alt={t('previewAlt')} style={{ width: previewWidth, height: previewHeight, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />
         )}
-        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileChange} disabled={saving} style={{ fontSize: 12 }} />
+        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileChange} disabled={saving} style={{ fontSize: 'var(--text-caption)' }} />
         {url && (
           <button
             type="button"
@@ -109,15 +109,15 @@ export function SiteSettingImageField({ settingKey, label, hint, previewWidth, p
             disabled={saving}
             style={{
               background: '#fff', color: '#666', border: '1px solid #ddd', borderRadius: 6,
-              padding: '5px 12px', fontSize: 12, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer',
+              padding: '5px 12px', fontSize: 'var(--text-caption)', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer',
             }}
           >
             {t('brandImageRemoveButton')}
           </button>
         )}
       </div>
-      <p style={{ fontSize: 11, color: '#999', margin: '6px 0 0' }}>{hint}</p>
-      {error && <p style={{ fontSize: 12, color: BRAND.red, margin: '4px 0 0' }}>{error}</p>}
+      <p style={{ fontSize: 'var(--text-caption)', color: '#999', margin: '6px 0 0' }}>{hint}</p>
+      {error && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, margin: '4px 0 0' }}>{error}</p>}
     </div>
   )
 }

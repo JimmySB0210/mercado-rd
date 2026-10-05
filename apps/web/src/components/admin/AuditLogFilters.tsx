@@ -12,7 +12,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 
 const inputStyle: React.CSSProperties = {
-  border: '1px solid #ddd', borderRadius: 8, padding: '8px 12px', fontSize: 13, background: '#fff',
+  border: '1px solid #ddd', borderRadius: 8, padding: '8px 12px', fontSize: 'var(--text-ui)', background: '#fff',
 }
 
 interface Props {
@@ -45,7 +45,7 @@ export function AuditLogFilters({ eventTypes }: Props) {
         ))}
       </select>
 
-      <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#666' }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-caption)', color: '#666' }}>
         {t('dateFromLabel')}
         <input
           type="date"
@@ -56,7 +56,7 @@ export function AuditLogFilters({ eventTypes }: Props) {
         />
       </label>
 
-      <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#666' }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-caption)', color: '#666' }}>
         {t('dateToLabel')}
         <input
           type="date"

@@ -101,7 +101,7 @@ export function HelpArticleList({ articles, setArticles, filter, onEdit, onReloa
 
   if (articles.length === 0) {
     return (
-      <div style={{ padding: 32, textAlign: 'center', fontSize: 13, color: '#999' }}>
+      <div style={{ padding: 32, textAlign: 'center', fontSize: 'var(--text-small)', color: '#999' }}>
         {t('helpNoArticlesYet')}
       </div>
     )
@@ -109,7 +109,7 @@ export function HelpArticleList({ articles, setArticles, filter, onEdit, onReloa
 
   if (groups.length === 0) {
     return (
-      <div style={{ padding: 32, textAlign: 'center', fontSize: 13, color: '#999' }}>
+      <div style={{ padding: 32, textAlign: 'center', fontSize: 'var(--text-small)', color: '#999' }}>
         {t('helpNoArticlesInCategory')}
       </div>
     )
@@ -126,7 +126,7 @@ export function HelpArticleList({ articles, setArticles, filter, onEdit, onReloa
             style={{
               display: 'flex', alignItems: 'center', gap: 8, padding: '8px 18px',
               background: '#fafafa', borderTop: '1px solid #f0f0f0', borderBottom: '1px solid #f0f0f0',
-              fontSize: 12, fontWeight: 800, color: '#444', textTransform: 'uppercase', letterSpacing: 0.4,
+              fontSize: 'var(--text-caption)', fontWeight: 700, color: '#444', textTransform: 'uppercase', letterSpacing: 0.4,
             }}
           >
             <span aria-hidden="true">{group.config?.emoji ?? '📄'}</span>
@@ -150,13 +150,13 @@ export function HelpArticleList({ articles, setArticles, filter, onEdit, onReloa
                 <div
                   title={article.title}
                   style={{
-                    fontSize: 13, fontWeight: 700, color: article.is_published ? '#111' : '#888',
+                    fontSize: 'var(--text-small)', fontWeight: 700, color: article.is_published ? '#111' : '#888',
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                   }}
                 >
                   {article.title}
                 </div>
-                <div style={{ fontSize: 11, color: '#999', display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                <div style={{ fontSize: 'var(--text-caption)', color: '#999', display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
                   <span style={{ flexShrink: 0 }}>{t('orderLabel', { order: article.sort_order })}</span>
                   <span style={{ flexShrink: 0 }}>·</span>
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260 }}>
@@ -184,7 +184,7 @@ export function HelpArticleList({ articles, setArticles, filter, onEdit, onReloa
                 <span
                   data-status={article.is_published ? 'published' : 'unpublished'}
                   style={{
-                    fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 10, flexShrink: 0,
+                    fontSize: 'var(--text-badge)', fontWeight: 700, padding: '3px 9px', borderRadius: 10, flexShrink: 0,
                     background: article.is_published ? '#DCFCE7' : '#F3F4F6',
                     color: article.is_published ? '#166534' : '#666',
                   }}
@@ -199,7 +199,7 @@ export function HelpArticleList({ articles, setArticles, filter, onEdit, onReloa
                     disabled={i === 0 || busy}
                     title={t('moveUpTitle')}
                     aria-label={t('moveUpTitle')}
-                    style={{ width: 26, height: 26, border: '1px solid #e5e5e5', borderRadius: 6, background: '#fff', cursor: i === 0 || busy ? 'not-allowed' : 'pointer', opacity: i === 0 ? 0.4 : 1, fontSize: 12 }}
+                    style={{ width: 26, height: 26, border: '1px solid #e5e5e5', borderRadius: 6, background: '#fff', cursor: i === 0 || busy ? 'not-allowed' : 'pointer', opacity: i === 0 ? 0.4 : 1, fontSize: 'var(--text-caption)' }}
                   >
                     ↑
                   </button>
@@ -209,7 +209,7 @@ export function HelpArticleList({ articles, setArticles, filter, onEdit, onReloa
                     disabled={i === group.articles.length - 1 || busy}
                     title={t('moveDownTitle')}
                     aria-label={t('moveDownTitle')}
-                    style={{ width: 26, height: 26, border: '1px solid #e5e5e5', borderRadius: 6, background: '#fff', cursor: i === group.articles.length - 1 || busy ? 'not-allowed' : 'pointer', opacity: i === group.articles.length - 1 ? 0.4 : 1, fontSize: 12 }}
+                    style={{ width: 26, height: 26, border: '1px solid #e5e5e5', borderRadius: 6, background: '#fff', cursor: i === group.articles.length - 1 || busy ? 'not-allowed' : 'pointer', opacity: i === group.articles.length - 1 ? 0.4 : 1, fontSize: 'var(--text-caption)' }}
                   >
                     ↓
                   </button>
@@ -220,7 +220,7 @@ export function HelpArticleList({ articles, setArticles, filter, onEdit, onReloa
                   onClick={() => togglePublished(article)}
                   disabled={busy}
                   style={{
-                    fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 6, flexShrink: 0,
+                    fontSize: 'var(--text-caption)', fontWeight: 700, padding: '5px 10px', borderRadius: 6, flexShrink: 0,
                     background: article.is_published ? '#fff' : BRAND.blue,
                     color: article.is_published ? '#666' : '#fff',
                     border: article.is_published ? '1px solid #ddd' : 'none',
@@ -234,7 +234,7 @@ export function HelpArticleList({ articles, setArticles, filter, onEdit, onReloa
                   type="button"
                   onClick={() => onEdit(article)}
                   disabled={busy}
-                  style={{ fontSize: 11, fontWeight: 700, color: BRAND.blue, background: 'transparent', border: 'none', cursor: busy ? 'not-allowed' : 'pointer', flexShrink: 0 }}
+                  style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color: BRAND.blue, background: 'transparent', border: 'none', cursor: busy ? 'not-allowed' : 'pointer', flexShrink: 0 }}
                 >
                   {t('editButton')}
                 </button>

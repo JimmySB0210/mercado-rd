@@ -39,14 +39,14 @@ export function PromoBannerManager({ initialBanners }: Props) {
   return (
     <>
       <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)', marginBottom: 20 }}>
-        <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 800, fontSize: 15 }}>
+        <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 600, fontSize: 'var(--text-h4)' }}>
           {t('currentBannersTitle', { count: banners.length })}
         </div>
         <PromoBannerList banners={banners} setBanners={setBanners} onEdit={setEditingBanner} />
       </div>
 
       <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-        <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 800, fontSize: 15 }}>
+        <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0', fontWeight: 600, fontSize: 'var(--text-h4)' }}>
           {editingBanner ? t('editBannerTitle') : t('createBannerTitle')}
         </div>
         {/* key fuerza remount al cambiar de banner editado (o volver a "crear"),

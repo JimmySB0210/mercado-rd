@@ -83,17 +83,17 @@ export function VerificationLevelControl({ vendorId, currentLevel }: Props) {
                 opacity: saving ? 0.6 : 1,
               }}
             >
-              <div style={{ fontSize: 11, fontWeight: 700, color: active ? BRAND.blue : '#999' }}>
+              <div style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color: active ? BRAND.blue : '#999' }}>
                 {ta('levelButtonPrefix', { level: l })}
               </div>
-              <div style={{ fontSize: 12, color: active ? BRAND.dark : '#666', marginTop: 2 }}>
+              <div style={{ fontSize: 'var(--text-caption)', color: active ? BRAND.dark : '#666', marginTop: 2 }}>
                 {levelLabel(l)}
               </div>
             </button>
           )
         })}
       </div>
-      {saving && <p style={{ fontSize: 11, color: '#999', marginTop: 8 }}>{ta('savingButton')}</p>}
+      {saving && <p style={{ fontSize: 'var(--text-caption)', color: '#999', marginTop: 8 }}>{ta('savingButton')}</p>}
     </div>
   )
 }

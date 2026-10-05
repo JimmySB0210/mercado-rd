@@ -32,10 +32,10 @@ interface Props {
 }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '9px 12px', fontSize: 13, outline: 'none', background: '#fff',
+  width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '9px 12px', fontSize: 'var(--text-ui)', outline: 'none', background: '#fff',
 }
-const labelStyle: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }
-const hintStyle: React.CSSProperties = { fontSize: 11, color: '#999', margin: '6px 0 0' }
+const labelStyle: React.CSSProperties = { fontSize: 'var(--text-form-label)', fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }
+const hintStyle: React.CSSProperties = { fontSize: 'var(--text-caption)', color: '#999', margin: '6px 0 0' }
 
 export function HelpArticleForm({ mode, articles, initialData, onSaved, onCancel }: Props) {
   const supabase = createClient()
@@ -240,7 +240,7 @@ export function HelpArticleForm({ mode, articles, initialData, onSaved, onCancel
       </div>
 
       {mode === 'crear' && (
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#333', cursor: 'pointer' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--text-small)', color: '#333', cursor: 'pointer' }}>
           <input
             type="checkbox"
             checked={published}
@@ -250,7 +250,7 @@ export function HelpArticleForm({ mode, articles, initialData, onSaved, onCancel
         </label>
       )}
 
-      {error && <p role="alert" style={{ fontSize: 12, color: BRAND.red, margin: 0 }}>{error}</p>}
+      {error && <p role="alert" style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, margin: 0 }}>{error}</p>}
 
       <div style={{ display: 'flex', gap: 10 }}>
         <button
@@ -258,7 +258,7 @@ export function HelpArticleForm({ mode, articles, initialData, onSaved, onCancel
           disabled={saving}
           style={{
             background: BRAND.blue, color: '#fff', border: 'none',
-            padding: '9px 20px', borderRadius: 8, fontWeight: 700, fontSize: 13,
+            padding: '9px 20px', borderRadius: 8, fontWeight: 700, fontSize: 'var(--text-small)',
             cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1,
           }}
         >
@@ -271,7 +271,7 @@ export function HelpArticleForm({ mode, articles, initialData, onSaved, onCancel
             disabled={saving}
             style={{
               background: '#fff', color: '#666', border: '1px solid #ddd',
-              padding: '9px 20px', borderRadius: 8, fontWeight: 600, fontSize: 13,
+              padding: '9px 20px', borderRadius: 8, fontWeight: 600, fontSize: 'var(--text-small)',
               cursor: saving ? 'not-allowed' : 'pointer',
             }}
           >

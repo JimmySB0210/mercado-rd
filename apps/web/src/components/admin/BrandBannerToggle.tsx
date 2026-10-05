@@ -65,9 +65,9 @@ export function BrandBannerToggle({ initialValue, initialDesktopImageUrl, initia
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 14 }}>{t('brandBannerToggleLabel')}</div>
-          <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>{t('brandBannerToggleSub')}</div>
-          {error && <div style={{ fontSize: 12, color: BRAND.red, marginTop: 4 }}>{t('brandBannerToggleError')}</div>}
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-ui)' }}>{t('brandBannerToggleLabel')}</div>
+          <div style={{ fontSize: 'var(--text-caption)', color: '#888', marginTop: 2 }}>{t('brandBannerToggleSub')}</div>
+          {error && <div style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, marginTop: 4 }}>{t('brandBannerToggleError')}</div>}
         </div>
 
         <button

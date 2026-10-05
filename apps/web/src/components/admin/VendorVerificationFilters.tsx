@@ -12,7 +12,7 @@ import { BUSINESS_TYPE_OPTIONS } from '@/lib/vendorWizardOptions'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 
 const selectStyle: React.CSSProperties = {
-  border: '1px solid #ddd', borderRadius: 8, padding: '8px 12px', fontSize: 13, background: '#fff', minWidth: 200,
+  border: '1px solid #ddd', borderRadius: 8, padding: '8px 12px', fontSize: 'var(--text-ui)', background: '#fff', minWidth: 200,
 }
 
 export function VendorVerificationFilters() {

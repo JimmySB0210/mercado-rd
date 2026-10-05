@@ -95,7 +95,7 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
 
   if (banners.length === 0) {
     return (
-      <div style={{ padding: 32, textAlign: 'center', fontSize: 13, color: '#999' }}>
+      <div style={{ padding: 32, textAlign: 'center', fontSize: 'var(--text-small)', color: '#999' }}>
         {t('noBannersYet')}
       </div>
     )
@@ -121,10 +121,10 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
           />
 
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div style={{ fontSize: 'var(--text-small)', fontWeight: 700, color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {banner.title || <span style={{ color: '#bbb', fontWeight: 400 }}>{t('noTitleFallback')}</span>}
             </div>
-            <div style={{ fontSize: 11, color: '#999', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ fontSize: 'var(--text-caption)', color: '#999', display: 'flex', alignItems: 'center', gap: 4 }}>
               <span style={{ flexShrink: 0 }}>{t('orderLabel', { order: banner.sort_order })}</span>
               {banner.link_url && (
                 <>
@@ -150,7 +150,7 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <span
               style={{
-                fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 10, flexShrink: 0,
+                fontSize: 'var(--text-badge)', fontWeight: 700, padding: '3px 9px', borderRadius: 10, flexShrink: 0,
                 background: banner.is_active ? '#DCFCE7' : '#F3F4F6',
                 color: banner.is_active ? '#166534' : '#666',
               }}
@@ -161,7 +161,7 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
             {isExpired(banner) && (
               <span
                 style={{
-                  fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 10, flexShrink: 0,
+                  fontSize: 'var(--text-badge)', fontWeight: 700, padding: '3px 9px', borderRadius: 10, flexShrink: 0,
                   background: '#FEF3C7', color: '#92400E',
                 }}
               >
@@ -175,7 +175,7 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
                 onClick={() => move(i, -1)}
                 disabled={i === 0 || loadingId !== null}
                 title={t('moveUpTitle')}
-                style={{ width: 26, height: 26, border: '1px solid #e5e5e5', borderRadius: 6, background: '#fff', cursor: i === 0 ? 'not-allowed' : 'pointer', opacity: i === 0 ? 0.4 : 1, fontSize: 12 }}
+                style={{ width: 26, height: 26, border: '1px solid #e5e5e5', borderRadius: 6, background: '#fff', cursor: i === 0 ? 'not-allowed' : 'pointer', opacity: i === 0 ? 0.4 : 1, fontSize: 'var(--text-caption)' }}
               >
                 ↑
               </button>
@@ -184,7 +184,7 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
                 onClick={() => move(i, 1)}
                 disabled={i === banners.length - 1 || loadingId !== null}
                 title={t('moveDownTitle')}
-                style={{ width: 26, height: 26, border: '1px solid #e5e5e5', borderRadius: 6, background: '#fff', cursor: i === banners.length - 1 ? 'not-allowed' : 'pointer', opacity: i === banners.length - 1 ? 0.4 : 1, fontSize: 12 }}
+                style={{ width: 26, height: 26, border: '1px solid #e5e5e5', borderRadius: 6, background: '#fff', cursor: i === banners.length - 1 ? 'not-allowed' : 'pointer', opacity: i === banners.length - 1 ? 0.4 : 1, fontSize: 'var(--text-caption)' }}
               >
                 ↓
               </button>
@@ -195,7 +195,7 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
               onClick={() => toggleActive(banner)}
               disabled={loadingId !== null}
               style={{
-                fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 6, flexShrink: 0,
+                fontSize: 'var(--text-caption)', fontWeight: 700, padding: '5px 10px', borderRadius: 6, flexShrink: 0,
                 background: banner.is_active ? '#fff' : BRAND.blue,
                 color: banner.is_active ? '#666' : '#fff',
                 border: banner.is_active ? '1px solid #ddd' : 'none',
@@ -209,7 +209,7 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
               type="button"
               onClick={() => onEdit(banner)}
               disabled={loadingId !== null}
-              style={{ fontSize: 11, fontWeight: 700, color: BRAND.blue, background: 'transparent', border: 'none', cursor: loadingId !== null ? 'not-allowed' : 'pointer', flexShrink: 0 }}
+              style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color: BRAND.blue, background: 'transparent', border: 'none', cursor: loadingId !== null ? 'not-allowed' : 'pointer', flexShrink: 0 }}
             >
               {t('editButton')}
             </button>
@@ -218,7 +218,7 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
               type="button"
               onClick={() => remove(banner)}
               disabled={loadingId !== null}
-              style={{ fontSize: 11, fontWeight: 700, color: BRAND.red, background: 'transparent', border: 'none', cursor: loadingId !== null ? 'not-allowed' : 'pointer', flexShrink: 0 }}
+              style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, background: 'transparent', border: 'none', cursor: loadingId !== null ? 'not-allowed' : 'pointer', flexShrink: 0 }}
             >
               {t('deleteButton')}
             </button>

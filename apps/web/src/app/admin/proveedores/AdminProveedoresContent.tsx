@@ -39,8 +39,8 @@ export function AdminProveedoresContent({ vendors, selectedVendor, selectedVendo
   return (
     <div style={{ padding: 28, background: '#f5f5f5' }}>
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 4 }}>{t('verificationPageTitle')}</h1>
-        <p style={{ color: '#666', fontSize: 14 }}>{t('verificationPageSubtitle')}</p>
+        <h1 style={{ fontSize: 'var(--text-dash-title)', fontWeight: 700, lineHeight: 'var(--leading-h1)', marginBottom: 4 }}>{t('verificationPageTitle')}</h1>
+        <p style={{ color: '#666', fontSize: 'var(--text-ui)' }}>{t('verificationPageSubtitle')}</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: selectedVendor ? '1fr 1.3fr' : '1fr', gap: 20, alignItems: 'start' }} className="proveedores-grid">
@@ -48,7 +48,7 @@ export function AdminProveedoresContent({ vendors, selectedVendor, selectedVendo
         {/* Lista */}
         <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
           <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f0f0' }}>
-            <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 12 }}>{t('vendorsTableTitle', { count: vendors.length })}</div>
+            <div style={{ fontWeight: 600, fontSize: 'var(--text-h4)', marginBottom: 12 }}>{t('vendorsTableTitle', { count: vendors.length })}</div>
             <Suspense fallback={null}>
               <VendorVerificationFilters />
             </Suspense>
@@ -56,7 +56,7 @@ export function AdminProveedoresContent({ vendors, selectedVendor, selectedVendo
 
           <div style={{ maxHeight: 720, overflowY: 'auto' }}>
             {vendors.length === 0 ? (
-              <div style={{ padding: 24, textAlign: 'center', fontSize: 13, color: '#999' }}>
+              <div style={{ padding: 24, textAlign: 'center', fontSize: 'var(--text-small)', color: '#999' }}>
                 {t('noVendorsMatchFilters')}
               </div>
             ) : (
@@ -73,23 +73,23 @@ export function AdminProveedoresContent({ vendors, selectedVendor, selectedVendo
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{v.business_name}</span>
+                      <span style={{ fontSize: 'var(--text-small)', fontWeight: 700, color: '#111' }}>{v.business_name}</span>
                       <VerificationBadge level={v.verification_level} />
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
                       {v.business_types.slice(0, 3).map((bt: string) => (
-                        <span key={bt} style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: '#F3F4F6', color: '#666', fontWeight: 600 }}>
+                        <span key={bt} style={{ fontSize: 'var(--text-badge)', padding: '2px 8px', borderRadius: 10, background: '#F3F4F6', color: '#666', fontWeight: 600 }}>
                           <VendorOptionLabel category="businessType" value={bt} />
                         </span>
                       ))}
                       {!v.onboarding_completed && (
-                        <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: '#FEF9C3', color: '#713f12', fontWeight: 600 }}>
+                        <span style={{ fontSize: 'var(--text-badge)', padding: '2px 8px', borderRadius: 10, background: '#FEF9C3', color: '#713f12', fontWeight: 600 }}>
                           {t('onboardingIncomplete')}
                         </span>
                       )}
                     </div>
                     {v.province_name && (
-                      <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>📍 {v.province_name}</div>
+                      <div style={{ fontSize: 'var(--text-caption)', color: '#999', marginTop: 4 }}>📍 {v.province_name}</div>
                     )}
                   </a>
                 )
@@ -103,12 +103,12 @@ export function AdminProveedoresContent({ vendors, selectedVendor, selectedVendo
           <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
             <div style={{ padding: '18px', borderBottom: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
               <div>
-                <div style={{ fontWeight: 900, fontSize: 18, color: '#111' }}>{selectedVendor.business_name}</div>
+                <div style={{ fontWeight: 700, fontSize: 'var(--text-h4)', color: '#111' }}>{selectedVendor.business_name}</div>
                 {selectedVendor.legal_name && (
-                  <div style={{ fontSize: 12, color: '#999' }}>{selectedVendor.legal_name}{selectedVendor.rnc && ` · RNC ${selectedVendor.rnc}`}</div>
+                  <div style={{ fontSize: 'var(--text-caption)', color: '#999' }}>{selectedVendor.legal_name}{selectedVendor.rnc && ` · RNC ${selectedVendor.rnc}`}</div>
                 )}
               </div>
-              <a href={`/tienda/${selectedVendor.id}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: BRAND.blue, textDecoration: 'none', fontWeight: 600 }}>
+              <a href={`/tienda/${selectedVendor.id}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-caption)', color: BRAND.blue, textDecoration: 'none', fontWeight: 600 }}>
                 {t('viewPublicStoreLink')}
               </a>
             </div>
@@ -132,7 +132,7 @@ export function AdminProveedoresContent({ vendors, selectedVendor, selectedVendo
               {/* Contacto */}
               <div>
                 <p style={sectionLabelStyle}>{t('contactSectionLabel')}</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 13, color: '#333' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 'var(--text-small)', color: '#333' }}>
                   {selectedVendor.contact_full_name && <p>👤 {selectedVendor.contact_full_name}</p>}
                   {selectedVendor.whatsapp && <p>💬 WhatsApp: {selectedVendor.whatsapp}</p>}
                   {selectedVendor.instagram && <p>📷 Instagram: {selectedVendor.instagram}</p>}
@@ -162,7 +162,7 @@ export function AdminProveedoresContent({ vendors, selectedVendor, selectedVendo
               {/* Presencia física / fabricación */}
               <div>
                 <p style={sectionLabelStyle}>{t('physicalPresenceSectionLabel')}</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 13, color: '#333' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 'var(--text-small)', color: '#333' }}>
                   <p>{selectedVendor.has_physical_store ? '✅' : '❌'} {t('hasPhysicalStore')}</p>
                   <p>{selectedVendor.has_warehouse ? '✅' : '❌'} {t('hasWarehouse')}</p>
                   <p>{selectedVendor.has_workshop ? '✅' : '❌'} {t('hasWorkshop')}</p>
@@ -171,7 +171,7 @@ export function AdminProveedoresContent({ vendors, selectedVendor, selectedVendo
 
               <div>
                 <p style={sectionLabelStyle}>{t('manufacturingStatusSectionLabel')}</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 13, color: '#333' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 'var(--text-small)', color: '#333' }}>
                   {selectedVendor.manufacturing_status ? (
                     <>
                       <p>🏭 <VendorOptionLabel category="manufacturingStatus" value={selectedVendor.manufacturing_status} /></p>
@@ -204,7 +204,7 @@ export function AdminProveedoresContent({ vendors, selectedVendor, selectedVendo
               <div>
                 <p style={sectionLabelStyle}>{t('minOrderQuantityLabel')}</p>
                 {selectedVendor.min_order_quantity ? (
-                  <p style={{ fontSize: 13, color: '#111', fontWeight: 600 }}>
+                  <p style={{ fontSize: 'var(--text-small)', color: '#111', fontWeight: 600 }}>
                     {selectedVendor.min_order_quantity} {selectedVendor.min_order_unit ?? t('unitsFallback')}
                   </p>
                 ) : <EmptyNote text={t('emptyNote')} />}
@@ -233,14 +233,14 @@ export function AdminProveedoresContent({ vendors, selectedVendor, selectedVendo
 }
 
 const sectionLabelStyle: React.CSSProperties = {
-  fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8,
+  fontSize: 'var(--text-caption)', fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8,
 }
 
 function InfoStat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p style={{ fontSize: 10, color: '#999', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</p>
-      <p style={{ fontSize: 13, fontWeight: 700, color: '#111', textTransform: 'capitalize' }}>{value}</p>
+      <p style={{ fontSize: 'var(--text-caption)', color: '#999', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</p>
+      <p style={{ fontSize: 'var(--text-small)', fontWeight: 700, color: '#111', textTransform: 'capitalize' }}>{value}</p>
     </div>
   )
 }
@@ -250,11 +250,11 @@ function ChipList({ items, variant = 'plain' }: { items: { key: string; content:
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: variant === 'check' ? 12 : 6 }}>
       {items.map(item => (
         variant === 'check' ? (
-          <span key={item.key} style={{ fontSize: 13, color: '#333' }}>
+          <span key={item.key} style={{ fontSize: 'var(--text-small)', color: '#333' }}>
             <span style={{ color: BRAND.green, fontWeight: 700 }}>✓</span> {item.content}
           </span>
         ) : (
-          <span key={item.key} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 10, background: '#F3F4F6', color: '#666', fontWeight: 600 }}>
+          <span key={item.key} style={{ fontSize: 'var(--text-caption)', padding: '3px 10px', borderRadius: 10, background: '#F3F4F6', color: '#666', fontWeight: 600 }}>
             {item.content}
           </span>
         )
@@ -264,5 +264,5 @@ function ChipList({ items, variant = 'plain' }: { items: { key: string; content:
 }
 
 function EmptyNote({ text }: { text: string }) {
-  return <p style={{ fontSize: 12, color: '#bbb' }}>{text}</p>
+  return <p style={{ fontSize: 'var(--text-caption)', color: '#bbb' }}>{text}</p>
 }

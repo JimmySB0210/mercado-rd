@@ -48,7 +48,7 @@ export function AdminSidebar() {
         display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px', cursor: 'pointer',
         background: active ? 'rgba(255,255,255,0.08)' : 'transparent',
         borderLeft: active ? '2px solid #fff' : '2px solid transparent',
-        color: active ? '#fff' : '#666', fontSize: 14, fontWeight: active ? 600 : 400,
+        color: active ? '#fff' : '#666', fontSize: 'var(--text-ui)', fontWeight: active ? 600 : 400,
         textDecoration: 'none',
       }}>
         <span>{item.icon}</span>{t(item.labelKey)}
@@ -57,7 +57,7 @@ export function AdminSidebar() {
   }
 
   const backLink = (onClick?: () => void) => (
-    <a href="/dashboard" onClick={onClick} style={{ padding: '10px 20px', color: '#666', fontSize: 14, textDecoration: 'none' }}>
+    <a href="/dashboard" onClick={onClick} style={{ padding: '10px 20px', color: '#666', fontSize: 'var(--text-ui)', textDecoration: 'none' }}>
       {t('backToVendorPanelLink')}
     </a>
   )
@@ -67,11 +67,11 @@ export function AdminSidebar() {
       <div style={{ background: '#0a0a0a', padding: '24px 0', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '0 20px 24px', borderBottom: '1px solid #222', marginBottom: 16 }}>
           <a href="/" style={{ textDecoration: 'none' }}>
-            <div style={{ fontWeight: 900, fontSize: 18, color: '#fff', marginBottom: 4 }}>
+            <div style={{ fontWeight: 700, fontSize: 'var(--text-h4)', color: '#fff', marginBottom: 4 }}>
               Mercado<span style={{ color: BRAND.red }}>RD</span>
             </div>
           </a>
-          <div style={{ fontSize: 12, color: '#888' }}>{t('adminPanelLabel')}</div>
+          <div style={{ fontSize: 'var(--text-caption)', color: '#888' }}>{t('adminPanelLabel')}</div>
         </div>
         {NAV_ITEM_KEYS.map((item, i) => navLink(item, i))}
         {backLink()}
@@ -87,7 +87,7 @@ export function AdminSidebar() {
     <>
       <div style={{ background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
         <a href="/" style={{ textDecoration: 'none' }}>
-          <div style={{ fontWeight: 900, fontSize: 16, color: '#fff' }}>
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-h4)', color: '#fff' }}>
             Mercado<span style={{ color: BRAND.red }}>RD</span>
           </div>
         </a>
@@ -112,7 +112,7 @@ export function AdminSidebar() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px 20px', borderBottom: '1px solid #222', marginBottom: 16 }}>
-              <div style={{ fontWeight: 900, fontSize: 18, color: '#fff' }}>
+              <div style={{ fontWeight: 700, fontSize: 'var(--text-h4)', color: '#fff' }}>
                 Mercado<span style={{ color: BRAND.red }}>RD</span>
               </div>
               <button
