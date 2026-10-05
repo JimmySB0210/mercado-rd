@@ -30,7 +30,7 @@ interface Props {
 
 const inputStyle: React.CSSProperties = {
   width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '11px 13px',
-  fontSize: 14, outline: 'none', boxSizing: 'border-box',
+  fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box',
 }
 
 const errorInputStyle: React.CSSProperties = {
@@ -38,11 +38,11 @@ const errorInputStyle: React.CSSProperties = {
 }
 
 const labelStyle: React.CSSProperties = {
-  fontSize: 12, fontWeight: 600, color: BRAND.dark, display: 'block', marginBottom: 5,
+  fontSize: 'var(--text-form-label)', fontWeight: 600, color: BRAND.dark, display: 'block', marginBottom: 5,
 }
 
 const fieldErrorStyle: React.CSSProperties = {
-  color: '#B91C1C', fontSize: 12, marginTop: 4,
+  color: '#B91C1C', fontSize: 'var(--text-small)', fontWeight: 500, marginTop: 4,
 }
 
 function YesNoToggle({ label, value, onChange }: { label: string; value: boolean | null; onChange: (v: boolean) => void }) {
@@ -56,7 +56,7 @@ function YesNoToggle({ label, value, onChange }: { label: string; value: boolean
             type="button"
             onClick={() => onChange(opt.v)}
             style={{
-              flex: 1, padding: '9px 0', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              flex: 1, padding: '9px 0', borderRadius: 8, fontSize: 'var(--text-small)', fontWeight: 600, cursor: 'pointer',
               border: value === opt.v ? `1.5px solid ${BRAND.blue}` : '1px solid #E0E0E0',
               background: value === opt.v ? 'color-mix(in srgb, ' + BRAND.blue + ' 8%, white)' : '#fff',
               color: value === opt.v ? BRAND.blue : BRAND.dark,
@@ -177,7 +177,7 @@ export function Step1BasicInfo({ data, updateData, provinces, onNext, saving, er
       />
 
       {saveError && (
-        <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', fontSize: 13, borderRadius: 8, padding: '10px 12px' }}>
+        <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', fontSize: 'var(--text-small)', fontWeight: 500, borderRadius: 8, padding: '10px 12px' }}>
           {saveError}
         </div>
       )}
@@ -188,7 +188,7 @@ export function Step1BasicInfo({ data, updateData, provinces, onNext, saving, er
         disabled={saving}
         style={{
           background: BRAND.blue, color: '#fff', border: 'none', padding: 14, borderRadius: 8,
-          fontWeight: 600, fontSize: 15, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1,
+          fontWeight: 600, fontSize: 'var(--text-body)', cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1,
         }}
       >
         {saving ? 'Guardando...' : 'Continuar'}

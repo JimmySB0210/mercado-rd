@@ -51,8 +51,8 @@ export default function RecuperarPasswordPage() {
         <div className="w-full max-w-md text-center">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
             <div className="text-5xl mb-4">✅</div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">{t('resetLinkSentTitle')}</h2>
-            <p className="text-gray-500 text-sm mb-4">
+            <h2 className="text-form-section font-bold text-gray-900 mb-2">{t('resetLinkSentTitle')}</h2>
+            <p className="text-gray-500 text-small mb-4">
               {t('resetLinkSentPrefix')} <strong>{email}</strong> {t('resetLinkSentSuffix')}
             </p>
             <p className="text-gray-400 text-xs mb-6">
@@ -60,7 +60,7 @@ export default function RecuperarPasswordPage() {
             </p>
             <Link
               href="/login"
-              className="block w-full bg-[var(--brand-red)] text-white font-medium py-3 rounded-lg text-center hover:brightness-90 transition-colors"
+              className="block w-full bg-[var(--brand-red)] text-white text-ui font-semibold py-3 rounded-lg text-center hover:brightness-90 transition-colors"
             >
               {t('goToLoginLink')}
             </Link>
@@ -88,15 +88,15 @@ export default function RecuperarPasswordPage() {
               <span className="text-[var(--color-blue-dark)]">D</span>
             </span>
           </Link>
-          <p className="mt-2 text-gray-500 text-sm">{t('forgotPasswordSubtitle')}</p>
+          <p className="mt-2 text-gray-500 text-small">{t('forgotPasswordSubtitle')}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-          <p className="text-sm text-gray-500 mb-6">{t('forgotPasswordInstructions')}</p>
+          <p className="text-small text-gray-500 mb-6">{t('forgotPasswordInstructions')}</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-form-label font-semibold text-gray-700 mb-1">
                 {t('emailLabel')}
               </label>
               <input
@@ -110,7 +110,7 @@ export default function RecuperarPasswordPage() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+              <div className="bg-red-50 border border-red-200 text-red-700 text-small font-medium rounded-lg px-4 py-3">
                 {error}
               </div>
             )}
@@ -118,14 +118,14 @@ export default function RecuperarPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[var(--brand-red)] hover:brightness-90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition-colors"
+              className="w-full bg-[var(--brand-red)] hover:brightness-90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-ui font-semibold py-3 rounded-lg transition-colors"
             >
               {loading ? t('sendingResetLink') : t('sendResetLinkButton')}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-gray-500">
-            <Link href="/login" className="text-[var(--brand-blue)] font-medium hover:underline">
+          <p className="mt-6 text-center text-small text-gray-500">
+            <Link href="/login" className="text-[var(--brand-blue)] font-semibold hover:underline">
               {t('goToLoginLink')}
             </Link>
           </p>

@@ -46,14 +46,14 @@ export function CategoryMultiSelect({ categories, selectedIds, onChange }: Props
     <div style={{ maxHeight: 280, overflowY: 'auto', border: '1px solid #E0E0E0', borderRadius: 8, padding: 12 }}>
       {topCategories.map(cat => (
         <div key={cat.id} style={{ marginBottom: 10 }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', color: BRAND.dark }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--text-small)', fontWeight: 600, cursor: 'pointer', color: BRAND.dark }}>
             <input type="checkbox" checked={selectedIds.includes(cat.id)} onChange={() => toggle(cat.id)} />
             {cat.emoji} {getCategoryName(cat, language)}
           </label>
           {(subcategoriesByParent.get(cat.id) ?? []).length > 0 && (
             <div style={{ marginLeft: 24, marginTop: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
               {subcategoriesByParent.get(cat.id)!.map(sub => (
-                <label key={sub.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: BRAND.gray, cursor: 'pointer' }}>
+                <label key={sub.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--text-caption)', color: BRAND.gray, cursor: 'pointer' }}>
                   <input type="checkbox" checked={selectedIds.includes(sub.id)} onChange={() => toggle(sub.id)} />
                   {getCategoryName(sub, language)}
                 </label>

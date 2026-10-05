@@ -28,11 +28,11 @@ const yesNoLabel = (v: boolean | null) => v === null ? '—' : (v ? 'Sí' : 'No'
 function SectionHeader({ title, step, onEditStep }: { title: string; step: number; onEditStep: (step: number) => void }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-      <h3 style={{ fontSize: 14, fontWeight: 700, color: BRAND.dark, margin: 0 }}>{title}</h3>
+      <h3 style={{ fontSize: 'var(--text-h4)', fontWeight: 600, color: BRAND.dark, margin: 0 }}>{title}</h3>
       <button
         type="button"
         onClick={() => onEditStep(step)}
-        style={{ background: 'transparent', border: 'none', color: BRAND.blue, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+        style={{ background: 'transparent', border: 'none', color: BRAND.blue, fontSize: 'var(--text-caption)', fontWeight: 600, cursor: 'pointer' }}
       >
         Editar
       </button>
@@ -42,7 +42,7 @@ function SectionHeader({ title, step, onEditStep }: { title: string; step: numbe
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13, padding: '5px 0' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 'var(--text-small)', padding: '5px 0' }}>
       <span style={{ color: BRAND.gray, flexShrink: 0 }}>{label}</span>
       <span style={{ color: BRAND.dark, fontWeight: 500, textAlign: 'right' }}>{value}</span>
     </div>
@@ -90,7 +90,7 @@ export function Step6Review({ data, provinces, categories, onEditStep, onSubmit,
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <p style={{ fontSize: 13, color: BRAND.gray, margin: 0 }}>
+      <p style={{ fontSize: 'var(--text-small)', color: BRAND.gray, margin: 0 }}>
         Revisa todo antes de crear tu perfil. Puedes editar cualquier sección.
       </p>
 
@@ -144,7 +144,7 @@ export function Step6Review({ data, provinces, categories, onEditStep, onSubmit,
         disabled={saving}
         style={{
           background: BRAND.blue, color: '#fff', border: 'none', padding: 15, borderRadius: 8,
-          fontWeight: 700, fontSize: 15, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1,
+          fontWeight: 600, fontSize: 'var(--text-body)', cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1,
         }}
       >
         {saving ? 'Creando tu perfil...' : 'Crear mi perfil de proveedor'}

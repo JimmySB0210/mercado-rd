@@ -86,17 +86,17 @@ function LoginForm() {
               <span className="text-[var(--color-blue-dark)]">D</span>
             </span>
           </Link>
-          <p className="mt-2 text-gray-500 text-sm">{t('subtitleLogin')}</p>
+          <p className="mt-2 text-gray-500 text-small">{t('subtitleLogin')}</p>
         </div>
 
         {reason === 'inactivity' && (
-          <div className="mb-4 bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-lg px-4 py-3">
+          <div className="mb-4 bg-yellow-50 border border-yellow-200 text-yellow-800 text-small font-medium rounded-lg px-4 py-3">
             {t('inactivityBanner')}
           </div>
         )}
 
         {resetSuccess && (
-          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg px-4 py-3">
+          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 text-small font-medium rounded-lg px-4 py-3">
             {t('passwordResetSuccessBanner')}
           </div>
         )}
@@ -110,7 +110,7 @@ function LoginForm() {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={oauthLoading}
-              className="w-full flex items-center justify-center gap-2.5 bg-white border border-gray-300 text-gray-800 font-medium py-2.5 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full flex items-center justify-center gap-2.5 bg-white border border-gray-300 text-gray-800 text-ui font-semibold py-2.5 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -130,7 +130,7 @@ function LoginForm() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-form-label font-semibold text-gray-700 mb-1">
                 {t('emailLabel')}
               </label>
               <input
@@ -144,7 +144,7 @@ function LoginForm() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-form-label font-semibold text-gray-700 mb-1">
                 {t('passwordLabel')}
               </label>
               <input
@@ -158,7 +158,7 @@ function LoginForm() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+              <div className="bg-red-50 border border-red-200 text-red-700 text-small font-medium rounded-lg px-4 py-3">
                 {error}
               </div>
             )}
@@ -166,21 +166,21 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[var(--brand-red)] hover:brightness-90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition-colors"
+              className="w-full bg-[var(--brand-red)] hover:brightness-90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-ui font-semibold py-3 rounded-lg transition-colors"
             >
               {loading ? t('loggingIn') : t('loginButton')}
             </button>
           </form>
 
           <p className="mt-4 text-center text-sm">
-            <Link href="/recuperar-password" className="text-[var(--brand-blue)] font-medium hover:underline">
+            <Link href="/recuperar-password" className="text-[var(--brand-blue)] font-semibold hover:underline">
               {t('forgotPasswordLink')}
             </Link>
           </p>
 
-          <p className="mt-4 text-center text-sm text-gray-500">
+          <p className="mt-4 text-center text-small text-gray-500">
             {t('noAccountYet')}{' '}
-            <Link href="/register" className="text-[var(--brand-blue)] font-medium hover:underline">
+            <Link href="/register" className="text-[var(--brand-blue)] font-semibold hover:underline">
               {t('registerFreeLink')}
             </Link>
           </p>

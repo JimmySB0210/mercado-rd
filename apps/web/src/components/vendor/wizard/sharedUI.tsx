@@ -8,21 +8,21 @@ import { BRAND } from '@/lib/colors'
 
 export const inputStyle: React.CSSProperties = {
   width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '11px 13px',
-  fontSize: 14, outline: 'none', boxSizing: 'border-box',
+  fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box',
 }
 
 export const labelStyle: React.CSSProperties = {
-  fontSize: 12, fontWeight: 600, color: BRAND.dark, display: 'block', marginBottom: 5,
+  fontSize: 'var(--text-form-label)', fontWeight: 600, color: BRAND.dark, display: 'block', marginBottom: 5,
 }
 
 export const helperTextStyle: React.CSSProperties = {
-  fontSize: 13, color: BRAND.gray, margin: 0,
+  fontSize: 'var(--text-small)', color: BRAND.gray, margin: 0,
 }
 
 export function SaveErrorBox({ error }: { error: string | null }) {
   if (!error) return null
   return (
-    <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', fontSize: 13, borderRadius: 8, padding: '10px 12px' }}>
+    <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', fontSize: 'var(--text-small)', fontWeight: 500, borderRadius: 8, padding: '10px 12px' }}>
       {error}
     </div>
   )
@@ -49,7 +49,7 @@ export function StepNavButtons({ onBack, onNext, saving, nextLabel = 'Continuar'
         disabled={saving}
         style={{
           flex: 2, background: BRAND.blue, color: '#fff', border: 'none', padding: 14, borderRadius: 8,
-          fontWeight: 600, fontSize: 15, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1,
+          fontWeight: 600, fontSize: 'var(--text-body)', cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1,
         }}
       >
         {saving ? 'Guardando...' : nextLabel}
@@ -78,7 +78,7 @@ export function CheckboxGrid<T extends string>({ options, selected, onToggle, co
             onClick={() => onToggle(opt.value)}
             style={{
               display: 'flex', alignItems: 'center', gap: 8, textAlign: 'left',
-              padding: '10px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 13,
+              padding: '10px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 'var(--text-small)',
               border: checked ? `1.5px solid ${accentColor}` : '1px solid #E0E0E0',
               background: checked ? 'color-mix(in srgb, ' + accentColor + ' 6%, white)' : '#fff',
               color: BRAND.dark,
@@ -118,7 +118,7 @@ export function PlainCheckboxList<T extends string>({ options, selected, onToggl
         return (
           <label
             key={opt.value}
-            style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13.5, color: BRAND.dark, cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 'var(--text-small)', color: BRAND.dark, cursor: 'pointer' }}
           >
             <span
               onClick={() => onToggle(opt.value)}
@@ -150,7 +150,7 @@ export function YesNoToggle({ label, value, onChange, accentColor = BRAND.blue }
             type="button"
             onClick={() => onChange(opt.v)}
             style={{
-              flex: 1, padding: '9px 0', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              flex: 1, padding: '9px 0', borderRadius: 8, fontSize: 'var(--text-small)', fontWeight: 600, cursor: 'pointer',
               border: value === opt.v ? `1.5px solid ${accentColor}` : '1px solid #E0E0E0',
               background: value === opt.v ? 'color-mix(in srgb, ' + accentColor + ' 8%, white)' : '#fff',
               color: value === opt.v ? accentColor : BRAND.dark,
@@ -181,7 +181,7 @@ export function SegmentedChoice<T extends string>({ label, options, value, onCha
             type="button"
             onClick={() => onChange(opt.value)}
             style={{
-              flex: '1 1 0', minWidth: 90, padding: '9px 10px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              flex: '1 1 0', minWidth: 90, padding: '9px 10px', borderRadius: 8, fontSize: 'var(--text-small)', fontWeight: 600, cursor: 'pointer',
               border: value === opt.value ? `1.5px solid ${accentColor}` : '1px solid #E0E0E0',
               background: value === opt.value ? 'color-mix(in srgb, ' + accentColor + ' 8%, white)' : '#fff',
               color: value === opt.value ? accentColor : BRAND.dark,

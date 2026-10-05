@@ -138,13 +138,13 @@ function RegisterForm() {
         <div className="w-full max-w-md text-center">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
             <div className="text-5xl mb-4">✅</div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">{t('accountCreatedTitle')}</h2>
-            <p className="text-gray-500 text-sm mb-6">
+            <h2 className="text-form-section font-bold text-gray-900 mb-2">{t('accountCreatedTitle')}</h2>
+            <p className="text-gray-500 text-small mb-6">
               {t('checkEmailPrefix')} <strong>{form.email}</strong> {t('checkEmailSuffix')}
             </p>
             <Link
               href={redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : '/login'}
-              className="block w-full bg-[var(--brand-red)] text-white font-medium py-3 rounded-lg text-center hover:brightness-90 transition-colors"
+              className="block w-full bg-[var(--brand-red)] text-white text-ui font-semibold py-3 rounded-lg text-center hover:brightness-90 transition-colors"
             >
               {t('goToLoginLink')}
             </Link>
@@ -172,7 +172,7 @@ function RegisterForm() {
               <span className="text-[var(--color-blue-dark)]">D</span>
             </span>
           </Link>
-          <p className="mt-2 text-gray-500 text-sm">{t('subtitleRegister')}</p>
+          <p className="mt-2 text-gray-500 text-small">{t('subtitleRegister')}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
@@ -183,7 +183,7 @@ function RegisterForm() {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={oauthLoading}
-              className="w-full flex items-center justify-center gap-2.5 bg-white border border-gray-300 text-gray-800 font-medium py-2.5 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full flex items-center justify-center gap-2.5 bg-white border border-gray-300 text-gray-800 text-ui font-semibold py-2.5 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -203,7 +203,7 @@ function RegisterForm() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-form-label font-semibold text-gray-700 mb-1">
                 {t('fullNameLabel')}
               </label>
               <input
@@ -218,7 +218,7 @@ function RegisterForm() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-form-label font-semibold text-gray-700 mb-1">
                 {t('emailLabel')}
               </label>
               <input
@@ -233,7 +233,7 @@ function RegisterForm() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-form-label font-semibold text-gray-700 mb-1">
                 {t('phoneLabel')} <span className="text-gray-400">{t('phoneOptional')}</span>
               </label>
               <input
@@ -247,7 +247,7 @@ function RegisterForm() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-form-label font-semibold text-gray-700 mb-1">
                 {t('passwordLabel')}
               </label>
               <input
@@ -262,7 +262,7 @@ function RegisterForm() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-form-label font-semibold text-gray-700 mb-1">
                 {t('confirmPasswordLabel')}
               </label>
               <input
@@ -296,7 +296,7 @@ function RegisterForm() {
             </label>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+              <div className="bg-red-50 border border-red-200 text-red-700 text-small font-medium rounded-lg px-4 py-3">
                 {error}
               </div>
             )}
@@ -316,15 +316,15 @@ function RegisterForm() {
             <button
               type="submit"
               disabled={loading || (!!TURNSTILE_SITE_KEY && !captchaToken)}
-              className="w-full bg-[var(--brand-red)] hover:brightness-90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition-colors mt-2"
+              className="w-full bg-[var(--brand-red)] hover:brightness-90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-ui font-semibold py-3 rounded-lg transition-colors mt-2"
             >
               {loading ? t('creatingAccount') : t('createAccountButton')}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-gray-500">
+          <p className="mt-6 text-center text-small text-gray-500">
             {t('alreadyHaveAccount')}{' '}
-            <Link href="/login" className="text-[var(--brand-blue)] font-medium hover:underline">
+            <Link href="/login" className="text-[var(--brand-blue)] font-semibold hover:underline">
               {t('loginLink')}
             </Link>
           </p>

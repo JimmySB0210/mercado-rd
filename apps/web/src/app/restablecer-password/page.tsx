@@ -77,13 +77,13 @@ export default function RestablecerPasswordPage() {
               <span className="text-[var(--color-blue-dark)]">D</span>
             </span>
           </Link>
-          <p className="mt-2 text-gray-500 text-sm">{t('resetPasswordSubtitle')}</p>
+          <p className="mt-2 text-gray-500 text-small">{t('resetPasswordSubtitle')}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-form-label font-semibold text-gray-700 mb-1">
                 {t('passwordLabel')}
               </label>
               <input
@@ -97,7 +97,7 @@ export default function RestablecerPasswordPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-form-label font-semibold text-gray-700 mb-1">
                 {t('confirmPasswordLabel')}
               </label>
               <input
@@ -111,7 +111,7 @@ export default function RestablecerPasswordPage() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+              <div className="bg-red-50 border border-red-200 text-red-700 text-small font-medium rounded-lg px-4 py-3">
                 {error}
               </div>
             )}
@@ -119,7 +119,7 @@ export default function RestablecerPasswordPage() {
             <button
               type="submit"
               disabled={saving}
-              className="w-full bg-[var(--brand-red)] hover:brightness-90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition-colors"
+              className="w-full bg-[var(--brand-red)] hover:brightness-90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-ui font-semibold py-3 rounded-lg transition-colors"
             >
               {saving ? t('resettingPassword') : t('resetPasswordButton')}
             </button>

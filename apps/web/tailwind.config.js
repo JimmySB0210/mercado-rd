@@ -28,6 +28,7 @@ module.exports = {
         'dash-title': ['var(--text-dash-title)', { lineHeight: 'var(--leading-h1)' }],
         metric: ['var(--text-metric)', { lineHeight: 'var(--leading-price)' }],
         'form-section': ['var(--text-form-section)', { lineHeight: 'var(--leading-h3)' }],
+        'form-label': ['var(--text-form-label)', { lineHeight: 'var(--leading-h4)' }],
       },
     },
   },

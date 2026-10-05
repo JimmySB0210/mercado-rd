@@ -83,7 +83,7 @@ export default function VendorRegisterPage() {
   if (authLoading || checking || redirecting) {
     return (
       <div style={{ minHeight: '100vh', background: BRAND.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: BRAND.gray, fontSize: 14 }}>Cargando...</p>
+        <p style={{ color: BRAND.gray, fontSize: 'var(--text-ui)' }}>Cargando...</p>
       </div>
     )
   }
@@ -96,22 +96,22 @@ export default function VendorRegisterPage() {
           <div style={{ fontWeight: 700, fontSize: 24, marginBottom: 8 }}>
             <span style={{ color: 'var(--color-blue-dark)' }}>Mercado</span><span style={{ color: BRAND.red }}>RD</span>
           </div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 10, color: BRAND.dark }}>
+          <h1 style={{ fontSize: 'var(--text-h1)', fontWeight: 700, lineHeight: 'var(--leading-h1)', marginBottom: 10, color: BRAND.dark }}>
             Necesitas una cuenta para vender en MercadoRD
           </h1>
-          <p style={{ color: BRAND.gray, marginBottom: 24, fontSize: 14 }}>
+          <p style={{ color: BRAND.gray, marginBottom: 24, fontSize: 'var(--text-body)' }}>
             Inicia sesión o crea una cuenta gratis para registrar tu tienda.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <a
               href="/login?redirect=/vendor/register"
-              style={{ background: BRAND.blue, color: '#fff', textDecoration: 'none', padding: 14, borderRadius: 8, fontWeight: 600, fontSize: 15, textAlign: 'center' }}
+              style={{ background: BRAND.blue, color: '#fff', textDecoration: 'none', padding: 14, borderRadius: 8, fontWeight: 600, fontSize: 'var(--text-body)', textAlign: 'center' }}
             >
               Iniciar sesión
             </a>
             <a
               href="/register?redirect=/vendor/register"
-              style={{ background: '#fff', color: BRAND.blue, border: `1px solid ${BRAND.blue}`, textDecoration: 'none', padding: 14, borderRadius: 8, fontWeight: 600, fontSize: 15, textAlign: 'center' }}
+              style={{ background: '#fff', color: BRAND.blue, border: `1px solid ${BRAND.blue}`, textDecoration: 'none', padding: 14, borderRadius: 8, fontWeight: 600, fontSize: 'var(--text-body)', textAlign: 'center' }}
             >
               Crear cuenta gratis
             </a>

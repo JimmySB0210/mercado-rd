@@ -39,7 +39,7 @@ export function WizardProgressBar({ currentStep, totalSteps = 6 }: Props) {
           )
         })}
       </div>
-      <p style={{ fontSize: 12, color: BRAND.gray, margin: 0 }}>
+      <p style={{ fontSize: 'var(--text-caption)', color: BRAND.gray, margin: 0 }}>
         Paso {currentStep} de {totalSteps} — {STEP_LABELS[currentStep - 1]}
       </p>
     </div>
