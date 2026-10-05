@@ -74,7 +74,7 @@ export function NoStoreNotice() {
   return (
     <div className="text-center max-w-md">
       <div className="text-5xl mb-4">🏪</div>
-      <h1 className="text-xl font-bold text-gray-900 mb-2">{t('noStoreTitle')}</h1>
+      <h1 className="text-dash-title font-bold text-gray-900 mb-2">{t('noStoreTitle')}</h1>
       <p className="text-gray-500 text-sm mb-6">{t('noStoreSub')}</p>
       <a
         href="/vendor/register"
@@ -95,11 +95,11 @@ function SectionHeader({ title, href, suffix }: { title: string; href?: string; 
   const { t } = useTranslation('dashboard')
   return (
     <div style={{ padding: '14px 16px', borderBottom: '1px solid #F0F3F6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <div style={{ fontWeight: 800, fontSize: 14, color: '#131A18' }}>
+      <div style={{ fontWeight: 600, fontSize: 'var(--text-h4)', color: '#131A18' }}>
         {title} {suffix && <span style={{ color: '#818F98', fontWeight: 600 }}>{suffix}</span>}
       </div>
       {href && (
-        <a href={href} style={{ fontSize: 12.5, color: 'var(--dashboard-blue)', textDecoration: 'none', fontWeight: 700 }}>
+        <a href={href} style={{ fontSize: 'var(--text-ui)', color: 'var(--dashboard-blue)', textDecoration: 'none', fontWeight: 600 }}>
           {t('viewAllArrow')}
         </a>
       )}
@@ -110,16 +110,16 @@ function SectionHeader({ title, href, suffix }: { title: string; href?: string; 
 function KpiCard({ label, value, sub, subColor }: { label: string; value: string; sub: string; subColor: string }) {
   return (
     <div style={{ ...cardStyle, padding: 14 }}>
-      <div style={{ fontSize: 10.5, color: '#818F98', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 700, marginBottom: 8 }}>{label}</div>
-      <div style={{ fontWeight: 900, fontSize: 21, marginBottom: 4, color: '#131A18' }}>{value}</div>
-      <div style={{ fontSize: 12, fontWeight: 600, color: subColor }}>{sub}</div>
+      <div style={{ fontSize: 'var(--text-caption)', color: '#818F98', textTransform: 'uppercase', letterSpacing: '0.02em', fontWeight: 500, marginBottom: 8 }}>{label}</div>
+      <div style={{ fontWeight: 700, fontSize: 'var(--text-metric)', lineHeight: 'var(--leading-price)', marginBottom: 4, color: '#131A18' }}>{value}</div>
+      <div style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: subColor }}>{sub}</div>
     </div>
   )
 }
 
 function AttentionItem({ emoji, text, href }: { emoji: string; text: string; href: string }) {
   return (
-    <a href={href} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 16px', textDecoration: 'none', color: '#131A18', fontSize: 13 }}>
+    <a href={href} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 16px', textDecoration: 'none', color: '#131A18', fontSize: 'var(--text-small)' }}>
       <span style={{ fontSize: 15, flexShrink: 0 }}>{emoji}</span>
       <span style={{ flex: 1 }}>{text}</span>
       <span style={{ color: 'var(--dashboard-blue)', fontSize: 16 }}>→</span>
@@ -144,11 +144,11 @@ function ProductMiniCard({ product }: { product: ProductRow }) {
         )}
       </div>
       <div style={{ padding: '8px 10px' }}>
-        <div style={{ fontSize: 12.5, fontWeight: 700, color: '#131A18', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <div style={{ fontSize: 'var(--text-small)', fontWeight: 600, color: '#131A18', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {product.name}
         </div>
-        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--dashboard-blue)', marginBottom: 2 }}>{formatPrice(product.price_rdp)}</div>
-        <div style={{ fontSize: 11, color: product.stock === 0 ? 'var(--brand-red)' : '#818F98' }}>
+        <div style={{ fontSize: 'var(--text-small)', fontWeight: 700, color: 'var(--dashboard-blue)', marginBottom: 2 }}>{formatPrice(product.price_rdp)}</div>
+        <div style={{ fontSize: 'var(--text-caption)', color: product.stock === 0 ? 'var(--brand-red)' : '#818F98' }}>
           {product.stock === 0 ? t('outOfStockShort') : t('unitsAvailable', { count: product.stock })}
         </div>
       </div>
@@ -182,14 +182,14 @@ export function DashboardContent({
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={{ fontSize: 21, fontWeight: 900, marginBottom: 2, color: '#131A18' }}>{t('greeting', { name: firstName })}</h1>
-          <p style={{ color: '#818F98', fontSize: 13 }}>{t('summarySubtitle')}</p>
+          <h1 style={{ fontSize: 'var(--text-dash-title)', fontWeight: 700, lineHeight: 'var(--leading-h1)', marginBottom: 2, color: '#131A18' }}>{t('greeting', { name: firstName })}</h1>
+          <p style={{ color: '#818F98', fontSize: 'var(--text-body)' }}>{t('summarySubtitle')}</p>
         </div>
         <a
           href="/dashboard/productos/nuevo"
           style={{
             background: 'var(--dashboard-blue)', color: '#fff', textDecoration: 'none', padding: '10px 18px',
-            borderRadius: 10, fontWeight: 700, cursor: 'pointer', fontSize: 13.5, boxShadow: '0 2px 10px rgba(4,88,180,0.25)',
+            borderRadius: 10, fontWeight: 600, cursor: 'pointer', fontSize: 'var(--text-ui)', boxShadow: '0 2px 10px rgba(4,88,180,0.25)',
           }}
         >
           {t('newProductCta')}
@@ -236,7 +236,7 @@ export function DashboardContent({
       {/* Necesita tu atención */}
       {attentionItems.length > 0 && (
         <div style={{ ...cardStyle, marginBottom: 12 }}>
-          <div style={{ padding: '12px 16px 8px', fontWeight: 800, fontSize: 13.5, color: '#131A18' }}>
+          <div style={{ padding: '12px 16px 8px', fontWeight: 600, fontSize: 'var(--text-h4)', color: '#131A18' }}>
             {t('attentionSectionTitle')}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))' }}>
@@ -255,20 +255,20 @@ export function DashboardContent({
         <div style={cardStyle}>
           <SectionHeader title={t('topSellingTitle')} />
           {topSelling.length === 0 ? (
-            <p style={{ padding: '28px 16px', fontSize: 12.5, color: '#818F98', textAlign: 'center' }}>{t('topSellingEmpty')}</p>
+            <p style={{ padding: '28px 16px', fontSize: 'var(--text-small)', color: '#818F98', textAlign: 'center' }}>{t('topSellingEmpty')}</p>
           ) : (
             <div style={{ padding: '6px 0' }}>
               {topSelling.map((p, i) => (
                 <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px' }}>
                   <span style={{
                     width: 20, height: 20, borderRadius: '50%', background: i === 0 ? 'var(--dashboard-yellow)' : '#EEF2F6',
-                    color: i === 0 ? '#131A18' : '#818F98', fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    color: i === 0 ? '#131A18' : '#818F98', fontSize: 'var(--text-badge)', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
                     {i + 1}
                   </span>
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontSize: 12.5, fontWeight: 700, color: '#131A18', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                    <div style={{ fontSize: 11, color: '#818F98' }}>{t('salesCountShort', { count: p.sold_count ?? 0 })}</div>
+                    <div style={{ fontSize: 'var(--text-small)', fontWeight: 600, color: '#131A18', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                    <div style={{ fontSize: 'var(--text-caption)', color: '#818F98' }}>{t('salesCountShort', { count: p.sold_count ?? 0 })}</div>
                   </div>
                 </div>
               ))}
@@ -298,7 +298,7 @@ export function DashboardContent({
         {orders.length === 0 ? (
           <div style={{ padding: '40px 24px', textAlign: 'center' }}>
             <div style={{ fontSize: 36, marginBottom: 10 }}>📭</div>
-            <p style={{ color: '#818F98', fontSize: 13.5 }}>{t('noOrdersYet')}</p>
+            <p style={{ color: '#818F98', fontSize: 'var(--text-small)' }}>{t('noOrdersYet')}</p>
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
@@ -306,7 +306,7 @@ export function DashboardContent({
               <thead>
                 <tr style={{ background: '#FAFBFC' }}>
                   {[t('tableOrder'), t('tableClient'), t('tableProducts'), t('tableProvince'), t('tableAmount'), t('tableStatus')].map(h => (
-                    <th key={h} style={{ padding: '9px 14px', textAlign: 'left', fontSize: 10.5, color: '#818F98', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 700, borderBottom: '1px solid #F0F3F6', whiteSpace: 'nowrap' }}>
+                    <th key={h} style={{ padding: '9px 14px', textAlign: 'left', fontSize: 'var(--text-caption)', color: '#818F98', textTransform: 'uppercase', letterSpacing: '0.02em', fontWeight: 500, borderBottom: '1px solid #F0F3F6', whiteSpace: 'nowrap' }}>
                       {h}
                     </th>
                   ))}
@@ -321,19 +321,19 @@ export function DashboardContent({
 
                   return (
                     <tr key={o.order_id} style={{ borderBottom: '1px solid #F7F9FB' }}>
-                      <td style={{ padding: '11px 14px', color: 'var(--dashboard-blue)', fontWeight: 700, fontSize: 12.5, whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '11px 14px', color: 'var(--dashboard-blue)', fontWeight: 600, fontSize: 'var(--text-small)', whiteSpace: 'nowrap' }}>
                         #RD-{shortId}
                       </td>
-                      <td style={{ padding: '11px 14px', fontSize: 12.5 }}>
+                      <td style={{ padding: '11px 14px', fontSize: 'var(--text-small)' }}>
                         {o.buyer_name || t('defaultClientName')}
                       </td>
-                      <td style={{ padding: '11px 14px', fontSize: 12.5, maxWidth: 200 }}>
+                      <td style={{ padding: '11px 14px', fontSize: 'var(--text-small)', maxWidth: 200 }}>
                         {productSummary}
                       </td>
-                      <td style={{ padding: '11px 14px', fontSize: 12.5, whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '11px 14px', fontSize: 'var(--text-small)', whiteSpace: 'nowrap' }}>
                         {o.province_name ?? '—'}
                       </td>
-                      <td style={{ padding: '11px 14px', fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '11px 14px', fontSize: 'var(--text-small)', fontWeight: 600, whiteSpace: 'nowrap' }}>
                         {formatPrice(o.vendor_subtotal_rdp)}
                       </td>
                       <td style={{ padding: '11px 14px' }}>

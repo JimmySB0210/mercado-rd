@@ -89,6 +89,10 @@
   --leading-price: 1.2;
   --leading-price-detail: 1.15;
 
+  --text-dash-title: 28px;
+  --text-metric: 28px;
+  --text-form-section: 18px;
+
   /* ── Border radius ── */
   --radius-card: 16px;
   --radius-control: 12px;
@@ -125,6 +129,9 @@
     --text-display: 32px;
     --text-price: 24px;
     --text-price-detail: 24px;
+    --text-dash-title: 24px;
+    --text-metric: 24px;
+    --text-form-section: 17px;
   }
 }
 

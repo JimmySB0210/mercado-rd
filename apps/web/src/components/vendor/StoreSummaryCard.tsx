@@ -23,12 +23,12 @@ export function StoreSummaryCard({ vendor, realStats, completenessPercent }: Pro
 
   return (
     <div style={{ background: '#fff', borderRadius: 14, boxShadow: '0 1px 8px rgba(10,30,60,0.06)', border: '1px solid #EEF2F6', padding: 16 }}>
-      <div style={{ fontSize: 13, fontWeight: 800, color: '#131A18', marginBottom: 12 }}>{t('storeCardTitle')}</div>
+      <div style={{ fontSize: 'var(--text-h4)', fontWeight: 600, color: '#131A18', marginBottom: 12 }}>{t('storeCardTitle')}</div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
         <div style={{
           width: 44, height: 44, borderRadius: 10, background: 'var(--color-primary-subtle)', flexShrink: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: 'var(--dashboard-blue)', overflow: 'hidden',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: 'var(--dashboard-blue)', overflow: 'hidden',
         }}>
           {vendor.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -36,14 +36,14 @@ export function StoreSummaryCard({ vendor, realStats, completenessPercent }: Pro
           ) : vendor.businessName.charAt(0).toUpperCase()}
         </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontWeight: 800, fontSize: 14, color: '#131A18', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontWeight: 600, fontSize: 'var(--text-ui)', color: '#131A18', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {vendor.businessName}
           </div>
-          {vendor.provinceName && <div style={{ fontSize: 11.5, color: '#818F98' }}>{vendor.provinceName}</div>}
+          {vendor.provinceName && <div style={{ fontSize: 'var(--text-caption)', color: '#818F98' }}>{vendor.provinceName}</div>}
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 12, fontSize: 12, color: '#3D5361', marginBottom: 12, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 12, fontSize: 'var(--text-caption)', color: '#3D5361', marginBottom: 12, flexWrap: 'wrap' }}>
         {realStats.realRatingAvg != null ? (
           <span>⭐ {realStats.realRatingAvg.toFixed(1)}{realStats.realRatingCount > 0 && ` · ${t('reviewsCountShort', { count: realStats.realRatingCount })}`}</span>
         ) : (
@@ -52,7 +52,7 @@ export function StoreSummaryCard({ vendor, realStats, completenessPercent }: Pro
         <span>{t('salesCountShort', { count: realStats.realTotalSales })}</span>
       </div>
 
-      <div style={{ marginBottom: 4, fontSize: 11, color: '#818F98', display: 'flex', justifyContent: 'space-between' }}>
+      <div style={{ marginBottom: 4, fontSize: 'var(--text-caption)', color: '#818F98', display: 'flex', justifyContent: 'space-between' }}>
         <span>{t('storeProfileLabel')}</span>
         <span style={{ fontWeight: 700, color: '#131A18' }}>{completenessPercent}%</span>
       </div>
@@ -62,13 +62,13 @@ export function StoreSummaryCard({ vendor, realStats, completenessPercent }: Pro
 
       <div style={{ display: 'flex', gap: 8 }}>
         <a href={`/tienda/${vendor.id}`} style={{
-          flex: 1, textAlign: 'center', fontSize: 12.5, fontWeight: 700, padding: '8px 10px', borderRadius: 8,
+          flex: 1, textAlign: 'center', fontSize: 'var(--text-ui)', fontWeight: 600, padding: '8px 10px', borderRadius: 8,
           border: '1px solid var(--dashboard-blue)', color: 'var(--dashboard-blue)', textDecoration: 'none',
         }}>
           {t('viewMyStoreCta')}
         </a>
         <a href="/dashboard/configuracion" style={{
-          flex: 1, textAlign: 'center', fontSize: 12.5, fontWeight: 700, padding: '8px 10px', borderRadius: 8,
+          flex: 1, textAlign: 'center', fontSize: 'var(--text-ui)', fontWeight: 600, padding: '8px 10px', borderRadius: 8,
           background: 'var(--dashboard-blue)', color: '#fff', textDecoration: 'none',
         }}>
           {t('editStoreCta')}

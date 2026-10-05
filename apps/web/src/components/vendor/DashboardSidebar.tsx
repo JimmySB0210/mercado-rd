@@ -143,14 +143,14 @@ export function DashboardSidebar() {
         display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px', cursor: 'pointer',
         background: active ? 'rgba(255,255,255,0.12)' : 'transparent',
         borderLeft: active ? '2px solid #fff' : '2px solid transparent',
-        color: active ? '#fff' : 'rgba(255,255,255,0.65)', fontSize: 14, fontWeight: active ? 600 : 400,
+        color: active ? '#fff' : 'rgba(255,255,255,0.65)', fontSize: 'var(--text-ui)', fontWeight: active ? 600 : 400,
         fontFamily: 'var(--font-body)', textDecoration: 'none', transition: 'background-color var(--transition-fast), color var(--transition-fast)',
       }}>
         <span>{item.icon}</span>
         <span style={{ flex: 1 }}>{t(item.labelKey)}</span>
         {badgeCount > 0 && (
           <span style={{
-            background: 'var(--dashboard-yellow)', color: '#131A18', fontSize: 10.5, fontWeight: 800,
+            background: 'var(--dashboard-yellow)', color: '#131A18', fontSize: 'var(--text-badge)', fontWeight: 600,
             padding: '1px 6px', borderRadius: 999, flexShrink: 0,
           }}>
             {badgeCount}
@@ -165,15 +165,15 @@ export function DashboardSidebar() {
       margin: '0 16px 14px', padding: '14px', borderRadius: 12,
       background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)',
     }}>
-      <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 4 }}>
+      <div style={{ fontSize: 'var(--text-small)', fontWeight: 700, color: '#fff', marginBottom: 4 }}>
         ✨ {t('sidebarProCardTitle')}
       </div>
-      <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.7)', margin: '0 0 10px', lineHeight: 1.4 }}>
+      <p style={{ fontSize: 'var(--text-caption)', color: 'rgba(255,255,255,0.7)', margin: '0 0 10px', lineHeight: 1.4 }}>
         {t('sidebarProCardBody')}
       </p>
       <a href="/dashboard/plan" style={{
         display: 'block', textAlign: 'center', background: 'var(--dashboard-yellow)', color: '#131A18',
-        fontSize: 12, fontWeight: 800, padding: '7px 10px', borderRadius: 8, textDecoration: 'none',
+        fontSize: 'var(--text-small)', fontWeight: 600, padding: '7px 10px', borderRadius: 8, textDecoration: 'none',
       }}>
         {t('sidebarProCardCta')}
       </a>
@@ -184,7 +184,7 @@ export function DashboardSidebar() {
   const navGroups = (onClick?: () => void) => NAV_GROUPS.map((group, gi) => (
     <div key={gi} style={gi > 0 ? { marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.12)' } : undefined}>
       {group.groupLabelKey && (
-        <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: 0.6, color: 'rgba(255,255,255,0.55)', padding: '6px 20px 4px' }}>
+        <div style={{ fontSize: 'var(--text-caption)', fontWeight: 600, letterSpacing: 0.6, color: 'rgba(255,255,255,0.55)', padding: '6px 20px 4px' }}>
           {t(group.groupLabelKey)}
         </div>
       )}
@@ -199,7 +199,7 @@ export function DashboardSidebar() {
           <a href="/" style={{ textDecoration: 'none' }}>
             <Logo variant="white" fontSize={18} />
           </a>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-body)', marginTop: 6 }}>{t('vendorPanelLabel')}</div>
+          <div style={{ fontSize: 'var(--text-caption)', color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-body)', marginTop: 6 }}>{t('vendorPanelLabel')}</div>
         </div>
         {navGroups()}
         <div style={{ marginTop: 'auto' }}>
