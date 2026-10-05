@@ -88,8 +88,8 @@ export function HelpCenterContent({ articles, loadFailed }: Props) {
       </nav>
 
       <h1
-        className="text-2xl sm:text-3xl mb-1"
-        style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, color: 'var(--color-blue-dark)', letterSpacing: 'var(--tracking-heading)' }}
+        className="text-h1 mb-1"
+        style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, color: 'var(--color-blue-dark)', letterSpacing: 'var(--tracking-heading)' }}
       >
         {t('helpCenterTitle')}
       </h1>
@@ -185,7 +185,7 @@ export function HelpCenterContent({ articles, loadFailed }: Props) {
                 <h2
                   id={`categoria-titulo-${group.slug}`}
                   className="flex items-baseline gap-2 mb-3"
-                  style={{ fontFamily: 'var(--font-heading)', fontSize: 20, fontWeight: 800, color: 'var(--color-blue-dark)' }}
+                  style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--text-h3)', fontWeight: 700, color: 'var(--color-blue-dark)' }}
                 >
                   <span aria-hidden="true">{group.config?.emoji ?? '📄'}</span>
                   {label}

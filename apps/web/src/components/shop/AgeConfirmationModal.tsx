@@ -63,24 +63,24 @@ export function AgeConfirmationModal({ requiresConfirmation }: Props) {
     >
       <div style={{ background: '#fff', borderRadius: 16, padding: 28, maxWidth: 400, width: '100%', textAlign: 'center' }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}>🔞</div>
-        <h2 style={{ fontSize: 17, fontWeight: 800, color: '#111', marginBottom: 8 }}>
+        <h2 style={{ fontSize: 'var(--text-h3)', fontWeight: 700, color: '#111', marginBottom: 8 }}>
           {t('ageConfirmationTitle')}
         </h2>
-        <p style={{ fontSize: 14, color: '#666', marginBottom: 24, lineHeight: 1.5 }}>
+        <p style={{ fontSize: 'var(--text-ui)', color: '#666', marginBottom: 24, lineHeight: 1.5 }}>
           {t('ageConfirmationBody')}
         </p>
         <div style={{ display: 'flex', gap: 10 }}>
           <button
             type="button"
             onClick={handleBack}
-            style={{ flex: 1, padding: '10px 16px', borderRadius: 8, border: '1px solid #ddd', background: '#fff', color: '#666', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}
+            style={{ flex: 1, padding: '10px 16px', borderRadius: 8, border: '1px solid #ddd', background: '#fff', color: '#666', fontWeight: 600, fontSize: 'var(--text-ui)', cursor: 'pointer' }}
           >
             {t('ageConfirmationBack')}
           </button>
           <button
             type="button"
             onClick={handleContinue}
-            style={{ flex: 1, padding: '10px 16px', borderRadius: 8, border: 'none', background: BRAND.blue, color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
+            style={{ flex: 1, padding: '10px 16px', borderRadius: 8, border: 'none', background: BRAND.blue, color: '#fff', fontWeight: 700, fontSize: 'var(--text-ui)', cursor: 'pointer' }}
           >
             {t('ageConfirmationContinue')}
           </button>

@@ -103,7 +103,7 @@ function QualitySidebarCard({ percent, checks, t }: {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-5">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-semibold text-gray-700">{t('qualityChecklistHeading')}</h3>
+        <h3 className="text-form-label font-semibold text-gray-700">{t('qualityChecklistHeading')}</h3>
         <span className="text-sm font-bold" style={{ color: QUALITY_TIER_COLOR[tier].text }}>{percent}%</span>
       </div>
       <div className="w-full h-2 rounded-full bg-gray-100 overflow-hidden mb-3">
@@ -145,14 +145,14 @@ function PreviewSidebarCard({ data, t }: {
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-5">
-      <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('previewSidebarHeading')}</h3>
+      <h3 className="text-form-label font-semibold text-gray-700 mb-3">{t('previewSidebarHeading')}</h3>
 
       <div className="rounded-xl overflow-hidden bg-gray-50 mb-3" style={{ aspectRatio: '1' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={image} alt="" className="w-full h-full object-cover" />
       </div>
 
-      <p className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 mb-1">
+      <p className="text-body font-semibold text-gray-900 leading-snug line-clamp-2 mb-1">
         {previewProduct.name || t('previewUntitledProduct')}
       </p>
       {/* Mismo criterio honesto que la página real: sin reseñas todavía
@@ -166,7 +166,7 @@ function PreviewSidebarCard({ data, t }: {
       )}
 
       <div className="flex items-baseline gap-2 mb-3">
-        <span className="text-lg font-extrabold" style={{ color: BRAND.blue }}>
+        <span className="text-form-section font-bold" style={{ color: BRAND.blue }}>
           {formatPrice(previewProduct.price_rdp || 0)}
         </span>
         {hasDiscount && (
@@ -1432,7 +1432,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           >
             {mode === 'editar' ? t('backToProductsLink') : t('backToDashboardLink')}
           </a>
-          <h1 className="text-2xl font-bold text-gray-900 mt-1">
+          <h1 className="text-dash-title font-bold text-gray-900 mt-1">
             {mode === 'editar' ? t('editProductTitle') : t('newProductTitle')}
           </h1>
         </div>
@@ -1466,7 +1466,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                     style={{ background: isActive ? BRAND.blue : 'transparent' }}
                   >
                     <span
-                      className="flex-shrink-0 flex items-center justify-center rounded-full text-[11px] font-bold"
+                      className="flex-shrink-0 flex items-center justify-center rounded-full text-badge font-bold"
                       style={{
                         width: 18, height: 18,
                         background: isActive ? '#fff' : '#F3F4F6',
@@ -1476,10 +1476,10 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                       {i + 1}
                     </span>
                     <span className="min-w-0">
-                      <span className="block text-[13px] font-semibold leading-tight" style={{ color: isActive ? '#fff' : 'var(--color-blue-dark)' }}>
+                      <span className="block text-small font-semibold leading-tight" style={{ color: isActive ? '#fff' : 'var(--color-blue-dark)' }}>
                         {step.label}
                       </span>
-                      <span className="block text-[11px] leading-snug" style={{ color: isActive ? 'rgba(255,255,255,0.8)' : BRAND.gray }}>
+                      <span className="block text-badge leading-snug" style={{ color: isActive ? 'rgba(255,255,255,0.8)' : BRAND.gray }}>
                         {step.subtitle}
                       </span>
                     </span>
@@ -1507,7 +1507,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           <>
           {/* Imágenes */}
           <div className="bg-white rounded-2xl border border-gray-100 p-5">
-            <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-blue-dark)' }}>{t('photosHeading')}</h2>
+            <h2 className="text-form-label font-semibold mb-3" style={{ color: 'var(--color-blue-dark)' }}>{t('photosHeading')}</h2>
             <div className="flex flex-wrap gap-3 mb-3">
               {existingImageUrls.map((src, i) => (
                 <div key={`existing-${i}`} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
@@ -1543,13 +1543,13 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               )}
             </div>
             <p className="text-xs text-gray-400">{t('photosHint')}</p>
-            {imageError && <p className="text-xs text-red-600 mt-2">{imageError}</p>}
+            {imageError && <p className="text-small font-medium text-red-600 mt-2">{imageError}</p>}
             {imageWarning && <p className="text-xs text-amber-600 mt-2">{imageWarning}</p>}
           </div>
 
           {/* Video (opcional) — complementa la galería de fotos, no la reemplaza */}
           <div className="bg-white rounded-2xl border border-gray-100 p-5">
-            <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-blue-dark)' }}>{t('videoHeading')}</h2>
+            <h2 className="text-form-label font-semibold mb-3" style={{ color: 'var(--color-blue-dark)' }}>{t('videoHeading')}</h2>
             <div className="mb-3">
               {(videoPreviewUrl || existingVideoUrl) ? (
                 <div className="relative w-48 aspect-video rounded-lg overflow-hidden border border-gray-200 bg-black">
@@ -1575,7 +1575,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               )}
             </div>
             <p className="text-xs text-gray-400">{t('videoHint')}</p>
-            {videoError && <p className="text-xs text-red-600 mt-2">{videoError}</p>}
+            {videoError && <p className="text-small font-medium text-red-600 mt-2">{videoError}</p>}
           </div>
           </>
           )}
@@ -1584,7 +1584,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           <>
           {/* Info básica */}
           <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
-            <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-blue-dark)' }}>{t('basicInfoHeading')}</h2>
+            <h2 className="text-form-label font-semibold mb-1" style={{ color: 'var(--color-blue-dark)' }}>{t('basicInfoHeading')}</h2>
 
             <div>
               <input
@@ -1594,7 +1594,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                 placeholder={t('productNamePlaceholder')}
                 className={inputCls(!!nameError)}
               />
-              {nameError && <p className="text-xs text-red-600 mt-1">{nameError}</p>}
+              {nameError && <p className="text-small font-medium text-red-600 mt-1">{nameError}</p>}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1656,7 +1656,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           <>
           {/* Precio y stock */}
           <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
-            <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-blue-dark)' }}>{t('priceSaleHeading')}</h2>
+            <h2 className="text-form-label font-semibold mb-1" style={{ color: 'var(--color-blue-dark)' }}>{t('priceSaleHeading')}</h2>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -1671,7 +1671,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                   placeholder="0.00"
                   className={inputCls(!!priceError)}
                 />
-                {priceError && <p className="text-xs text-red-600 mt-1">{priceError}</p>}
+                {priceError && <p className="text-small font-medium text-red-600 mt-1">{priceError}</p>}
               </div>
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">{t('comparePriceLabel')}</label>
@@ -1690,7 +1690,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           </div>
 
           <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
-            <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-blue-dark)' }}>{t('inventoryHeading')}</h2>
+            <h2 className="text-form-label font-semibold mb-1" style={{ color: 'var(--color-blue-dark)' }}>{t('inventoryHeading')}</h2>
 
             <div>
               <label className="text-xs text-gray-500 mb-1 block">{t('stockAvailableLabel')}</label>
@@ -1703,7 +1703,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                 placeholder="0"
                 className={inputCls(!!stockError)}
               />
-              {stockError && <p className="text-xs text-red-600 mt-1">{stockError}</p>}
+              {stockError && <p className="text-small font-medium text-red-600 mt-1">{stockError}</p>}
             </div>
 
             <div>
@@ -1717,7 +1717,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                 placeholder={t('lowStockThresholdPlaceholder')}
                 className={inputCls(!!lowStockThresholdError)}
               />
-              {lowStockThresholdError && <p className="text-xs text-red-600 mt-1">{lowStockThresholdError}</p>}
+              {lowStockThresholdError && <p className="text-small font-medium text-red-600 mt-1">{lowStockThresholdError}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -1885,7 +1885,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                                     type="button"
                                     onClick={() => removeDynamicVariantImage(i)}
                                     className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-black/60 text-white flex items-center justify-center leading-none"
-                                    style={{ fontSize: 10 }}
+                                    style={{ fontSize: 'var(--text-badge)' }}
                                     aria-label={t('removeImageAria')}
                                   >
                                     ×
@@ -1894,7 +1894,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                               ) : (
                                 <label
                                   className="flex-shrink-0 rounded-lg border border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors"
-                                  style={{ width: 36, height: 36, fontSize: 14 }}
+                                  style={{ width: 36, height: 36, fontSize: 'var(--text-ui)' }}
                                   title={t('uploadColorPhotoTitle')}
                                 >
                                   {uploadingDynamicVariantIndex === i ? '…' : '📷'}
@@ -1994,7 +1994,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                             type="button"
                             onClick={() => removeVariantImage(i)}
                             className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-black/60 text-white flex items-center justify-center leading-none"
-                            style={{ fontSize: 10 }}
+                            style={{ fontSize: 'var(--text-badge)' }}
                             aria-label={t('removeImageAria')}
                           >
                             ×
@@ -2003,7 +2003,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                       ) : (
                         <label
                           className="flex-shrink-0 rounded-lg border border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors"
-                          style={{ width: 36, height: 36, fontSize: 14 }}
+                          style={{ width: 36, height: 36, fontSize: 'var(--text-ui)' }}
                           title={t('uploadColorPhotoTitle')}
                         >
                           {uploadingVariantIndex === i ? '…' : '📷'}
@@ -2053,7 +2053,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                 </div>
               ))
             )}
-            {variantImageError && <p className="text-xs text-red-600">{variantImageError}</p>}
+            {variantImageError && <p className="text-small font-medium text-red-600">{variantImageError}</p>}
           </div>
           </>
           )}
@@ -2072,7 +2072,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           </div>
 
           <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
-            <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-blue-dark)' }}>{t('shippingWeightDimensionsHeading')}</h2>
+            <h2 className="text-form-label font-semibold mb-1" style={{ color: 'var(--color-blue-dark)' }}>{t('shippingWeightDimensionsHeading')}</h2>
             <p className="text-xs text-gray-400">{t('shippingWeightDimensionsDisclaimer')}</p>
 
             <div>
@@ -2158,7 +2158,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           {/* Información adicional — descripción vive acá (no en
               Información básica), junto con garantía y devoluciones. */}
           <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
-            <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-blue-dark)' }}>{t('stepAdditionalLabel')}</h2>
+            <h2 className="text-form-label font-semibold mb-1" style={{ color: 'var(--color-blue-dark)' }}>{t('stepAdditionalLabel')}</h2>
             <div>
               <textarea
                 name="description"
@@ -2168,7 +2168,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                 rows={4}
                 className={`w-full border rounded-lg px-4 py-2.5 text-sm outline-none resize-none ${descriptionError ? 'border-red-400' : 'border-gray-200'}`}
               />
-              {descriptionError && <p className="text-xs text-red-600 mt-1">{descriptionError}</p>}
+              {descriptionError && <p className="text-small font-medium text-red-600 mt-1">{descriptionError}</p>}
             </div>
           </div>
 
@@ -2203,7 +2203,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               muestra a modo informativo, no como un campo editable, para
               no inventar una configuración por producto que no existe. */}
           <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4">
-            <h2 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-blue-dark)' }}>{t('returnPolicyHeading')}</h2>
+            <h2 className="text-form-label font-semibold mb-1" style={{ color: 'var(--color-blue-dark)' }}>{t('returnPolicyHeading')}</h2>
             <p className="text-xs text-gray-500 mb-2">{t('returnPolicyText')}</p>
             <a href="/terminos" target="_blank" rel="noopener noreferrer" className="text-xs font-semibold no-underline" style={{ color: BRAND.blue }}>
               {t('returnPolicyLink')}
@@ -2256,7 +2256,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           </div>
 
           {error && planLimitReached && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-small font-medium text-amber-800">
               <p className="mb-2">🔒 {error}</p>
               <a
                 href="/dashboard/plan"
@@ -2269,7 +2269,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           )}
 
           {error && !planLimitReached && (
-            <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
+            <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-small font-medium text-red-700">
               {error}
             </div>
           )}
@@ -2332,7 +2332,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               <PreviewSidebarCard data={buildPreviewData()} t={t} />
 
               <div className="bg-white rounded-2xl border border-gray-100 p-5">
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">💡 {t('tipsHeading')}</h3>
+                <h3 className="text-form-label font-semibold text-gray-700 mb-2">💡 {t('tipsHeading')}</h3>
                 <ul className="space-y-1.5">
                   {[t('tipPhotos'), t('tipCategory'), t('tipAttributes'), t('tipDescription')].map(tip => (
                     <li key={tip} className="flex items-center gap-2 text-xs text-gray-600">
@@ -2343,7 +2343,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               </div>
 
               <div className="bg-white rounded-2xl border border-gray-100 p-5">
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">🛡️ {tp('trustSecureTitle')}</h3>
+                <h3 className="text-form-label font-semibold text-gray-700 mb-2">🛡️ {tp('trustSecureTitle')}</h3>
                 <ul className="space-y-1.5">
                   {[tp('trustSecureTitle'), tp('trustQualityTitle'), tp('trustShippingTitle'), tp('trustBuyersTitle')].map(txt => (
                     <li key={txt} className="flex items-center gap-2 text-xs text-gray-600">

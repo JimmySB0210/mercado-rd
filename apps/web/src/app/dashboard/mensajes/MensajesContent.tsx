@@ -38,8 +38,8 @@ export function MensajesContent({ rows }: { rows: ConversationRow[] }) {
   return (
     <div style={{ padding: 28, background: '#f5f5f5' }}>
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 4 }}>{t('messagesPageTitle')}</h1>
-        <p style={{ color: '#666', fontSize: 14 }}>
+        <h1 style={{ fontSize: 'var(--text-dash-title)', fontWeight: 700, lineHeight: 'var(--leading-h1)', marginBottom: 4 }}>{t('messagesPageTitle')}</h1>
+        <p style={{ color: '#666', fontSize: 'var(--text-ui)' }}>
           {rows.length === 1 ? t('conversationCountOne', { count: rows.length }) : t('conversationCountOther', { count: rows.length })}
         </p>
       </div>
@@ -47,7 +47,7 @@ export function MensajesContent({ rows }: { rows: ConversationRow[] }) {
       {rows.length === 0 ? (
         <div style={{ background: '#fff', borderRadius: 12, padding: 48, textAlign: 'center', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>💬</div>
-          <p style={{ color: '#999', fontSize: 14 }}>{t('noMessagesYet')}</p>
+          <p style={{ color: '#999', fontSize: 'var(--text-ui)' }}>{t('noMessagesYet')}</p>
         </div>
       ) : (
         <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
@@ -79,10 +79,10 @@ export function MensajesContent({ rows }: { rows: ConversationRow[] }) {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: '#111' }}>{buyerName}</span>
-                  <span style={{ fontSize: 12, color: '#999', flexShrink: 0 }}>{timeAgo(c.last_message_at)}</span>
+                  <span style={{ fontSize: 'var(--text-ui)', fontWeight: 600, color: '#111' }}>{buyerName}</span>
+                  <span style={{ fontSize: 'var(--text-caption)', color: '#999', flexShrink: 0 }}>{timeAgo(c.last_message_at)}</span>
                 </div>
-                <p style={{ fontSize: 13, color: '#666', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <p style={{ fontSize: 'var(--text-small)', color: '#666', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {c.last_message ?? t('noMessagesInConvo')}
                 </p>
               </div>
@@ -90,7 +90,7 @@ export function MensajesContent({ rows }: { rows: ConversationRow[] }) {
                 <span
                   style={{
                     background: BRAND.red, color: '#fff', borderRadius: '50%',
-                    width: 20, height: 20, fontSize: 11, fontWeight: 700,
+                    width: 20, height: 20, fontSize: 'var(--text-badge)', fontWeight: 700,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}
                 >

@@ -53,8 +53,8 @@ export function AboutContent({ articles, loadFailed }: Props) {
       </nav>
 
       <h1
-        className="text-2xl sm:text-3xl mb-1"
-        style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, color: 'var(--color-blue-dark)', letterSpacing: 'var(--tracking-heading)' }}
+        className="text-h1 mb-1"
+        style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, color: 'var(--color-blue-dark)', letterSpacing: 'var(--tracking-heading)' }}
       >
         {t('aboutPageTitle')}
       </h1>
@@ -97,8 +97,8 @@ export function AboutContent({ articles, loadFailed }: Props) {
                     {section.articles.map(article => (
                       <div key={article.id} className="mb-5 last:mb-0">
                         <h2
-                          className="text-lg sm:text-xl mb-2"
-                          style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, color: 'var(--color-blue-dark)' }}
+                          className="text-h3 mb-2"
+                          style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, color: 'var(--color-blue-dark)' }}
                         >
                           {article.title}
                         </h2>
