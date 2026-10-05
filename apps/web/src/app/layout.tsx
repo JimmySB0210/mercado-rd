@@ -1,27 +1,30 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { Inter, Playfair_Display } from 'next/font/google'
+import localFont from 'next/font/local'
 import { MobileTabBar } from '../components/shop/MobileTabBar'
 import { Footer } from '../components/shop/Footer'
 import { InactivityWarning } from '../components/shop/InactivityWarning'
 import { AbandonedCartTracker } from '../components/shop/AbandonedCartTracker'
 import { BRAND } from '@/lib/colors'
 
-// Inter es la única fuente de interfaz. Pesos 400–700 estáticos; 800 y 900 se
-// muestran como 700. Sin cursiva: next/font 14.2 no la declara para Inter.
-const inter = Inter({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+// Inter es la única fuente de interfaz. Archivo variable propio en fonts/
+// (SIL OFL, latin), limitado a 400–700: 800 y 900 se muestran como 700.
+// Sin descarga de Google Fonts en el build.
+const inter = localFont({
+  src: '../fonts/inter-latin-wght-normal.woff2',
+  weight: '400 700',
   variable: '--font-inter',
   display: 'swap',
+  adjustFontFallback: 'Arial',
 })
 
 // Wordmark "MercadoRD", único uso: --font-logo en Logo.tsx.
-const playfairDisplay = Playfair_Display({
-  subsets: ['latin'],
-  weight: ['700'],
+const playfairDisplay = localFont({
+  src: '../fonts/playfair-display-latin-700-normal.woff2',
+  weight: '700',
   variable: '--font-playfair-display',
   display: 'swap',
+  adjustFontFallback: 'Times New Roman',
 })
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
