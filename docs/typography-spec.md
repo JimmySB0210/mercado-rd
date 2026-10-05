@@ -202,3 +202,24 @@ Estas decisiones precisan la spec anterior para la implementación:
 
 - **Altura del hero en escritorio:** reducirla al estilo compacto del móvil. Hoy mide 307px a 1440. El H1 de 40px puede ocupar 2 líneas, así que el cambio tiene que contar con eso. Pedido de Jimmy para más adelante, sin implementar.
   - **Hallazgo en FR a 1440 (previo, no causado por el titular):** el subtítulo ocupa 3 líneas (68px) y la fila de perks queda 14px fuera del banner, así que se recorta. Medido igual con el titular anterior. Sin tocar subtítulo ni CTA hasta que se decida el alto del hero.
+
+## Barrido final de tamaños (fase 3)
+
+### Clases Tailwind de la escala de px (excepción documentada, sin migrar)
+
+- `text-xs`, `text-sm`, `text-base`, `text-xl` y `text-2xl` son equivalentes aceptados para 12, 14, 16, 20 y 24 px. Mantienen la misma escala de px; el interlineado difiere en menos de 1 px. No se migran.
+- Regla: el código nuevo usa los tokens (`--text-*`, `text-caption`, `text-small`, `text-ui`, `text-h1`…); las clases de arriba se conservan en el código existente.
+
+### Excepciones (no son texto de interfaz; no se tokenizan)
+
+- **Emojis** como contenido (🛒, 📦, 🔍, 💬, ⭐, 🇩🇴, ⚠️, 🔞, 📊, 🏪, 🤝, 💡…) en tamaños de 18 a 48 px.
+- **Íconos** en contenedores de tamaño fijo (16 a 26 px), incluida la X de cierre y la flecha `→`.
+- **Marcas ✓** de casillas (10 a 11 px) y chevrones `›`.
+- **SVG de recharts:** ticks y tooltip de `RevenueChart`. El SVG necesita valores numéricos.
+- **Wordmark "MercadoRD":** props `fontSize` de `Logo` y el texto de marca en login, registro, recuperar, restablecer y `/vendor/register`. Es identidad, no tipografía de interfaz.
+- **Placeholders de logo** (inicial de avatar y logo de vendedor sin imagen).
+- **Contador de la barra móvil** (8 px dentro de un círculo de 15 px en `MobileTabBar`).
+
+### Pendiente (no verificado)
+
+- **Onboarding de vendor, pasos 1 a 6:** sin verificar en pantalla. No hay cuenta sin vendedor para recorrerlos; las cuentas demo son de vendedor. Pendiente de una cuenta de prueba de Jimmy. Solo se revisó el código y la pantalla inicial de `/vendor/register`.
