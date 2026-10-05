@@ -204,7 +204,7 @@ export default function CartPage() {
               ) : (
                 <a
                   href="/checkout"
-                  style={{ display: 'block', background: 'var(--color-primary)', color: '#fff', textDecoration: 'none', textAlign: 'center', padding: 14, borderRadius: 'var(--radius-control)', fontWeight: 700, fontSize: 15, marginBottom: 10, boxShadow: 'var(--shadow-button)' }}
+                  style={{ display: 'block', background: 'var(--color-primary)', color: '#fff', textDecoration: 'none', textAlign: 'center', padding: 14, borderRadius: 'var(--radius-control)', fontWeight: 700, fontSize: 'var(--text-body)', marginBottom: 10, boxShadow: 'var(--shadow-button)' }}
                 >
                   {t('proceedToCheckout')}
                 </a>
