@@ -27,7 +27,7 @@ export function InactivityWarning() {
         border: 'none',
         borderRadius: 10,
         padding: '12px 20px',
-        fontSize: 13,
+        fontSize: 'var(--text-small)',
         fontWeight: 600,
         boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
         cursor: 'pointer',

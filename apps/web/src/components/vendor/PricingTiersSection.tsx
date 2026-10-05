@@ -237,8 +237,8 @@ export function PricingTiersSection({ mode, productId, pendingTiers, onPendingTi
     setSavedTiers(prev => prev.filter(row => row.id !== id))
   }
 
-  const inputStyle: React.CSSProperties = { width: '100%', border: '1px solid #ddd', borderRadius: 6, padding: '6px 8px', fontSize: 12, boxSizing: 'border-box' }
-  const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: '#555', display: 'block', marginBottom: 3 }
+  const inputStyle: React.CSSProperties = { width: '100%', border: '1px solid #ddd', borderRadius: 6, padding: '6px 8px', fontSize: 'var(--text-caption)', boxSizing: 'border-box' }
+  const labelStyle: React.CSSProperties = { fontSize: 'var(--text-badge)', fontWeight: 600, color: '#555', display: 'block', marginBottom: 3 }
 
   // Ya es su propio paso del formulario ("Precios por cantidad" en el
   // navegador de pasos) — a diferencia de cuando este componente vivía
@@ -272,7 +272,7 @@ export function PricingTiersSection({ mode, productId, pendingTiers, onPendingTi
 
           {tiers.length > 0 && (
             <div className="rounded-xl border border-gray-100 overflow-hidden">
-              <div className="grid grid-cols-[1fr_1fr_auto] gap-2 px-3 py-2 bg-gray-50 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+              <div className="grid grid-cols-[1fr_1fr_auto] gap-2 px-3 py-2 bg-gray-50 text-badge font-semibold text-gray-500 uppercase tracking-wide">
                 <span>{t('tierTableQuantityHeader')}</span>
                 <span>{t('tierTablePriceHeader')}</span>
                 <span />

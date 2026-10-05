@@ -33,7 +33,7 @@ function Stars({ value }: { value: number }) {
   return (
     <div className="flex gap-0.5">
       {[1, 2, 3, 4, 5].map(n => (
-        <span key={n} style={{ color: n <= value ? '#F5A200' : '#ddd', fontSize: 14 }}>★</span>
+        <span key={n} style={{ color: n <= value ? '#F5A200' : '#ddd', fontSize: 'var(--text-ui)' }}>★</span>
       ))}
     </div>
   )

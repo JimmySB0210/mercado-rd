@@ -347,7 +347,7 @@ export default function ProvidersDirectoryPage() {
             onClick={() => setMobileFiltersOpen(true)}
             style={{
               display: 'flex', alignItems: 'center', gap: 8, background: '#fff', border: '1px solid #E0E0E0',
-              borderRadius: 8, padding: '10px 16px', fontSize: 13, fontWeight: 600, color: BRAND.dark,
+              borderRadius: 8, padding: '10px 16px', fontSize: 'var(--text-small)', fontWeight: 600, color: BRAND.dark,
               marginBottom: 16, cursor: 'pointer',
             }}
           >
@@ -491,7 +491,7 @@ export default function ProvidersDirectoryPage() {
                 onClick={() => setMobileFiltersOpen(false)}
                 style={{
                   width: '100%', background: BRAND.blue, color: '#fff', border: 'none', padding: 12,
-                  borderRadius: 8, fontWeight: 700, fontSize: 14, marginTop: 20, cursor: 'pointer',
+                  borderRadius: 8, fontWeight: 700, fontSize: 'var(--text-ui)', marginTop: 20, cursor: 'pointer',
                 }}
               >
                 {t('viewResultsButton')}

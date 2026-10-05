@@ -105,7 +105,7 @@ export default function VendorSettingsPage() {
             href="/perfil/seguridad"
             style={{
               display: 'block', background: '#FEF9C3', color: '#713f12', borderRadius: 10,
-              padding: '12px 16px', fontSize: 13, fontWeight: 600, marginBottom: 20,
+              padding: '12px 16px', fontSize: 'var(--text-small)', fontWeight: 600, marginBottom: 20,
               textDecoration: 'none', maxWidth: 1180,
             }}
           >

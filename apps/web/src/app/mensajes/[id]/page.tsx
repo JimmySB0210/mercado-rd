@@ -623,7 +623,7 @@ export default function ChatPage() {
                               <button
                                 type="button"
                                 onClick={() => handleHideTranslation(m.id)}
-                                className="text-[11px] underline mt-0.5 border-none bg-transparent cursor-pointer p-0"
+                                className="text-badge underline mt-0.5 border-none bg-transparent cursor-pointer p-0"
                                 style={{ color: '#999' }}
                               >
                                 {t('hideTranslationButton')}
@@ -634,14 +634,14 @@ export default function ChatPage() {
                               type="button"
                               onClick={() => handleTranslate(m.id, m.message)}
                               disabled={translatingIds.has(m.id)}
-                              className="text-[11px] underline border-none bg-transparent cursor-pointer p-0 disabled:opacity-60"
+                              className="text-badge underline border-none bg-transparent cursor-pointer p-0 disabled:opacity-60"
                               style={{ color: '#999' }}
                             >
                               {translatingIds.has(m.id) ? t('translatingButton') : `🌐 ${t('translateButton')}`}
                             </button>
                           )}
                           {translateErrors.has(m.id) && (
-                            <p className="text-[11px] mt-0.5" style={{ color: BRAND.red }}>{translateErrors.get(m.id)}</p>
+                            <p className="text-badge mt-0.5" style={{ color: BRAND.red }}>{translateErrors.get(m.id)}</p>
                           )}
                         </div>
                       )}
@@ -694,7 +694,7 @@ export default function ChatPage() {
                         </div>
                       )}
 
-                      <p className="text-[11px] mt-1" style={{ color: isMine ? 'rgba(255,255,255,0.7)' : '#999' }}>
+                      <p className="text-badge mt-1" style={{ color: isMine ? 'rgba(255,255,255,0.7)' : '#999' }}>
                         {formatDate(m.created_at, language, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}
                       </p>
                     </div>

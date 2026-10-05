@@ -211,7 +211,7 @@ function PromoSlide({ banner }: { banner: PromoBanner }) {
             </h2>
           )}
           {banner.subtitle && (
-            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, margin: 0, maxWidth: 420 }}>
+            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 'var(--text-ui)', margin: 0, maxWidth: 420 }}>
               {banner.subtitle}
             </p>
           )}

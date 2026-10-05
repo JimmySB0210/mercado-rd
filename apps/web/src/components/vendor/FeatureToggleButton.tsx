@@ -26,7 +26,7 @@ export function FeatureToggleButton({ productId, initialFeatured, isPro }: Props
 
   if (!isPro) {
     return (
-      <span style={{ fontSize: 11, color: '#999' }}>{t('proOnlyLabel')}</span>
+      <span style={{ fontSize: 'var(--text-badge)', color: '#999' }}>{t('proOnlyLabel')}</span>
     )
   }
 
@@ -55,7 +55,7 @@ export function FeatureToggleButton({ productId, initialFeatured, isPro }: Props
         border: `1px solid ${featured ? BRAND.blue : '#ddd'}`,
         background: featured ? BRAND.blue : '#fff',
         color: featured ? '#fff' : '#333',
-        borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 600,
+        borderRadius: 6, padding: '4px 10px', fontSize: 'var(--text-badge)', fontWeight: 600,
         cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1,
       }}
     >

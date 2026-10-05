@@ -140,13 +140,13 @@ export function DailyDealAction({ productId, currentPriceRdp, initialDeal }: Pro
   if (deal && remaining) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', width: '100%' }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: '#B45309', background: '#FEF3C7', padding: '3px 8px', borderRadius: 6 }}>
+        <span style={{ fontSize: 'var(--text-badge)', fontWeight: 700, color: '#B45309', background: '#FEF3C7', padding: '3px 8px', borderRadius: 6 }}>
           {t('dealActiveLabel')} · {t('dealTimeRemaining', { time: remaining })}
         </span>
         <button
           onClick={handleDeactivate}
           disabled={saving}
-          style={{ fontSize: 11, fontWeight: 600, color: BRAND.red, background: 'none', border: 'none', cursor: saving ? 'not-allowed' : 'pointer', padding: 0 }}
+          style={{ fontSize: 'var(--text-badge)', fontWeight: 600, color: BRAND.red, background: 'none', border: 'none', cursor: saving ? 'not-allowed' : 'pointer', padding: 0 }}
         >
           {saving ? t('dealDeactivating') : t('dealDeactivateButton')}
         </button>
@@ -160,7 +160,7 @@ export function DailyDealAction({ productId, currentPriceRdp, initialDeal }: Pro
     return (
       <button
         onClick={() => setOpen(true)}
-        style={{ fontSize: 11, fontWeight: 600, color: '#B45309', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+        style={{ fontSize: 'var(--text-badge)', fontWeight: 600, color: '#B45309', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
       >
         {t('createDealCta')}
       </button>
@@ -177,7 +177,7 @@ export function DailyDealAction({ productId, currentPriceRdp, initialDeal }: Pro
           step="0.01"
           value={priceInput}
           onChange={e => setPriceInput(e.target.value)}
-          style={{ width: '100%', marginTop: 2, border: '1px solid #ddd', borderRadius: 4, padding: '4px 6px', fontSize: 12, boxSizing: 'border-box' }}
+          style={{ width: '100%', marginTop: 2, border: '1px solid #ddd', borderRadius: 4, padding: '4px 6px', fontSize: 'var(--text-caption)', boxSizing: 'border-box' }}
         />
       </label>
       <label style={{ fontSize: 10, fontWeight: 600, color: '#92400E' }}>
@@ -185,7 +185,7 @@ export function DailyDealAction({ productId, currentPriceRdp, initialDeal }: Pro
         <select
           value={durationHours}
           onChange={e => setDurationHours(Number(e.target.value))}
-          style={{ width: '100%', marginTop: 2, border: '1px solid #ddd', borderRadius: 4, padding: '4px 6px', fontSize: 12, boxSizing: 'border-box' }}
+          style={{ width: '100%', marginTop: 2, border: '1px solid #ddd', borderRadius: 4, padding: '4px 6px', fontSize: 'var(--text-caption)', boxSizing: 'border-box' }}
         >
           {DURATION_OPTIONS.map(opt => (
             <option key={opt.hours} value={opt.hours}>{t(opt.labelKey)}</option>
@@ -197,14 +197,14 @@ export function DailyDealAction({ productId, currentPriceRdp, initialDeal }: Pro
         <button
           onClick={handleCreate}
           disabled={saving}
-          style={{ flex: 1, background: '#B45309', color: '#fff', border: 'none', borderRadius: 4, padding: '5px 0', fontSize: 11, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer' }}
+          style={{ flex: 1, background: '#B45309', color: '#fff', border: 'none', borderRadius: 4, padding: '5px 0', fontSize: 'var(--text-badge)', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer' }}
         >
           {saving ? t('dealCreating') : t('dealCreateButton')}
         </button>
         <button
           onClick={() => { setOpen(false); setError(null) }}
           disabled={saving}
-          style={{ background: '#fff', border: '1px solid #ddd', borderRadius: 4, padding: '5px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+          style={{ background: '#fff', border: '1px solid #ddd', borderRadius: 4, padding: '5px 10px', fontSize: 'var(--text-badge)', fontWeight: 600, cursor: 'pointer' }}
         >
           {t('dealCancelButton')}
         </button>

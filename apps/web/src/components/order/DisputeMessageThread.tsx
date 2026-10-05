@@ -190,7 +190,7 @@ export function DisputeMessageThread({ disputeId, senderRole, status }: Props) {
                     </div>
                   )}
 
-                  <p className="text-[11px] mt-1" style={{ color: isMine ? 'rgba(255,255,255,0.7)' : '#999' }}>
+                  <p className="text-badge mt-1" style={{ color: isMine ? 'rgba(255,255,255,0.7)' : '#999' }}>
                     {formatDate(m.created_at, language, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}
                   </p>
                 </div>

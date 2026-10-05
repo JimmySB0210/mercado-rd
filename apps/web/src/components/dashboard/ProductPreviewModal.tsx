@@ -65,7 +65,7 @@ export function ProductPreviewModal({ product, vendor, variants, onClose }: Prop
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
           }}
         >
-          <span style={{ fontWeight: 700, fontSize: 14 }}>👁️ {t('previewBannerText')}</span>
+          <span style={{ fontWeight: 700, fontSize: 'var(--text-ui)' }}>👁️ {t('previewBannerText')}</span>
           <button
             type="button"
             onClick={onClose}

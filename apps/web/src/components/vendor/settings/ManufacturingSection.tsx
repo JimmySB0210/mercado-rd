@@ -94,7 +94,7 @@ export function ManufacturingSection({ vendorId, initial, onRegisterSave, hideOw
                   onClick={() => setManufacturingStatus(opt.value)}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 8, flex: '1 1 0', minWidth: 140,
-                    padding: '9px 14px', borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                    padding: '9px 14px', borderRadius: 999, fontSize: 'var(--text-small)', fontWeight: 600, cursor: 'pointer',
                     border: checked ? '1.5px solid var(--dashboard-blue)' : '1px solid #E0E0E0',
                     background: checked ? 'color-mix(in srgb, var(--dashboard-blue) 8%, white)' : '#fff',
                     color: checked ? 'var(--dashboard-blue)' : BRAND.dark,

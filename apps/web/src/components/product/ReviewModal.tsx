@@ -80,7 +80,7 @@ export function ReviewModal({ orderId, productId, vendorId, productName, onClose
         style={{ background: '#fff', borderRadius: 16, padding: 24, maxWidth: 420, width: '100%' }}
       >
         <h2 style={{ fontSize: 17, fontWeight: 700, color: '#111', marginBottom: 4 }}>Califica tu compra</h2>
-        <p style={{ fontSize: 13, color: '#666', marginBottom: 18 }}>{productName}</p>
+        <p style={{ fontSize: 'var(--text-small)', color: '#666', marginBottom: 18 }}>{productName}</p>
 
         <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 18 }}>
           {[1, 2, 3, 4, 5].map(n => (
@@ -102,11 +102,11 @@ export function ReviewModal({ orderId, productId, vendorId, productName, onClose
           onChange={e => setComment(e.target.value)}
           placeholder="Cuéntale a otros compradores cómo fue tu experiencia (opcional)"
           rows={4}
-          style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', marginBottom: 14 }}
+          style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 'var(--text-ui)', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', marginBottom: 14 }}
         />
 
         {error && (
-          <div style={{ background: '#fee', border: '1px solid #fcc', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#c00', marginBottom: 14 }}>
+          <div style={{ background: '#fee', border: '1px solid #fcc', borderRadius: 8, padding: '8px 12px', fontSize: 'var(--text-caption)', color: '#c00', marginBottom: 14 }}>
             {error}
           </div>
         )}
@@ -115,7 +115,7 @@ export function ReviewModal({ orderId, productId, vendorId, productName, onClose
           <button
             type="button"
             onClick={onClose}
-            style={{ flex: 1, background: '#fff', border: '1px solid #ddd', color: '#333', padding: '11px', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}
+            style={{ flex: 1, background: '#fff', border: '1px solid #ddd', color: '#333', padding: '11px', borderRadius: 8, fontWeight: 600, fontSize: 'var(--text-ui)', cursor: 'pointer' }}
           >
             Cancelar
           </button>
@@ -123,7 +123,7 @@ export function ReviewModal({ orderId, productId, vendorId, productName, onClose
             type="button"
             onClick={handleSubmit}
             disabled={saving}
-            style={{ flex: 1, background: saving ? '#ccc' : BRAND.blue, color: '#fff', border: 'none', padding: '11px', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: saving ? 'not-allowed' : 'pointer' }}
+            style={{ flex: 1, background: saving ? '#ccc' : BRAND.blue, color: '#fff', border: 'none', padding: '11px', borderRadius: 8, fontWeight: 600, fontSize: 'var(--text-ui)', cursor: saving ? 'not-allowed' : 'pointer' }}
           >
             {saving ? 'Enviando...' : 'Enviar reseña'}
           </button>

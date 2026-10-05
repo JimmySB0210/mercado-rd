@@ -82,7 +82,7 @@ export function BusinessTypeSection({ vendorId, initialBusinessTypes, onRegister
 
   return (
     <SectionCard title="Tipo de negocio" subtitle="Selecciona todas las que apliquen.">
-      <p style={{ fontSize: 13, fontWeight: 600, color: '#131A18', marginBottom: 10 }}>¿Qué tipo de negocio eres? *</p>
+      <p style={{ fontSize: 'var(--text-small)', fontWeight: 600, color: '#131A18', marginBottom: 10 }}>¿Qué tipo de negocio eres? *</p>
       <BusinessTypeCards options={options} selected={businessTypes} onToggle={toggle} />
 
       <div style={{ marginTop: 20 }}>

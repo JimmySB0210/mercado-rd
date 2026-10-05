@@ -48,7 +48,7 @@ export function OrderTimeline({ orderId }: Props) {
   }, [orderId])
 
   if (loading) {
-    return <div style={{ fontSize: 12, color: '#999', padding: '10px 4px' }}>{t('loadingTimeline')}</div>
+    return <div style={{ fontSize: 'var(--text-caption)', color: '#999', padding: '10px 4px' }}>{t('loadingTimeline')}</div>
   }
 
   if (!history || history.length === 0) {
@@ -101,13 +101,13 @@ export function OrderTimeline({ orderId }: Props) {
             {/* Texto */}
             <div style={{ paddingBottom: isLast ? 0 : 16 }}>
               <p style={{
-                fontSize: 13, fontWeight: 600, margin: 0,
+                fontSize: 'var(--text-small)', fontWeight: 600, margin: 0,
                 color: isCancelledStep ? '#C62828' : (isReached ? BRAND.dark : '#999'),
               }}>
                 {t(`timelineStep.${status}` as 'timelineStep.pending')}
               </p>
               {reachedAt && (
-                <p style={{ fontSize: 11, color: '#999', margin: '2px 0 0' }}>
+                <p style={{ fontSize: 'var(--text-badge)', color: '#999', margin: '2px 0 0' }}>
                   {formatDate(reachedAt, language, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}
                 </p>
               )}

@@ -51,7 +51,7 @@ export function FeaturedProvidersGrid({ providers }: { providers: Vendor[] }) {
               )}
             </div>
             {Number(v.rating_avg) > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--color-text-secondary)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-caption)', color: 'var(--color-text-secondary)' }}>
                 <Star size={12} fill="#F5A623" color="#F5A623" />
                 {Number(v.rating_avg).toFixed(1)} · {v.total_sales ?? 0} {t('salesSuffix')}
               </div>

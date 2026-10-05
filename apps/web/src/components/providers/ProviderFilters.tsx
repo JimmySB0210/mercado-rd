@@ -88,7 +88,7 @@ export function ProviderFilters({ filters, onChange, provinces, categories }: Pr
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {VENDOR_SERVICE_GROUPS.map(group => (
             <div key={group.titleKey}>
-              <p style={{ fontSize: 11, color: '#999', fontWeight: 600, marginBottom: 6 }}>{t(`serviceGroupTitles.${group.titleKey}`)}</p>
+              <p style={{ fontSize: 'var(--text-badge)', color: '#999', fontWeight: 600, marginBottom: 6 }}>{t(`serviceGroupTitles.${group.titleKey}`)}</p>
               <CheckboxGrid
                 options={group.options.map(value => ({ value, label: t(`service.${value}`) }))}
                 selected={filters.services}

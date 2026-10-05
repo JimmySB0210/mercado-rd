@@ -81,7 +81,7 @@ function ConversationList({ rows, emptyMessage, defaultName }: { rows: Conversat
           {c.unreadCount > 0 && (
             <span
               className="text-white rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ background: BRAND.red, width: 20, height: 20, fontSize: 11, fontWeight: 700 }}
+              style={{ background: BRAND.red, width: 20, height: 20, fontSize: 'var(--text-badge)', fontWeight: 700 }}
             >
               {c.unreadCount > 9 ? '9+' : c.unreadCount}
             </span>

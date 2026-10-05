@@ -70,14 +70,14 @@ export function DeliveryOtpForm({ orderId }: Props) {
   if (delivered) {
     return (
       <div style={{ background: '#F0FDF4', borderRadius: 8, padding: 12, marginTop: 12, border: '1px solid #BBF7D0' }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: '#166534' }}>✅ {t('deliveryConfirmedLabel')}</p>
+        <p style={{ fontSize: 'var(--text-small)', fontWeight: 700, color: '#166534' }}>✅ {t('deliveryConfirmedLabel')}</p>
       </div>
     )
   }
 
   return (
     <div style={{ background: '#fff', borderRadius: 8, padding: 12, marginTop: 12, border: '1px solid #e0e0e0' }}>
-      <p style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 8 }}>{t('confirmDeliveryHeading')}</p>
+      <p style={{ fontSize: 'var(--text-badge)', color: '#999', textTransform: 'uppercase', marginBottom: 8 }}>{t('confirmDeliveryHeading')}</p>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <input
           value={code}
@@ -85,21 +85,21 @@ export function DeliveryOtpForm({ orderId }: Props) {
           placeholder={t('otpCodePlaceholder')}
           maxLength={6}
           inputMode="numeric"
-          style={{ flex: 1, minWidth: 140, border: '1px solid #ddd', borderRadius: 6, padding: '7px 10px', fontSize: 13, letterSpacing: 2 }}
+          style={{ flex: 1, minWidth: 140, border: '1px solid #ddd', borderRadius: 6, padding: '7px 10px', fontSize: 'var(--text-small)', letterSpacing: 2 }}
         />
         <button
           onClick={handleVerify}
           disabled={verifying}
           style={{
             background: verifying ? '#ccc' : BRAND.blue, color: '#fff', border: 'none',
-            borderRadius: 6, padding: '7px 16px', fontSize: 13, fontWeight: 700,
+            borderRadius: 6, padding: '7px 16px', fontSize: 'var(--text-small)', fontWeight: 700,
             cursor: verifying ? 'not-allowed' : 'pointer',
           }}
         >
           {verifying ? t('verifyingOtpBtn') : t('confirmDeliveryBtn')}
         </button>
       </div>
-      {error && <p style={{ fontSize: 12, color: '#c00', marginTop: 6 }}>{error}</p>}
+      {error && <p style={{ fontSize: 'var(--text-caption)', color: '#c00', marginTop: 6 }}>{error}</p>}
     </div>
   )
 }

@@ -64,27 +64,27 @@ export function TrackingForm({ orderId, initialTracking, initialCourier }: Props
   if (saved) {
     return (
       <div style={{ background: '#fff', borderRadius: 8, padding: 12, marginTop: 12, border: '1px solid #e0e0e0' }}>
-        <p style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 4 }}>{t('trackingHeading')}</p>
-        <p style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>📦 {saved.tracking_number}</p>
-        <p style={{ fontSize: 12, color: '#666' }}>{saved.courier}</p>
+        <p style={{ fontSize: 'var(--text-badge)', color: '#999', textTransform: 'uppercase', marginBottom: 4 }}>{t('trackingHeading')}</p>
+        <p style={{ fontSize: 'var(--text-small)', fontWeight: 700, color: '#111' }}>📦 {saved.tracking_number}</p>
+        <p style={{ fontSize: 'var(--text-caption)', color: '#666' }}>{saved.courier}</p>
       </div>
     )
   }
 
   return (
     <div style={{ background: '#fff', borderRadius: 8, padding: 12, marginTop: 12, border: '1px solid #e0e0e0' }}>
-      <p style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', marginBottom: 8 }}>{t('markAsShippedHeading')}</p>
+      <p style={{ fontSize: 'var(--text-badge)', color: '#999', textTransform: 'uppercase', marginBottom: 8 }}>{t('markAsShippedHeading')}</p>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <input
           value={trackingNumber}
           onChange={e => setTrackingNumber(e.target.value)}
           placeholder={t('trackingNumberPlaceholder')}
-          style={{ flex: 1, minWidth: 160, border: '1px solid #ddd', borderRadius: 6, padding: '7px 10px', fontSize: 13 }}
+          style={{ flex: 1, minWidth: 160, border: '1px solid #ddd', borderRadius: 6, padding: '7px 10px', fontSize: 'var(--text-small)' }}
         />
         <select
           value={courier}
           onChange={e => setCourier(e.target.value)}
-          style={{ border: '1px solid #ddd', borderRadius: 6, padding: '7px 10px', fontSize: 13, background: '#fff' }}
+          style={{ border: '1px solid #ddd', borderRadius: 6, padding: '7px 10px', fontSize: 'var(--text-small)', background: '#fff' }}
         >
           {COURIERS.map(c => (
             <option key={c} value={c}>{c}</option>
@@ -97,7 +97,7 @@ export function TrackingForm({ orderId, initialTracking, initialCourier }: Props
             type="date"
             value={estimatedDeliveryDate}
             onChange={e => setEstimatedDeliveryDate(e.target.value)}
-            style={{ border: '1px solid #ddd', borderRadius: 6, padding: '6px 10px', fontSize: 13 }}
+            style={{ border: '1px solid #ddd', borderRadius: 6, padding: '6px 10px', fontSize: 'var(--text-small)' }}
           />
         </label>
         <button
@@ -105,14 +105,14 @@ export function TrackingForm({ orderId, initialTracking, initialCourier }: Props
           disabled={saving}
           style={{
             background: saving ? '#ccc' : BRAND.blue, color: '#fff', border: 'none',
-            borderRadius: 6, padding: '7px 16px', fontSize: 13, fontWeight: 700,
+            borderRadius: 6, padding: '7px 16px', fontSize: 'var(--text-small)', fontWeight: 700,
             cursor: saving ? 'not-allowed' : 'pointer',
           }}
         >
           {saving ? t('savingTracking') : t('markAsShippedBtn')}
         </button>
       </div>
-      {error && <p style={{ fontSize: 12, color: '#c00', marginTop: 6 }}>{error}</p>}
+      {error && <p style={{ fontSize: 'var(--text-caption)', color: '#c00', marginTop: 6 }}>{error}</p>}
     </div>
   )
 }

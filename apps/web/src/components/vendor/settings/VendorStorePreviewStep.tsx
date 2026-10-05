@@ -46,22 +46,22 @@ export function VendorStorePreviewStep({ vendorId, completenessPercent }: Props)
         background: completenessPercent >= 100 ? '#E6F6F0' : '#FFF8E6',
         border: `1px solid ${completenessPercent >= 100 ? '#B7E4D3' : '#F5E3A8'}`,
       }}>
-        <p style={{ fontSize: 13, fontWeight: 700, margin: 0, color: completenessPercent >= 100 ? '#00714A' : '#8A6400' }}>
+        <p style={{ fontSize: 'var(--text-small)', fontWeight: 700, margin: 0, color: completenessPercent >= 100 ? '#00714A' : '#8A6400' }}>
           {completenessPercent >= 100
             ? '✓ Tu perfil está 100% completo'
             : `Tu perfil está ${completenessPercent}% completo`}
         </p>
-        <p style={{ fontSize: 12, margin: '4px 0 0', color: '#666' }}>
+        <p style={{ fontSize: 'var(--text-caption)', margin: '4px 0 0', color: '#666' }}>
           Así verán tu tienda los compradores en MercadoRD.
         </p>
       </div>
 
       <div style={{ border: '1px solid #eee', borderRadius: 12, overflow: 'hidden', maxHeight: 640, overflowY: 'auto', background: '#f5f5f5' }}>
         {loading && (
-          <div style={{ padding: 48, textAlign: 'center', color: '#999', fontSize: 13 }}>Cargando vista previa...</div>
+          <div style={{ padding: 48, textAlign: 'center', color: '#999', fontSize: 'var(--text-small)' }}>Cargando vista previa...</div>
         )}
         {loadError && !loading && (
-          <div style={{ padding: 48, textAlign: 'center', color: '#c00', fontSize: 13 }}>No se pudo cargar la vista previa. Intenta de nuevo.</div>
+          <div style={{ padding: 48, textAlign: 'center', color: '#c00', fontSize: 'var(--text-small)' }}>No se pudo cargar la vista previa. Intenta de nuevo.</div>
         )}
         {data && !loading && (
           <VendorStoreContent

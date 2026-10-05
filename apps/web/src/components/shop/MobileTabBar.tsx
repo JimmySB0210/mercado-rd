@@ -44,7 +44,7 @@ export function MobileTabBar() {
               href={tab.href}
               className="flex flex-col items-center gap-0.5 px-2 no-underline"
               style={{
-                fontSize: 11,
+                fontSize: 'var(--text-badge)',
                 fontWeight: active ? 700 : 500,
                 color,
               }}

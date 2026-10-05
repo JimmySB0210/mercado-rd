@@ -172,14 +172,14 @@ export function PushNotificationButton() {
         onMouseEnter={() => setHovering(true)}
         onMouseLeave={() => setHovering(false)}
         style={{
-          background: 'none', border: 'none', padding: 0, fontSize: 12,
+          background: 'none', border: 'none', padding: 0, fontSize: 'var(--text-caption)',
           color: hovering ? BRAND.red : BRAND.green, cursor: loading ? 'default' : 'pointer'
         }}
       >
         {loading ? 'Desactivando...' : hovering ? '🔕 Desactivar notificaciones' : '🔔 Notificaciones activadas'}
       </button>
       {error && (
-        <p style={{ fontSize: 11, color: BRAND.red, marginTop: 4 }}>{error}</p>
+        <p style={{ fontSize: 'var(--text-badge)', color: BRAND.red, marginTop: 4 }}>{error}</p>
       )}
     </div>
   )
@@ -191,13 +191,13 @@ export function PushNotificationButton() {
         disabled={loading}
         style={{
           background: 'none', border: `1px solid ${BRAND.blue}`, borderRadius: 8,
-          padding: '6px 12px', fontSize: 12, color: BRAND.blue, cursor: loading ? 'default' : 'pointer'
+          padding: '6px 12px', fontSize: 'var(--text-caption)', color: BRAND.blue, cursor: loading ? 'default' : 'pointer'
         }}
       >
         {loading ? 'Activando...' : '🔔 Activar notificaciones'}
       </button>
       {error && (
-        <p style={{ fontSize: 11, color: BRAND.red, marginTop: 4 }}>{error}</p>
+        <p style={{ fontSize: 'var(--text-badge)', color: BRAND.red, marginTop: 4 }}>{error}</p>
       )}
     </div>
   )

@@ -123,7 +123,7 @@ export function LogoSection({ vendorId, userId, initialLogoUrl, onRegisterSave, 
           )}
         </div>
         <label style={{ cursor: 'pointer' }}>
-          <span style={{ display: 'inline-block', border: '1px solid #ddd', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, color: '#333' }}>
+          <span style={{ display: 'inline-block', border: '1px solid #ddd', borderRadius: 8, padding: '8px 16px', fontSize: 'var(--text-small)', fontWeight: 600, color: '#333' }}>
             Cambiar logo
           </span>
           <input type="file" accept="image/*" onChange={handleLogoSelect} style={{ display: 'none' }} />
@@ -133,7 +133,7 @@ export function LogoSection({ vendorId, userId, initialLogoUrl, onRegisterSave, 
             type="button"
             onClick={handleRemove}
             disabled={removing}
-            style={{ background: 'none', border: 'none', color: '#c00', fontSize: 13, fontWeight: 600, cursor: removing ? 'not-allowed' : 'pointer', padding: 0 }}
+            style={{ background: 'none', border: 'none', color: '#c00', fontSize: 'var(--text-small)', fontWeight: 600, cursor: removing ? 'not-allowed' : 'pointer', padding: 0 }}
           >
             {removing ? 'Eliminando...' : 'Eliminar'}
           </button>
@@ -144,7 +144,7 @@ export function LogoSection({ vendorId, userId, initialLogoUrl, onRegisterSave, 
         <SaveSectionButton onClick={handleSave} saving={saving} error={logoError} success={success} showButton={!hideOwnButton} />
       )}
       {!logoFile && logoError && (
-        <p style={{ fontSize: 12, color: '#c00', marginTop: 10 }}>{logoError}</p>
+        <p style={{ fontSize: 'var(--text-caption)', color: '#c00', marginTop: 10 }}>{logoError}</p>
       )}
     </SectionCard>
   )

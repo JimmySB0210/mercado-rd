@@ -48,7 +48,7 @@ export function ProviderCard({ vendor, provinceName, businessTypes, services }: 
       {businessTypeLabels.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-2">
           {businessTypeLabels.map(label => (
-            <span key={label} className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
+            <span key={label} className="text-badge px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
               {label}
             </span>
           ))}

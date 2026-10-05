@@ -75,15 +75,15 @@ export function DisputeModal({ orderId, vendorId, refundEligible = true, refundI
         style={{ background: '#fff', borderRadius: 16, padding: 24, maxWidth: 440, width: '100%' }}
       >
         <h2 style={{ fontSize: 17, fontWeight: 700, color: '#111', marginBottom: 4 }}>{t('openDisputeTitle')}</h2>
-        <p style={{ fontSize: 13, color: '#666', marginBottom: 18 }}>
+        <p style={{ fontSize: 'var(--text-small)', color: '#666', marginBottom: 18 }}>
           {t('orderNumberLabel', { id: orderId.split('-')[0].toUpperCase() })}
         </p>
 
-        <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>{t('reasonLabel')}</label>
+        <label style={{ fontSize: 'var(--text-caption)', color: '#666', display: 'block', marginBottom: 4 }}>{t('reasonLabel')}</label>
         <select
           value={reason}
           onChange={e => setReason(e.target.value)}
-          style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box', background: '#fff', marginBottom: refundEligible ? 14 : 4 }}
+          style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 'var(--text-ui)', boxSizing: 'border-box', background: '#fff', marginBottom: refundEligible ? 14 : 4 }}
         >
           <option value="">{t('selectReasonOption')}</option>
           {REASON_VALUES.map(value => (
@@ -97,12 +97,12 @@ export function DisputeModal({ orderId, vendorId, refundEligible = true, refundI
           ))}
         </select>
         {!refundEligible && refundIneligibleReason && (
-          <p style={{ fontSize: 11, color: '#999', margin: '0 0 14px' }}>
+          <p style={{ fontSize: 'var(--text-badge)', color: '#999', margin: '0 0 14px' }}>
             {t('refundRequestUnavailable', { reason: refundIneligibleReason })}
           </p>
         )}
 
-        <label style={{ fontSize: 12, color: '#666', display: 'block', marginBottom: 4 }}>
+        <label style={{ fontSize: 'var(--text-caption)', color: '#666', display: 'block', marginBottom: 4 }}>
           {t('describeProblemLabel')} <span style={{ color: '#999' }}>{t('minCharsHint')}</span>
         </label>
         <textarea
@@ -110,14 +110,14 @@ export function DisputeModal({ orderId, vendorId, refundEligible = true, refundI
           onChange={e => setDescription(e.target.value)}
           placeholder={t('describePlaceholder')}
           rows={4}
-          style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', marginBottom: 4 }}
+          style={{ width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 'var(--text-ui)', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', marginBottom: 4 }}
         />
-        <p style={{ fontSize: 11, color: description.trim().length < 20 ? '#c00' : '#999', marginBottom: 14 }}>
+        <p style={{ fontSize: 'var(--text-badge)', color: description.trim().length < 20 ? '#c00' : '#999', marginBottom: 14 }}>
           {t('charCounter', { count: description.trim().length })}
         </p>
 
         {error && (
-          <div style={{ background: '#fee', border: '1px solid #fcc', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#c00', marginBottom: 14 }}>
+          <div style={{ background: '#fee', border: '1px solid #fcc', borderRadius: 8, padding: '8px 12px', fontSize: 'var(--text-caption)', color: '#c00', marginBottom: 14 }}>
             {error}
           </div>
         )}
@@ -126,7 +126,7 @@ export function DisputeModal({ orderId, vendorId, refundEligible = true, refundI
           <button
             type="button"
             onClick={onClose}
-            style={{ flex: 1, background: '#fff', border: '1px solid #ddd', color: '#333', padding: '11px', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}
+            style={{ flex: 1, background: '#fff', border: '1px solid #ddd', color: '#333', padding: '11px', borderRadius: 8, fontWeight: 600, fontSize: 'var(--text-ui)', cursor: 'pointer' }}
           >
             {t('cancelButton')}
           </button>
@@ -134,7 +134,7 @@ export function DisputeModal({ orderId, vendorId, refundEligible = true, refundI
             type="button"
             onClick={handleSubmit}
             disabled={saving}
-            style={{ flex: 1, background: saving ? '#ccc' : BRAND.red, color: '#fff', border: 'none', padding: '11px', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: saving ? 'not-allowed' : 'pointer' }}
+            style={{ flex: 1, background: saving ? '#ccc' : BRAND.red, color: '#fff', border: 'none', padding: '11px', borderRadius: 8, fontWeight: 600, fontSize: 'var(--text-ui)', cursor: saving ? 'not-allowed' : 'pointer' }}
           >
             {saving ? t('sendingButton') : t('openDisputeButton')}
           </button>
