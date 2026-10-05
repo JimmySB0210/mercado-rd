@@ -89,7 +89,7 @@ export function OrderStatusSelect({ orderId, currentStatus }: Props) {
           border: 'none',
           borderRadius: 20,
           padding: '4px 10px',
-          fontSize: 11,
+          fontSize: 'var(--text-caption)',
           fontWeight: 700,
           cursor: loading ? 'wait' : 'pointer',
           appearance: 'none',
@@ -105,7 +105,7 @@ export function OrderStatusSelect({ orderId, currentStatus }: Props) {
           role="alert"
           style={{
             position: 'absolute', top: '100%', right: 0, marginTop: 6, zIndex: 10,
-            background: '#FEE2E2', color: '#991B1B', fontSize: 11, fontWeight: 500,
+            background: '#FEE2E2', color: '#991B1B', fontSize: 'var(--text-small)', fontWeight: 500,
             padding: '8px 12px', borderRadius: 8, width: 220, textAlign: 'left',
             boxShadow: '0 4px 12px rgba(0,0,0,0.15)', lineHeight: 1.4,
           }}
@@ -114,7 +114,7 @@ export function OrderStatusSelect({ orderId, currentStatus }: Props) {
           <button
             type="button"
             onClick={() => setError(null)}
-            style={{ display: 'block', marginTop: 4, background: 'none', border: 'none', color: '#991B1B', fontWeight: 700, fontSize: 11, cursor: 'pointer', padding: 0 }}
+            style={{ display: 'block', marginTop: 4, background: 'none', border: 'none', color: '#991B1B', fontWeight: 600, fontSize: 'var(--text-small)', cursor: 'pointer', padding: 0 }}
           >
             {t('dismissErrorButton')}
           </button>

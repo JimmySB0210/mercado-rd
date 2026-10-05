@@ -116,13 +116,13 @@ export function ProductosContent({ products, isPro, categories, store }: Props) 
   ]
 
   const controlStyle: React.CSSProperties = {
-    border: '1px solid #E0E4E9', borderRadius: 8, padding: '8px 10px', fontSize: 13, background: '#fff', color: '#131A18', minWidth: 0,
+    border: '1px solid #E0E4E9', borderRadius: 8, padding: '8px 10px', fontSize: 'var(--text-ui)', background: '#fff', color: '#131A18', minWidth: 0,
   }
 
   return (
     <div style={{ padding: 24, background: '#f5f5f5' }}>
       {showTiersWarning && (
-        <div style={{ background: '#FEF3C7', color: '#92400E', border: '1px solid #FDE68A', borderRadius: 8, padding: '12px 16px', fontSize: 13, marginBottom: 16 }}>
+        <div style={{ background: '#FEF3C7', color: '#92400E', border: '1px solid #FDE68A', borderRadius: 8, padding: '12px 16px', fontSize: 'var(--text-small)', marginBottom: 16 }}>
           {t('productTiersSaveWarning')}
         </div>
       )}
@@ -132,8 +132,8 @@ export function ProductosContent({ products, isPro, categories, store }: Props) 
           {/* Encabezado */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14, flexWrap: 'wrap', gap: 12 }}>
             <div>
-              <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 2, color: '#131A18', lineHeight: 1.2 }}>{t('productsPageTitle')}</h1>
-              <p style={{ color: '#818F98', fontSize: 13 }}>
+              <h1 style={{ fontSize: 'var(--text-dash-title)', fontWeight: 700, marginBottom: 2, color: '#131A18', lineHeight: 'var(--leading-h1)' }}>{t('productsPageTitle')}</h1>
+              <p style={{ color: '#818F98', fontSize: 'var(--text-body)' }}>
                 {products.length === 1
                   ? t('productCountOne', { count: products.length })
                   : t('productCountOther', { count: products.length })}
@@ -141,7 +141,7 @@ export function ProductosContent({ products, isPro, categories, store }: Props) 
             </div>
             <a
               href="/dashboard/productos/nuevo"
-              style={{ background: 'var(--dashboard-blue)', color: '#fff', textDecoration: 'none', padding: '9px 16px', borderRadius: 8, fontWeight: 700, fontSize: 13.5 }}
+              style={{ background: 'var(--dashboard-blue)', color: '#fff', textDecoration: 'none', padding: '9px 16px', borderRadius: 8, fontWeight: 600, fontSize: 'var(--text-ui)' }}
             >
               {t('newProductCta')}
             </a>
@@ -150,10 +150,10 @@ export function ProductosContent({ products, isPro, categories, store }: Props) 
           {products.length === 0 ? (
             <div style={{ background: '#fff', borderRadius: 12, padding: 48, textAlign: 'center', border: '1px solid #EEF2F6' }}>
               <div style={{ fontSize: 40, marginBottom: 12 }}>📦</div>
-              <p style={{ color: '#818F98', fontSize: 14, marginBottom: 16 }}>{t('noProductsYet')}</p>
+              <p style={{ color: '#818F98', fontSize: 'var(--text-ui)', marginBottom: 16 }}>{t('noProductsYet')}</p>
               <a
                 href="/dashboard/productos/nuevo"
-                style={{ display: 'inline-block', background: 'var(--dashboard-blue)', color: '#fff', textDecoration: 'none', padding: '10px 24px', borderRadius: 8, fontWeight: 600, fontSize: 14 }}
+                style={{ display: 'inline-block', background: 'var(--dashboard-blue)', color: '#fff', textDecoration: 'none', padding: '10px 24px', borderRadius: 8, fontWeight: 600, fontSize: 'var(--text-ui)' }}
               >
                 {t('publishFirstProduct')}
               </a>
@@ -178,8 +178,8 @@ export function ProductosContent({ products, isPro, categories, store }: Props) 
                         <Icon size={15} color={color} strokeWidth={2} />
                       </span>
                       <span style={{ minWidth: 0 }}>
-                        <span style={{ display: 'block', fontSize: 11.5, color: '#818F98', fontWeight: 600 }}>{label}</span>
-                        <span style={{ display: 'block', fontSize: 17, fontWeight: 800, color: '#131A18', lineHeight: 1.2 }}>{count}</span>
+                        <span style={{ display: 'block', fontSize: 'var(--text-caption)', color: '#818F98', fontWeight: 600 }}>{label}</span>
+                        <span style={{ display: 'block', fontSize: 'var(--text-h4)', fontWeight: 700, color: '#131A18', lineHeight: 1.2 }}>{count}</span>
                       </span>
                     </button>
                   )
@@ -219,7 +219,7 @@ export function ProductosContent({ products, isPro, categories, store }: Props) 
               </div>
 
               {visible.length === 0 ? (
-                <div style={{ background: '#fff', borderRadius: 12, padding: 36, textAlign: 'center', border: '1px solid #EEF2F6', color: '#818F98', fontSize: 13.5 }}>
+                <div style={{ background: '#fff', borderRadius: 12, padding: 36, textAlign: 'center', border: '1px solid #EEF2F6', color: '#818F98', fontSize: 'var(--text-small)' }}>
                   {t('noProductsMatchFilters')}
                 </div>
               ) : (
@@ -275,27 +275,27 @@ function ProductTile({ p, isPro }: { p: ProductRow; isPro: boolean }) {
         ) : (
           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 34 }}>📦</div>
         )}
-        <span style={{ position: 'absolute', top: 7, left: 7, background: STATUS_BADGE_STYLE[p.status].bg, color: STATUS_BADGE_STYLE[p.status].text, fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 4 }}>
+        <span style={{ position: 'absolute', top: 7, left: 7, background: STATUS_BADGE_STYLE[p.status].bg, color: STATUS_BADGE_STYLE[p.status].text, fontSize: 'var(--text-badge)', fontWeight: 700, padding: '2px 7px', borderRadius: 4 }}>
           {p.status === 'draft' ? t('draftBadge') : p.status === 'published' ? t('publishedBadge') : t('pausedBadge')}
         </span>
         {lowStock && p.stock === 0 ? (
-          <span style={{ position: 'absolute', top: 7, right: 7, background: '#D2282D', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 4 }}>
+          <span style={{ position: 'absolute', top: 7, right: 7, background: '#D2282D', color: '#fff', fontSize: 'var(--text-badge)', fontWeight: 700, padding: '2px 7px', borderRadius: 4 }}>
             {t('outOfStockShort')}
           </span>
         ) : lowStock && (
-          <span style={{ position: 'absolute', top: 7, right: 7, background: '#F59E0B', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 4 }}>
+          <span style={{ position: 'absolute', top: 7, right: 7, background: '#F59E0B', color: '#fff', fontSize: 'var(--text-badge)', fontWeight: 700, padding: '2px 7px', borderRadius: 4 }}>
             {t('summaryLowStock')}
           </span>
         )}
       </div>
 
       <div style={{ padding: '10px 12px 12px' }}>
-        <p style={{ fontSize: 13, fontWeight: 600, color: '#131A18', marginBottom: 4, lineHeight: 1.3, minHeight: 34, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>
+        <p style={{ fontSize: 'var(--text-small)', fontWeight: 600, color: '#131A18', marginBottom: 4, lineHeight: 1.3, minHeight: 34, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>
           {p.name}
         </p>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-          <span style={{ fontSize: 15, fontWeight: 800, color: '#131A18' }}>{formatPrice(p.price_rdp)}</span>
+          <span style={{ fontSize: 'var(--text-body)', fontWeight: 700, color: '#131A18' }}>{formatPrice(p.price_rdp)}</span>
           {p.hasTiers && (
             <span title={t('quantityPricingHint')} aria-label={t('quantityPricingHint')} style={{ display: 'inline-flex', color: 'var(--dashboard-blue)' }}>
               <Layers size={14} strokeWidth={2} />
@@ -303,21 +303,21 @@ function ProductTile({ p, isPro }: { p: ProductRow; isPro: boolean }) {
           )}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: '#818F98', marginBottom: 8 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-caption)', color: '#818F98', marginBottom: 8 }}>
           <span style={{ color: lowStock && p.stock === 0 ? '#D2282D' : lowStock ? '#B45309' : '#818F98', fontWeight: lowStock ? 700 : 400 }}>
             {t('stockCountLabel', { count: p.stock })}
           </span>
           <span>{t('salesColumnLabel')}: <strong style={{ color: '#131A18' }}>{p.sold_count}</strong></span>
         </div>
 
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: QUALITY_TIER_COLOR[tier].bg, color: QUALITY_TIER_COLOR[tier].text, fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, marginBottom: 10 }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: QUALITY_TIER_COLOR[tier].bg, color: QUALITY_TIER_COLOR[tier].text, fontSize: 'var(--text-badge)', fontWeight: 700, padding: '2px 7px', borderRadius: 10, marginBottom: 10 }}>
           {QUALITY_TIER_EMOJI[tier]} {t('publishQualityLabel', { percent: p.qualityPercent })}
         </span>
 
         <div style={{ display: 'flex', gap: 6, position: 'relative' }} ref={menuRef}>
           <a
             href={`/dashboard/productos/${p.id}/editar`}
-            style={{ flex: 1, textAlign: 'center', fontSize: 12.5, fontWeight: 700, color: '#fff', background: 'var(--dashboard-blue)', textDecoration: 'none', padding: '7px 0', borderRadius: 7 }}
+            style={{ flex: 1, textAlign: 'center', fontSize: 'var(--text-small)', fontWeight: 600, color: '#fff', background: 'var(--dashboard-blue)', textDecoration: 'none', padding: '7px 0', borderRadius: 7 }}
           >
             {t('editLink')}
           </a>
@@ -325,7 +325,7 @@ function ProductTile({ p, isPro }: { p: ProductRow; isPro: boolean }) {
             type="button"
             onClick={() => setMenuOpen(o => !o)}
             aria-expanded={menuOpen}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 12, fontWeight: 600, color: '#3D5361', background: '#fff', border: '1px solid #E0E4E9', borderRadius: 7, padding: '6px 8px', cursor: 'pointer' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 'var(--text-small)', fontWeight: 600, color: '#3D5361', background: '#fff', border: '1px solid #E0E4E9', borderRadius: 7, padding: '6px 8px', cursor: 'pointer' }}
           >
             {t('moreActionsButton')} <ChevronDown size={13} />
           </button>

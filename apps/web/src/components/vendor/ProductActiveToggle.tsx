@@ -72,7 +72,7 @@ export function ProductActiveToggle({ productId, status }: Props) {
   }
 
   const errorLine = error && (
-    <span style={{ display: 'block', fontSize: 11, color: BRAND.red, marginTop: 4, lineHeight: 1.35 }}>{error}</span>
+    <span style={{ display: 'block', fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, marginTop: 4, lineHeight: 1.35 }}>{error}</span>
   )
 
   if (active) {
@@ -83,7 +83,7 @@ export function ProductActiveToggle({ productId, status }: Props) {
         onClick={handleDeactivate}
         disabled={saving}
         style={{
-          fontSize: 11, fontWeight: 600, color: BRAND.red,
+          fontSize: 'var(--text-small)', fontWeight: 600, color: BRAND.red,
           background: 'transparent', border: 'none', cursor: saving ? 'not-allowed' : 'pointer',
           opacity: saving ? 0.6 : 1, padding: 0,
         }}
@@ -102,7 +102,7 @@ export function ProductActiveToggle({ productId, status }: Props) {
       onClick={handleReactivate}
       disabled={saving}
       style={{
-        fontSize: 11, fontWeight: 600, color: BRAND.blue,
+        fontSize: 'var(--text-small)', fontWeight: 600, color: BRAND.blue,
         background: 'transparent', border: 'none', cursor: saving ? 'not-allowed' : 'pointer',
         opacity: saving ? 0.6 : 1, padding: 0,
       }}

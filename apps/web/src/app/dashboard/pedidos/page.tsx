@@ -192,30 +192,30 @@ export default function VendorOrdersPage() {
     <div style={{ borderTop: '1px solid #EEF2F6', padding: '14px 16px', background: '#FAFBFC' }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 14 }}>
         <div>
-          <p style={{ fontSize: 11, color: '#818F98', textTransform: 'uppercase', marginBottom: 4 }}>{t('deliveryLabel')}</p>
-          <p style={{ fontSize: 13, color: '#333' }}>{order.delivery_address}</p>
-          <p style={{ fontSize: 12, color: '#818F98' }}>{order.province_name}</p>
+          <p style={{ fontSize: 'var(--text-caption)', color: '#818F98', textTransform: 'uppercase', marginBottom: 4 }}>{t('deliveryLabel')}</p>
+          <p style={{ fontSize: 'var(--text-small)', color: '#333' }}>{order.delivery_address}</p>
+          <p style={{ fontSize: 'var(--text-caption)', color: '#818F98' }}>{order.province_name}</p>
         </div>
         <div>
-          <p style={{ fontSize: 11, color: '#818F98', textTransform: 'uppercase', marginBottom: 4 }}>{t('contactLabel')}</p>
-          <p style={{ fontSize: 13, color: '#333' }}>{order.buyer_phone || t('notAvailable')}</p>
-          <p style={{ fontSize: 12, color: '#818F98' }}>{PAYMENT_LABELS[order.payment_method] ?? order.payment_method}</p>
+          <p style={{ fontSize: 'var(--text-caption)', color: '#818F98', textTransform: 'uppercase', marginBottom: 4 }}>{t('contactLabel')}</p>
+          <p style={{ fontSize: 'var(--text-small)', color: '#333' }}>{order.buyer_phone || t('notAvailable')}</p>
+          <p style={{ fontSize: 'var(--text-caption)', color: '#818F98' }}>{PAYMENT_LABELS[order.payment_method] ?? order.payment_method}</p>
         </div>
       </div>
 
       {order.recipient_name && (
-        <div style={{ marginBottom: 12, padding: 10, background: '#EFF6FF', borderRadius: 8, fontSize: 12, color: '#1e3a8a' }}>
+        <div style={{ marginBottom: 12, padding: 10, background: '#EFF6FF', borderRadius: 8, fontSize: 'var(--text-caption)', color: '#1e3a8a' }}>
           👤 {t('recipientBanner', { buyer: order.buyer_name, recipient: order.recipient_name, phone: order.recipient_phone ?? t('notAvailable') })}
         </div>
       )}
 
       {order.notes && (
-        <div style={{ marginBottom: 12, padding: 10, background: '#FFF8E1', borderRadius: 8, fontSize: 12, color: '#5D4037' }}>
+        <div style={{ marginBottom: 12, padding: 10, background: '#FFF8E1', borderRadius: 8, fontSize: 'var(--text-caption)', color: '#5D4037' }}>
           📝 {order.notes}
         </div>
       )}
 
-      <p style={{ fontSize: 11, color: '#818F98', textTransform: 'uppercase', marginBottom: 8 }}>
+      <p style={{ fontSize: 'var(--text-caption)', color: '#818F98', textTransform: 'uppercase', marginBottom: 8 }}>
         {t('orderProductsCount', { count: order.items.length })}
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -228,14 +228,14 @@ export default function VendorOrdersPage() {
               ) : null}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontSize: 13, fontWeight: 600, color: '#111' }}>{item.product_name}</p>
-              <p style={{ fontSize: 11, color: '#818F98' }}>
+              <p style={{ fontSize: 'var(--text-small)', fontWeight: 600, color: '#111' }}>{item.product_name}</p>
+              <p style={{ fontSize: 'var(--text-caption)', color: '#818F98' }}>
                 x{item.quantity}
                 {item.size && ` · ${item.size}`}
                 {item.color && ` · ${item.color}`}
               </p>
             </div>
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>
+            <span style={{ fontSize: 'var(--text-small)', fontWeight: 700, color: '#111' }}>
               {formatPrice(item.price_rdp * item.quantity)}
             </span>
           </div>
@@ -268,11 +268,11 @@ export default function VendorOrdersPage() {
           ) : null}
         </div>
         <div style={{ minWidth: 0 }}>
-          <p style={{ fontSize: 12.5, fontWeight: 600, color: '#131A18', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <p style={{ fontSize: 'var(--text-small)', fontWeight: 600, color: '#131A18', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {first.product_name} <span style={{ color: '#818F98', fontWeight: 500 }}>x{first.quantity}</span>
           </p>
           {order.items.length > 1 && (
-            <p style={{ fontSize: 11, color: '#818F98' }}>{t('productSummaryMore', { count: order.items.length - 1 })}</p>
+            <p style={{ fontSize: 'var(--text-caption)', color: '#818F98' }}>{t('productSummaryMore', { count: order.items.length - 1 })}</p>
           )}
         </div>
       </div>
@@ -289,8 +289,8 @@ export default function VendorOrdersPage() {
       <div style={{ padding: 24, background: '#f5f5f5', minWidth: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14, flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 2, color: '#131A18', lineHeight: 1.2 }}>{t('ordersPageTitle')}</h1>
-            <p style={{ color: '#818F98', fontSize: 13 }}>
+            <h1 style={{ fontSize: 'var(--text-dash-title)', fontWeight: 700, marginBottom: 2, color: '#131A18', lineHeight: 'var(--leading-h1)' }}>{t('ordersPageTitle')}</h1>
+            <p style={{ color: '#818F98', fontSize: 'var(--text-body)' }}>
               {orders.length === 1 ? t('orderCountOne', { count: orders.length }) : t('orderCountOther', { count: orders.length })}
             </p>
           </div>
@@ -302,7 +302,7 @@ export default function VendorOrdersPage() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder={t('ordersSearchPlaceholder')}
-          style={{ width: '100%', border: '1px solid #E0E4E9', borderRadius: 8, padding: '9px 12px', fontSize: 13, background: '#fff', color: '#131A18', marginBottom: 12, boxSizing: 'border-box' }}
+          style={{ width: '100%', border: '1px solid #E0E4E9', borderRadius: 8, padding: '9px 12px', fontSize: 'var(--text-ui)', background: '#fff', color: '#131A18', marginBottom: 12, boxSizing: 'border-box' }}
         />
 
         {/* Chips de estado con contadores reales */}
@@ -314,7 +314,7 @@ export default function VendorOrdersPage() {
                 key={f.value}
                 onClick={() => setFilter(f.value)}
                 style={{
-                  padding: '6px 12px', borderRadius: 999, fontSize: 12.5, fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0,
+                  padding: '6px 12px', borderRadius: 999, fontSize: 'var(--text-ui)', fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0,
                   border: `1px solid ${active ? 'var(--dashboard-blue)' : '#E0E4E9'}`,
                   background: active ? 'var(--dashboard-blue)' : '#fff',
                   color: active ? '#fff' : '#3D5361', cursor: 'pointer',
@@ -329,7 +329,7 @@ export default function VendorOrdersPage() {
         {filteredOrders.length === 0 ? (
           <div style={{ background: '#fff', borderRadius: 12, padding: 40, textAlign: 'center', border: '1px solid #EEF2F6' }}>
             <div style={{ fontSize: 36, marginBottom: 10 }}>📭</div>
-            <p style={{ color: '#818F98', fontSize: 13.5 }}>
+            <p style={{ color: '#818F98', fontSize: 'var(--text-small)' }}>
               {orders.length === 0
                 ? t('ordersEmptyAll')
                 : q
@@ -341,11 +341,11 @@ export default function VendorOrdersPage() {
           <>
             {/* Escritorio: tabla */}
             <div className="hidden md:block" style={{ background: '#fff', borderRadius: 12, border: '1px solid #EEF2F6', overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--text-small)' }}>
                 <thead>
                   <tr style={{ background: '#FAFBFC' }}>
                     {[t('tableOrder'), t('tableClient'), t('tableProducts'), t('tableDate'), t('tableProvince'), t('tableAmount'), t('tableStatus'), t('tableActions')].map(h => (
-                      <th key={h} style={{ padding: '9px 12px', textAlign: 'left', fontSize: 10.5, color: '#818F98', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 700, borderBottom: '1px solid #EEF2F6', whiteSpace: 'nowrap' }}>
+                      <th key={h} style={{ padding: '9px 12px', textAlign: 'left', fontSize: 'var(--text-caption)', color: '#818F98', textTransform: 'uppercase', letterSpacing: '0.02em', fontWeight: 500, borderBottom: '1px solid #EEF2F6', whiteSpace: 'nowrap' }}>
                         {h}
                       </th>
                     ))}
@@ -369,7 +369,7 @@ export default function VendorOrdersPage() {
                             <button
                               type="button"
                               onClick={() => setExpandedId(isExpanded ? null : order.order_id)}
-                              style={{ background: 'none', border: 'none', color: 'var(--dashboard-blue)', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', padding: 0 }}
+                              style={{ background: 'none', border: 'none', color: 'var(--dashboard-blue)', fontWeight: 600, fontSize: 'var(--text-ui)', cursor: 'pointer', padding: 0 }}
                             >
                               {t('viewOrderCta')}
                             </button>
@@ -396,19 +396,19 @@ export default function VendorOrdersPage() {
                   <div key={order.order_id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #EEF2F6', overflow: 'hidden' }}>
                     <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                        <span style={{ color: 'var(--dashboard-blue)', fontWeight: 700, fontSize: 13.5 }}>#RD-{shortIdOf(order)}</span>
-                        <span style={{ fontSize: 11.5, color: '#818F98' }}>{date}</span>
+                        <span style={{ color: 'var(--dashboard-blue)', fontWeight: 700, fontSize: 'var(--text-small)' }}>#RD-{shortIdOf(order)}</span>
+                        <span style={{ fontSize: 'var(--text-caption)', color: '#818F98' }}>{date}</span>
                       </div>
-                      <div style={{ fontSize: 13, color: '#3D5361' }}>{order.buyer_name}{order.province_name ? ` · ${order.province_name}` : ''}</div>
+                      <div style={{ fontSize: 'var(--text-small)', color: '#3D5361' }}>{order.buyer_name}{order.province_name ? ` · ${order.province_name}` : ''}</div>
                       {productsSummary(order)}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                        <span style={{ fontWeight: 800, fontSize: 14, color: '#131A18' }}>{formatPrice(order.vendor_subtotal_rdp)}</span>
+                        <span style={{ fontWeight: 700, fontSize: 'var(--text-ui)', color: '#131A18' }}>{formatPrice(order.vendor_subtotal_rdp)}</span>
                         <OrderStatusSelect orderId={order.order_id} currentStatus={order.status} />
                       </div>
                       <button
                         type="button"
                         onClick={() => setExpandedId(isExpanded ? null : order.order_id)}
-                        style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--dashboard-blue)', fontWeight: 700, fontSize: 13, cursor: 'pointer', padding: 0 }}
+                        style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--dashboard-blue)', fontWeight: 600, fontSize: 'var(--text-ui)', cursor: 'pointer', padding: 0 }}
                       >
                         {t('viewOrderCta')}
                       </button>
