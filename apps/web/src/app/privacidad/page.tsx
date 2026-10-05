@@ -32,7 +32,7 @@ export default function PrivacyPage() {
         <div className="prose prose-sm max-w-none text-gray-700 space-y-6">
 
           <section>
-            <h2 className="text-lg font-bold text-gray-900 mb-2">1. Qué datos recopilamos</h2>
+            <h2 className="text-h3 font-bold text-gray-900 mb-2">1. Qué datos recopilamos</h2>
             <p>Para operar la Plataforma, recopilamos los siguientes datos cuando te registras o realizas una compra:</p>
             <ul className="list-disc pl-5 space-y-1">
               <li><strong>Datos de identificación:</strong> nombre completo, correo electrónico, número de teléfono.</li>
@@ -43,7 +43,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-gray-900 mb-2">2. Para qué usamos tus datos</h2>
+            <h2 className="text-h3 font-bold text-gray-900 mb-2">2. Para qué usamos tus datos</h2>
             <ul className="list-disc pl-5 space-y-1">
               <li>Procesar y entregar tus pedidos.</li>
               <li>Comunicarnos contigo sobre el estado de tus compras (incluyendo notificaciones por WhatsApp).</li>
@@ -54,7 +54,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-gray-900 mb-2">3. Con quién compartimos tus datos</h2>
+            <h2 className="text-h3 font-bold text-gray-900 mb-2">3. Con quién compartimos tus datos</h2>
             <p>Compartimos datos limitados con:</p>
             <ul className="list-disc pl-5 space-y-1">
               <li><strong>Vendedores:</strong> nombre, teléfono y dirección de entrega de tus pedidos, únicamente para poder completarlos.</li>
@@ -66,7 +66,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-gray-900 mb-2">4. Tus derechos (Ley 172-13)</h2>
+            <h2 className="text-h3 font-bold text-gray-900 mb-2">4. Tus derechos (Ley 172-13)</h2>
             <p>Como titular de tus datos, tienes derecho a:</p>
             <ul className="list-disc pl-5 space-y-1">
               <li><strong>Acceso:</strong> solicitar una copia de los datos que tenemos sobre ti.</li>
@@ -78,7 +78,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-gray-900 mb-2">5. Seguridad de los datos</h2>
+            <h2 className="text-h3 font-bold text-gray-900 mb-2">5. Seguridad de los datos</h2>
             <p>
               Implementamos medidas técnicas razonables para proteger tus datos, incluyendo cifrado en tránsito,
               controles de acceso basados en roles (Row Level Security), y autenticación segura. Sin embargo, ningún
@@ -87,7 +87,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-gray-900 mb-2">6. Retención de datos</h2>
+            <h2 className="text-h3 font-bold text-gray-900 mb-2">6. Retención de datos</h2>
             <p>
               Conservamos tus datos mientras tu cuenta esté activa, y por el período adicional requerido por
               obligaciones legales o fiscales (por ejemplo, registros de transacciones para fines tributarios).
@@ -95,7 +95,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-gray-900 mb-2">7. Cookies</h2>
+            <h2 className="text-h3 font-bold text-gray-900 mb-2">7. Cookies</h2>
             <p>
               Usamos almacenamiento local del navegador (no cookies de terceros con fines publicitarios) para
               mantener tu sesión iniciada, recordar tu carrito de compras y tu provincia preferida.
@@ -103,7 +103,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-gray-900 mb-2">8. Menores de edad</h2>
+            <h2 className="text-h3 font-bold text-gray-900 mb-2">8. Menores de edad</h2>
             <p>
               MercadoRD no está dirigido a menores de 18 años para fines de venta. Si descubrimos que hemos
               recopilado datos de un menor sin consentimiento de un adulto responsable, eliminaremos esa información.
@@ -111,7 +111,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-gray-900 mb-2">9. Cambios a esta política</h2>
+            <h2 className="text-h3 font-bold text-gray-900 mb-2">9. Cambios a esta política</h2>
             <p>
               Podemos actualizar esta política periódicamente. Te notificaremos sobre cambios sustanciales a través
               de la Plataforma o por correo electrónico.
@@ -119,7 +119,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-gray-900 mb-2">10. Contacto</h2>
+            <h2 className="text-h3 font-bold text-gray-900 mb-2">10. Contacto</h2>
             <p>
               Para ejercer tus derechos o resolver dudas sobre el manejo de tus datos, contáctanos a través de los
               canales de soporte disponibles en la Plataforma.

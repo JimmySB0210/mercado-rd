@@ -49,7 +49,7 @@ export function RatingBreakdown({ average, total, counts }: { average: number; t
   return (
     <div className="flex flex-col sm:flex-row gap-6 sm:gap-10">
       <div className="flex flex-col items-center sm:items-start flex-shrink-0">
-        <span className="text-4xl font-bold text-gray-900">{average.toFixed(1)}</span>
+        <span className="text-display font-bold text-gray-900">{average.toFixed(1)}</span>
         <Stars value={Math.round(average)} />
       </div>
       <div className="flex-1 flex flex-col gap-1.5 max-w-sm">

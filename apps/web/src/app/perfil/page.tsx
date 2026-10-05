@@ -164,7 +164,7 @@ export default function PerfilPage() {
             <div className="flex items-center gap-3">
               <div
                 className="w-4 h-4 rounded flex items-center justify-center text-white"
-                style={{ background: BRAND.blue, fontSize: 10, fontWeight: 700 }}
+                style={{ background: BRAND.blue, fontSize: 'var(--text-badge)', fontWeight: 700 }}
               >
                 V
               </div>

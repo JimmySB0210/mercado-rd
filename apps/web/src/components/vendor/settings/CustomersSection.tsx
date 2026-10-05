@@ -108,7 +108,7 @@ export function CustomersSection({ vendorId, initialTargetCustomers, initial, on
             {[{ v: '', text: 'Sin mínimo' }, ...MIN_ORDER_QUANTITY_OPTIONS.map(n => ({ v: String(n), text: `${n} ${minOrderUnit || 'unidades'}` })), { v: CUSTOM_MARKER, text: 'Personalizado' }].map(opt => {
               const checked = selectValue === opt.v
               return (
-                <label key={opt.v} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13.5, color: '#131A18', cursor: 'pointer' }}>
+                <label key={opt.v} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 'var(--text-ui)', color: '#131A18', cursor: 'pointer' }}>
                   <input
                     type="radio"
                     name="minOrderQuantity"

@@ -64,7 +64,7 @@ export function BusinessTypeCards({ options, selected, onToggle }: Props) {
               </span>
             )}
             {Icon && <Icon size={24} color={checked ? 'var(--dashboard-blue)' : '#818F98'} strokeWidth={1.75} />}
-            <span style={{ fontSize: 12.5, fontWeight: 600, color: '#131A18', lineHeight: 1.3 }}>{opt.label}</span>
+            <span style={{ fontSize: 'var(--text-small)', fontWeight: 600, color: '#131A18', lineHeight: 1.3 }}>{opt.label}</span>
           </button>
         )
       })}

@@ -39,7 +39,7 @@ export function StepNavButtons({ onBack, onNext, saving, nextLabel = 'Continuar'
       <button
         type="button"
         onClick={onBack}
-        style={{ flex: 1, background: '#fff', color: BRAND.blue, border: `1px solid ${BRAND.blue}`, padding: 14, borderRadius: 8, fontWeight: 600, fontSize: 15, cursor: 'pointer' }}
+        style={{ flex: 1, background: '#fff', color: BRAND.blue, border: `1px solid ${BRAND.blue}`, padding: 14, borderRadius: 8, fontWeight: 600, fontSize: 'var(--text-body)', cursor: 'pointer' }}
       >
         ← Atrás
       </button>

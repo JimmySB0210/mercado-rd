@@ -95,7 +95,7 @@ export function BusinessTypeSection({ vendorId, initialBusinessTypes, onRegister
           })}
           accentColor="var(--dashboard-blue)"
         />
-        <p style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12.5, color: '#3D5361', background: '#F3F7FC', borderRadius: 8, padding: '10px 12px', marginTop: 10 }}>
+        <p style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 'var(--text-small)', color: '#3D5361', background: '#F3F7FC', borderRadius: 8, padding: '10px 12px', marginTop: 10 }}>
           <span>ℹ️</span>
           <span>Tu tienda puede vender tanto a clientes minoristas como a compradores por volumen.</span>
         </p>

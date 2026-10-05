@@ -122,7 +122,7 @@ export default function VendorReviewsPage() {
             {/* Resumen */}
             <div style={{ background: '#fff', borderRadius: 12, padding: 24, marginBottom: 20, boxShadow: '0 1px 8px rgba(0,0,0,0.06)', display: 'flex', gap: 32, alignItems: 'center', flexWrap: 'wrap' }}>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 40, fontWeight: 700, color: '#111' }}>{avgRating.toFixed(1)}</div>
+                <div style={{ fontSize: 'var(--text-display)', fontWeight: 700, color: '#111' }}>{avgRating.toFixed(1)}</div>
                 <Stars value={Math.round(avgRating)} />
                 <div style={{ fontSize: 'var(--text-caption)', color: '#999', marginTop: 4 }}>{t('reviewsCountSuffix', { count: reviews.length })}</div>
               </div>

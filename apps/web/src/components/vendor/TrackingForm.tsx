@@ -91,7 +91,7 @@ export function TrackingForm({ orderId, initialTracking, initialCourier }: Props
           ))}
           <option value="Otro">{t('courierOtherOption')}</option>
         </select>
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 2, fontSize: 10, color: '#999' }}>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 2, fontSize: 'var(--text-badge)', color: '#999' }}>
           {t('estimatedDeliveryLabel')} <span style={{ fontWeight: 400 }}>({t('estimatedDeliveryOptional')})</span>
           <input
             type="date"

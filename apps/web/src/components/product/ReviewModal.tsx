@@ -79,7 +79,7 @@ export function ReviewModal({ orderId, productId, vendorId, productName, onClose
         onClick={e => e.stopPropagation()}
         style={{ background: '#fff', borderRadius: 16, padding: 24, maxWidth: 420, width: '100%' }}
       >
-        <h2 style={{ fontSize: 17, fontWeight: 700, color: '#111', marginBottom: 4 }}>Califica tu compra</h2>
+        <h2 style={{ fontSize: 'var(--text-h3)', fontWeight: 700, color: '#111', marginBottom: 4 }}>Califica tu compra</h2>
         <p style={{ fontSize: 'var(--text-small)', color: '#666', marginBottom: 18 }}>{productName}</p>
 
         <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 18 }}>

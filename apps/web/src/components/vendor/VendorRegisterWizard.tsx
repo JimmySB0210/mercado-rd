@@ -273,7 +273,7 @@ export function VendorRegisterWizard({ userId, initialVendor, initialStep, initi
         <div style={{ fontWeight: 700, fontSize: 24, marginBottom: 8 }}>
           <span style={{ color: 'var(--color-blue-dark)' }}>Mercado</span><span style={{ color: BRAND.red }}>RD</span>
         </div>
-        <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4, color: BRAND.dark }}>Registra tu negocio</h1>
+        <h1 style={{ fontSize: 'var(--text-title-long)', fontWeight: 700, marginBottom: 4, color: BRAND.dark }}>Registra tu negocio</h1>
         <p style={{ color: BRAND.gray, marginBottom: 20, fontSize: 'var(--text-ui)' }}>Únete a miles de vendedores dominicanos</p>
 
         <WizardProgressBar currentStep={step} totalSteps={TOTAL_STEPS} />

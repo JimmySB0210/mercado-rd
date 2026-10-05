@@ -474,7 +474,7 @@ export default function ProvidersDirectoryPage() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #eee', flexShrink: 0 }}>
-              <span style={{ fontWeight: 700, fontSize: 16, color: BRAND.dark }}>{t('filtersDrawerTitle')}</span>
+              <span style={{ fontWeight: 700, fontSize: 'var(--text-h4)', color: BRAND.dark }}>{t('filtersDrawerTitle')}</span>
               <button
                 type="button"
                 onClick={() => setMobileFiltersOpen(false)}

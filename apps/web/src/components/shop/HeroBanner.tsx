@@ -206,7 +206,7 @@ function PromoSlide({ banner }: { banner: PromoBanner }) {
       {hasText && (
         <div style={{ position: 'absolute', left: 40, right: 40, bottom: 36, color: '#fff', zIndex: 1 }}>
           {banner.title && (
-            <h2 style={{ fontSize: 32, fontWeight: 700, lineHeight: 1.25, margin: '0 0 8px' }}>
+            <h2 style={{ fontSize: 'var(--text-h1)', fontWeight: 700, lineHeight: 'var(--leading-h1)', margin: '0 0 8px' }}>
               {banner.title}
             </h2>
           )}

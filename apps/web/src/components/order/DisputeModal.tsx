@@ -74,7 +74,7 @@ export function DisputeModal({ orderId, vendorId, refundEligible = true, refundI
         onClick={e => e.stopPropagation()}
         style={{ background: '#fff', borderRadius: 16, padding: 24, maxWidth: 440, width: '100%' }}
       >
-        <h2 style={{ fontSize: 17, fontWeight: 700, color: '#111', marginBottom: 4 }}>{t('openDisputeTitle')}</h2>
+        <h2 style={{ fontSize: 'var(--text-h3)', fontWeight: 700, color: '#111', marginBottom: 4 }}>{t('openDisputeTitle')}</h2>
         <p style={{ fontSize: 'var(--text-small)', color: '#666', marginBottom: 18 }}>
           {t('orderNumberLabel', { id: orderId.split('-')[0].toUpperCase() })}
         </p>

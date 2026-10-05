@@ -786,7 +786,7 @@ export default function ChatPage() {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={URL.createObjectURL(pf.file)} alt={pf.file.name} className="w-14 h-14 rounded-lg object-cover border border-gray-200" />
                     ) : (
-                      <div className="w-14 h-14 rounded-lg border border-gray-200 flex flex-col items-center justify-center text-[10px] text-gray-500 px-1 text-center">
+                      <div className="w-14 h-14 rounded-lg border border-gray-200 flex flex-col items-center justify-center text-badge text-gray-500 px-1 text-center">
                         <span>{pf.type === 'video' ? '🎬' : pf.type === 'audio' ? '🎤' : '📄'}</span>
                         <span className="truncate w-full">{pf.file.name}</span>
                       </div>

@@ -193,11 +193,11 @@ export function VendorStoreContent({
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3 mt-5 pt-5 border-t border-gray-100">
           <div className="text-center">
-            <p className="text-lg font-bold text-gray-900">{realTotalSales}</p>
+            <p className="text-h3 font-bold text-gray-900">{realTotalSales}</p>
             <p className="text-xs text-gray-400">{t('totalSalesLabel')}</p>
           </div>
           <div className="text-center">
-            <p className="text-lg font-bold text-gray-900 capitalize">{memberSince}</p>
+            <p className="text-h3 font-bold text-gray-900 capitalize">{memberSince}</p>
             <p className="text-xs text-gray-400">{t('memberSinceLabel', { duration: membershipDuration })}</p>
           </div>
         </div>
@@ -209,7 +209,7 @@ export function VendorStoreContent({
       {/* Información del proveedor — solo si completó el wizard de registro */}
       {hasProviderInfo && (
         <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">{t('providerInfoTitle')}</h2>
+          <h2 className="text-h3 font-bold text-gray-900 mb-4">{t('providerInfoTitle')}</h2>
 
           <div className="flex flex-col gap-5">
             {vendorCategories.length > 0 && (
@@ -293,7 +293,7 @@ export function VendorStoreContent({
       {/* Productos */}
       <div className="mb-8">
         <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
-          <h2 className="text-lg font-bold text-gray-900">
+          <h2 className="text-h3 font-bold text-gray-900">
             {t('productsTitle')} {productsWithVendor.length > 0 && `(${productsWithVendor.length})`}
           </h2>
           {productsWithVendor.length > 0 && (
@@ -322,7 +322,7 @@ export function VendorStoreContent({
 
       {/* Reseñas recientes */}
       <div>
-        <h2 className="text-lg font-bold text-gray-900 mb-4">{t('recentReviewsTitle')}</h2>
+        <h2 className="text-h3 font-bold text-gray-900 mb-4">{t('recentReviewsTitle')}</h2>
         {reviews.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
             <div className="text-4xl mb-3">⭐</div>

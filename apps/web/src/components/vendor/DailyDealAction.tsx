@@ -150,7 +150,7 @@ export function DailyDealAction({ productId, currentPriceRdp, initialDeal }: Pro
         >
           {saving ? t('dealDeactivating') : t('dealDeactivateButton')}
         </button>
-        {error && <p style={{ fontSize: 10, color: BRAND.red, width: '100%', margin: 0 }}>{error}</p>}
+        {error && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, width: '100%', margin: 0 }}>{error}</p>}
       </div>
     )
   }
@@ -169,7 +169,7 @@ export function DailyDealAction({ productId, currentPriceRdp, initialDeal }: Pro
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%', padding: 8, background: '#FFFBEB', borderRadius: 6, border: '1px solid #FDE68A' }}>
-      <label style={{ fontSize: 10, fontWeight: 600, color: '#92400E' }}>
+      <label style={{ fontSize: 'var(--text-caption)', fontWeight: 600, color: '#92400E' }}>
         {t('dealPriceLabel')} — {formatPrice(currentPriceRdp)}
         <input
           type="number"
@@ -180,7 +180,7 @@ export function DailyDealAction({ productId, currentPriceRdp, initialDeal }: Pro
           style={{ width: '100%', marginTop: 2, border: '1px solid #ddd', borderRadius: 4, padding: '4px 6px', fontSize: 'var(--text-caption)', boxSizing: 'border-box' }}
         />
       </label>
-      <label style={{ fontSize: 10, fontWeight: 600, color: '#92400E' }}>
+      <label style={{ fontSize: 'var(--text-caption)', fontWeight: 600, color: '#92400E' }}>
         {t('dealDurationLabel')}
         <select
           value={durationHours}
@@ -192,7 +192,7 @@ export function DailyDealAction({ productId, currentPriceRdp, initialDeal }: Pro
           ))}
         </select>
       </label>
-      {error && <p style={{ fontSize: 10, color: BRAND.red, margin: 0 }}>{error}</p>}
+      {error && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, margin: 0 }}>{error}</p>}
       <div style={{ display: 'flex', gap: 6 }}>
         <button
           onClick={handleCreate}
