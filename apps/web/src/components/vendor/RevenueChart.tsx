@@ -28,7 +28,7 @@ export function RevenueChart({ data, height = 260 }: Props) {
     return (
       <div style={{ padding: '48px 24px', textAlign: 'center' }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}>📊</div>
-        <p style={{ color: '#999', fontSize: 14 }}>{t('noRevenueYet')}</p>
+        <p style={{ color: '#999', fontSize: 'var(--text-ui)' }}>{t('noRevenueYet')}</p>
       </div>
     )
   }

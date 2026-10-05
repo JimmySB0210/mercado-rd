@@ -181,7 +181,7 @@ export function HomeProductGrid() {
           {showError && (
             <div style={{background:'var(--color-card-bg)', boxShadow:'var(--shadow-card)', borderRadius:'var(--radius-card)', padding:'40px 20px', textAlign:'center'}}>
               <div style={{fontSize:40, marginBottom:12}}>⚠️</div>
-              <p style={{color:'var(--color-text-secondary)', fontSize:14, margin:0}}>{t('loadError')}</p>
+              <p style={{color:'var(--color-text-secondary)', fontSize:'var(--text-ui)', margin:0}}>{t('loadError')}</p>
             </div>
           )}
         </>
@@ -199,7 +199,7 @@ export function HomeProductGrid() {
               border:'none',
               borderRadius:'var(--radius-control)',
               padding:'12px 28px',
-              fontSize:14,
+              fontSize:'var(--text-ui)',
               fontWeight:600,
               boxShadow:'var(--shadow-button)',
               cursor: loadingMore ? 'wait' : 'pointer',
@@ -244,7 +244,7 @@ export function HomeProductGrid() {
                 )}
               </div>
               {Number(v.rating_avg) > 0 && (
-                <div style={{display:'flex', alignItems:'center', gap:4, fontSize:12, color:'var(--color-text-secondary)'}}>
+                <div style={{display:'flex', alignItems:'center', gap:4, fontSize:'var(--text-caption)', color:'var(--color-text-secondary)'}}>
                   <Star size={12} fill='#F5A623' color='#F5A623' />
                   {Number(v.rating_avg).toFixed(1)} · {v.total_sales ?? 0} {t('salesSuffix')}
                 </div>
