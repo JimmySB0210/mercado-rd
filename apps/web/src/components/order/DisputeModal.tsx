@@ -79,7 +79,7 @@ export function DisputeModal({ orderId, vendorId, refundEligible = true, refundI
           {t('orderNumberLabel', { id: orderId.split('-')[0].toUpperCase() })}
         </p>
 
-        <label style={{ fontSize: 'var(--text-caption)', color: '#666', display: 'block', marginBottom: 4 }}>{t('reasonLabel')}</label>
+        <label style={{ fontSize: 'var(--text-form-label)', fontWeight: 600, color: '#666', display: 'block', marginBottom: 4 }}>{t('reasonLabel')}</label>
         <select
           value={reason}
           onChange={e => setReason(e.target.value)}
@@ -102,7 +102,7 @@ export function DisputeModal({ orderId, vendorId, refundEligible = true, refundI
           </p>
         )}
 
-        <label style={{ fontSize: 'var(--text-caption)', color: '#666', display: 'block', marginBottom: 4 }}>
+        <label style={{ fontSize: 'var(--text-form-label)', fontWeight: 600, color: '#666', display: 'block', marginBottom: 4 }}>
           {t('describeProblemLabel')} <span style={{ color: '#999' }}>{t('minCharsHint')}</span>
         </label>
         <textarea
@@ -117,7 +117,7 @@ export function DisputeModal({ orderId, vendorId, refundEligible = true, refundI
         </p>
 
         {error && (
-          <div style={{ background: '#fee', border: '1px solid #fcc', borderRadius: 8, padding: '8px 12px', fontSize: 'var(--text-caption)', color: '#c00', marginBottom: 14 }}>
+          <div style={{ background: '#fee', border: '1px solid #fcc', borderRadius: 8, padding: '8px 12px', fontSize: 'var(--text-small)', fontWeight: 500, color: '#c00', marginBottom: 14 }}>
             {error}
           </div>
         )}

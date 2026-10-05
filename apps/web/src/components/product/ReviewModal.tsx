@@ -106,7 +106,7 @@ export function ReviewModal({ orderId, productId, vendorId, productName, onClose
         />
 
         {error && (
-          <div style={{ background: '#fee', border: '1px solid #fcc', borderRadius: 8, padding: '8px 12px', fontSize: 'var(--text-caption)', color: '#c00', marginBottom: 14 }}>
+          <div style={{ background: '#fee', border: '1px solid #fcc', borderRadius: 8, padding: '8px 12px', fontSize: 'var(--text-small)', fontWeight: 500, color: '#c00', marginBottom: 14 }}>
             {error}
           </div>
         )}
