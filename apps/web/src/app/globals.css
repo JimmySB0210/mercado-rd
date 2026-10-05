@@ -92,6 +92,7 @@
   --text-dash-title: 28px;
   --text-metric: 28px;
   --text-form-section: 18px;
+  --text-form-label: 14px;
 
   /* ── Border radius ── */
   --radius-card: 16px;
@@ -132,6 +133,10 @@
     --text-dash-title: 24px;
     --text-metric: 24px;
     --text-form-section: 17px;
+    --text-form-label: 13px;
+  }
+  .kpi-label {
+    min-height: calc(var(--text-caption) * var(--leading-caption) * 2);
   }
 }
 

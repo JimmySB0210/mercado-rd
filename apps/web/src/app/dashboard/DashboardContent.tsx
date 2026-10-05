@@ -110,7 +110,7 @@ function SectionHeader({ title, href, suffix }: { title: string; href?: string; 
 function KpiCard({ label, value, sub, subColor }: { label: string; value: string; sub: string; subColor: string }) {
   return (
     <div style={{ ...cardStyle, padding: 14 }}>
-      <div style={{ fontSize: 'var(--text-caption)', color: '#818F98', textTransform: 'uppercase', letterSpacing: '0.02em', fontWeight: 500, marginBottom: 8 }}>{label}</div>
+      <div className="kpi-label" style={{ fontSize: 'var(--text-caption)', lineHeight: 'var(--leading-caption)', color: '#818F98', textTransform: 'uppercase', letterSpacing: '0.02em', fontWeight: 500, marginBottom: 8 }}>{label}</div>
       <div style={{ fontWeight: 700, fontSize: 'var(--text-metric)', lineHeight: 'var(--leading-price)', marginBottom: 4, color: '#131A18' }}>{value}</div>
       <div style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: subColor }}>{sub}</div>
     </div>

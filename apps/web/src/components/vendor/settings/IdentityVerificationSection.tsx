@@ -33,7 +33,7 @@ const CEDULA_REGEX = /^\d{3}-\d{7}-\d{1}$/
 const inputStyle: React.CSSProperties = {
   width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '10px 12px', fontSize: 'var(--text-ui)', boxSizing: 'border-box',
 }
-const labelStyle: React.CSSProperties = { fontSize: 'var(--text-ui)', fontWeight: 600, color: '#666', display: 'block', marginBottom: 4 }
+const labelStyle: React.CSSProperties = { fontSize: 'var(--text-form-label)', fontWeight: 600, color: '#666', display: 'block', marginBottom: 4 }
 
 export function IdentityVerificationSection({ userId }: Props) {
   const language = useLanguageStore(s => s.language)
