@@ -188,6 +188,7 @@ Estas decisiones precisan la spec anterior para la implementación:
 
 - **Subtítulo del hero móvil en caption (12px).** El banner móvil del hero mide 112px de alto fijo, con H1 de 24px en 2 líneas. Con 14px el subtítulo no cabe y se colapsa, así que queda en `--text-caption` con `--leading-caption`. Excepción a la regla de párrafos móviles en 14px. Reutilizable para cualquier banner compacto de altura fija.
 - **Tablets (641 a 1009px):** el hero compacto sigue usando el H1 de 32px del token de escritorio, porque el breakpoint de los tokens móviles es 640px. Aprobado.
+- **Títulos largos en tarjetas angostas:** token `--text-title-long` (24px, sin override móvil), usado solo en el H1 de `/vendor/register`. Ahí el título ocupa 3 líneas en H1 (32px) dentro de una tarjeta angosta; en H2 (24px) ocupa 2. Aprobado por Jimmy.
 - **Badges:** token `--text-badge` (11px), definido por la spec §8.
 - **Móvil H3 (17px) y body (14px):** overrides de los tokens existentes en el media query de 640px.
 

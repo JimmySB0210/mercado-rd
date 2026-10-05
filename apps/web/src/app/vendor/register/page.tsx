@@ -96,7 +96,7 @@ export default function VendorRegisterPage() {
           <div style={{ fontWeight: 700, fontSize: 24, marginBottom: 8 }}>
             <span style={{ color: 'var(--color-blue-dark)' }}>Mercado</span><span style={{ color: BRAND.red }}>RD</span>
           </div>
-          <h1 style={{ fontSize: 'var(--text-h1)', fontWeight: 700, lineHeight: 'var(--leading-h1)', marginBottom: 10, color: BRAND.dark }}>
+          <h1 style={{ fontSize: 'var(--text-title-long)', fontWeight: 700, lineHeight: 'var(--leading-h2)', marginBottom: 10, color: BRAND.dark }}>
             Necesitas una cuenta para vender en MercadoRD
           </h1>
           <p style={{ color: BRAND.gray, marginBottom: 24, fontSize: 'var(--text-body)' }}>
