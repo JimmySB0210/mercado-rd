@@ -378,13 +378,9 @@ function CheckoutPageContent() {
         throw rpcError
       }
 
-      // Incrementar el contador de usos del cupón aplicado
-      if (appliedCoupon) {
-        const { error: couponUseError } = await supabase.rpc('apply_coupon_use', {
-          p_coupon_id: appliedCoupon.coupon_id,
-        })
-        if (couponUseError) console.error('[checkout] Error incrementando uso de cupón:', couponUseError)
-      }
+      // El uso del cupón lo cuenta create_order_from_cart dentro de la misma
+      // transacción (apply_coupon_use). No se vuelve a llamar aquí: contaría
+      // dos usos por pedido.
 
       // Registrar el pago ya aprobado, vinculado a la orden real recién creada
       if (paymentResult) {
