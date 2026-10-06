@@ -10,6 +10,12 @@ import type { PromoBanner } from '@/types/database.types'
 
 const SLIDE_INTERVAL_MS = 3500
 const MOBILE_BREAKPOINT = 1010
+// Desde este ancho el hero de escritorio pasa a la disposición compacta
+// (titular en una línea, altura 200). Entre MOBILE_BREAKPOINT y este valor
+// se mantiene la disposición de titular en dos líneas, con altura 260.
+const WIDE_BREAKPOINT = 1280
+const DESKTOP_HEIGHT_WIDE = 200
+const DESKTOP_HEIGHT_NARROW = 260
 
 // Los 3 perks del banner — vuelven a pedido explícito, con el texto
 // exacto de la imagen de referencia (antes se habían quitado del todo;
@@ -32,15 +38,46 @@ const HERO_PERKS = [
 //     mismo degradado navy como wash encima para legibilidad — mismo
 //     tratamiento que WelcomeSlide en mobile, mejor ajuste para fotos
 //     panorámicas (paisajes, playas) que no son un recorte de persona.
-function BrandSlide({ imageUrl }: { imageUrl: string | null }) {
+// wide (≥1280px): columna de texto de 850px, titular en una línea, kicker
+// en el bloque de la derecha y CTA + perks en una fila. Narrow (1010 a
+// 1279px): columna de 580px, titular en dos líneas, perks debajo del CTA.
+function BrandSlide({ imageUrl, wide }: { imageUrl: string | null; wide: boolean }) {
   const { t } = useTranslation('home')
+
+  const kicker = (
+    <span style={{display:'inline-block',fontSize:'var(--text-caption)',fontWeight:600,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--color-yellow-cta)',marginBottom: wide ? 8 : 4}}>
+      {t('heroKicker')}
+    </span>
+  )
+
+  const cta = (
+    <a href='#categorias' style={{display:'inline-block',background:'var(--color-yellow-cta)',color:'var(--color-primary)',textDecoration:'none',padding: wide ? '8px 22px' : '9px 24px',borderRadius:'var(--radius-control)',fontWeight:600,fontSize:'var(--text-ui)',boxShadow:'0 4px 14px rgba(232,185,35,0.4)'}}>
+      {t('exploreCta')}
+    </a>
+  )
+
+  // Los 3 perks — vueltos a pedido explícito, con el texto exacto
+  // de la imagen de referencia. Secundarios a propósito: nunca
+  // deben competir con el titular, por eso van chicos y en un
+  // blanco apagado, no en el amarillo del CTA.
+  const perks = (
+    <div style={{ display: 'flex', gap: 10, marginTop: wide ? 0 : 4, flexWrap: 'wrap' }}>
+      {HERO_PERKS.map(({ Icon, key }) => (
+        <span key={key} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 'var(--text-caption)', fontWeight: 500, color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap' }}>
+          <Icon size={12} color="rgba(255,255,255,0.8)" />
+          {t(key)}
+        </span>
+      ))}
+    </div>
+  )
 
   return (
     <div style={{
       position:'relative',
       overflow:'hidden',
+      height:'100%',
       background: imageUrl ? undefined : `linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%)`,
-      padding:'32px 40px',
+      padding: wide ? '10px 40px' : '12px 40px',
       display:'flex',
       alignItems:'center',
       justifyContent:'space-between',
@@ -92,38 +129,34 @@ function BrandSlide({ imageUrl }: { imageUrl: string | null }) {
           del panel; con basis 480px y sin grow se queda como una
           columna de texto normal, dejando ver la foto de fondo/modelo
           a la derecha en vez de un vacío. */}
-      <div style={{position:'relative',zIndex:1,flex:'0 1 580px',minWidth:280}}>
-        <span style={{display:'inline-block',fontSize:'var(--text-caption)',fontWeight:600,letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--color-yellow-cta)',marginBottom:8}}>
-          {t('heroKicker')}
-        </span>
-        <h1 style={{fontFamily:'var(--font-heading)',letterSpacing:'var(--tracking-heading)',fontSize:'var(--text-display)',fontWeight:700,lineHeight:'var(--leading-display)',margin:'0 0 10px',textShadow:'0 2px 12px rgba(0,0,0,0.2)'}}>
+      <div style={wide
+        ? {position:'relative',zIndex:1,flex:'0 1 850px',minWidth:280,display:'flex',flexWrap:'wrap',alignItems:'center',alignContent:'center',columnGap:16}
+        : {position:'relative',zIndex:1,flex:'0 1 580px',minWidth:280}}>
+        {!wide && kicker}
+        <h1 style={{fontFamily:'var(--font-heading)',letterSpacing:'var(--tracking-heading)',fontSize:'var(--text-display)',fontWeight:700,lineHeight:'var(--leading-display)',margin:'0 0 4px',textShadow:'0 2px 12px rgba(0,0,0,0.2)',...(wide ? {flexBasis:'100%'} : {})}}>
           {t('welcomeTitle')}
         </h1>
-        <p style={{color:'rgba(255,255,255,0.85)',fontSize:'var(--text-body)',lineHeight:'var(--leading-body)',margin:'0 0 18px',maxWidth:360}}>
+        <p style={{color:'rgba(255,255,255,0.85)',fontSize:'var(--text-body)',lineHeight:'var(--leading-body)',margin:'0 0 8px',maxWidth:640,...(wide ? {flexBasis:'100%'} : {})}}>
           {t('welcomeSubtitle')}
         </p>
-        <a href='#categorias' style={{display:'inline-block',background:'var(--color-yellow-cta)',color:'var(--color-primary)',textDecoration:'none',padding:'12px 26px',borderRadius:'var(--radius-control)',fontWeight:600,fontSize:'var(--text-ui)',boxShadow:'0 4px 14px rgba(232,185,35,0.4)'}}>
-          {t('exploreCta')}
-        </a>
-
-        {/* Los 3 perks — vueltos a pedido explícito, con el texto exacto
-            de la imagen de referencia. Secundarios a propósito: nunca
-            deben competir con el titular, por eso van chicos y en un
-            blanco apagado, no en el amarillo del CTA. */}
-        <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
-          {HERO_PERKS.map(({ Icon, key }) => (
-            <span key={key} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 'var(--text-caption)', fontWeight: 500, color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap' }}>
-              <Icon size={12} color="rgba(255,255,255,0.8)" />
-              {t(key)}
-            </span>
-          ))}
-        </div>
+        {wide ? (
+          <div style={{display:'flex',alignItems:'center',columnGap:16,flexWrap:'wrap',flexBasis:'100%'}}>
+            {cta}
+            {perks}
+          </div>
+        ) : (
+          <>
+            {cta}
+            {perks}
+          </>
+        )}
       </div>
 
       {/* Bandera + tagline — puramente decorativo, refuerza la identidad
           dominicana pedida en el brief. Siempre encima de lo que haya de
           fondo (gradiente, modelo, o foto configurada desde admin). */}
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, marginLeft: 'auto' }}>
+        {wide && kicker}
         <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-h4)', color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.35)', textAlign: 'right', maxWidth: 220 }}>
           {t('heroTagline')}
         </span>
@@ -180,11 +213,13 @@ function WelcomeSlide({ imageUrl }: { imageUrl: string | null }) {
 
 // Diapositiva promocional — imagen a pantalla completa del hero, con
 // title/subtitle superpuestos (mismo estilo tipográfico que BrandSlide).
-function PromoSlide({ banner }: { banner: PromoBanner }) {
+function PromoSlide({ banner, isMobile }: { banner: PromoBanner; isMobile: boolean }) {
   const hasText = !!(banner.title || banner.subtitle)
 
+  // minHeight 260 solo en mobile (sin cambios). En escritorio el alto lo
+  // da el contenedor (200 o 260), y 260 fijo dejaría el texto fuera.
   const content = (
-    <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 260 }}>
+    <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: isMobile ? 260 : undefined }}>
       {/* Debajo de 1010px de contenedor, BrandSlide pasa a layout apilado
           (ver HeroBanner: umbral donde el heading + perks dejan de caber
           lado a lado) — coincide con el breakpoint usado aquí */}
@@ -238,6 +273,9 @@ export function HeroBanner() {
   const [brandMobileImageUrl, setBrandMobileImageUrl] = useState<string | null>(null)
   const [activeIndex, setActiveIndex] = useState(0)
   const isMobile = useIsMobile(MOBILE_BREAKPOINT)
+  // useIsMobile(1280) es true por debajo de 1280; en escritorio ancho es !isBelowWide
+  const isBelowWide = useIsMobile(WIDE_BREAKPOINT)
+  const isWide = !isMobile && !isBelowWide
 
   // Una sola diapositiva de marca (WelcomeSlide en mobile, BrandSlide
   // en desktop) + promos. Los 3 perks (compra segura/envíos/soporte)
@@ -302,12 +340,12 @@ export function HeroBanner() {
         // ocupe notablemente menos alto en mobile — "vende una acción,
         // no explica toda la plataforma". El interruptor/imagen
         // configurable de BrandSlide y WelcomeSlide no se tocaron.
-        // Desktop: 4.4/1 — ancho ya correcto (width:100%, ver abajo);
-        // más bajo que el 4/1 anterior a pedido explícito ("el banner
-        // está muy grande"), compensado con paddings/márgenes internos
-        // más ajustados en BrandSlide para que los 3 perks entren sin
-        // que el conjunto se sienta apretado.
-        aspectRatio: isMobile ? '3.2 / 1' : '4.4 / 1',
+        // Escritorio: alto fijo. 200px desde 1280px (titular en una línea)
+        // y 260px entre 1010 y 1279px (titular en dos líneas). Ver
+        // BrandSlide y las reglas en docs/typography-spec.md.
+        ...(isMobile
+          ? { aspectRatio: '3.2 / 1' }
+          : { height: isWide ? DESKTOP_HEIGHT_WIDE : DESKTOP_HEIGHT_NARROW }),
       }}>
         <div style={{
           display: 'flex',
@@ -317,12 +355,12 @@ export function HeroBanner() {
         }}>
           {showBrandBanner && (
             <div style={{ flex: '0 0 100%', minWidth: 0, height: '100%' }}>
-              {isMobile ? <WelcomeSlide imageUrl={brandMobileImageUrl} /> : <BrandSlide imageUrl={brandImageUrl} />}
+              {isMobile ? <WelcomeSlide imageUrl={brandMobileImageUrl} /> : <BrandSlide imageUrl={brandImageUrl} wide={isWide} />}
             </div>
           )}
           {banners.map(banner => (
             <div key={banner.id} style={{ flex: '0 0 100%', minWidth: 0, height: '100%' }}>
-              <PromoSlide banner={banner} />
+              <PromoSlide banner={banner} isMobile={isMobile} />
             </div>
           ))}
         </div>

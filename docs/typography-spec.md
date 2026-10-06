@@ -197,11 +197,16 @@ Estas decisiones precisan la spec anterior para la implementación:
 - **Peso 800:** la carga de Inter sigue en 400 a 700. El 800 se habilita al final de la fase 3, cuando no quede ningún 800 o 900 sin revisar, y solo si un elemento autorizado lo necesita. Esto reemplaza la instrucción anterior de habilitarlo por bloque.
 - **Emojis y tamaños de ícono** (22, 40, 48 px): fuera de la escala de texto, sin tokenizar.
 - **Cursiva:** next/font 14.2 no declara itálica para Inter. El Georgia del hero se reemplazó por Inter sin cursiva.
+- **Hero de escritorio (≥1010px): altura por rango.** Dos reglas, con el mismo contenido en ES, EN y FR. Medido con margen mínimo de 12px arriba y abajo, sin recortes ni solapes, y sin scroll horizontal.
+  - **≥1280px, altura 200px:** titular de 40px en una línea, en una columna de texto de 850px. El kicker va en el bloque de la derecha, sobre la bandera. CTA y perks van en una fila debajo del subtítulo, de 2 líneas. Medido: 31px arriba y abajo.
+  - **1010 a 1279px, altura 260px:** titular de 40px en dos líneas, en una columna de 580px. El kicker va arriba del titular y los perks debajo del CTA. Medido: 19px arriba y 14px abajo, igual en ES, EN y FR.
+  - **Límite entre rangos:** al cruzar 1280px la altura baja de 260 a 200px. Es un salto fijo de 60px, sin scroll horizontal.
+  - **Móvil y tablet (hasta 1009px):** sin cambios. El banner mide 112px a 390px de ancho y 271px a 899px.
+  - **Promos de escritorio:** la altura mínima de 260px se aplica solo en móvil. En escritorio la altura la da el contenedor. No hay promos activas para probarlo con datos reales.
 
 ### Pendientes
 
-- **Altura del hero en escritorio:** reducirla al estilo compacto del móvil. Hoy mide 307px a 1440. El H1 de 40px puede ocupar 2 líneas, así que el cambio tiene que contar con eso. Pedido de Jimmy para más adelante, sin implementar.
-  - **Hallazgo en FR a 1440 (previo, no causado por el titular):** el subtítulo ocupa 3 líneas (68px) y la fila de perks queda 14px fuera del banner, así que se recorta. Medido igual con el titular anterior. Sin tocar subtítulo ni CTA hasta que se decida el alto del hero.
+- Ninguno de hero. Lo de altura del hero queda resuelto arriba.
 
 ## Barrido final de tamaños (fase 3)
 
