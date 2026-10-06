@@ -19,13 +19,14 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowDownRight, ArrowUpRight, BarChart3, Package } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, BarChart3, Minus, Package } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { DashboardSidebar } from '@/components/vendor/DashboardSidebar'
 import { RevenueChartLoader } from '@/components/vendor/RevenueChartLoader'
 import { formatPrice } from '@/types/database.types'
 import { formatDate } from '@/lib/utils'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { formatPctChange } from '@/lib/formatPctChange'
 
 const DAY_MS = 86_400_000
 const RECENT_ACTIVITY_LIMIT = 8
@@ -195,7 +196,11 @@ export default function VendorIncomePage() {
       row.revenue += i.price_rdp * i.quantity
       map.set(i.product_id, row)
     })
-    return [...map.values()].sort((a, b) => b.revenue - a.revenue).slice(0, TOP_PRODUCTS_LIMIT)
+    // Mismo criterio que el resumen del dashboard: unidades vendidas, con
+    // el ingreso como desempate.
+    return [...map.values()]
+      .sort((a, b) => b.units - a.units || b.revenue - a.revenue)
+      .slice(0, TOP_PRODUCTS_LIMIT)
   }, [valid, start, now])
 
   const recentOrders = useMemo(() => {
@@ -328,9 +333,9 @@ export default function VendorIncomePage() {
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 'var(--text-small)', fontWeight: 600, color: '#131A18', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                          <div style={{ fontSize: 'var(--text-caption)', color: '#667085' }}>{t('soldCountLabel', { count: p.units })}</div>
+                          <div style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color: '#344054' }}>{t('soldCountLabel', { count: p.units })}</div>
                         </div>
-                        <span style={{ fontSize: 'var(--text-small)', fontWeight: 700, color: '#131A18', whiteSpace: 'nowrap' }}>{formatPrice(p.revenue)}</span>
+                        <span style={{ fontSize: 'var(--text-caption)', color: '#667085', whiteSpace: 'nowrap' }}>{formatPrice(p.revenue)}</span>
                       </div>
                     ))}
                   </div>
@@ -414,16 +419,18 @@ function KpiCard({ label, value, delta, deltaLabel, sub, tone }: {
   sub?: string
   tone?: 'red'
 }) {
-  const showDelta = delta != null
-  const up = (delta ?? 0) >= 0
+  const change = delta != null ? formatPctChange(delta) : null
+  const colorByDirection = { up: '#0B7A4B', down: '#B42318', flat: '#667085' } as const
   return (
     <div style={{ ...cardStyle, padding: 14 }}>
       <div style={{ fontSize: 'var(--text-caption)', color: '#818F98', textTransform: 'uppercase', letterSpacing: '0.02em', fontWeight: 500, marginBottom: 6 }}>{label}</div>
       <div style={{ fontSize: 'var(--text-metric)', fontWeight: 700, lineHeight: 'var(--leading-price)', color: tone === 'red' ? '#B42318' : '#131A18' }}>{value}</div>
-      {showDelta && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-caption)', fontWeight: 600, color: up ? '#0B7A4B' : '#B42318', marginTop: 4, flexWrap: 'wrap' }}>
-          {up ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-          {`${Math.abs(delta).toFixed(1)}%`}
+      {change && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-caption)', fontWeight: 600, color: colorByDirection[change.direction], marginTop: 4, flexWrap: 'wrap' }}>
+          {change.direction === 'up' && <ArrowUpRight size={14} />}
+          {change.direction === 'down' && <ArrowDownRight size={14} />}
+          {change.direction === 'flat' && <Minus size={14} />}
+          {change.text}
           <span style={{ color: '#667085', fontWeight: 500 }}>{deltaLabel}</span>
         </div>
       )}
