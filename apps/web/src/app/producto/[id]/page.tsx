@@ -6,6 +6,7 @@
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 import { getProductByIdPublic } from '@/lib/supabase/products'
+import { isSupplierContext } from '@/lib/vendorContext'
 import { createPublicClient } from '@/lib/supabase/public'
 import { Navbar } from '@/components/shop/Navbar'
 import { ProductViewTracker } from '@/components/product/ProductViewTracker'
@@ -291,10 +292,7 @@ export default async function ProductPage(
   // vendor realmente ofrece: o ya tiene tramos de precio configurados
   // para este producto, o su perfil declara un tipo de negocio mayorista
   // (retailer solo no cuenta — ese vendor no vende al por mayor).
-  const WHOLESALE_BUSINESS_TYPES = new Set(['wholesaler', 'distributor', 'manufacturer'])
-  const hasWholesaleBusinessType = (businessTypesRows ?? []).some(
-    row => WHOLESALE_BUSINESS_TYPES.has(row.business_type)
-  )
+  const hasWholesaleBusinessType = isSupplierContext((businessTypesRows ?? []).map(row => row.business_type))
   const hasWholesaleOffering = hasPricingTiers || hasWholesaleBusinessType
 
   const hasDiscount = product.compare_rdp && product.compare_rdp > product.price_rdp

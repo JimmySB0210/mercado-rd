@@ -32,6 +32,7 @@ interface OrderRow {
   courier: string | null
   province_name: string | null
   buyer_name: string
+  buyer_id: string
   buyer_phone: string | null
   recipient_name: string | null
   recipient_phone: string | null
@@ -67,6 +68,14 @@ export default function VendorOrdersPage() {
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  // Filtros de enlace desde Mensajes (?order=<id> o ?buyer=<id>). Se leen en
+  // el cliente para no volver dinámica la página.
+  const [urlFilter, setUrlFilter] = useState<{ order: string | null; buyer: string | null }>({ order: null, buyer: null })
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    setUrlFilter({ order: params.get('order'), buyer: params.get('buyer') })
+  }, [])
 
   useEffect(() => {
     const load = async () => {
@@ -148,6 +157,7 @@ export default function VendorOrdersPage() {
           courier: order.courier,
           province_name: order.province?.name ?? null,
           buyer_name: buyer?.full_name ?? 'Cliente',
+          buyer_id: order.user_id,
           buyer_phone: buyer?.phone ?? null,
           recipient_name: order.recipient_name ?? null,
           recipient_phone: order.recipient_phone ?? null,
@@ -167,6 +177,8 @@ export default function VendorOrdersPage() {
 
   const q = search.trim().toLowerCase()
   const filteredOrders = orders
+    .filter(o => !urlFilter.order || o.order_id === urlFilter.order)
+    .filter(o => !urlFilter.buyer || o.buyer_id === urlFilter.buyer)
     .filter(o => filter === 'all' || o.status === filter)
     .filter(o => {
       if (!q) return true
@@ -287,6 +299,16 @@ export default function VendorOrdersPage() {
       <DashboardSidebar />
 
       <div style={{ padding: 24, background: '#f5f5f5', minWidth: 0 }}>
+        {(urlFilter.order || urlFilter.buyer) && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', background: '#EAF3FF', border: '1px solid #C7DDFB', borderRadius: 10, padding: '8px 12px', marginBottom: 12, fontSize: 'var(--text-caption)', color: '#0B5FC6', fontWeight: 600 }}>
+            <span>
+              {urlFilter.order
+                ? t('ordersFilterOrderLabel', { id: `RD-${urlFilter.order.split('-')[0].toUpperCase()}` })
+                : t('ordersFilterBuyerLabel')}
+            </span>
+            <a href="/dashboard/pedidos" style={{ color: 'var(--dashboard-blue)', fontWeight: 700, textDecoration: 'none' }}>{t('ordersClearFilter')}</a>
+          </div>
+        )}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 'var(--text-dash-title)', fontWeight: 700, marginBottom: 2, color: '#131A18', lineHeight: 'var(--leading-h1)' }}>{t('ordersPageTitle')}</h1>

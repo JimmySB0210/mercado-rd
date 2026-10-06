@@ -342,3 +342,45 @@ html, body {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Mensajes del vendedor: bandeja + panel del cliente. En hojas de estilo
+   globales (no en un <style> dentro del componente cliente) para no causar
+   diferencias de hidratación. */
+.inbox-layout {
+  display: grid;
+  gap: 12px;
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr);
+}
+.inbox-close {
+  display: inline-flex;
+}
+@media (min-width: 1024px) {
+  .inbox-layout {
+    grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+  }
+  .inbox-panel {
+    display: block;
+  }
+  .inbox-close {
+    display: none;
+  }
+}
+@media (max-width: 1023px) {
+  .inbox-panel {
+    display: none;
+  }
+  .inbox-panel.open {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    overflow-y: auto;
+    background: #F7F9FB;
+    padding: 16px;
+  }
+  .inbox-panel.open > * {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+}
