@@ -24,7 +24,6 @@ export const auth = {
   loggingIn: 'Logging in...',
   noAccountYet: "Don't have an account?",
   registerFreeLink: 'Sign up for free',
-  demoAccountsTitle: 'Demo accounts:',
 
   fullNameLabel: 'Full name',
   fullNamePlaceholder: 'Your first and last name',

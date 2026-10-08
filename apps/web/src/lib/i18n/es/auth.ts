@@ -34,7 +34,6 @@ export const auth = {
   loggingIn: 'Iniciando sesión...',
   noAccountYet: '¿No tienes cuenta?',
   registerFreeLink: 'Regístrate gratis',
-  demoAccountsTitle: 'Cuentas de prueba:',
 
   // Registro
   fullNameLabel: 'Nombre completo',

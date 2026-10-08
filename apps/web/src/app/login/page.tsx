@@ -185,13 +185,6 @@ function LoginForm() {
             </Link>
           </p>
         </div>
-
-        {/* Demo hint */}
-        <div className="mt-4 bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 text-xs text-blue-700">
-          <strong>{t('demoAccountsTitle')}</strong><br />
-          carlos@demo.mercadord.com / Demo1234!<br />
-          maria@demo.mercadord.com / Demo1234!
-        </div>
       </div>
     </main>
   )
