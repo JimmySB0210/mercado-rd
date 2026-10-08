@@ -335,7 +335,7 @@ export interface Review {
 // ─── Tipos con relaciones (para queries con joins) ───────────────────────────
 
 export interface ProductWithVendor extends Product {
-  vendor: Pick<Vendor, 'id' | 'business_name' | 'logo_url' | 'is_verified' | 'rating_avg' | 'whatsapp'>
+  vendor: Pick<Vendor, 'id' | 'business_name' | 'logo_url' | 'is_verified' | 'whatsapp'>
   category: Pick<Category, 'id' | 'name' | 'slug' | 'emoji'> | null
   province: Pick<Province, 'id' | 'name'> | null
 }
