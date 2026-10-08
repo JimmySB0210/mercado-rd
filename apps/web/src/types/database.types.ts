@@ -140,8 +140,6 @@ export interface Vendor {
   logo_url: string | null
   plan: VendorPlan
   is_verified: boolean
-  rating_avg: number
-  total_sales: number
   whatsapp: string | null
   instagram: string | null
   bank_name: string | null
