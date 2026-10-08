@@ -21,8 +21,8 @@ import { createPublicClient } from '@/lib/supabase/public'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { useHasVariantsMap } from '@/lib/hooks/useHasVariantsMap'
 import { getBestSellerProductId } from '@/lib/utils'
-import { toVendorRealStats } from '@/lib/queries/vendorRealStatsBatch'
-import type { VendorRealStats, VendorRealStatsMap, VendorRealStatsRow } from '@/lib/queries/vendorRealStatsBatch'
+import { getVendorRealStatsBatch } from '@/lib/queries/vendorRealStatsBatch'
+import type { VendorRealStats } from '@/lib/queries/vendorRealStatsBatch'
 import type { Product } from '@/types'
 
 const PAGE_SIZE = 12
@@ -37,36 +37,31 @@ type FeaturedVendor = {
 }
 
 // "Tiendas destacadas" — ranking por ventas reales (vendor_real_stats),
-// no por vendors.total_sales (sembrado). Se leen las 15 primeras del
-// ranking, se traen sus tiendas con .in(ids) y se muestran 5. A igual
-// cantidad de ventas: verificadas primero, luego las más nuevas, y por
-// último el id, para que el orden sea estable entre cargas.
-const FEATURED_CANDIDATES = 15
+// no por vendors.total_sales (sembrado). Solo entran tiendas con al menos
+// un producto publicado (misma regla que search_providers, migración
+// 044): primero se traen esas tiendas y luego sus estadísticas, así que
+// se muestran 5 siempre que existan, aunque las primeras del ranking
+// estén vacías. A igual cantidad de ventas: verificadas primero, luego
+// las más nuevas, y por último el id, para que el orden sea estable
+// entre cargas.
 const FEATURED_SHOWN = 5
 
 async function fetchFeaturedVendors(): Promise<FeaturedVendor[]> {
   const supabase = createPublicClient()
-  const { data: ranking, error: rankingError } = await supabase
-    .from('vendor_real_stats')
-    .select('vendor_id, real_total_sales, real_rating_avg, real_rating_count')
-    .order('real_total_sales', { ascending: false })
-    .limit(FEATURED_CANDIDATES)
-
-  if (rankingError) { console.error('[HomeProductGrid] vendor_real_stats', rankingError); return [] }
-  if (!ranking || ranking.length === 0) return []
-
-  const statsById: VendorRealStatsMap = {}
-  for (const row of ranking as VendorRealStatsRow[]) statsById[row.vendor_id] = toVendorRealStats(row)
-
+  // products!inner() vacío filtra sin traer los productos ni repetir la tienda.
   const { data, error } = await supabase
     .from('vendors')
-    .select('id, business_name, logo_url, is_verified, created_at')
-    .in('id', Object.keys(statsById))
+    .select('id, business_name, logo_url, is_verified, created_at, products!inner()')
+    .eq('products.status', 'published')
 
   if (error) { console.error('[HomeProductGrid] vendors', error); return [] }
+  if (!data || data.length === 0) return []
+
+  const vendors = data as unknown as Omit<FeaturedVendor, 'stats'>[]
+  const statsById = await getVendorRealStatsBatch(vendors.map(v => v.id))
 
   const sales = (id: string) => statsById[id]?.realTotalSales ?? 0
-  return ((data ?? []) as Omit<FeaturedVendor, 'stats'>[])
+  return vendors
     .map(v => ({ ...v, stats: statsById[v.id] }))
     .sort((a, b) =>
       sales(b.id) - sales(a.id) ||

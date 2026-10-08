@@ -20,9 +20,13 @@ export default async function TiendasPage() {
   // Orden: verificadas primero, luego las más nuevas. Las ventas y la
   // calificación no se ordenan por columnas sembradas: se muestran
   // desde vendor_real_stats (ver abajo).
+  // Solo tiendas con al menos un producto publicado (misma regla que
+  // search_providers, migración 044). products!inner() vacío filtra sin
+  // traer los productos ni repetir la tienda.
   const { data: vendors, error } = await supabase
     .from('vendors')
-    .select('id, business_name, logo_url, description, province_id, is_verified, plan, provinces_rd(name)')
+    .select('id, business_name, logo_url, description, province_id, is_verified, plan, provinces_rd(name), products!inner()')
+    .eq('products.status', 'published')
     .order('is_verified', { ascending: false })
     .order('created_at', { ascending: false })
 
