@@ -27,6 +27,7 @@ export const chat = {
   daysAgo: 'il y a {count}j',
 
   backToMessagesLink: 'Retour aux messages',
+  customerPanelButton: 'Voir le client',
   conversationNotFound: 'Cette conversation est introuvable.',
   noMessagesInThread: "Il n'y a pas encore de messages dans cette conversation.",
   verifiedTrustBadge: '✓ Vérifié',

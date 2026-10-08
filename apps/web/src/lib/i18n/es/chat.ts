@@ -41,6 +41,7 @@ export const chat = {
 
   // app/mensajes/[id]/page.tsx
   backToMessagesLink: 'Volver a mensajes',
+  customerPanelButton: 'Ver cliente',
   conversationNotFound: 'No se encontró esta conversación.',
   noMessagesInThread: 'Aún no hay mensajes en esta conversación.',
   verifiedTrustBadge: '✓ Verificado',

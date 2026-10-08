@@ -18,6 +18,7 @@ import { getCurrentVendor } from '@/lib/queries/vendor-dashboard'
 import { DashboardSidebar } from '@/components/vendor/DashboardSidebar'
 import { isSupplierContext } from '@/lib/vendorContext'
 import { buildBuyerSummaries, type VendorOrderLine } from '@/lib/inboxClassification'
+import { VENDOR_ORDER_ITEMS_SELECT, toVendorOrderLine } from '@/lib/queries/customerPanel'
 import { MensajesContent, type InboxRow } from './MensajesContent'
 
 export default async function VendorMessagesPage() {
@@ -54,7 +55,7 @@ export default async function VendorMessagesPage() {
       : emptyIn([] as { id: string; full_name: string | null; avatar_url: string | null }[]),
     supabase
       .from('order_items')
-      .select('order_id, price_rdp, quantity, created_at, product:products(name), order:orders(id, status, user_id, created_at)')
+      .select(VENDOR_ORDER_ITEMS_SELECT)
       .eq('vendor_id', vendor.id),
     convIds.length > 0
       ? supabase.from('chat_messages').select('conversation_id').in('conversation_id', convIds).not('chat_quote_id', 'is', null)
@@ -72,14 +73,7 @@ export default async function VendorMessagesPage() {
   const buyerSet = new Set(buyerIds)
 
   const lines: VendorOrderLine[] = (orderItemsRes.data ?? [])
-    .map((i: any) => ({
-      orderId: i.order?.id ?? i.order_id,
-      buyerId: i.order?.user_id ?? '',
-      status: i.order?.status ?? 'pending',
-      amount: (i.price_rdp ?? 0) * (i.quantity ?? 0),
-      productName: i.product?.name ?? 'Producto',
-      createdAt: i.order?.created_at ?? i.created_at,
-    }))
+    .map(toVendorOrderLine)
     .filter(l => buyerSet.has(l.buyerId))
   const summaries = buildBuyerSummaries(lines)
 

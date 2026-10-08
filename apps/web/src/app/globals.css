@@ -167,7 +167,8 @@
    "medio" -- no es necesario que ambos colores compartan el mismo
    nivel de brillo.
    ============================================================ */
-.dashboard-grid {
+.dashboard-grid,
+.chat-customer-panel {
   --dashboard-blue: #0570E6;   /* sutil, elegido */
   --dashboard-yellow: #F7CD4A; /* medio, elegido */
 }
@@ -382,5 +383,34 @@ html, body {
   .inbox-panel.open > * {
     max-width: 640px;
     margin: 0 auto;
+  }
+}
+
+/* Chat (/mensajes/[id]) visto por el vendedor: el panel del cliente va en
+   una columna derecha desde 1024 px; en móvil lo abre el botón del
+   encabezado (.chat-panel-toggle) con las mismas reglas .inbox-panel. */
+@media (min-width: 1024px) {
+  /* Columnas laterales flexibles: el Navbar ocupa todo el ancho y el
+     chat + panel quedan centrados. */
+  .chat-with-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 42rem) 360px minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    align-items: start;
+    column-gap: 20px;
+  }
+  .chat-with-panel > header {
+    grid-column: 1 / -1;
+  }
+  .chat-with-panel > main {
+    grid-column: 2;
+    margin: 0;
+  }
+  .chat-customer-panel {
+    grid-column: 3;
+    padding-top: 24px;
+  }
+  .chat-panel-toggle {
+    display: none;
   }
 }

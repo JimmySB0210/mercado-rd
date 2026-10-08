@@ -24,6 +24,7 @@ import {
   type ChatAttachmentType,
 } from '@/lib/storage/upload'
 import { QuoteCard, type ChatQuote } from '@/components/chat/QuoteCard'
+import { ChatCustomerPanel } from '@/components/messages/ChatCustomerPanel'
 
 interface ProvinceOption {
   id: number
@@ -125,6 +126,10 @@ export default function ChatPage() {
   const [translateErrors, setTranslateErrors] = useState<Map<string, string>>(new Map())
 
   const isBuyer = !!userId && !!conversation && conversation.buyer_id === userId
+
+  // Panel del cliente: solo para el vendedor, solo lectura.
+  const isVendorView = !!userId && !!conversation && !isBuyer
+  const [customerPanelOpen, setCustomerPanelOpen] = useState(false)
 
   const fetchMessages = async () => {
     const { data } = await supabase
@@ -527,7 +532,7 @@ export default function ChatPage() {
     : (buyerCreatedAt ? membershipText(buyerCreatedAt) : null)
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className={`min-h-screen bg-gray-50 flex flex-col${isVendorView ? ' chat-with-panel' : ''}`}>
       <Navbar />
 
       <main className="max-w-2xl w-full mx-auto px-4 py-6 flex-1 flex flex-col">
@@ -565,6 +570,16 @@ export default function ChatPage() {
               <p className="text-xs text-gray-400 mt-0.5">{otherTrustLine}</p>
             )}
           </div>
+          {isVendorView && (
+            <button
+              type="button"
+              onClick={() => setCustomerPanelOpen(true)}
+              className="chat-panel-toggle ml-auto flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-200 bg-white cursor-pointer"
+              style={{ color: BRAND.blue }}
+            >
+              {t('customerPanelButton')}
+            </button>
+          )}
         </div>
 
         {/* Hilo de mensajes */}
@@ -849,6 +864,16 @@ export default function ChatPage() {
           </div>
         </div>
       </main>
+
+      {isVendorView && (
+        <ChatCustomerPanel
+          conversationId={conversation.id}
+          vendorId={conversation.vendor_id}
+          buyerId={conversation.buyer_id}
+          open={customerPanelOpen}
+          onClose={() => setCustomerPanelOpen(false)}
+        />
+      )}
     </div>
   )
 }
