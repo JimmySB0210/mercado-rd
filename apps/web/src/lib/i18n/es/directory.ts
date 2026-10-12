@@ -57,6 +57,21 @@ export const directory = {
   manufacturerVerifiedOrMoreOption: '🏭 Fabricante verificado o más',
   featuredOnlyOption: '⭐ Solo proveedores destacados',
 
+  // Tarjeta de proveedor (components/providers/ProviderCard.tsx)
+  cardMinOrderLabel: 'Pedido mínimo',
+  cardShippingLabel: 'Envíos',
+  cardProductionLabel: 'Producción',
+  notSpecified: 'No especificado',
+  declaredBySeller: 'Declarado por el vendedor',
+  memberSinceYear: 'En MercadoRD desde {year}',
+  noReviewsCard: 'Sin reseñas todavía',
+  featuredStripLabel: 'Destacados',
+  logoAlt: 'Logo de {store}',
+  chatWithProviderButton: 'Chatear con el proveedor',
+  chatShortButton: 'Chatear',
+  visitStoreButton: 'Visitar tienda',
+  moreProductsAria: 'Ver {count} productos más de {store}',
+
   // app/tienda/[id]/page.tsx
   whatsappButton: 'WhatsApp',
   instagramButton: 'Instagram',

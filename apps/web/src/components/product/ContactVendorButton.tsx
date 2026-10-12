@@ -3,15 +3,16 @@
 // MercadoRD — Botón "Preguntar al vendedor" (chat interno)
 // Ruta: src/components/product/ContactVendorButton.tsx
 // ============================================================
-// send_chat_message retorna el id del MENSAJE, no de la
-// conversación — por eso, después de llamarlo, consultamos
-// chat_messages para obtener el conversation_id real.
+// El flujo (login, send_chat_message y lectura del conversation_id)
+// vive en lib/chat/openVendorChat.ts, compartido con el botón de chat
+// de las tiendas (StoreChatButton).
 // ============================================================
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { openVendorChat } from '@/lib/chat/openVendorChat'
 
 interface Props {
   vendorId: string
@@ -33,36 +34,18 @@ export function ContactVendorButton({ vendorId, productId, productName, message,
 
   const handleClick = async () => {
     setLoading(true)
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      router.push('/login?redirect=' + encodeURIComponent(`/producto/${productId}`))
-      return
-    }
-
-    const { data: messageId, error } = await supabase.rpc('send_chat_message', {
-      p_vendor_id: vendorId,
-      p_product_id: productId,
-      p_message: message ?? `Hola, tengo una pregunta sobre ${productName}`,
+    const result = await openVendorChat(supabase, {
+      vendorId,
+      productId,
+      message: message ?? `Hola, tengo una pregunta sobre ${productName}`,
+      returnTo: `/producto/${productId}`,
     })
-
-    if (error || !messageId) {
-      console.error('[ContactVendorButton]', error)
-      setLoading(false)
+    if (result.status === 'login') {
+      router.push(result.url)
       return
     }
-
-    const { data: sentMessage } = await supabase
-      .from('chat_messages')
-      .select('conversation_id')
-      .eq('id', messageId)
-      .single()
-
     setLoading(false)
-
-    if (sentMessage?.conversation_id) {
-      router.push(`/mensajes/${sentMessage.conversation_id}`)
-    }
+    if (result.status === 'opened') router.push(`/mensajes/${result.conversationId}`)
   }
 
   return (

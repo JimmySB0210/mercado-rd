@@ -44,6 +44,21 @@ export const directory = {
   manufacturerVerifiedOrMoreOption: '🏭 Fabricant vérifié ou plus',
   featuredOnlyOption: '⭐ Fournisseurs en vedette uniquement',
 
+  // Tarjeta de proveedor (components/providers/ProviderCard.tsx)
+  cardMinOrderLabel: 'Commande minimum',
+  cardShippingLabel: 'Livraison',
+  cardProductionLabel: 'Production',
+  notSpecified: 'Non précisé',
+  declaredBySeller: 'Déclaré par le vendeur',
+  memberSinceYear: 'Sur MercadoRD depuis {year}',
+  noReviewsCard: "Pas encore d'avis",
+  featuredStripLabel: 'En vedette',
+  logoAlt: 'Logo de {store}',
+  chatWithProviderButton: 'Discuter avec le fournisseur',
+  chatShortButton: 'Discuter',
+  visitStoreButton: 'Visiter la boutique',
+  moreProductsAria: 'Voir {count} produits de plus de {store}',
+
   whatsappButton: 'WhatsApp',
   instagramButton: 'Instagram',
   totalSalesLabel: 'Ventes totales',

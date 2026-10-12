@@ -4,9 +4,12 @@
 // Ruta: src/app/proveedores/page.tsx
 // ============================================================
 // Client Component: cada cambio de filtro llama a search_providers()
-// vía createPublicClient(). Los chips de tipo de negocio/servicios de
-// cada tarjeta se arman con un fetch aparte (WHERE vendor_id IN (...))
-// para no tener que tocar el RPC.
+// vía createPublicClient(). La fila del RPC trae todas las columnas de
+// vendors; se convierte enseguida con toPublicVendorCard y solo eso se
+// guarda en el estado y llega a ProviderCard. Lo demás de cada tarjeta
+// (tipos de negocio, servicios, estadísticas reales y productos) se
+// pide en lote para todas las tarjetas a la vez (WHERE vendor_id IN
+// (...)), nunca una consulta por tarjeta.
 // ============================================================
 
 import { useEffect, useRef, useState } from 'react'
@@ -15,16 +18,22 @@ import { Navbar } from '@/components/shop/Navbar'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { useHasVariantsMap } from '@/lib/hooks/useHasVariantsMap'
+import { useOwnVendorId } from '@/lib/hooks/useOwnVendorId'
 import { BRAND } from '@/lib/colors'
 import { ProviderFilters } from '@/components/providers/ProviderFilters'
-import { ProviderCard } from '@/components/providers/ProviderCard'
+import { ProviderCard, type ProviderCardProduct } from '@/components/providers/ProviderCard'
 import { ProductCard, type ProductCardPricingTier } from '@/components/product/ProductCard'
 import { EMPTY_PROVIDER_FILTERS, type ProviderFiltersState } from '@/components/providers/types'
-import type { Vendor, Category, BusinessType, VendorService, ProductWithVendor } from '@/types/database.types'
+import { toPublicVendorCard, type PublicVendorCard } from '@/lib/publicVendor'
+import { getVendorRealStatsBatch, type VendorRealStatsMap } from '@/lib/queries/vendorRealStatsBatch'
+import type { Category, BusinessType, VendorService, ProductWithVendor } from '@/types/database.types'
 
 interface ProvinceOption { id: number; name: string }
 
 const PRODUCTS_PAGE_SIZE = 24
+const CARD_PRODUCTS = 3
+
+interface VendorProductsStrip { items: ProviderCardProduct[]; publishedCount: number }
 
 // Mismo join que /buscar (buscar/page.tsx, SearchResultsGrid.tsx) — el
 // RPC search_products devuelve SETOF products sin relaciones; esta
@@ -42,12 +51,15 @@ export default function ProvidersDirectoryPage() {
   const { t: tp } = useTranslation('products')
 
   const [activeTab, setActiveTab] = useState<'tiendas' | 'productos'>('tiendas')
+  const ownVendorId = useOwnVendorId()
   const [filters, setFilters] = useState<ProviderFiltersState>(EMPTY_PROVIDER_FILTERS)
   const [provinces, setProvinces] = useState<ProvinceOption[]>([])
   const [categories, setCategories] = useState<Category[]>([])
-  const [results, setResults] = useState<Vendor[]>([])
+  const [results, setResults] = useState<PublicVendorCard[]>([])
   const [businessTypesByVendor, setBusinessTypesByVendor] = useState<Map<string, BusinessType[]>>(new Map())
   const [servicesByVendor, setServicesByVendor] = useState<Map<string, VendorService[]>>(new Map())
+  const [statsByVendor, setStatsByVendor] = useState<VendorRealStatsMap>({})
+  const [productsByVendor, setProductsByVendor] = useState<Map<string, VendorProductsStrip>>(new Map())
   const [loading, setLoading] = useState(true)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
@@ -130,21 +142,49 @@ export default function ProvidersDirectoryPage() {
         return
       }
 
-      const vendorList = (vendors ?? []) as Vendor[]
-      setResults(vendorList)
+      const vendorList: PublicVendorCard[] = (vendors ?? []).map(toPublicVendorCard)
 
       const vendorIds = vendorList.map(v => v.id)
       if (vendorIds.length === 0) {
+        setResults([])
         setBusinessTypesByVendor(new Map())
         setServicesByVendor(new Map())
+        setStatsByVendor({})
+        setProductsByVendor(new Map())
         setLoading(false)
         return
       }
 
-      const [{ data: businessTypesRows }, { data: servicesRows }] = await Promise.all([
+      // Productos publicados de todas las tarjetas en UNA consulta:
+      // destacados primero y luego los más nuevos; cada tarjeta se queda
+      // con los 3 primeros que tengan imagen.
+      const [{ data: businessTypesRows }, { data: servicesRows }, stats, { data: productRows, error: productsError }] = await Promise.all([
         supabase.from('vendor_business_types').select('vendor_id, business_type').in('vendor_id', vendorIds),
         supabase.from('vendor_services').select('vendor_id, service').in('vendor_id', vendorIds),
+        getVendorRealStatsBatch(vendorIds),
+        supabase
+          .from('products')
+          .select('id, vendor_id, name, images, is_featured')
+          .in('vendor_id', vendorIds)
+          .eq('status', 'published')
+          .order('is_featured', { ascending: false })
+          .order('created_at', { ascending: false }),
       ])
+      if (productsError) console.error('[ProvidersDirectoryPage] products', productsError)
+
+      const stripMap = new Map<string, VendorProductsStrip>()
+      for (const row of productRows ?? []) {
+        const strip = stripMap.get(row.vendor_id) ?? { items: [], publishedCount: 0 }
+        strip.publishedCount++
+        const image = Array.isArray(row.images) ? row.images.find((src: unknown) => typeof src === 'string' && src.length > 0) : null
+        if (image && strip.items.length < CARD_PRODUCTS) {
+          strip.items.push({ id: row.id, name: row.name, image, isFeatured: !!row.is_featured })
+        }
+        stripMap.set(row.vendor_id, strip)
+      }
+      setProductsByVendor(stripMap)
+      setStatsByVendor(stats)
+      setResults(vendorList)
 
       const btMap = new Map<string, BusinessType[]>()
       for (const row of businessTypesRows ?? []) {
@@ -293,6 +333,7 @@ export default function ProvidersDirectoryPage() {
   }
 
   const provinceNameById = new Map(provinces.map(p => [p.id, p.name]))
+  const categoryById = new Map(categories.map(c => [c.id, c]))
 
   const filtersPanel = (
     <ProviderFilters filters={filters} onChange={updateFilters} provinces={provinces} categories={categories} />
@@ -376,14 +417,19 @@ export default function ProvidersDirectoryPage() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
                   {results.map(vendor => (
                     <ProviderCard
                       key={vendor.id}
                       vendor={vendor}
-                      provinceName={vendor.province_id ? provinceNameById.get(vendor.province_id) ?? null : null}
+                      provinceName={vendor.provinceId ? provinceNameById.get(vendor.provinceId) ?? null : null}
+                      category={vendor.categoryId ? categoryById.get(vendor.categoryId) ?? null : null}
                       businessTypes={businessTypesByVendor.get(vendor.id) ?? []}
                       services={servicesByVendor.get(vendor.id) ?? []}
+                      stats={statsByVendor[vendor.id]}
+                      products={productsByVendor.get(vendor.id)?.items ?? []}
+                      publishedCount={productsByVendor.get(vendor.id)?.publishedCount ?? 0}
+                      ownVendorId={ownVendorId}
                     />
                   ))}
                 </div>
