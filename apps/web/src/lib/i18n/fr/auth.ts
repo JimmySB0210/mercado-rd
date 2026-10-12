@@ -56,6 +56,7 @@ export const auth = {
   mustAcceptTerms: "Vous devez accepter les Conditions d'utilisation et la Politique de confidentialité",
   completeCaptcha: 'Complétez la vérification de sécurité',
   captchaFailed: 'Échec de la vérification de sécurité. Réessayez.',
+  captchaLoadError: 'Impossible de charger la vérification de sécurité. Rechargez la page ou essayez un autre navigateur.',
   emailAlreadyRegistered: 'Cet e-mail est déjà enregistré',
 
   forgotPasswordLink: 'Mot de passe oublié ?',

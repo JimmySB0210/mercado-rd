@@ -69,6 +69,7 @@ export const auth = {
   mustAcceptTerms: 'Debes aceptar los Términos de Servicio y la Política de Privacidad',
   completeCaptcha: 'Completa la verificación de seguridad',
   captchaFailed: 'Verificación de seguridad fallida. Intenta de nuevo.',
+  captchaLoadError: 'No se pudo cargar la verificación de seguridad. Recarga la página o prueba con otro navegador.',
   emailAlreadyRegistered: 'Este correo ya está registrado',
 
   // Recuperar contraseña — app/login/page.tsx (link + banner de éxito)

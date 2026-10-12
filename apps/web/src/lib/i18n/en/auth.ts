@@ -56,6 +56,7 @@ export const auth = {
   mustAcceptTerms: 'You must accept the Terms of Service and Privacy Policy',
   completeCaptcha: 'Complete the security check',
   captchaFailed: 'Security check failed. Try again.',
+  captchaLoadError: "We couldn't load the security check. Reload the page or try another browser.",
   emailAlreadyRegistered: 'This email is already registered',
 
   forgotPasswordLink: 'Forgot your password?',

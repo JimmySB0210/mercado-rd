@@ -4,7 +4,7 @@
 // Archivo: app/register/page.tsx
 // ============================================================
 
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Script from 'next/script'
 import Link from 'next/link'
@@ -13,6 +13,28 @@ import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+
+// API mínima de Cloudflare Turnstile que usa esta página (renderizado
+// explícito: https://developers.cloudflare.com/turnstile/get-started/client-side-rendering/).
+interface TurnstileApi {
+  render(container: HTMLElement, options: {
+    sitekey: string
+    callback: (token: string) => void
+    'expired-callback': () => void
+    'error-callback': (code?: string) => void
+    'timeout-callback': () => void
+  }): string
+  reset(widgetId: string): void
+  remove(widgetId: string): void
+}
+
+function getTurnstile(): TurnstileApi | undefined {
+  return (window as unknown as { turnstile?: TurnstileApi }).turnstile
+}
+
+// Si en este tiempo el script de Turnstile no ha cargado (bloqueado por
+// una extensión, la red, etc.), se avisa en vez de dejar el registro mudo.
+const TURNSTILE_LOAD_TIMEOUT_MS = 10000
 
 export default function RegisterPage() {
   return (
@@ -42,14 +64,49 @@ function RegisterForm() {
   const [loading, setLoading] = useState(false)
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [captchaToken, setCaptchaToken] = useState('')
+  // null = sin error; '' = error sin código; '600010', etc. = código de Turnstile.
+  const [captchaLoadError, setCaptchaLoadError] = useState<string | null>(null)
+  const captchaContainerRef = useRef<HTMLDivElement>(null)
+  const captchaWidgetIdRef = useRef<string | null>(null)
 
-  // Callbacks globales que el widget de Turnstile invoca por nombre
-  // (data-callback / data-expired-callback) cuando se renderiza vía script.
+  // Renderizado explícito: el renderizado implícito (div .cf-turnstile)
+  // solo funciona la primera vez que carga el script, así que al volver a
+  // /register con navegación del cliente el widget no aparecía y el botón
+  // quedaba deshabilitado sin explicación. Se llama desde onReady del
+  // Script (también se dispara si el script ya estaba cargado) y al montar.
+  const renderCaptcha = useCallback(() => {
+    const turnstile = getTurnstile()
+    if (!TURNSTILE_SITE_KEY || !turnstile || !captchaContainerRef.current || captchaWidgetIdRef.current) return
+    captchaWidgetIdRef.current = turnstile.render(captchaContainerRef.current, {
+      sitekey: TURNSTILE_SITE_KEY,
+      callback: token => { setCaptchaToken(token); setCaptchaLoadError(null) },
+      'expired-callback': () => setCaptchaToken(''),
+      'error-callback': code => { setCaptchaToken(''); setCaptchaLoadError(code ? String(code) : '') },
+      'timeout-callback': () => setCaptchaToken(''),
+    })
+  }, [])
+
   useEffect(() => {
     if (!TURNSTILE_SITE_KEY) return
-    ;(window as any).onTurnstileVerify = (token: string) => setCaptchaToken(token)
-    ;(window as any).onTurnstileExpired = () => setCaptchaToken('')
-  }, [])
+    renderCaptcha()
+    const loadTimeout = setTimeout(() => {
+      if (!getTurnstile()) setCaptchaLoadError('')
+    }, TURNSTILE_LOAD_TIMEOUT_MS)
+    return () => {
+      clearTimeout(loadTimeout)
+      const widgetId = captchaWidgetIdRef.current
+      if (widgetId) getTurnstile()?.remove(widgetId)
+      captchaWidgetIdRef.current = null
+    }
+  }, [renderCaptcha])
+
+  // El token de Turnstile es de un solo uso: tras enviarlo a
+  // /api/verify-captcha se pide uno nuevo para que un reintento no falle.
+  const resetCaptcha = () => {
+    const widgetId = captchaWidgetIdRef.current
+    if (widgetId) getTurnstile()?.reset(widgetId)
+    setCaptchaToken('')
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -99,6 +156,7 @@ function RegisterForm() {
         body: JSON.stringify({ token: captchaToken }),
       })
       const captchaData = await captchaRes.json().catch(() => ({ success: false }))
+      resetCaptcha()
 
       if (!captchaData.success) {
         setError(t('captchaFailed'))
@@ -303,19 +361,23 @@ function RegisterForm() {
 
             {TURNSTILE_SITE_KEY && (
               <>
-                <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
-                <div
-                  className="cf-turnstile"
-                  data-sitekey={TURNSTILE_SITE_KEY}
-                  data-callback="onTurnstileVerify"
-                  data-expired-callback="onTurnstileExpired"
+                <Script
+                  src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+                  strategy="afterInteractive"
+                  onReady={renderCaptcha}
                 />
+                <div ref={captchaContainerRef} className="cf-turnstile" />
+                {captchaLoadError !== null && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 text-small font-medium rounded-lg px-4 py-3">
+                    {t('captchaLoadError')}{captchaLoadError ? ` (${captchaLoadError})` : ''}
+                  </div>
+                )}
               </>
             )}
 
             <button
               type="submit"
-              disabled={loading || (!!TURNSTILE_SITE_KEY && !captchaToken)}
+              disabled={loading}
               className="w-full bg-[var(--brand-red)] hover:brightness-90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-ui font-semibold py-3 rounded-lg transition-colors mt-2"
             >
               {loading ? t('creatingAccount') : t('createAccountButton')}
