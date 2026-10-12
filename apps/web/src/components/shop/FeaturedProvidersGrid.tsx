@@ -13,9 +13,9 @@
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { VendorRealStatsLine } from '@/components/shop/VendorRealStatsLine'
 import type { VendorRealStatsMap } from '@/lib/queries/vendorRealStatsBatch'
-import type { Vendor } from '@/types/database.types'
+import type { PublicVendorRow } from '@/types/database.types'
 
-export function FeaturedProvidersGrid({ providers, realStats }: { providers: Vendor[]; realStats: VendorRealStatsMap }) {
+export function FeaturedProvidersGrid({ providers, realStats }: { providers: PublicVendorRow[]; realStats: VendorRealStatsMap }) {
   const { t } = useTranslation('products')
 
   return (

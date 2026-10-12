@@ -93,11 +93,13 @@ export function vendorInitials(name: string): string {
 // tienda/[id]/page.tsx y lib/queries/vendorStorePreviewClient.ts siguen
 // siendo dos consultas (servidor y navegador), pero piden exactamente
 // estas columnas y pasan por el mismo mapper. Nunca bank_*, rnc,
-// legal_name, contact_full_name, latitude, longitude ni user_id. La
-// dirección solo sale si el vendedor declaró tienda física.
+// legal_name, contact_full_name, latitude, longitude, address ni
+// user_id. La dirección llega aparte, de get_vendor_store_address (que
+// solo la devuelve con tienda física), y el mapper repite esa regla
+// como doble control.
 
 export const VENDOR_PROFILE_SELECT =
-  'id, business_name, logo_url, description, municipio, sector, address, created_at, whatsapp, instagram, ' +
+  'id, business_name, logo_url, description, municipio, sector, created_at, whatsapp, instagram, ' +
   'verification_level, is_verified, min_order_quantity, min_order_unit, production_time, production_time_custom, ' +
   'manufacturing_status, accepts_private_label, allows_customization, has_physical_store, has_warehouse, has_workshop, ' +
   'province:provinces_rd(name), category:categories(id, name, name_en, name_fr, emoji, slug)'
@@ -138,7 +140,6 @@ interface VendorProfileRow {
   description: string | null
   municipio: string | null
   sector: string | null
-  address: string | null
   created_at: string
   whatsapp: string | null
   instagram: string | null
@@ -158,7 +159,7 @@ interface VendorProfileRow {
   category: PublicCategory | null
 }
 
-export function toPublicVendorProfile(row: VendorProfileRow): PublicVendorProfile {
+export function toPublicVendorProfile(row: VendorProfileRow, storeAddress: string | null): PublicVendorProfile {
   return {
     id: row.id,
     businessName: row.business_name,
@@ -167,7 +168,7 @@ export function toPublicVendorProfile(row: VendorProfileRow): PublicVendorProfil
     provinceName: row.province?.name ?? null,
     municipio: row.municipio?.trim() || null,
     sector: row.sector?.trim() || null,
-    physicalStoreAddress: row.has_physical_store === true ? row.address?.trim() || null : null,
+    physicalStoreAddress: row.has_physical_store === true ? storeAddress?.trim() || null : null,
     mainCategory: row.category ?? null,
     createdAt: row.created_at,
     whatsapp: row.whatsapp,

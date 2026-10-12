@@ -8,6 +8,7 @@
 // ============================================================
 
 import { createServerClient } from '@/lib/supabase/server'
+import type { Vendor } from '@/types/database.types'
 
 export interface VendorOrderRow {
   order_id: string
@@ -40,13 +41,14 @@ export async function getCurrentVendor() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  // province embebida (provinces_rd(name)) -- mismo patrón que ya usa
-  // getVendorOrders más abajo -- para "Tu tienda" (ciudad/provincia real).
+  // Fila completa del propio vendedor vía get_my_vendor (las columnas
+  // privadas no se leen directo de vendors). province embebida
+  // (provinces_rd(name)) -- mismo patrón que getVendorOrders más abajo --
+  // para "Tu tienda" (ciudad/provincia real).
   const { data: vendor, error } = await supabase
-    .from('vendors')
+    .rpc('get_my_vendor')
     .select('*, province:provinces_rd(name)')
-    .eq('user_id', user.id)
-    .single()
+    .maybeSingle<Vendor & { province: { name: string } | null }>()
 
   if (error || !vendor) return null
   return vendor

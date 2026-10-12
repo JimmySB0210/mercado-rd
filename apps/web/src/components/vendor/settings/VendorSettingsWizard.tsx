@@ -97,7 +97,8 @@ export function VendorSettingsWizard({
   const refreshVendorData = useCallback(async () => {
     const supabase = createClient()
     const [{ data: vendorData }, { data: btRes }, { data: catRes }, { data: svcRes }, { data: tcRes }, { data: idRes }] = await Promise.all([
-      supabase.from('vendors').select('*').eq('id', initialVendor.id).single(),
+      // Fila completa del propio vendedor (get_my_vendor, no lectura directa).
+      supabase.rpc('get_my_vendor').maybeSingle<Vendor>(),
       supabase.from('vendor_business_types').select('business_type').eq('vendor_id', initialVendor.id),
       supabase.from('vendor_categories').select('category_id').eq('vendor_id', initialVendor.id),
       supabase.from('vendor_services').select('service').eq('vendor_id', initialVendor.id),

@@ -20,21 +20,22 @@ import type { BusinessType, CustomerType, VendorService } from '@/types/database
 export type VendorStorePreviewData = VendorStoreData
 
 export async function fetchVendorStorePreviewData(supabase: SupabaseClient, vendorId: string): Promise<VendorStorePreviewData | null> {
+  // Es la tienda del propio vendedor: get_my_vendor, con las mismas
+  // columnas públicas que la página real.
   const { data: vendorRow, error } = await supabase
-    .from('vendors')
+    .rpc('get_my_vendor')
     .select(VENDOR_PROFILE_SELECT)
-    .eq('id', vendorId)
-    .single()
+    .maybeSingle()
 
-  if (error || !vendorRow) return null
-
-  const vendor = toPublicVendorProfile(vendorRow as any)
+  if (error || !vendorRow || (vendorRow as any).id !== vendorId) return null
 
   const [
+    { data: storeAddress },
     { data: products }, { data: reviewsRaw },
     { data: businessTypesRaw }, { data: vendorCategoriesRaw }, { data: servicesRaw }, { data: targetCustomersRaw },
     { data: faqsRaw }, { data: realStats },
   ] = await Promise.all([
+    supabase.rpc('get_vendor_store_address', { p_vendor_id: vendorId }),
     supabase
       .from('products')
       .select('*, category:categories(id, name, slug, emoji), province:provinces_rd(id, name)')
@@ -60,6 +61,8 @@ export async function fetchVendorStorePreviewData(supabase: SupabaseClient, vend
     ? await supabase.from('users').select('id, full_name').in('id', reviewerIds)
     : { data: [] as { id: string; full_name: string }[] }
   const reviewerMap = new Map((reviewers ?? []).map((u: any) => [u.id, u.full_name]))
+
+  const vendor = toPublicVendorProfile(vendorRow as any, (storeAddress as string | null) ?? null)
 
   return {
     vendor,

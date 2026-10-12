@@ -170,6 +170,16 @@ export interface Vendor {
   onboarding_completed: boolean
 }
 
+// Columnas de vendors que no se leen directamente desde código público:
+// solo el propio vendedor (get_my_vendor) o un admin (admin_list_vendors).
+export type VendorPrivateField =
+  | 'rnc' | 'legal_name' | 'contact_full_name' | 'bank_name' | 'bank_account'
+  | 'latitude' | 'longitude' | 'address'
+
+// Fila de vendors en lecturas públicas (search_providers_public y
+// selects con columnas explícitas).
+export type PublicVendorRow = Omit<Vendor, VendorPrivateField>
+
 export interface Product {
   id: string
   vendor_id: string

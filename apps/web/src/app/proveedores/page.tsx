@@ -3,9 +3,9 @@
 // MercadoRD — Directorio de búsqueda de proveedores
 // Ruta: src/app/proveedores/page.tsx
 // ============================================================
-// Client Component: cada cambio de filtro llama a search_providers()
-// vía createPublicClient(). La fila del RPC trae todas las columnas de
-// vendors; se convierte enseguida con toPublicVendorCard y solo eso se
+// Client Component: cada cambio de filtro llama a search_providers_public()
+// vía createPublicClient() (mismos filtros y orden que search_providers,
+// solo columnas públicas); se convierte enseguida con toPublicVendorCard y solo eso se
 // guarda en el estado y llega a ProviderCard. Lo demás de cada tarjeta
 // (tipos de negocio, servicios, estadísticas reales y productos) se
 // pide en lote para todas las tarjetas a la vez (WHERE vendor_id IN
@@ -124,7 +124,7 @@ export default function ProvidersDirectoryPage() {
     setLoading(true)
 
     const timeout = setTimeout(async () => {
-      const { data: vendors, error } = await supabase.rpc('search_providers', {
+      const { data: vendors, error } = await supabase.rpc('search_providers_public', {
         p_business_types: filters.businessTypes.length > 0 ? filters.businessTypes : null,
         p_category_ids: filters.categoryIds.length > 0 ? filters.categoryIds : null,
         p_services: filters.services.length > 0 ? filters.services : null,
@@ -136,7 +136,7 @@ export default function ProvidersDirectoryPage() {
       })
 
       if (error) {
-        console.error('[ProvidersDirectoryPage] search_providers', error)
+        console.error('[ProvidersDirectoryPage] search_providers_public', error)
         setResults([])
         setLoading(false)
         return

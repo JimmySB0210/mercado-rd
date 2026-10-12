@@ -49,8 +49,9 @@ export async function getMarketplaceKPIs(): Promise<MarketplaceKPIs> {
     { data: allOrders },
     { data: monthOrders },
   ] = await Promise.all([
-    supabase.from('vendors').select('*', { count: 'exact', head: true }),
-    supabase.from('vendors').select('*', { count: 'exact', head: true }).eq('is_verified', true),
+    // admin_list_vendors: filas completas solo para admin (vacío para los demás).
+    supabase.rpc('admin_list_vendors', undefined, { count: 'exact', head: true }),
+    supabase.rpc('admin_list_vendors', undefined, { count: 'exact', head: true }).eq('is_verified', true),
     supabase.from('products').select('*', { count: 'exact', head: true }),
     supabase.from('products').select('*', { count: 'exact', head: true }).eq('is_active', true),
     supabase.from('users').select('*', { count: 'exact', head: true }),
@@ -91,10 +92,13 @@ export interface AdminVendorRow {
 export async function getAllVendors(): Promise<AdminVendorRow[]> {
   const supabase = await createServerClient()
 
-  const { data: vendors, error } = await supabase
-    .from('vendors')
+  // admin_list_vendors devuelve un conjunto de filas; el cast solo corrige
+  // la inferencia de tipos de .select() sobre una RPC sin tipos generados.
+  const { data: vendorsData, error } = await supabase
+    .rpc('admin_list_vendors')
     .select('id, business_name, is_verified, verification_level, plan, created_at, province:provinces_rd(name)')
     .order('created_at', { ascending: false })
+  const vendors = vendorsData as unknown as any[] | null
 
   if (error || !vendors) {
     console.error('[getAllVendors]', error)
@@ -142,14 +146,15 @@ export interface AdminVendorVerificationRow {
 export async function getAllVendorsForVerification(): Promise<AdminVendorVerificationRow[]> {
   const supabase = await createServerClient()
 
-  const [{ data: vendors, error }, { data: businessTypeRows }] = await Promise.all([
+  const [{ data: vendorsData, error }, { data: businessTypeRows }] = await Promise.all([
     supabase
-      .from('vendors')
+      .rpc('admin_list_vendors')
       .select('id, business_name, logo_url, verification_level, onboarding_completed, created_at, province:provinces_rd(name)')
       .order('created_at', { ascending: false }),
     supabase.from('vendor_business_types').select('vendor_id, business_type'),
   ])
 
+  const vendors = vendorsData as unknown as any[] | null
   if (error || !vendors) {
     console.error('[getAllVendorsForVerification]', error)
     return []
@@ -187,7 +192,7 @@ export async function getVendorDetailForAdmin(vendorId: string): Promise<AdminVe
   const supabase = await createServerClient()
 
   const { data: vendor, error } = await supabase
-    .from('vendors')
+    .rpc('admin_list_vendors')
     .select('*, province:provinces_rd(name)')
     .eq('id', vendorId)
     .single()

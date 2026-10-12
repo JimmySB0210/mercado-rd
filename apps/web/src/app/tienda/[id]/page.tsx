@@ -33,13 +33,14 @@ export default async function VendorStorePage(
 
   if (error || !vendorRow) notFound()
 
-  const vendor = toPublicVendorProfile(vendorRow as any)
-
   const [
+    { data: storeAddress },
     { data: products }, { data: reviewsRaw },
     { data: businessTypesRaw }, { data: vendorCategoriesRaw }, { data: servicesRaw }, { data: targetCustomersRaw },
     { data: faqsRaw }, { data: realStats },
   ] = await Promise.all([
+    // address es privada: solo esta RPC la devuelve, y solo con tienda física.
+    supabase.rpc('get_vendor_store_address', { p_vendor_id: id }),
     supabase
       .from('products')
       .select('*, category:categories(id, name, slug, emoji), province:provinces_rd(id, name)')
@@ -70,6 +71,8 @@ export default async function VendorStorePage(
     ? await supabase.from('users').select('id, full_name').in('id', reviewerIds)
     : { data: [] as { id: string; full_name: string }[] }
   const reviewerMap = new Map((reviewers ?? []).map(u => [u.id, u.full_name]))
+
+  const vendor = toPublicVendorProfile(vendorRow as any, (storeAddress as string | null) ?? null)
 
   const data: VendorStoreData = {
     vendor,

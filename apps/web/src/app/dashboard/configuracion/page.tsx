@@ -49,11 +49,9 @@ export default function VendorSettingsPage() {
       const { data: factorsData } = await supabase.auth.mfa.listFactors()
       setHasMfa(!!factorsData?.totp.some(f => f.status === 'verified'))
 
-      const { data: vendorData } = await supabase
-        .from('vendors')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
+      // Fila completa del propio vendedor (banco, dirección, etc.):
+      // get_my_vendor, no lectura directa de vendors.
+      const { data: vendorData } = await supabase.rpc('get_my_vendor').maybeSingle<Vendor>()
 
       if (!vendorData) {
         router.push('/vendor/register')

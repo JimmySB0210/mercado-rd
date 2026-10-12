@@ -90,7 +90,7 @@ export async function getProductById(id: string): Promise<Product | null> {
     .from('products')
     .select(`
       *,
-      vendor:vendors(*),
+      vendor:vendors(id, user_id, business_name, logo_url, is_verified, whatsapp, created_at),
       category:categories(*),
       province:provinces_rd(*)
     `)
@@ -108,7 +108,7 @@ export async function getProductByIdPublic(id: string): Promise<Product | null> 
     .from('products')
     .select(`
       *,
-      vendor:vendors(*),
+      vendor:vendors(id, user_id, business_name, logo_url, is_verified, whatsapp, created_at),
       category:categories(*),
       province:provinces_rd(*)
     `)

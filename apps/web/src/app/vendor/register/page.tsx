@@ -34,11 +34,10 @@ export default function VendorRegisterPage() {
     if (!user) { setChecking(false); return }
 
     const supabase = createClient()
+    // Fila completa del propio vendedor: get_my_vendor (vacío si no tiene tienda).
     supabase
-      .from('vendors')
-      .select('*')
-      .eq('user_id', user.id)
-      .maybeSingle()
+      .rpc('get_my_vendor')
+      .maybeSingle<Vendor>()
       .then(async ({ data }) => {
         if (data?.onboarding_completed) {
           setRedirecting(true)
