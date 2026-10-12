@@ -64,21 +64,7 @@ export function VendorStorePreviewStep({ vendorId, completenessPercent }: Props)
           <div style={{ padding: 48, textAlign: 'center', color: '#c00', fontSize: 'var(--text-small)' }}>No se pudo cargar la vista previa. Intenta de nuevo.</div>
         )}
         {data && !loading && (
-          <VendorStoreContent
-            vendor={data.vendor}
-            productsWithVendor={data.productsWithVendor}
-            reviews={data.reviews}
-            realRatingAvg={data.realRatingAvg}
-            realTotalSales={data.realTotalSales}
-            realRatingCount={data.realRatingCount}
-            businessTypes={data.businessTypes}
-            vendorCategories={data.vendorCategories}
-            services={data.services}
-            targetCustomers={data.targetCustomers}
-            showsManufacturing={data.showsManufacturing}
-            hasProviderInfo={data.hasProviderInfo}
-            memberSinceRaw={data.memberSinceRaw}
-          />
+          <VendorStoreContent data={data} />
         )}
       </div>
     </div>

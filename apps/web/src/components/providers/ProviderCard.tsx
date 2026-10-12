@@ -74,11 +74,14 @@ export function ProviderCard({ vendor, provinceName, category, businessTypes, se
   const hiddenBusinessTypes = businessTypeLabels.slice(MAX_BUSINESS_TYPES)
 
   // Servicios declarados (sin los de envío, que van en su propia celda)
-  // más marca privada / personalización cuando el vendedor las marcó.
-  const capabilityKeys: VendorService[] = services.filter(s => !(SHIPPING_SERVICES as readonly string[]).includes(s))
-  if (vendor.acceptsPrivateLabel && !capabilityKeys.includes('private_label')) capabilityKeys.push('private_label')
-  if (vendor.allowsCustomization === 'yes' && !capabilityKeys.includes('customization')) capabilityKeys.push('customization')
-  const capabilityLabels = capabilityKeys.map(v => to(`service.${v}`))
+  // más marca privada / personalización cuando el vendedor las marcó,
+  // con las etiquetas públicas (tercera persona) y sin repetir el
+  // servicio equivalente si ya lo declaró.
+  const capabilityLabels = services
+    .filter(s => !(SHIPPING_SERVICES as readonly string[]).includes(s))
+    .map(v => to(`service.${v}`))
+  if (vendor.acceptsPrivateLabel && !services.includes('private_label')) capabilityLabels.push(to('publicPrivateLabel.yes'))
+  if (vendor.allowsCustomization === 'yes' && !services.includes('customization')) capabilityLabels.push(to('publicCustomization.yes'))
   const shownCapabilities = capabilityLabels.slice(0, MAX_SERVICE_CHIPS)
   const hiddenCapabilities = capabilityLabels.slice(MAX_SERVICE_CHIPS)
 
@@ -89,7 +92,7 @@ export function ProviderCard({ vendor, provinceName, category, businessTypes, se
     : null
   const productionTime = vendor.productionTime === 'custom'
     ? vendor.productionTimeCustom?.trim() || null
-    : vendor.productionTime ? to(`productionTime.${vendor.productionTime}`) : null
+    : vendor.productionTime ? to(`publicProductionTime.${vendor.productionTime}`) : null
 
   const rating = getVisibleRating(stats)
   const reviewCount = stats?.realRatingCount ?? 0

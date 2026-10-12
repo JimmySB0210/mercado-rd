@@ -57,6 +57,28 @@ export const directory = {
   manufacturerVerifiedOrMoreOption: '🏭 Fabricante verificado o más',
   featuredOnlyOption: '⭐ Solo proveedores destacados',
 
+  // Perfil de tienda (app/tienda/[id]/VendorStoreContent.tsx)
+  aboutStoreTitle: 'Sobre la tienda',
+  mainCategoryTag: 'Principal',
+  capabilitiesTitle: 'Capacidades y servicios',
+  commercialTermsTitle: 'Condiciones comerciales',
+  physicalStoreLabel: 'Tienda física',
+  warehouseLabel: 'Almacén',
+  workshopLabel: 'Taller',
+  productionTimeTerm: 'Tiempo de producción',
+  shippingTerm: 'Envíos y entrega',
+  faqTitle: 'Preguntas frecuentes',
+  storeAddressLabel: 'Dirección de la tienda física',
+  viewProductsButton: 'Ver productos',
+  reviewsSectionTitle: 'Reseñas',
+  noReviewsStore: 'Aún sin reseñas. Solo compradores con un pedido real pueden reseñar.',
+  measuredMetricsTitle: 'Métricas medidas por MercadoRD',
+  responseTimeMetric: 'Tiempo de respuesta',
+  onTimeMetric: 'Entregas a tiempo',
+  basedOnResponses: 'Basado en {count} respuestas',
+  basedOnDeliveries: 'Basado en {count} entregas',
+  declaredServicesLabel: 'Servicios',
+
   // Tarjeta de proveedor (components/providers/ProviderCard.tsx)
   cardMinOrderLabel: 'Pedido mínimo',
   cardShippingLabel: 'Envíos',

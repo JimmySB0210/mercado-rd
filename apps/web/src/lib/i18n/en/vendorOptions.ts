@@ -69,6 +69,29 @@ export const vendorOptions = {
     manufacturing_dev: 'Manufacturing and development',
     logistics: 'Logistics and distribution',
   },
+  publicManufacturingStatus: {
+    fabricates_own: 'In-house manufacturing',
+    buys_from_third_parties: 'Sources from third parties',
+    mixed: 'In-house and third-party manufacturing',
+  },
+  publicCustomization: {
+    yes: 'Offers customization',
+    no: 'No customization',
+    depends: 'Customization depending on the order',
+  },
+  publicPrivateLabel: {
+    yes: 'Accepts private label',
+    no: 'No private label',
+  },
+  publicProductionTime: {
+    under_7_days: 'Under 7 days',
+    days_7_15: '7 to 15 days',
+    days_15_30: '15 to 30 days',
+    days_30_60: '30 to 60 days',
+    over_60_days: 'Over 60 days',
+    variable: 'Varies by order',
+    custom: 'As specified by the seller',
+  },
   verificationLevel: {
     '1': 'Basic account',
     '2': 'Verified business',

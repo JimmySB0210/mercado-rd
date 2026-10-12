@@ -44,6 +44,28 @@ export const directory = {
   manufacturerVerifiedOrMoreOption: '🏭 Fabricant vérifié ou plus',
   featuredOnlyOption: '⭐ Fournisseurs en vedette uniquement',
 
+  // Perfil de tienda (app/tienda/[id]/VendorStoreContent.tsx)
+  aboutStoreTitle: 'À propos de la boutique',
+  mainCategoryTag: 'Principale',
+  capabilitiesTitle: 'Capacités et services',
+  commercialTermsTitle: 'Conditions commerciales',
+  physicalStoreLabel: 'Magasin physique',
+  warehouseLabel: 'Entrepôt',
+  workshopLabel: 'Atelier',
+  productionTimeTerm: 'Délai de production',
+  shippingTerm: 'Expédition et livraison',
+  faqTitle: 'Questions fréquentes',
+  storeAddressLabel: 'Adresse du magasin physique',
+  viewProductsButton: 'Voir les produits',
+  reviewsSectionTitle: 'Avis',
+  noReviewsStore: "Pas encore d'avis. Seuls les acheteurs ayant passé une vraie commande peuvent laisser un avis.",
+  measuredMetricsTitle: 'Indicateurs mesurés par MercadoRD',
+  responseTimeMetric: 'Temps de réponse',
+  onTimeMetric: 'Livraisons à temps',
+  basedOnResponses: 'Basé sur {count} réponses',
+  basedOnDeliveries: 'Basé sur {count} livraisons',
+  declaredServicesLabel: 'Services',
+
   // Tarjeta de proveedor (components/providers/ProviderCard.tsx)
   cardMinOrderLabel: 'Commande minimum',
   cardShippingLabel: 'Livraison',

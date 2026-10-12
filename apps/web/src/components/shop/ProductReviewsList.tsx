@@ -71,7 +71,10 @@ export function RatingBreakdown({ average, total, counts }: { average: number; t
   )
 }
 
-export function ProductReviewsList({ reviews }: { reviews: ReviewViewModel[] }) {
+// minForBreakdown / emptyText: el perfil de tienda (tienda/[id]) muestra
+// la nota solo con MIN_SAMPLE_SIZE reseñas o más y su propio texto de
+// vacío. La página de producto no los pasa y se ve igual que siempre.
+export function ProductReviewsList({ reviews, minForBreakdown = 0, emptyText }: { reviews: ReviewViewModel[]; minForBreakdown?: number; emptyText?: string }) {
   const { t, language } = useTranslation('products')
   const [showAll, setShowAll] = useState(false)
 
@@ -83,12 +86,14 @@ export function ProductReviewsList({ reviews }: { reviews: ReviewViewModel[] }) 
   return (
     <div>
       {reviews.length === 0 ? (
-        <p className="text-sm text-gray-500 text-center py-6">{t('noReviewsYet')}</p>
+        <p className="text-sm text-gray-500 text-center py-6">{emptyText ?? t('noReviewsYet')}</p>
       ) : (
         <>
-          <div className="mb-6 pb-6 border-b border-gray-100">
-            <RatingBreakdown average={average} total={total} counts={counts} />
-          </div>
+          {total >= minForBreakdown && (
+            <div className="mb-6 pb-6 border-b border-gray-100">
+              <RatingBreakdown average={average} total={total} counts={counts} />
+            </div>
+          )}
           <div className="flex flex-col gap-3">
             {visible.map(r => (
               <div

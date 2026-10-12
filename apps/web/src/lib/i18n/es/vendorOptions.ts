@@ -76,6 +76,31 @@ export const vendorOptions = {
     manufacturing_dev: 'Fabricación y desarrollo',
     logistics: 'Logística y distribución',
   },
+  // Etiquetas públicas (perfil de tienda y tarjeta de proveedor), en
+  // tercera persona. Las de arriba son las del asistente y no se tocan.
+  publicManufacturingStatus: {
+    fabricates_own: 'Fabricación propia',
+    buys_from_third_parties: 'Compra a terceros',
+    mixed: 'Fabricación propia y de terceros',
+  },
+  publicCustomization: {
+    yes: 'Ofrece personalización',
+    no: 'No ofrece personalización',
+    depends: 'Personalización según el pedido',
+  },
+  publicPrivateLabel: {
+    yes: 'Acepta marca privada',
+    no: 'No trabaja marca privada',
+  },
+  publicProductionTime: {
+    under_7_days: 'Menos de 7 días',
+    days_7_15: '7 a 15 días',
+    days_15_30: '15 a 30 días',
+    days_30_60: '30 a 60 días',
+    over_60_days: 'Más de 60 días',
+    variable: 'Variable según el pedido',
+    custom: 'Según lo indicado por el vendedor',
+  },
   verificationLevel: {
     '1': 'Cuenta básica',
     '2': 'Negocio verificado',
