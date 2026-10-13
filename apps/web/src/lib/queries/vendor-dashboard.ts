@@ -75,7 +75,7 @@ export async function getVendorOrders(vendorId: string): Promise<VendorOrderRow[
   // 2. Traer las órdenes correspondientes a esos IDs
   const { data: orders, error: ordersError } = await supabase
     .from('orders')
-    .select('id, status, delivery_address, payment_method, tracking_code, notes, created_at, updated_at, user_id, province:provinces_rd(name)')
+    .select('id, status, delivery_address, payment_method, tracking_code, notes, created_at, updated_at, user_id, buyer_name, buyer_phone, province:provinces_rd(name)')
     .in('id', orderIds)
     .order('created_at', { ascending: false })
 
@@ -84,16 +84,9 @@ export async function getVendorOrders(vendorId: string): Promise<VendorOrderRow[
     return []
   }
 
-  // 3. Traer los nombres/teléfonos de los compradores
-  const buyerIds = [...new Set(orders.map(o => o.user_id))]
-  const { data: buyers } = await supabase
-    .from('users')
-    .select('id, full_name, phone')
-    .in('id', buyerIds)
-
-  const buyerMap = new Map((buyers ?? []).map(b => [b.id, b]))
-
-  // 4. Combinar todo
+  // 3. Combinar todo. El contacto del comprador viene en la propia fila
+  // del pedido (orders.buyer_name / buyer_phone): la tienda no puede leer
+  // users por RLS salvo que haya habido chat.
   return orders.map(order => {
     const orderItems = items
       .filter(i => i.order_id === order.id)
@@ -108,8 +101,6 @@ export async function getVendorOrders(vendorId: string): Promise<VendorOrderRow[
         color: i.color,
       }))
 
-    const buyer = buyerMap.get(order.user_id)
-
     return {
       order_id: order.id,
       status: order.status,
@@ -120,8 +111,8 @@ export async function getVendorOrders(vendorId: string): Promise<VendorOrderRow[
       created_at: order.created_at,
       updated_at: order.updated_at,
       province_name: (order.province as any)?.name ?? null,
-      buyer_name: buyer?.full_name ?? 'Cliente',
-      buyer_phone: buyer?.phone ?? null,
+      buyer_name: order.buyer_name ?? 'Cliente',
+      buyer_phone: order.buyer_phone ?? null,
       items: orderItems,
       vendor_subtotal_rdp: orderItems.reduce((acc, i) => acc + i.price_rdp * i.quantity, 0),
     }

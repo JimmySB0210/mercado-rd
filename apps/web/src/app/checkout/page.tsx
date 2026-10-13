@@ -427,6 +427,18 @@ function CheckoutPageContent() {
       // transacción (apply_coupon_use). No se vuelve a llamar aquí: contaría
       // dos usos por pedido.
 
+      // Contacto del comprador para la tienda (orders.buyer_name /
+      // buyer_phone). create_order_from_cart ya los rellena con el perfil;
+      // aquí se guardan los que la persona escribió en este formulario. Si
+      // falla no se interrumpe nada: el pedido ya existe con el contacto
+      // del perfil.
+      const { error: contactError } = await supabase.rpc('set_order_buyer_contact', {
+        p_order_id: orderId,
+        p_buyer_name: form.fullName.trim(),
+        p_buyer_phone: normalizePhone(form.phone),
+      })
+      if (contactError) console.error('[checkout] set_order_buyer_contact', contactError)
+
       // Registrar el pago ya aprobado, vinculado a la orden real recién creada
       if (paymentResult) {
         const { error: paymentError } = await supabase.from('payments').insert({

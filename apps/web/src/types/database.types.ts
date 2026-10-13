@@ -303,6 +303,11 @@ export interface Order {
   payment_method: PaymentMethod
   tracking_code: string | null
   notes: string | null
+  // Contacto del comprador para la tienda: create_order_from_cart lo
+  // copia del perfil y set_order_buyer_contact lo actualiza desde el
+  // checkout. buyer_phone en formato canónico 1809XXXXXXX o null.
+  buyer_name: string | null
+  buyer_phone: string | null
   created_at: string
   updated_at: string
 }

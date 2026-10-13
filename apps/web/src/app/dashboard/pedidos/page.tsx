@@ -114,7 +114,7 @@ export default function VendorOrdersPage() {
 
       const { data: ordersData } = await supabase
         .from('orders')
-        .select('id, status, delivery_address, payment_method, notes, created_at, tracking_number, courier, user_id, recipient_name, recipient_phone, province:provinces_rd(name)')
+        .select('id, status, delivery_address, payment_method, notes, created_at, tracking_number, courier, user_id, buyer_name, buyer_phone, recipient_name, recipient_phone, province:provinces_rd(name)')
         .in('id', orderIds)
         .order('created_at', { ascending: false })
 
@@ -124,14 +124,9 @@ export default function VendorOrdersPage() {
         return
       }
 
-      const buyerIds = [...new Set(ordersData.map((o: any) => o.user_id))]
-      const { data: buyers } = await supabase
-        .from('users')
-        .select('id, full_name, phone')
-        .in('id', buyerIds)
-
-      const buyerMap = new Map((buyers ?? []).map((b: any) => [b.id, b]))
-
+      // El contacto del comprador viene en la propia fila del pedido
+      // (orders.buyer_name / buyer_phone). La tienda no puede leer users
+      // por RLS salvo que haya habido chat.
       const combined: OrderRow[] = ordersData.map((order: any) => {
         const orderItems = items
           .filter((i: any) => i.order_id === order.id)
@@ -145,8 +140,6 @@ export default function VendorOrdersPage() {
             color: i.color,
           }))
 
-        const buyer = buyerMap.get(order.user_id)
-
         return {
           order_id: order.id,
           status: order.status,
@@ -157,9 +150,9 @@ export default function VendorOrdersPage() {
           tracking_number: order.tracking_number,
           courier: order.courier,
           province_name: order.province?.name ?? null,
-          buyer_name: buyer?.full_name ?? 'Cliente',
+          buyer_name: order.buyer_name ?? 'Cliente',
           buyer_id: order.user_id,
-          buyer_phone: buyer?.phone ?? null,
+          buyer_phone: order.buyer_phone ?? null,
           recipient_name: order.recipient_name ?? null,
           recipient_phone: order.recipient_phone ?? null,
           items: orderItems,

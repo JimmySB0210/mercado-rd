@@ -76,6 +76,7 @@ interface IncomeItem {
   product_image: string | null
   status: string
   user_id: string | null
+  buyer_name: string | null
 }
 
 function pctChange(current: number, previous: number): number | null {
@@ -103,7 +104,6 @@ export default function VendorIncomePage() {
   const supabase = createClient()
 
   const [items, setItems] = useState<IncomeItem[]>([])
-  const [buyerNames, setBuyerNames] = useState<Record<string, string>>({})
   const [rangeDays, setRangeDays] = useState<RangeDays>(30)
   const [loading, setLoading] = useState(true)
 
@@ -128,7 +128,7 @@ export default function VendorIncomePage() {
 
       const { data: orderItems } = await supabase
         .from('order_items')
-        .select('id, order_id, created_at, price_rdp, quantity, product_id, product:products(id, name, images), order:orders(status, user_id)')
+        .select('id, order_id, created_at, price_rdp, quantity, product_id, product:products(id, name, images), order:orders(status, user_id, buyer_name)')
         .eq('vendor_id', vendor.id)
         .order('created_at', { ascending: false })
 
@@ -143,13 +143,11 @@ export default function VendorIncomePage() {
         product_image: i.product?.images?.[0] ?? null,
         status: i.order?.status ?? 'pending',
         user_id: i.order?.user_id ?? null,
+        // El nombre del comprador viene en el propio pedido
+        // (orders.buyer_name): la tienda no puede leer users por RLS
+        // salvo que haya habido chat.
+        buyer_name: i.order?.buyer_name ?? null,
       }))
-
-      const userIds = [...new Set(mapped.map(i => i.user_id).filter((id): id is string => !!id))]
-      if (userIds.length > 0) {
-        const { data: buyers } = await supabase.from('users').select('id, full_name').in('id', userIds)
-        setBuyerNames(Object.fromEntries((buyers ?? []).map(b => [b.id, b.full_name])))
-      }
 
       setItems(mapped)
       setLoading(false)
@@ -204,9 +202,9 @@ export default function VendorIncomePage() {
   }, [valid, start, now])
 
   const recentOrders = useMemo(() => {
-    const map = new Map<string, { order_id: string; latest: string; status: string; user_id: string | null; names: string[]; amount: number }>()
+    const map = new Map<string, { order_id: string; latest: string; status: string; user_id: string | null; buyer_name: string | null; names: string[]; amount: number }>()
     items.forEach(i => {
-      const row = map.get(i.order_id) ?? { order_id: i.order_id, latest: i.created_at, status: i.status, user_id: i.user_id, names: [], amount: 0 }
+      const row = map.get(i.order_id) ?? { order_id: i.order_id, latest: i.created_at, status: i.status, user_id: i.user_id, buyer_name: i.buyer_name, names: [], amount: 0 }
       if (!row.names.includes(i.product_name)) row.names.push(i.product_name)
       row.amount += i.price_rdp * i.quantity
       if (i.created_at > row.latest) row.latest = i.created_at
@@ -371,7 +369,7 @@ export default function VendorIncomePage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {recentOrders.map(o => <ActivityRow key={o.order_id} o={o} buyerNames={buyerNames} language={language} t={t} />)}
+                          {recentOrders.map(o => <ActivityRow key={o.order_id} o={o} language={language} t={t} />)}
                         </tbody>
                       </table>
                     </div>
@@ -382,7 +380,7 @@ export default function VendorIncomePage() {
                             <span style={{ fontSize: 'var(--text-small)', fontWeight: 700, color: 'var(--dashboard-blue)' }}>#RD-{o.order_id.split('-')[0].toUpperCase()}</span>
                             <StatusBadge status={o.status} t={t} />
                           </div>
-                          <div style={{ fontSize: 'var(--text-caption)', color: '#667085' }}>{formatDate(o.latest, language, { day: 'numeric', month: 'short', year: 'numeric' })} · {o.user_id && buyerNames[o.user_id] ? buyerNames[o.user_id] : t('reviewsClientFallback')}</div>
+                          <div style={{ fontSize: 'var(--text-caption)', color: '#667085' }}>{formatDate(o.latest, language, { day: 'numeric', month: 'short', year: 'numeric' })} · {o.buyer_name ?? t('reviewsClientFallback')}</div>
                           <div style={{ fontSize: 'var(--text-caption)', color: '#344054', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.names.join(', ')}</div>
                           <div style={{ fontSize: 'var(--text-small)', fontWeight: 700, color: '#131A18' }}>{formatPrice(o.amount)}</div>
                         </div>
@@ -458,13 +456,12 @@ function StatusBadge({ status, t }: { status: string; t: (key: any) => string })
   )
 }
 
-function ActivityRow({ o, buyerNames, language, t }: {
-  o: { order_id: string; latest: string; status: string; user_id: string | null; names: string[]; amount: number }
-  buyerNames: Record<string, string>
+function ActivityRow({ o, language, t }: {
+  o: { order_id: string; latest: string; status: string; user_id: string | null; buyer_name: string | null; names: string[]; amount: number }
   language: string
   t: (key: any, params?: Record<string, string | number>) => string
 }) {
-  const buyer = o.user_id && buyerNames[o.user_id] ? buyerNames[o.user_id] : t('reviewsClientFallback')
+  const buyer = o.buyer_name ?? t('reviewsClientFallback')
   return (
     <tr style={{ borderBottom: '1px solid #F2F4F7' }}>
       <td style={{ padding: '9px 10px', fontSize: 'var(--text-caption)', color: '#475467', whiteSpace: 'nowrap' }}>{formatDate(o.latest, language as any, { day: 'numeric', month: 'short', year: 'numeric' })}</td>
