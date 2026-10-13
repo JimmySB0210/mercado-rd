@@ -10,6 +10,7 @@ import { getCategoryName } from '@/lib/utils'
 import type { Category } from '@/types/database.types'
 import type { VendorWizardFormData } from './vendorWizardTypes'
 import { SaveErrorBox } from './sharedUI'
+import { formatPhone } from '@/lib/phone'
 
 interface ProvinceOption { id: number; name: string }
 
@@ -99,7 +100,7 @@ export function Step6Review({ data, provinces, categories, onEditStep, onSubmit,
         <Row label="Nombre del negocio" value={data.businessName || '—'} />
         <Row label="Razón social" value={data.legalName || '—'} />
         <Row label="Contacto" value={data.contactFullName || '—'} />
-        <Row label="WhatsApp" value={data.whatsapp || '—'} />
+        <Row label="WhatsApp" value={formatPhone(data.whatsapp) || '—'} />
         <Row label="Ubicación" value={[provinceName, data.municipio, data.sector].filter(Boolean).join(', ') || '—'} />
         <Row label="Dirección" value={data.address || '—'} />
         <Row label="Tienda física" value={yesNoLabel(data.hasPhysicalStore)} />

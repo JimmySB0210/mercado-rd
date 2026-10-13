@@ -16,6 +16,7 @@ import { VendorOptionLabel } from '@/components/vendor/VendorOptionLabel'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
 import { getCategoryName } from '@/lib/utils'
+import { formatPhone } from '@/lib/phone'
 
 interface Props {
   vendors: any[]
@@ -134,7 +135,7 @@ export function AdminProveedoresContent({ vendors, selectedVendor, selectedVendo
                 <p style={sectionLabelStyle}>{t('contactSectionLabel')}</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 'var(--text-small)', color: '#333' }}>
                   {selectedVendor.contact_full_name && <p>👤 {selectedVendor.contact_full_name}</p>}
-                  {selectedVendor.whatsapp && <p>💬 WhatsApp: {selectedVendor.whatsapp}</p>}
+                  {selectedVendor.whatsapp && <p>💬 WhatsApp: {formatPhone(selectedVendor.whatsapp)}</p>}
                   {selectedVendor.instagram && <p>📷 Instagram: {selectedVendor.instagram}</p>}
                   {selectedVendor.address && <p>📍 {selectedVendor.address}{selectedVendor.municipio && `, ${selectedVendor.municipio}`}{selectedVendor.sector && ` (${selectedVendor.sector})`}</p>}
                   {!selectedVendor.contact_full_name && !selectedVendor.whatsapp && !selectedVendor.instagram && !selectedVendor.address && (

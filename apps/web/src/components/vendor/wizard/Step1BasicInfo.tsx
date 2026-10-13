@@ -4,7 +4,11 @@
 // Ruta: src/components/vendor/wizard/Step1BasicInfo.tsx
 // ============================================================
 
+import { useState } from 'react'
 import { BRAND } from '@/lib/colors'
+import { useTranslation } from '@/lib/hooks/useTranslation'
+import { formatPhone, normalizePhone, PHONE_INPUT_PROPS, PHONE_PLACEHOLDER } from '@/lib/phone'
+import { helperTextStyle } from './sharedUI'
 import type { VendorWizardFormData } from './vendorWizardTypes'
 
 interface ProvinceOption { id: number; name: string }
@@ -71,6 +75,18 @@ function YesNoToggle({ label, value, onChange }: { label: string; value: boolean
 }
 
 export function Step1BasicInfo({ data, updateData, provinces, onNext, saving, errors, saveError }: Props) {
+  const { t: tc } = useTranslation('common')
+  // Validación al salir del campo; la del envío la hace VendorRegisterWizard
+  // (errors.whatsapp). Si es válido se reescribe como 809-555-1234.
+  const [whatsappBlurError, setWhatsappBlurError] = useState<string | null>(null)
+  const whatsappError = whatsappBlurError ?? errors.whatsapp ?? null
+  const handleWhatsappBlur = () => {
+    if (!data.whatsapp.trim()) { setWhatsappBlurError(null); return }
+    if (!normalizePhone(data.whatsapp)) { setWhatsappBlurError(tc('phoneInvalid')); return }
+    setWhatsappBlurError(null)
+    updateData({ whatsapp: formatPhone(data.whatsapp) })
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div>
@@ -107,12 +123,17 @@ export function Step1BasicInfo({ data, updateData, provinces, onNext, saving, er
       <div>
         <label style={labelStyle}>WhatsApp (opcional)</label>
         <input
-          style={errors.whatsapp ? errorInputStyle : inputStyle}
+          {...PHONE_INPUT_PROPS}
+          style={whatsappError ? errorInputStyle : inputStyle}
           value={data.whatsapp}
-          onChange={e => updateData({ whatsapp: e.target.value })}
-          placeholder="809-555-5555"
+          onChange={e => { updateData({ whatsapp: e.target.value }); setWhatsappBlurError(null) }}
+          onBlur={handleWhatsappBlur}
+          aria-invalid={!!whatsappError}
+          placeholder={PHONE_PLACEHOLDER}
         />
-        {errors.whatsapp && <p style={fieldErrorStyle}>{errors.whatsapp}</p>}
+        {whatsappError
+          ? <p style={fieldErrorStyle}>{whatsappError}</p>
+          : <p style={{ ...helperTextStyle, marginTop: 6 }}>{tc('whatsappHelp')}</p>}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>

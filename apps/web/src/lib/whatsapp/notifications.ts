@@ -12,6 +12,7 @@
 // ============================================================
 
 import type { Order } from '@/types'
+import { normalizePhone } from '@/lib/phone'
 
 // ─── Validación de configuración ────────────────────────────
 const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID
@@ -40,25 +41,10 @@ type WATemplate =
   | 'payment_received'
   | 'review_request'
 
-// ─── Validación de formato de teléfono dominicano ───────────
-// Acepta: 8095551234, 809-555-1234, (809) 555-1234, etc.
-// Normaliza a 10 dígitos antes de anteponer el +1
-function normalizePhone(raw: string): string | null {
-  const digits = raw.replace(/\D/g, '')
+// ─── Teléfono dominicano ─────────────────────────────────────
+// normalizePhone viene de lib/phone.ts (misma regla que la base): el
+// canónico 1809XXXXXXX o null si el número no es válido (no se envía).
 
-  // Ya viene con código de país (11 dígitos empezando en 1)
-  if (digits.length === 11 && digits.startsWith('1')) {
-    return digits
-  }
-  // Formato local de 10 dígitos (809/829/849 + 7 dígitos)
-  if (digits.length === 10) {
-    return `1${digits}`
-  }
-
-  return null // formato irreconocible — no enviar
-}
-
-// ─── Enviar mensaje template ─────────────────────────────────
 async function sendTemplate(
   to: string,
   template: WATemplate,

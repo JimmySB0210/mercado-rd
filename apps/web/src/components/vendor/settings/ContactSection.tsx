@@ -7,7 +7,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { validatePhone } from '@/lib/validation'
+import { usePhoneField } from '@/lib/hooks/usePhoneField'
+import { useTranslation } from '@/lib/hooks/useTranslation'
+import { PHONE_PLACEHOLDER } from '@/lib/phone'
 import { SectionCard, SaveSectionButton } from './SectionCard'
 
 interface Props {
@@ -26,27 +28,26 @@ export function ContactSection({ vendorId, initial, onRegisterSave, hideOwnButto
   const router = useRouter()
   const supabase = createClient()
 
-  const [whatsapp, setWhatsapp] = useState(initial.whatsapp)
+  const { t: tc } = useTranslation('common')
+  // Se guarda canónico (1809XXXXXXX); se muestra y edita como 809-555-1234.
+  const whatsappField = usePhoneField(initial.whatsapp)
+  const validateWhatsapp = whatsappField.validate
   const [instagram, setInstagram] = useState(initial.instagram)
-  const [whatsappError, setWhatsappError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState(false)
 
   const handleSave = useCallback(async () => {
     setError(null)
-    setWhatsappError(null)
     setSuccess(false)
 
-    if (whatsapp.trim().length > 0) {
-      const whatsappErr = validatePhone(whatsapp)
-      if (whatsappErr) { setWhatsappError(whatsappErr); return false }
-    }
+    const whatsapp = validateWhatsapp()
+    if (whatsapp === false) return false
 
     setSaving(true)
     const { error: updateError } = await supabase
       .from('vendors')
-      .update({ whatsapp: whatsapp.trim() || null, instagram: instagram.trim() || null })
+      .update({ whatsapp, instagram: instagram.trim() || null })
       .eq('id', vendorId)
     setSaving(false)
 
@@ -58,7 +59,7 @@ export function ContactSection({ vendorId, initial, onRegisterSave, hideOwnButto
     setSuccess(true)
     router.refresh()
     return true
-  }, [whatsapp, instagram, vendorId, supabase, router])
+  }, [validateWhatsapp, instagram, vendorId, supabase, router])
 
   useEffect(() => {
     onRegisterSave?.(handleSave)
@@ -68,10 +69,12 @@ export function ContactSection({ vendorId, initial, onRegisterSave, hideOwnButto
   return (
     <SectionCard title="Contacto">
       <div style={{ marginBottom: 12 }}>
-        <label style={labelStyle}>WhatsApp (con código de país, sin +)</label>
-        <input value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="18095550000"
-          style={{ ...inputStyle, border: `1px solid ${whatsappError ? '#c00' : '#ddd'}` }} />
-        {whatsappError && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: '#c00', marginTop: 6 }}>{whatsappError}</p>}
+        <label style={labelStyle}>WhatsApp</label>
+        <input {...whatsappField.inputProps} placeholder={PHONE_PLACEHOLDER}
+          style={{ ...inputStyle, border: `1px solid ${whatsappField.error ? '#c00' : '#ddd'}` }} />
+        {whatsappField.error
+          ? <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: '#c00', marginTop: 6 }}>{whatsappField.error}</p>
+          : <p style={{ fontSize: 'var(--text-small)', color: '#666', marginTop: 6 }}>{tc('whatsappHelp')}</p>}
       </div>
 
       <div>

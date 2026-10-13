@@ -12,13 +12,13 @@ export const checkout = {
 
   deliveryAddressHeading: 'Delivery address',
   fullNamePlaceholder: 'Full name *',
-  phonePlaceholder: 'Phone *',
+  phonePlaceholder: 'Phone * (809-555-1234)',
   addressPlaceholder: 'Full address *',
   selectProvincePlaceholder: 'Select your province *',
   notesPlaceholder: 'Delivery instructions (optional)',
   isForSomeoneElseLabel: 'This is for someone else',
   recipientNamePlaceholder: "Recipient's name *",
-  recipientPhonePlaceholder: "Recipient's phone *",
+  recipientPhonePlaceholder: "Recipient's phone * (809-555-1234)",
   recipientNameRequiredError: "Enter the recipient's name (at least 3 characters)",
   recipientPhoneRequiredError: "Enter the recipient's phone number",
 

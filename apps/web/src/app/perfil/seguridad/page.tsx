@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Navbar } from '@/components/shop/Navbar'
 import { useTranslation } from '@/lib/hooks/useTranslation'
-import { validatePhone } from '@/lib/validation'
+import { usePhoneField } from '@/lib/hooks/usePhoneField'
 import { BRAND } from '@/lib/colors'
 
 interface DeletionBlockers {
@@ -23,6 +23,7 @@ export default function SecurityPage() {
   const router = useRouter()
   const supabase = createClient()
   const { t } = useTranslation('profile')
+  const { t: tc } = useTranslation('common')
 
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
@@ -41,7 +42,7 @@ export default function SecurityPage() {
   const [emailSuccess, setEmailSuccess] = useState(false)
 
   // Teléfono
-  const [phoneNew, setPhoneNew] = useState('')
+  const phoneField = usePhoneField()
   const [phoneSaving, setPhoneSaving] = useState(false)
   const [phoneError, setPhoneError] = useState<string | null>(null)
   const [phoneSuccess, setPhoneSuccess] = useState(false)
@@ -160,16 +161,18 @@ export default function SecurityPage() {
     setPhoneError(null)
     setPhoneSuccess(false)
 
-    const validationError = validatePhone(phoneNew)
-    if (validationError) {
-      setPhoneError(validationError)
+    // Aquí el número es obligatorio: vacío también cuenta como inválido.
+    const phone = phoneField.validate()
+    if (phone === false) return
+    if (phone === null) {
+      setPhoneError(tc('phoneInvalid'))
       return
     }
 
     setPhoneSaving(true)
     // Validación de formato la repite el propio RPC del lado del
     // servidor — esto es solo feedback inmediato, no la única barrera.
-    const { error } = await supabase.rpc('update_own_phone', { p_phone: phoneNew.trim() })
+    const { error } = await supabase.rpc('update_own_phone', { p_phone: phone })
     setPhoneSaving(false)
 
     if (error) {
@@ -179,7 +182,7 @@ export default function SecurityPage() {
     }
 
     setPhoneSuccess(true)
-    setPhoneNew('')
+    phoneField.reset()
   }
 
   const buildBlockersMessage = (blockers: DeletionBlockers): string => {
@@ -423,13 +426,14 @@ export default function SecurityPage() {
           <h2 className="text-sm font-semibold text-gray-700 mb-3">{t('changePhoneTitle')}</h2>
 
           <form onSubmit={handlePhoneSubmit} className="space-y-3">
-            <input
-              type="tel"
-              value={phoneNew}
-              onChange={e => setPhoneNew(e.target.value)}
-              placeholder={t('newPhonePlaceholder')}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
-            />
+            <div>
+              <input
+                {...phoneField.inputProps}
+                placeholder={t('newPhonePlaceholder')}
+                className={`w-full border ${phoneField.error ? 'border-red-400' : 'border-gray-200'} rounded-lg px-4 py-2.5 text-sm outline-none`}
+              />
+              {phoneField.error && <p className="mt-1 text-xs font-medium text-red-600">{phoneField.error}</p>}
+            </div>
 
             {phoneError && (
               <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2">

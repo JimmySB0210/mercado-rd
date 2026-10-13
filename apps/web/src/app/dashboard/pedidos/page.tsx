@@ -20,6 +20,7 @@ import { formatDate } from '@/lib/utils'
 import { BRAND } from '@/lib/colors'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import type { DashboardDict } from '@/lib/i18n/es/dashboard'
+import { formatPhone } from '@/lib/phone'
 
 interface OrderRow {
   order_id: string
@@ -210,14 +211,14 @@ export default function VendorOrdersPage() {
         </div>
         <div>
           <p style={{ fontSize: 'var(--text-caption)', color: '#818F98', textTransform: 'uppercase', marginBottom: 4 }}>{t('contactLabel')}</p>
-          <p style={{ fontSize: 'var(--text-small)', color: '#333' }}>{order.buyer_phone || t('notAvailable')}</p>
+          <p style={{ fontSize: 'var(--text-small)', color: '#333' }}>{formatPhone(order.buyer_phone) || t('notAvailable')}</p>
           <p style={{ fontSize: 'var(--text-caption)', color: '#818F98' }}>{PAYMENT_LABELS[order.payment_method] ?? order.payment_method}</p>
         </div>
       </div>
 
       {order.recipient_name && (
         <div style={{ marginBottom: 12, padding: 10, background: '#EFF6FF', borderRadius: 8, fontSize: 'var(--text-caption)', color: '#1e3a8a' }}>
-          👤 {t('recipientBanner', { buyer: order.buyer_name, recipient: order.recipient_name, phone: order.recipient_phone ?? t('notAvailable') })}
+          👤 {t('recipientBanner', { buyer: order.buyer_name, recipient: order.recipient_name, phone: formatPhone(order.recipient_phone) || t('notAvailable') })}
         </div>
       )}
 

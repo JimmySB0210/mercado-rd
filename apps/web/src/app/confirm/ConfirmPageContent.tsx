@@ -11,6 +11,7 @@
 import { DownloadInvoiceButton } from '@/components/order/DownloadInvoiceButton'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { formatPrice } from '@/types/database.types'
+import { whatsappLink } from '@/lib/phone'
 import type { InvoiceData } from '@/lib/invoice/generateInvoice'
 
 interface OrderItem {
@@ -60,6 +61,9 @@ export function ConfirmPageContent({
   subtotalRdp, deliveryRdp, itbisRdp, totalRdp, vendorsWithWhatsapp, invoiceData,
 }: Props) {
   const { t } = useTranslation('checkout')
+  const vendorContacts = vendorsWithWhatsapp
+    .map(v => ({ business_name: v.business_name, href: whatsappLink(v.whatsapp, `Hola, tengo una pregunta sobre mi pedido #RD-${shortId}`) }))
+    .filter((v): v is { business_name: string; href: string } => v.href !== null)
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
@@ -145,17 +149,18 @@ export function ConfirmPageContent({
         </div>
       </div>
 
-      {/* Contactar vendedor(es) */}
-      {vendorsWithWhatsapp.length > 0 && (
+      {/* Contactar vendedor(es) — solo los que tienen un número válido
+          (whatsappLink devuelve null si no; nunca un link roto). */}
+      {vendorContacts.length > 0 && (
         <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-4">
           <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            {vendorsWithWhatsapp.length > 1 ? t('contactVendorHeadingOther') : t('contactVendorHeadingOne')}
+            {vendorContacts.length > 1 ? t('contactVendorHeadingOther') : t('contactVendorHeadingOne')}
           </h2>
           <div className="flex flex-col gap-2">
-            {vendorsWithWhatsapp.map(vendor => (
+            {vendorContacts.map(vendor => (
               <a
                 key={vendor.business_name}
-                href={`https://wa.me/${vendor.whatsapp}?text=${encodeURIComponent(`Hola, tengo una pregunta sobre mi pedido #RD-${shortId}`)}`}
+                href={vendor.href}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-1.5 w-full border border-green-500 text-green-600 text-sm font-medium py-2.5 rounded-lg hover:bg-green-50 transition-colors no-underline"

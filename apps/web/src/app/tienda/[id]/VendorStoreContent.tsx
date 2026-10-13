@@ -24,6 +24,7 @@ import { useHasVariantsMap } from '@/lib/hooks/useHasVariantsMap'
 import { useOwnVendorId } from '@/lib/hooks/useOwnVendorId'
 import { MIN_SAMPLE_SIZE } from '@/lib/hooks/useVendorTrustStats'
 import { getCategoryName } from '@/lib/utils'
+import { whatsappLink } from '@/lib/phone'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductReviewsList, type ReviewViewModel } from '@/components/shop/ProductReviewsList'
 import { getVisibleRating, getVisibleSales } from '@/components/shop/VendorRealStatsLine'
@@ -65,6 +66,8 @@ export function VendorStoreContent({ data }: { data: VendorStoreData }) {
   const reviewsText = `${reviewCount} ${reviewCount === 1 ? t('reviewCountSingular') : t('reviewCountPlural')}`
 
   const location = [vendor.provinceName, vendor.municipio, vendor.sector].filter(Boolean).join(' · ')
+  // null si el número no es válido: entonces no se muestra el botón.
+  const storeWhatsappHref = whatsappLink(vendor.whatsapp, `Hola, vi tu tienda ${vendor.businessName} en MercadoRD`)
   const otherCategories = categories.filter(c => c.id !== vendor.mainCategory?.id)
 
   // Capacidades declaradas
@@ -163,9 +166,9 @@ export function VendorStoreContent({ data }: { data: VendorStoreData }) {
             <Package size={16} aria-hidden="true" />
             {t('viewProductsButton')}
           </a>
-          {vendor.whatsapp && (
+          {storeWhatsappHref && (
             <a
-              href={`https://wa.me/${vendor.whatsapp}?text=${encodeURIComponent(`Hola, vi tu tienda ${vendor.businessName} en MercadoRD`)}`}
+              href={storeWhatsappHref}
               target="_blank"
               rel="noopener noreferrer"
               className="store-outline-btn"

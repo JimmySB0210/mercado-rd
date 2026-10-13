@@ -8,6 +8,7 @@
 // aislado — así el Paso 6 (revisión) puede leer todo lo ingresado.
 // ============================================================
 
+import { formatPhone } from '@/lib/phone'
 import type {
   BusinessType, ManufacturingStatus, ProductionTimeRange, CustomerType,
   VendorService, CustomizationOption, Vendor,
@@ -57,7 +58,8 @@ export function buildInitialWizardData(vendor: Vendor | null, m2m?: VendorWizard
     businessName: vendor?.business_name ?? '',
     legalName: vendor?.legal_name ?? '',
     contactFullName: vendor?.contact_full_name ?? '',
-    whatsapp: vendor?.whatsapp ?? '',
+    // Se guarda canónico (1809XXXXXXX); en el formulario se muestra 809-555-1234.
+    whatsapp: formatPhone(vendor?.whatsapp),
     provinceId: vendor?.province_id ? String(vendor.province_id) : '',
     municipio: vendor?.municipio ?? '',
     sector: vendor?.sector ?? '',

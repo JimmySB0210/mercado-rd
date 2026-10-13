@@ -21,6 +21,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { validateText, validatePhone } from '@/lib/validation'
+import { normalizePhone } from '@/lib/phone'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
 import type { Vendor, Category } from '@/types/database.types'
 import { WizardProgressBar } from './wizard/WizardProgressBar'
@@ -51,6 +53,7 @@ const MANUFACTURES = (status: VendorWizardFormData['manufacturingStatus']) =>
 export function VendorRegisterWizard({ userId, initialVendor, initialStep, initialM2M, provinces, categories }: Props) {
   const router = useRouter()
   const supabase = createClient()
+  const { t: tc } = useTranslation('common')
 
   const [step, setStep] = useState(Math.min(Math.max(initialStep, 1), TOTAL_STEPS))
   const [vendorId, setVendorId] = useState<string | null>(initialVendor?.id ?? null)
@@ -86,7 +89,7 @@ export function VendorRegisterWizard({ userId, initialVendor, initialStep, initi
     if (addressErr) errors.address = addressErr
     if (data.whatsapp.trim().length > 0) {
       const whatsappErr = validatePhone(data.whatsapp)
-      if (whatsappErr) errors.whatsapp = whatsappErr
+      if (whatsappErr) errors.whatsapp = tc(whatsappErr)
     }
 
     setStep1Errors(errors)
@@ -98,7 +101,7 @@ export function VendorRegisterWizard({ userId, initialVendor, initialStep, initi
       business_name: data.businessName.trim(),
       legal_name: data.legalName.trim() || null,
       contact_full_name: data.contactFullName.trim() || null,
-      whatsapp: data.whatsapp.trim() || null,
+      whatsapp: normalizePhone(data.whatsapp),
       province_id: Number(data.provinceId),
       municipio: data.municipio.trim() || null,
       sector: data.sector.trim() || null,

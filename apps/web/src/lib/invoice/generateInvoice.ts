@@ -13,6 +13,7 @@ import jsPDF from 'jspdf'
 import { formatPrice } from '@/types/database.types'
 import { formatDate } from '@/lib/utils'
 import type { Language } from '@/lib/store/language'
+import { formatPhone } from '@/lib/phone'
 
 export interface InvoiceData {
   orderId: string
@@ -112,7 +113,7 @@ export function generateInvoicePdf(data: InvoiceData, language: Language): void 
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(30, 30, 30)
     doc.text(
-      data.recipientPhone ? `Recibe: ${data.recipientName} (${data.recipientPhone})` : `Recibe: ${data.recipientName}`,
+      data.recipientPhone ? `Recibe: ${data.recipientName} (${formatPhone(data.recipientPhone)})` : `Recibe: ${data.recipientName}`,
       marginX, y
     )
     doc.setFont('helvetica', 'normal')

@@ -202,7 +202,7 @@ export const profile = {
   emailChangeSuccess: '✓ Vérifiez votre boîte mail pour confirmer le changement',
   updateEmailButton: "Mettre à jour l'email",
   changePhoneTitle: 'Changer de téléphone',
-  newPhonePlaceholder: 'Nouveau téléphone (809/829/849)',
+  newPhonePlaceholder: 'Nouveau téléphone (809-555-1234)',
   phoneChangeSuccess: '✓ Téléphone mis à jour avec succès',
   updatePhoneButton: 'Mettre à jour le téléphone',
 

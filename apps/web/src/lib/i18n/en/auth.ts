@@ -29,7 +29,7 @@ export const auth = {
   fullNamePlaceholder: 'Your first and last name',
   phoneLabel: 'Phone',
   phoneOptional: '(optional)',
-  phonePlaceholder: '809-555-0000',
+  phonePlaceholder: '809-555-1234',
   registerPasswordPlaceholder: 'At least 6 characters',
   confirmPasswordLabel: 'Confirm password',
   confirmPasswordPlaceholder: 'Repeat your password',

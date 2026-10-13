@@ -69,4 +69,8 @@ export const common = {
   ageConfirmationBody: 'Ce contenu est réservé aux personnes de 18 ans ou plus. Confirmez-vous avoir 18 ans ou plus ?',
   ageConfirmationContinue: 'Continuer',
   ageConfirmationBack: 'Retour',
+
+  // Teléfonos (lib/phone.ts, lib/hooks/usePhoneField.ts)
+  phoneInvalid: 'Saisissez un numéro dominicain valide (809, 829 ou 849)',
+  whatsappHelp: "C'est le numéro que vos clients utiliseront pour vous écrire sur WhatsApp",
 } satisfies CommonDict

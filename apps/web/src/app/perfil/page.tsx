@@ -13,6 +13,7 @@ import { PushNotificationButton } from '@/components/shop/PushNotificationButton
 import { User, Mail, Phone, MapPin, ShoppingBag, Gift, LogOut } from 'lucide-react'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
+import { formatPhone } from '@/lib/phone'
 
 export default function PerfilPage() {
   const { user, profile, loading, signOut } = useAuth()
@@ -121,7 +122,7 @@ export default function PerfilPage() {
               <div>
                 <p className="text-xs text-gray-400">{t('phoneLabel')}</p>
                 <p className="text-sm font-medium text-gray-900">
-                  {profile?.phone || '—'}
+                  {formatPhone(profile?.phone) || '—'}
                 </p>
               </div>
             </div>

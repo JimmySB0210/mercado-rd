@@ -4,7 +4,7 @@
 // Ruta: src/app/checkout/page.tsx
 // ============================================================
 
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ShieldCheck, ChevronDown } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
@@ -19,6 +19,7 @@ import type { CartItem } from '@/types'
 import { notifyOrderConfirmed } from '@/lib/whatsapp/notifications'
 import { processPayment, type PaymentResult } from '@/lib/payments/azul'
 import { DANGEROUS_PATTERN } from '@/lib/validation'
+import { formatPhone, normalizePhone, PHONE_INPUT_PROPS } from '@/lib/phone'
 import { qualifiesForFreeShipping } from '@/lib/shipping'
 import { resolveKnownError, KNOWN_ORDER_ERRORS, type SupabaseErrorLike } from '@/lib/orderErrors'
 import { useTranslation } from '@/lib/hooks/useTranslation'
@@ -40,6 +41,7 @@ const PAYMENT_METHOD_KEYS: { id: string; labelKey: keyof CheckoutDict; emoji: st
 // cambio de comportamiento, solo satisface el requisito de build.
 function CheckoutPageContent() {
   const { t } = useTranslation('checkout')
+  const { t: tc } = useTranslation('common')
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, profile } = useAuth()
@@ -80,7 +82,7 @@ function CheckoutPageContent() {
 
   const [form, setForm] = useState({
     fullName:   profile?.full_name || '',
-    phone:      profile?.phone || '',
+    phone:      formatPhone(profile?.phone),
     address:    '',
     province:   '',
     notes:      '',
@@ -92,10 +94,26 @@ function CheckoutPageContent() {
     cardExpiration: '',
     cardCvc:        '',
   })
+  // El perfil suele llegar después del primer render (useAuth carga en
+  // segundo plano), así que el useState inicial casi nunca lo ve. Cuando
+  // llega, se rellenan nombre y teléfono, salvo en los campos que el
+  // usuario ya haya editado (no se pisa lo que escribió).
+  const editedFieldsRef = useRef(new Set<string>())
+  useEffect(() => {
+    if (!profile) return
+    setForm(f => ({
+      ...f,
+      fullName: editedFieldsRef.current.has('fullName') ? f.fullName : (profile.full_name || f.fullName),
+      phone: editedFieldsRef.current.has('phone') ? f.phone : (formatPhone(profile.phone) || f.phone),
+    }))
+  }, [profile])
+
   const [loading, setLoading] = useState(false)
   const [error, setError]   = useState<string | null>(null)
   const [rateLimited, setRateLimited] = useState(false)
   const [addressError, setAddressError] = useState<string | null>(null)
+  // Errores en línea de los teléfonos (comprador y quien recibe).
+  const [phoneErrors, setPhoneErrors] = useState<{ phone: string | null; recipientPhone: string | null }>({ phone: null, recipientPhone: null })
   const [notesError, setNotesError] = useState<string | null>(null)
   const [provinces, setProvinces] = useState<Province[]>([])
 
@@ -189,6 +207,24 @@ function CheckoutPageContent() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
+    editedFieldsRef.current.add(e.target.name)
+    if (e.target.name === 'phone' || e.target.name === 'recipientPhone') {
+      const name = e.target.name
+      setPhoneErrors(prev => (prev[name] ? { ...prev, [name]: null } : prev))
+    }
+  }
+
+  // Al salir del campo: error si no es un número dominicano válido; si
+  // lo es, se reescribe como 809-555-1234 (lo que se guarda).
+  const handlePhoneBlur = (name: 'phone' | 'recipientPhone') => {
+    const value = form[name]
+    if (!value.trim()) return
+    if (!normalizePhone(value)) {
+      setPhoneErrors(prev => ({ ...prev, [name]: tc('phoneInvalid') }))
+      return
+    }
+    setPhoneErrors(prev => ({ ...prev, [name]: null }))
+    setForm(f => ({ ...f, [name]: formatPhone(value) }))
   }
 
   const handleForSomeoneElseToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -242,6 +278,15 @@ function CheckoutPageContent() {
         setError(t('recipientPhoneRequiredError'))
         return
       }
+    }
+    const buyerPhoneInvalid = !normalizePhone(form.phone)
+    const recipientPhoneInvalid = form.isForSomeoneElse && !normalizePhone(form.recipientPhone)
+    if (buyerPhoneInvalid || recipientPhoneInvalid) {
+      setPhoneErrors({
+        phone: buyerPhoneInvalid ? tc('phoneInvalid') : null,
+        recipientPhone: recipientPhoneInvalid ? tc('phoneInvalid') : null,
+      })
+      return
     }
     if (form.payMethod === 'azul' && (!form.cardNumber || !form.cardExpiration || !form.cardCvc)) {
       setError(t('cardDetailsRequired'))
@@ -370,7 +415,7 @@ function CheckoutPageContent() {
         p_items: itemsPayload,
         p_coupon_id: appliedCoupon?.coupon_id ?? null,
         p_recipient_name: form.isForSomeoneElse ? form.recipientName.trim() : null,
-        p_recipient_phone: form.isForSomeoneElse ? form.recipientPhone.trim() : null,
+        p_recipient_phone: form.isForSomeoneElse ? normalizePhone(form.recipientPhone) : null,
       })
 
       if (rpcError) {
@@ -478,13 +523,19 @@ function CheckoutPageContent() {
                 placeholder={t('fullNamePlaceholder')}
                 style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
               />
-              <input
-                name="phone"
-                value={form.phone}
-                onChange={handleChange}
-                placeholder={t('phonePlaceholder')}
-                style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
-              />
+              <div>
+                <input
+                  name="phone"
+                  {...PHONE_INPUT_PROPS}
+                  value={form.phone}
+                  onChange={handleChange}
+                  onBlur={() => handlePhoneBlur('phone')}
+                  aria-invalid={!!phoneErrors.phone}
+                  placeholder={t('phonePlaceholder')}
+                  style={{ width: '100%', border: `1px solid ${phoneErrors.phone ? BRAND.red : 'var(--color-border)'}`, borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
+                />
+                {phoneErrors.phone && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, margin: '4px 0 0' }}>{phoneErrors.phone}</p>}
+              </div>
               <div>
                 <input
                   name="address"
@@ -527,13 +578,19 @@ function CheckoutPageContent() {
                     placeholder={t('recipientNamePlaceholder')}
                     style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
                   />
-                  <input
-                    name="recipientPhone"
-                    value={form.recipientPhone}
-                    onChange={handleChange}
-                    placeholder={t('recipientPhonePlaceholder')}
-                    style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
-                  />
+                  <div>
+                    <input
+                      name="recipientPhone"
+                      {...PHONE_INPUT_PROPS}
+                      value={form.recipientPhone}
+                      onChange={handleChange}
+                      onBlur={() => handlePhoneBlur('recipientPhone')}
+                      aria-invalid={!!phoneErrors.recipientPhone}
+                      placeholder={t('recipientPhonePlaceholder')}
+                      style={{ width: '100%', border: `1px solid ${phoneErrors.recipientPhone ? BRAND.red : 'var(--color-border)'}`, borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
+                    />
+                    {phoneErrors.recipientPhone && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, margin: '4px 0 0' }}>{phoneErrors.recipientPhone}</p>}
+                  </div>
                 </>
               )}
 

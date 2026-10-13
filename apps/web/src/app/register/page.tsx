@@ -10,6 +10,7 @@ import Script from 'next/script'
 import Link from 'next/link'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { usePhoneField } from '@/lib/hooks/usePhoneField'
 import { BRAND } from '@/lib/colors'
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
@@ -55,10 +56,11 @@ function RegisterForm() {
   const [form, setForm] = useState({
     fullName: '',
     email: '',
-    phone: '',
     password: '',
     confirmPassword: '',
   })
+  // Opcional, pero si se escribe debe ser un número dominicano válido.
+  const phoneField = usePhoneField()
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -127,6 +129,9 @@ function RegisterForm() {
     e.preventDefault()
     setError(null)
 
+    const phone = phoneField.validate()
+    if (phone === false) return
+
     if (form.password !== form.confirmPassword) {
       setError(t('passwordMismatch'))
       return
@@ -166,10 +171,10 @@ function RegisterForm() {
     }
 
     const { error } = await signUpWithEmail(
-      form.email,
+      form.email.trim(),
       form.password,
-      form.fullName,
-      form.phone || undefined
+      form.fullName.trim(),
+      phone ?? undefined
     )
 
     if (error) {
@@ -296,12 +301,11 @@ function RegisterForm() {
               </label>
               <input
                 name="phone"
-                type="tel"
-                value={form.phone}
-                onChange={handleChange}
+                {...phoneField.inputProps}
                 placeholder={t('phonePlaceholder')}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+                className={`w-full px-4 py-2.5 border ${phoneField.error ? 'border-red-400' : 'border-gray-200'} rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]`}
               />
+              {phoneField.error && <p className="mt-1 text-small font-medium text-red-600">{phoneField.error}</p>}
             </div>
 
             <div>

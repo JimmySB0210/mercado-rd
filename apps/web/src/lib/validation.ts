@@ -8,6 +8,8 @@
 // una capa adicional, no la única.
 // ============================================================
 
+import { normalizePhone } from '@/lib/phone'
+
 export const DANGEROUS_PATTERN = /<|>|script|--|;/i
 
 export function validateText(value: string, field: string, min: number, max: number): string | null {
@@ -25,18 +27,11 @@ export function validateText(value: string, field: string, min: number, max: num
   return null
 }
 
-// Acepta 10 dígitos (809/829/849 + 7 dígitos) o 11 con el código de
-// país "1" delante (formato que usa el link de WhatsApp wa.me).
-export function validatePhone(phone: string): string | null {
-  if (typeof phone !== 'string') return 'El teléfono debe ser texto'
-
-  const digits = phone.replace(/\D/g, '')
-  const validPattern = /^1?(809|829|849)\d{7}$/
-
-  if (!validPattern.test(digits)) {
-    return 'El teléfono debe ser un número dominicano válido (809, 829 u 849)'
-  }
-  return null
+// Valida con la misma regla que la base (lib/phone.ts → normalizePhone).
+// Devuelve una clave del namespace de traducción 'common' (no un texto
+// fijo): quien la muestra la traduce con t(). null = válido.
+export function validatePhone(phone: string): 'phoneInvalid' | null {
+  return normalizePhone(phone) ? null : 'phoneInvalid'
 }
 
 // price en centavos — máximo RD$999,999.99 (99999999 centavos)
