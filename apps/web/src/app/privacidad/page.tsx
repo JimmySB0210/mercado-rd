@@ -23,7 +23,7 @@ export default function PrivacyPage() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
 
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Política de Privacidad</h1>
-        <p className="text-sm text-gray-400 mb-8">Última actualización: 21 de junio de 2026</p>
+        <p className="text-sm text-gray-400 mb-8">Última actualización: 14 de octubre de 2026</p>
 
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-8 text-sm text-amber-800">
           <strong>Documento en revisión.</strong> Este es un borrador inicial conforme a la Ley 172-13 de Protección de Datos Personales de República Dominicana.
@@ -39,6 +39,7 @@ export default function PrivacyPage() {
               <li><strong>Datos de envío:</strong> dirección de entrega, provincia.</li>
               <li><strong>Datos de pago:</strong> procesados directamente por nuestros proveedores certificados (Azul, CardNet) — MercadoRD <strong>no almacena</strong> números completos de tarjeta de crédito/débito en sus propios servidores.</li>
               <li><strong>Datos de uso:</strong> historial de compras, productos vistos, búsquedas realizadas.</li>
+              <li><strong>Documentos de verificación (solo proveedores):</strong> fotos del documento de identidad (anverso y reverso) y una selfie, que se guardan en un almacenamiento privado.</li>
             </ul>
           </section>
 
@@ -91,6 +92,12 @@ export default function PrivacyPage() {
             <p>
               Conservamos tus datos mientras tu cuenta esté activa, y por el período adicional requerido por
               obligaciones legales o fiscales (por ejemplo, registros de transacciones para fines tributarios).
+            </p>
+            <p>
+              Los documentos de verificación de identidad de los proveedores se conservan en un almacenamiento
+              privado, con acceso restringido al equipo de MercadoRD, para prevenir fraudes, atender reclamos y
+              cumplir obligaciones legales. Se conservan aunque la cuenta se cierre, por el tiempo que esas
+              finalidades lo requieran.
             </p>
           </section>
 
