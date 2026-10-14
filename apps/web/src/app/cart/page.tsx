@@ -12,6 +12,9 @@ import { Navbar } from '@/components/shop/Navbar'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { createClient } from '@/lib/supabase/client'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { useLocationStore } from '@/lib/store/location'
+import { useCartQuote, lineProblem, quoteBlocksPurchase } from '@/lib/cart/quote'
+import { FREE_SHIPPING_THRESHOLD_RDP } from '@/lib/shipping'
 import Image from 'next/image'
 
 export default function CartPage() {
@@ -43,11 +46,24 @@ export default function CartPage() {
     ? items.filter(i => i.product.vendor_id === ownVendorId)
     : []
   const hasOwnProducts = ownProductItems.length > 0
-  // Mismo umbral que checkout/page.tsx y el RPC create_order_from_cart —
-  // esto es solo una estimación (el checkout calcula el envío real según
-  // provincia), pero debe ser consistente con el aviso de arriba.
-  const FREE_SHIPPING_THRESHOLD_RDP = 250000 // RD$2,500
-  const ENVIO = items.length === 0 ? 0 : subtotal >= FREE_SHIPPING_THRESHOLD_RDP ? 0 : 18000 // RD$180 en centavos
+
+  // Precios, ITBIS y envío los calcula el servidor (quote_cart), con la
+  // misma regla que cobra create_order_from_cart. Si la cotización falla
+  // se muestra la estimación local con una nota; nunca se bloquea el
+  // carrito por eso. El envío solo se sabe con provincia.
+  const { province } = useLocationStore()
+  const { quote, status: quoteStatus } = useCartQuote(items, province?.id ?? null)
+  const quoteMatches = !!quote && quote.lines.length === items.length
+    && quote.lines.every((l, i) => l.product_id === items[i].product.id && l.quantity === items[i].quantity)
+  const q = quoteStatus === 'ready' && quoteMatches ? quote : null
+  const displaySubtotal = q ? q.subtotal_rdp : subtotal
+  const displayItbis = q ? q.itbis_rdp : itbis
+  const freeThreshold = q ? q.free_shipping_threshold_rdp : FREE_SHIPPING_THRESHOLD_RDP
+  const qualifiesFree = q ? q.qualifies_free_shipping : subtotal >= FREE_SHIPPING_THRESHOLD_RDP
+  const deliveryRdp = q ? q.delivery_rdp : null
+  const displayTotal = q ? q.total_rdp : total
+  const lineIssues = q ? quoteBlocksPurchase(q) : false
+  const checkoutBlocked = hasOwnProducts || lineIssues
 
   return (
     <div style={{ minHeight: '100vh', background: BRAND.bg }}>
@@ -73,9 +89,13 @@ export default function CartPage() {
               </a>
             </div>
           ) : (
-            items.map((item) => {
+            items.map((item, index) => {
               const image = item.product.images?.[0]
               const isOwn = ownVendorId != null && item.product.vendor_id === ownVendorId
+              const line = q?.lines.find(l => l.index === index)
+              const problem = lineProblem(line)
+              const unitPrice = line?.unit_price_rdp ?? item.variant_price_rdp ?? item.product.price_rdp
+              const lineTotal = line?.line_total_rdp ?? unitPrice * item.quantity
               return (
                 <div
                   key={`${item.product.id}-${item.variant_id ?? `${item.selected_size}-${item.selected_color}`}`}
@@ -83,7 +103,7 @@ export default function CartPage() {
                   style={{
                     background: 'var(--color-card-bg)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)',
                     padding: 16, marginBottom: 12, display: 'flex', gap: 14, alignItems: 'center',
-                    border: isOwn ? '1px solid #FDBA74' : undefined,
+                    border: isOwn || problem ? '1px solid #FDBA74' : undefined,
                   }}
                 >
                   {/* Imagen */}
@@ -109,8 +129,13 @@ export default function CartPage() {
                       </div>
                     )}
                     <div style={{ fontSize: 'var(--text-caption)', color: BRAND.blue, fontWeight: 600 }}>
-                      RD${((item.variant_price_rdp ?? item.product.price_rdp) / 100).toLocaleString('es-DO')}
+                      RD${(unitPrice / 100).toLocaleString('es-DO')}
                     </div>
+                    {problem && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, fontSize: 'var(--text-badge)', color: '#C2410C', fontWeight: 600 }}>
+                        <AlertTriangle size={12} /> {problem === 'unavailable' ? t('lineUnavailable') : t('onlyNLeft', { count: line?.available_quantity ?? 0 })}
+                      </div>
+                    )}
                     {isOwn && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, fontSize: 'var(--text-badge)', color: '#C2410C', fontWeight: 600 }}>
                         <AlertTriangle size={12} /> {t('ownProductWarning')}
@@ -121,7 +146,7 @@ export default function CartPage() {
                   {/* Acciones */}
                   <div className="cart-item-actions" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, flexShrink: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 'var(--text-price-card)', lineHeight: 'var(--leading-price)', color: BRAND.dark }}>
-                      RD${(((item.variant_price_rdp ?? item.product.price_rdp) * item.quantity) / 100).toLocaleString('es-DO')}
+                      RD${(lineTotal / 100).toLocaleString('es-DO')}
                     </div>
                     <div style={{ display: 'flex', border: '1px solid #E0E0E0', borderRadius: 6, overflow: 'hidden' }}>
                       <button
@@ -161,12 +186,12 @@ export default function CartPage() {
 
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-small)', marginBottom: 8, color: BRAND.dark }}>
                 <span>{t('subtotalLabel', { count: items.reduce((a, i) => a + i.quantity, 0) })}</span>
-                <span>RD${(subtotal / 100).toLocaleString('es-DO')}</span>
+                <span>RD${(displaySubtotal / 100).toLocaleString('es-DO')}</span>
               </div>
 
-              {subtotal < FREE_SHIPPING_THRESHOLD_RDP ? (
+              {!qualifiesFree ? (
                 <div style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: 'var(--color-primary)', background: 'var(--color-primary-subtle)', borderRadius: 'var(--radius-control)', padding: '8px 10px', marginBottom: 12 }}>
-                  {t('freeShippingMissing', { amount: ((FREE_SHIPPING_THRESHOLD_RDP - subtotal) / 100).toLocaleString('es-DO') })}
+                  {t('freeShippingMissing', { amount: (Math.max(0, freeThreshold - displaySubtotal) / 100).toLocaleString('es-DO') })}
                 </div>
               ) : (
                 <div style={{ fontSize: 'var(--text-small)', color: 'var(--color-green)', background: 'var(--color-green-subtle)', borderRadius: 'var(--radius-control)', padding: '8px 10px', marginBottom: 12, fontWeight: 600 }}>
@@ -177,29 +202,35 @@ export default function CartPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-small)', marginBottom: 8, color: BRAND.dark }}>
                 <span>{t('shippingLabel')}</span>
                 <span>
-                  {items.length > 0 && subtotal >= FREE_SHIPPING_THRESHOLD_RDP
+                  {qualifiesFree
                     ? <span style={{ color: 'var(--color-green)', fontWeight: 700 }}>{t('freeBadge')}</span>
-                    : `RD$${(ENVIO / 100).toLocaleString('es-DO')}`}
+                    : deliveryRdp !== null
+                      ? `RD$${(deliveryRdp / 100).toLocaleString('es-DO')}`
+                      : <span style={{ color: BRAND.gray }}>{t('shippingAtCheckout')}</span>}
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-small)', marginBottom: 16, color: BRAND.dark }}>
                 <span>{t('itbisLabel')}</span>
-                <span>RD${(itbis / 100).toLocaleString('es-DO')}</span>
+                <span>RD${(displayItbis / 100).toLocaleString('es-DO')}</span>
               </div>
 
               <div style={{ borderTop: '1px solid #eee', paddingTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontWeight: 700, fontSize: 'var(--text-h4)', marginBottom: 16, color: BRAND.dark }}>
                 <span>{t('totalLabel')}</span>
                 <span style={{ fontSize: 'var(--text-price-card)', fontWeight: 700, lineHeight: 'var(--leading-price)', color: 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}>
-                  RD${((total + ENVIO) / 100).toLocaleString('es-DO')}
+                  RD${(displayTotal / 100).toLocaleString('es-DO')}
                 </span>
               </div>
 
-              {hasOwnProducts ? (
+              {quoteStatus === 'error' && (
+                <div style={{ fontSize: 'var(--text-caption)', color: BRAND.gray, marginTop: -8, marginBottom: 12 }}>{t('estimatedTotalsNote')}</div>
+              )}
+
+              {checkoutBlocked ? (
                 <div
                   style={{ background: '#FFF7ED', border: '1px solid #FDBA74', borderRadius: 'var(--radius-control)', padding: 12, marginBottom: 10, display: 'flex', gap: 8, alignItems: 'flex-start', color: '#C2410C' }}
                 >
                   <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
-                  <span style={{ fontSize: 'var(--text-caption)', fontWeight: 500 }}>{t('checkoutBlockedOwnProducts')}</span>
+                  <span style={{ fontSize: 'var(--text-caption)', fontWeight: 500 }}>{hasOwnProducts ? t('checkoutBlockedOwnProducts') : t('checkoutBlockedLineIssues')}</span>
                 </div>
               ) : (
                 <a

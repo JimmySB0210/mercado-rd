@@ -30,4 +30,11 @@ export const cart = {
 
   paymentTransfer: '🏧 Bank transfer',
   paymentCash: '💵 Cash',
+
+  // Cotización del servidor (lib/cart/quote.ts)
+  shippingAtCheckout: 'Calculated at checkout',
+  lineUnavailable: 'This product is no longer available',
+  onlyNLeft: 'Only {count} left',
+  estimatedTotalsNote: "Estimated totals: we couldn't confirm prices. Checkout shows the final total.",
+  checkoutBlockedLineIssues: 'Review the highlighted products before paying.',
 } satisfies CartDict

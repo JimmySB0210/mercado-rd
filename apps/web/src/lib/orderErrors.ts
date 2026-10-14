@@ -45,7 +45,37 @@ const REVIEW_OWN_PRODUCT: KnownError = {
   key: 'REVIEW_OWN_PRODUCT',
 }
 
-export const KNOWN_ORDER_ERRORS = [SELF_PURCHASE]
+// create_order_from_cart — ERRCODE propios para producto o variante que
+// ya no se pueden comprar.
+const PRODUCT_UNAVAILABLE: KnownError = {
+  matches: err => err.code === 'P0102',
+  key: 'PRODUCT_UNAVAILABLE',
+}
+
+const VARIANT_UNAVAILABLE: KnownError = {
+  matches: err => err.code === 'P0103',
+  key: 'VARIANT_UNAVAILABLE',
+}
+
+// create_order_from_cart — excepciones P0001 sin código propio (mismo
+// criterio que REVIEW_*: se compara el texto conocido).
+const INSUFFICIENT_STOCK: KnownError = {
+  matches: err => !!err.message?.includes('Stock insuficiente'),
+  key: 'INSUFFICIENT_STOCK',
+}
+
+const PRICES_CHANGED: KnownError = {
+  matches: err => !!err.message?.includes('Los precios cambiaron'),
+  key: 'PRICES_CHANGED',
+}
+
+const COUPON_INVALID: KnownError = {
+  matches: err => !!err.message && /cup[oó]n/i.test(err.message),
+  key: 'COUPON_INVALID',
+}
+
+// El orden importa: primero los ERRCODE propios, luego los textos.
+export const KNOWN_ORDER_ERRORS = [SELF_PURCHASE, PRODUCT_UNAVAILABLE, VARIANT_UNAVAILABLE, INSUFFICIENT_STOCK, PRICES_CHANGED, COUPON_INVALID]
 export const KNOWN_REVIEW_ERRORS = [REVIEW_NOT_DELIVERED, REVIEW_OWN_PRODUCT]
 
 export function resolveKnownError(err: SupabaseErrorLike | null | undefined, known: KnownError[]): string | null {

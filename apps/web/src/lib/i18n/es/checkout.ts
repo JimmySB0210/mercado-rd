@@ -96,6 +96,7 @@ export const checkout = {
   thankYouMessage: 'Gracias por comprar en MercadoRD 🇩🇴',
   whatsappConfirmationNotice: 'Recibirás confirmación por WhatsApp en los próximos minutos.',
   deliveryHeading: '📍 ENTREGA',
+  giftAddressProtected: 'Dirección protegida: la tienda la recibe directamente',
   productsHeading: '📦 PRODUCTOS',
   totalPaidLabel: 'Total pagado',
   contactVendorHeadingOne: '📲 CONTACTAR VENDEDOR',
@@ -109,6 +110,32 @@ export const checkout = {
   // DownloadInvoiceButton
   generatingInvoice: 'Generando...',
   downloadInvoice: '📄 Descargar factura',
+
+  // Cotización del servidor, cupones y errores del pedido (lib/cart/quote.ts, lib/orderErrors.ts)
+  lineUnavailable: 'Este producto ya no está disponible',
+  onlyNLeft: 'Solo quedan {count}',
+  itemsBlockedNotice: 'Algunos productos ya no están disponibles o no tienen stock suficiente.',
+  backToCart: 'Volver al carrito',
+  quoteLoadingButton: 'Calculando total...',
+  quoteErrorNotice: 'No pudimos calcular el total de tu pedido.',
+  retryButton: 'Reintentar',
+  quoteFailedSubmit: 'No pudimos confirmar el total. Inténtalo de nuevo; no se hizo ningún cobro.',
+  pricesChangedNotice: 'Los precios o el envío cambiaron, revisa el total antes de pagar.',
+  stockChangedNotice: 'Algunos productos ya no tienen stock suficiente. Revisa tu pedido; no se hizo ningún cobro.',
+  couponLoginRequired: 'Inicia sesión para usar un cupón',
+  couponErrNotFound: 'Este cupón no existe',
+  couponErrExpired: 'Este cupón ya venció',
+  couponErrLimitReached: 'Este cupón ya alcanzó su límite de usos',
+  couponErrMinOrder: 'Este cupón requiere un pedido mínimo de RD${amount}',
+  couponErrRateLimited: 'Demasiados intentos. Espera unos minutos antes de probar otro cupón.',
+  couponErrInvalidTotal: 'No pudimos validar el cupón con el total de este pedido.',
+  couponStoreOnly: 'Este cupón solo aplica a productos de una tienda específica',
+  couponRemovedNotice: 'El cupón ya no es válido para este pedido y se quitó. Revisa el total.',
+  productUnavailableError: 'Uno de los productos ya no está disponible. Revisa tu carrito.',
+  variantUnavailableError: 'Una de las opciones elegidas ya no está disponible. Revisa tu carrito.',
+  insufficientStockError: 'No hay stock suficiente para uno de los productos. Revisa tu carrito.',
+  pricesChangedError: 'Los precios cambiaron. Revisa el total antes de pagar.',
+  couponInvalidError: 'El cupón ya no es válido para este pedido.',
 }
 
 export type CheckoutDict = typeof checkout

@@ -8,7 +8,7 @@ import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ShieldCheck, ChevronDown } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
-import { useCartStore, ITBIS_RATE } from '@/lib/store/cart'
+import { useCartStore } from '@/lib/store/cart'
 import { useExpressCheckoutStore, useExpressCheckoutHydrated } from '@/lib/store/expressCheckout'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { Navbar } from '@/components/shop/Navbar'
@@ -20,7 +20,7 @@ import { notifyOrderConfirmed } from '@/lib/whatsapp/notifications'
 import { processPayment, type PaymentResult } from '@/lib/payments/azul'
 import { DANGEROUS_PATTERN } from '@/lib/validation'
 import { formatPhone, normalizePhone, PHONE_INPUT_PROPS } from '@/lib/phone'
-import { qualifiesForFreeShipping } from '@/lib/shipping'
+import { useCartQuote, fetchCartQuote, lineProblem, quoteBlocksPurchase, type CartQuote } from '@/lib/cart/quote'
 import { resolveKnownError, KNOWN_ORDER_ERRORS, type SupabaseErrorLike } from '@/lib/orderErrors'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import type { CheckoutDict } from '@/lib/i18n/es/checkout'
@@ -32,6 +32,16 @@ const PAYMENT_METHOD_KEYS: { id: string; labelKey: keyof CheckoutDict; emoji: st
   { id: 'transfer', labelKey: 'paymentTransferLabel', emoji: '🏧' },
   { id: 'cash',     labelKey: 'paymentCashLabel',      emoji: '💵' },
 ]
+
+interface AppliedCoupon {
+  valid: true
+  coupon_id: string
+  code: string
+  type: string
+  value: number
+  discount_rdp: number
+  vendor_id: string | null
+}
 
 // FIX URGENTE (2026-10-01): useSearchParams() sin <Suspense> alrededor
 // falla el build de producción real (next build), aunque funcione sin
@@ -59,14 +69,6 @@ function CheckoutPageContent() {
   const expressHydrated = useExpressCheckoutHydrated()
 
   const items: CartItem[] = isExpressMode ? (expressItem ? [expressItem] : []) : cartItems
-
-  // Mismo cálculo que useCartSubtotal/useCartItbis/useCartTotal, pero
-  // sobre `items` (que en modo express es un array de un solo ítem, no
-  // el carrito persistido) — no se puede reusar esos hooks acá porque
-  // leen useCartStore directo, sin importar el modo.
-  const subtotal = items.reduce((acc, i) => acc + (i.variant_price_rdp ?? i.product.price_rdp) * i.quantity, 0)
-  const itbis = Math.round(subtotal * ITBIS_RATE)
-  const total = subtotal + itbis
 
   // Si el flag express está pero sessionStorage no tiene ningún ítem
   // (ej. se limpió entre el click y esta carga, o alguien pegó la URL a
@@ -120,15 +122,10 @@ function CheckoutPageContent() {
   const [couponCode, setCouponCode] = useState('')
   const [couponApplying, setCouponApplying] = useState(false)
   const [couponError, setCouponError] = useState<string | null>(null)
-  const [appliedCoupon, setAppliedCoupon] = useState<{
-    valid: boolean
-    coupon_id: string
-    code: string
-    type: string
-    value: number
-    discount_rdp: number
-    vendor_id: string
-  } | null>(null)
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null)
+  // Subtotal de la cotización con el que se validó el cupón aplicado: si
+  // cambia, se revalida una vez en silencio.
+  const couponValidatedForRef = useRef<number | null>(null)
   const { province: selectedProvince } = useLocationStore()
 
   const [shippingRate, setShippingRate] = useState<{
@@ -139,23 +136,27 @@ function CheckoutPageContent() {
   } | null>(null)
   const [shippingLoading, setShippingLoading] = useState(false)
 
-  // Fallback de seguridad — mismo valor que usa el RPC create_order_from_cart
-  // si alguna provincia no tuviera tarifa cargada en shipping_rates
-  const SHIPPING_FALLBACK_RDP = 25000
-
-  // Mismo umbral que create_order_from_cart aplica en el backend —
-  // lib/shipping.ts es la única fuente de este número, para que lo que
-  // se muestra acá, en la página de producto y en las tarjetas nunca se
-  // desincronice de lo que el RPC termina cobrando.
-  const qualifiesFreeShipping = qualifiesForFreeShipping(subtotal)
-
-  const rawShipping = items.length === 0
-    ? 0
-    : shippingRate?.price_rdp ?? (form.province && !shippingLoading ? SHIPPING_FALLBACK_RDP : 0)
-
-  const ENVIO = qualifiesFreeShipping ? 0 : rawShipping
-
+  // Subtotal, ITBIS, envío y precio por línea los calcula el servidor
+  // (quote_cart) con la misma regla que cobra create_order_from_cart. La
+  // consulta a shipping_rates de abajo solo da los días estimados y la
+  // tarifa tachada cuando el envío es gratis; el monto sale de aquí.
+  const quoteProvinceId = provinces.find(p => p.name === form.province)?.id ?? null
+  const { quote, status: quoteStatus, reload: reloadQuote, setQuote } = useCartQuote(items, quoteProvinceId)
+  const quoteMatches = !!quote && quote.lines.length === items.length
+    && quote.lines.every((l, i) => l.product_id === items[i].product.id && l.quantity === items[i].quantity)
+  const q = quoteStatus === 'ready' && quoteMatches ? quote : null
+  const subtotal = q?.subtotal_rdp ?? 0
+  const itbis = q?.itbis_rdp ?? 0
+  const qualifiesFreeShipping = q?.qualifies_free_shipping ?? false
+  const ENVIO = q?.delivery_rdp ?? 0
   const discountRdp = appliedCoupon?.discount_rdp ?? 0
+  const totalToPay = q ? Math.max(0, q.total_rdp - discountRdp) : 0
+  const quoteHasLineIssues = q ? quoteBlocksPurchase(q) : false
+  const quoteReady = !!q && q.delivery_rdp !== null
+  const fmt = (cents: number) => `RD$${(cents / 100).toLocaleString('es-DO')}`
+  const submitBlocked = loading || rateLimited || quoteStatus === 'loading' || quoteStatus === 'error'
+    || quoteHasLineIssues || (!!form.province && !quoteReady)
+  const backHref = isExpressMode ? (expressItem ? `/producto/${expressItem.product.id}` : '/') : '/cart'
 
   useEffect(() => {
     const supabase = createClient()
@@ -231,27 +232,62 @@ function CheckoutPageContent() {
     setForm(f => ({ ...f, isForSomeoneElse: e.target.checked }))
   }
 
+  // Mensaje traducido por error_code; nunca el texto crudo del servidor.
+  const couponErrorMessage = (data: { error_code?: string; min_order_rdp?: number } | null): string => {
+    switch (data?.error_code) {
+      case 'not_found': return t('couponErrNotFound')
+      case 'expired': return t('couponErrExpired')
+      case 'limit_reached': return t('couponErrLimitReached')
+      case 'min_order': return t('couponErrMinOrder', { amount: ((data.min_order_rdp ?? 0) / 100).toLocaleString('es-DO') })
+      case 'rate_limited': return t('couponErrRateLimited')
+      case 'invalid_total': return t('couponErrInvalidTotal')
+      default: return t('couponGenericError')
+    }
+  }
+
+  // validate_coupon solo con sesión. Devuelve el cupón válido o el mensaje
+  // de error ya traducido. Un cupón de tienda no aplica si el pedido trae
+  // productos de otra tienda (el servidor igual lo rechazaría al crear el
+  // pedido).
+  const validateCoupon = async (code: string, subtotalRdp: number): Promise<{ coupon: AppliedCoupon } | { error: string }> => {
+    const { data, error } = await createClient().rpc('validate_coupon', { p_code: code, p_order_total_rdp: subtotalRdp })
+    if (error || !data) return { error: t('couponGenericError') }
+    if (!data.valid) return { error: couponErrorMessage(data) }
+    if (data.vendor_id && items.some(i => i.product.vendor_id !== data.vendor_id)) return { error: t('couponStoreOnly') }
+    return { coupon: data as AppliedCoupon }
+  }
+
   const handleApplyCoupon = async () => {
-    if (!couponCode.trim()) return
+    if (!couponCode.trim() || !q || !user) return
     setCouponApplying(true)
     setCouponError(null)
-
-    const supabase = createClient()
-    const { data, error } = await supabase.rpc('validate_coupon', {
-      p_code: couponCode.trim().toUpperCase(),
-      p_order_total_rdp: subtotal,
-    })
-
+    const result = await validateCoupon(couponCode.trim().toUpperCase(), q.subtotal_rdp)
     setCouponApplying(false)
-
-    if (error || !data?.valid) {
-      setCouponError(data?.error ?? t('couponGenericError'))
+    if ('error' in result) {
+      setCouponError(result.error)
       setAppliedCoupon(null)
       return
     }
-
-    setAppliedCoupon(data)
+    couponValidatedForRef.current = q.subtotal_rdp
+    setAppliedCoupon(result.coupon)
   }
+
+  // Si el subtotal de la cotización cambia con un cupón aplicado, se
+  // revalida una vez en silencio; si deja de servir, se quita con aviso.
+  useEffect(() => {
+    if (!appliedCoupon || !q || couponValidatedForRef.current === q.subtotal_rdp) return
+    const subtotalNow = q.subtotal_rdp
+    couponValidatedForRef.current = subtotalNow
+    validateCoupon(appliedCoupon.code, subtotalNow).then(result => {
+      if ('error' in result) {
+        setAppliedCoupon(null)
+        setCouponError(t('couponRemovedNotice'))
+      } else {
+        setAppliedCoupon(result.coupon)
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q?.subtotal_rdp, appliedCoupon?.code])
 
   const handleRemoveCoupon = () => {
     setAppliedCoupon(null)
@@ -292,11 +328,11 @@ function CheckoutPageContent() {
       setError(t('cardDetailsRequired'))
       return
     }
-    if (shippingLoading) {
-      setError(t('waitingShippingCalc'))
+    if (items.length === 0) { router.push('/'); return }
+    if (!quoteReady || quoteHasLineIssues) {
+      setError(quoteHasLineIssues ? t('itemsBlockedNotice') : t('waitingShippingCalc'))
       return
     }
-    if (items.length === 0) { router.push('/'); return }
 
     setAddressError(null)
     setNotesError(null)
@@ -330,14 +366,13 @@ function CheckoutPageContent() {
 
     try {
       const supabase = createClient()
-      const totalCents = Math.max(0, total + ENVIO - discountRdp)
 
       // Protección contra card testing — máx. 5 intentos por IP y 3
       // fallos consecutivos por usuario cada 15 minutos.
       const rateCheckRes = await fetch('/api/checkout/rate-check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: user.id, action: 'check' }),
+        body: JSON.stringify({ action: 'check' }),
       })
 
       if (rateCheckRes.status === 429) {
@@ -348,6 +383,63 @@ function CheckoutPageContent() {
         return
       }
 
+      // Buscar el id de la provincia seleccionada
+      const { data: provinceRow, error: provinceError } = await supabase
+        .from('provinces_rd')
+        .select('id')
+        .eq('name', form.province)
+        .single()
+
+      if (provinceError || !provinceRow) {
+        throw new Error('Provincia inválida')
+      }
+
+      // Cotización nueva con la provincia final ANTES de cobrar. Si falla,
+      // si algo dejó de estar disponible o si el total cambió respecto a
+      // lo mostrado, no se cobra: se actualiza la pantalla y se avisa.
+      let fresh: CartQuote
+      try {
+        fresh = await fetchCartQuote(items, provinceRow.id)
+      } catch (quoteErr) {
+        console.error('[checkout] quote_cart', quoteErr)
+        setError(t('quoteFailedSubmit'))
+        setLoading(false)
+        return
+      }
+      if (quoteBlocksPurchase(fresh)) {
+        setQuote(fresh)
+        setError(t('stockChangedNotice'))
+        setLoading(false)
+        return
+      }
+      if (!q || fresh.total_rdp !== q.total_rdp) {
+        setQuote(fresh)
+        setError(t('pricesChangedNotice'))
+        setLoading(false)
+        return
+      }
+
+      // El cupón se revalida contra el subtotal fresco.
+      let discountForCharge = 0
+      if (appliedCoupon) {
+        const result = await validateCoupon(appliedCoupon.code, fresh.subtotal_rdp)
+        if ('error' in result) {
+          setAppliedCoupon(null)
+          setCouponError(result.error)
+          setError(t('couponRemovedNotice'))
+          setLoading(false)
+          return
+        }
+        if (result.coupon.discount_rdp !== appliedCoupon.discount_rdp) {
+          setAppliedCoupon(result.coupon)
+          setError(t('pricesChangedNotice'))
+          setLoading(false)
+          return
+        }
+        discountForCharge = result.coupon.discount_rdp
+      }
+      const totalCents = Math.max(0, fresh.total_rdp - discountForCharge)
+
       // Cobrar primero — solo creamos la orden si el pago es aprobado.
       // Así evitamos órdenes "pending" huérfanas por pagos rechazados.
       let paymentResult: PaymentResult | null = null
@@ -355,7 +447,7 @@ function CheckoutPageContent() {
         paymentResult = await processPayment({
           orderId: crypto.randomUUID(), // referencia temporal, no es el id real de la orden
           amountCents: totalCents,
-          itbisCents: itbis,
+          itbisCents: fresh.itbis_rdp,
           cardNumber: form.cardNumber,
           expiration: form.cardExpiration,
           cvc: form.cardCvc,
@@ -371,35 +463,22 @@ function CheckoutPageContent() {
           fetch('/api/checkout/rate-check', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: user.id, action: 'fail' }),
+            body: JSON.stringify({ action: 'fail' }),
           }).catch(() => {})
           return
         }
       }
 
-      // Buscar el id de la provincia seleccionada
-      const { data: provinceRow, error: provinceError } = await supabase
-        .from('provinces_rd')
-        .select('id')
-        .eq('name', form.province)
-        .single()
-
-      if (provinceError || !provinceRow) {
-        throw new Error('Provincia inválida')
-      }
-
       // Armar el payload de items para la función RPC — vendor_id y
       // price_rdp van solo de referencia informativa, la función real
-      // los ignora y resuelve todo del lado del servidor (migración
-      // 020). variant_id nuevo: el descuento de stock de variante
-      // también se movió adentro de la función, ya no existe una
-      // llamada aparte a reduce_variant_stock.
-      const itemsPayload = items.map(item => ({
+      // los ignora y resuelve todo del lado del servidor. price_rdp lleva
+      // el precio unitario de la cotización por coherencia.
+      const itemsPayload = items.map((item, index) => ({
         product_id: item.product.id,
         vendor_id: item.product.vendor_id,
         variant_id: item.variant_id ?? null,
         quantity: item.quantity,
-        price_rdp: item.variant_price_rdp ?? item.product.price_rdp,
+        price_rdp: fresh.lines.find(l => l.index === index)?.unit_price_rdp ?? item.variant_price_rdp ?? item.product.price_rdp,
         size: item.selected_size ?? null,
         color: item.selected_color ?? null,
       }))
@@ -486,7 +565,15 @@ function CheckoutPageContent() {
       // ERRCODE) se traducen a un mensaje específico, el resto cae al
       // genérico de siempre. Ver lib/orderErrors.ts.
       const knownKey = resolveKnownError(err as SupabaseErrorLike, KNOWN_ORDER_ERRORS)
-      setError(knownKey === 'SELF_PURCHASE' ? t('selfPurchaseError') : t('genericOrderError'))
+      setError(
+        knownKey === 'SELF_PURCHASE' ? t('selfPurchaseError') :
+        knownKey === 'PRODUCT_UNAVAILABLE' ? t('productUnavailableError') :
+        knownKey === 'VARIANT_UNAVAILABLE' ? t('variantUnavailableError') :
+        knownKey === 'INSUFFICIENT_STOCK' ? t('insufficientStockError') :
+        knownKey === 'PRICES_CHANGED' ? t('pricesChangedError') :
+        knownKey === 'COUPON_INVALID' ? t('couponInvalidError') :
+        t('genericOrderError'),
+      )
       setLoading(false)
     }
   }
@@ -704,7 +791,10 @@ function CheckoutPageContent() {
 
             {/* Items */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 14 }}>
-              {items.map(item => (
+              {items.map((item, index) => {
+                const line = q?.lines.find(l => l.index === index)
+                const problem = lineProblem(line)
+                return (
                 <div key={`${item.product.id}-${item.variant_id ?? `${item.selected_size}-${item.selected_color}`}`} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                   <div style={{ width: 44, height: 44, borderRadius: 6, background: BRAND.bg, flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
                     {item.product.images?.[0] ? (
@@ -726,19 +816,39 @@ function CheckoutPageContent() {
                             {item.selected_color && ` · ${item.selected_color}`}
                           </>}
                     </p>
+                    {problem && (
+                      <p style={{ fontSize: 'var(--text-badge)', fontWeight: 600, color: BRAND.red, margin: '2px 0 0' }}>
+                        {problem === 'unavailable' ? t('lineUnavailable') : t('onlyNLeft', { count: line?.available_quantity ?? 0 })}
+                      </p>
+                    )}
                   </div>
                   <span style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color: BRAND.dark, flexShrink: 0 }}>
-                    RD${(((item.variant_price_rdp ?? item.product.price_rdp) * item.quantity) / 100).toLocaleString('es-DO')}
+                    {line?.line_total_rdp != null ? fmt(line.line_total_rdp) : '—'}
                   </span>
                 </div>
-              ))}
+                )
+              })}
             </div>
+            {quoteHasLineIssues && (
+              <div style={{ fontSize: 'var(--text-small)', color: BRAND.red, marginBottom: 12 }}>
+                {t('itemsBlockedNotice')}{' '}
+                <a href={backHref} style={{ color: BRAND.blue, fontWeight: 600 }}>{t('backToCart')}</a>
+              </div>
+            )}
 
             {/* Cupón */}
             <div style={{ borderTop: '1px solid #EEE', paddingTop: 12, marginBottom: 12 }}>
               <label style={{ fontSize: 'var(--text-caption)', color: BRAND.gray, display: 'block', marginBottom: 6 }}>
                 {t('couponQuestion')}
               </label>
+              {!user ? (
+                <a
+                  href={`/login?redirect=${encodeURIComponent(isExpressMode ? `/checkout?${searchParams.toString()}` : '/checkout')}`}
+                  style={{ fontSize: 'var(--text-small)', color: BRAND.blue, fontWeight: 600 }}
+                >
+                  {t('couponLoginRequired')}
+                </a>
+              ) : (
               <div style={{ display: 'flex', gap: 8 }}>
                 <input
                   value={couponCode}
@@ -763,18 +873,19 @@ function CheckoutPageContent() {
                   <button
                     type="button"
                     onClick={handleApplyCoupon}
-                    disabled={couponApplying || !couponCode.trim()}
+                    disabled={couponApplying || !couponCode.trim() || !q}
                     style={{
                       border: 'none', borderRadius: 8, padding: '9px 14px', fontSize: 'var(--text-small)', fontWeight: 600,
                       color: '#fff', whiteSpace: 'nowrap',
-                      background: couponApplying || !couponCode.trim() ? '#ccc' : BRAND.dark,
-                      cursor: couponApplying || !couponCode.trim() ? 'not-allowed' : 'pointer',
+                      background: couponApplying || !couponCode.trim() || !q ? '#ccc' : BRAND.dark,
+                      cursor: couponApplying || !couponCode.trim() || !q ? 'not-allowed' : 'pointer',
                     }}
                   >
                     {couponApplying ? '...' : t('applyCoupon')}
                   </button>
                 )}
               </div>
+              )}
               {couponError && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, margin: '6px 0 0' }}>{couponError}</p>}
               {appliedCoupon && (
                 <p style={{ fontSize: 'var(--text-small)', color: '#2E7D32', margin: '6px 0 0', fontWeight: 600 }}>
@@ -785,7 +896,7 @@ function CheckoutPageContent() {
 
             <div style={{ borderTop: '1px solid #EEE', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-small)', color: BRAND.dark }}>
-                <span>{t('subtotalLabel')}</span><span>RD${(subtotal / 100).toLocaleString('es-DO')}</span>
+                <span>{t('subtotalLabel')}</span><span>{q ? fmt(subtotal) : '—'}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-small)', color: BRAND.dark }}>
                 <span>
@@ -801,42 +912,53 @@ function CheckoutPageContent() {
                 <span>
                   {!form.province
                     ? t('selectProvinceHint')
-                    : shippingLoading
+                    : !quoteReady
                       ? t('calculatingShipping')
                       : qualifiesFreeShipping
                         ? (
                           <>
-                            <span style={{ textDecoration: 'line-through', color: BRAND.gray, marginRight: 6 }}>
-                              RD${(rawShipping / 100).toLocaleString('es-DO')}
-                            </span>
+                            {shippingRate && (
+                              <span style={{ textDecoration: 'line-through', color: BRAND.gray, marginRight: 6 }}>
+                                {fmt(shippingRate.price_rdp)}
+                              </span>
+                            )}
                             <span style={{ color: 'var(--color-green)', fontWeight: 700 }}>{t('freeBadge')}</span>
                           </>
                         )
-                        : `RD$${(ENVIO / 100).toLocaleString('es-DO')}`}
+                        : fmt(ENVIO)}
                 </span>
               </div>
-              {form.province && !shippingLoading && !qualifiesFreeShipping && (
+              {form.province && quoteReady && !qualifiesFreeShipping && (
                 <p style={{ fontSize: 'var(--text-badge)', color: BRAND.gray, margin: '-2px 0 0', textAlign: 'right' }}>
                   {t('freeShippingThresholdNote')}
                 </p>
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-small)', color: BRAND.dark }}>
-                <span>{t('itbisLabel')}</span><span>RD${(itbis / 100).toLocaleString('es-DO')}</span>
+                <span>{t('itbisLabel')}</span><span>{q ? fmt(itbis) : '—'}</span>
               </div>
               {appliedCoupon && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-small)', color: 'var(--color-green)', fontWeight: 600 }}>
                   <span>{t('discountLabel', { code: appliedCoupon.code })}</span>
-                  <span>-RD${(discountRdp / 100).toLocaleString('es-DO')}</span>
+                  <span>-{fmt(discountRdp)}</span>
                 </div>
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontWeight: 700, fontSize: 'var(--text-ui)', borderTop: '1px solid #EEE', paddingTop: 10, marginTop: 4, color: BRAND.dark }}>
                 <span>{t('totalLabel')}</span>
                 <span style={{ fontSize: 'var(--text-price-card)', fontWeight: 700, lineHeight: 'var(--leading-price)', color: 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}>
-                  RD${(Math.max(0, total + ENVIO - discountRdp) / 100).toLocaleString('es-DO')}
+                  {quoteReady ? fmt(totalToPay) : '—'}
                 </span>
               </div>
             </div>
           </div>
+
+          {quoteStatus === 'error' && (
+            <div style={{ background: '#FFF0F0', border: '1px solid #FFCDD2', borderRadius: 8, padding: '10px 14px', fontSize: 'var(--text-small)', color: '#C62828', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <span>{t('quoteErrorNotice')}</span>
+              <button type="button" onClick={reloadQuote} style={{ border: '1px solid #FFCDD2', background: '#fff', color: '#C62828', borderRadius: 8, padding: '6px 12px', fontSize: 'var(--text-small)', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                {t('retryButton')}
+              </button>
+            </div>
+          )}
 
           {error && (
             <div style={{ background: '#FFF0F0', border: '1px solid #FFCDD2', borderRadius: 8, padding: '10px 14px', fontSize: 'var(--text-small)', color: '#C62828', marginBottom: 12 }}>
@@ -857,16 +979,16 @@ function CheckoutPageContent() {
 
           <button
             onClick={handleSubmit}
-            disabled={loading || shippingLoading || rateLimited}
+            disabled={submitBlocked}
             style={{
-              display: 'block', width: '100%', background: (loading || shippingLoading || rateLimited) ? '#ccc' : 'var(--color-primary)',
+              display: 'block', width: '100%', background: submitBlocked ? '#ccc' : 'var(--color-primary)',
               color: '#fff', border: 'none', padding: 14, borderRadius: 'var(--radius-control)',
-              fontWeight: 600, fontSize: 'var(--text-body)', cursor: (loading || shippingLoading || rateLimited) ? 'not-allowed' : 'pointer',
+              fontWeight: 600, fontSize: 'var(--text-body)', cursor: submitBlocked ? 'not-allowed' : 'pointer',
               marginBottom: 10,
-              boxShadow: (loading || shippingLoading || rateLimited) ? 'none' : 'var(--shadow-button)',
+              boxShadow: submitBlocked ? 'none' : 'var(--shadow-button)',
             }}
           >
-            {loading ? t('processingPayment') : shippingLoading ? t('calculatingShippingButton') : rateLimited ? t('rateLimitedButton') : t('confirmAndPay')}
+            {loading ? t('processingPayment') : quoteStatus === 'loading' ? t('quoteLoadingButton') : rateLimited ? t('rateLimitedButton') : t('confirmAndPay')}
           </button>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 12, background: 'var(--color-green-subtle)', borderRadius: 'var(--radius-control)', color: 'var(--color-green)' }}>

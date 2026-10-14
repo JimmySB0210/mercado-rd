@@ -31,6 +31,13 @@ export const cart = {
 
   paymentTransfer: '🏧 Transferencia',
   paymentCash: '💵 Efectivo',
+
+  // Cotización del servidor (lib/cart/quote.ts)
+  shippingAtCheckout: 'Se calcula en el checkout',
+  lineUnavailable: 'Este producto ya no está disponible',
+  onlyNLeft: 'Solo quedan {count}',
+  estimatedTotalsNote: 'Totales estimados: no pudimos confirmar los precios. El checkout muestra el total final.',
+  checkoutBlockedLineIssues: 'Revisa los productos marcados antes de pagar.',
 }
 
 export type CartDict = typeof cart

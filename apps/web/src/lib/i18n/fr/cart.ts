@@ -30,4 +30,11 @@ export const cart = {
 
   paymentTransfer: '🏧 Virement bancaire',
   paymentCash: '💵 Espèces',
+
+  // Cotización del servidor (lib/cart/quote.ts)
+  shippingAtCheckout: 'Calculé au paiement',
+  lineUnavailable: "Ce produit n'est plus disponible",
+  onlyNLeft: 'Plus que {count} en stock',
+  estimatedTotalsNote: "Totaux estimés : nous n'avons pas pu confirmer les prix. Le paiement affiche le total final.",
+  checkoutBlockedLineIssues: 'Vérifiez les produits signalés avant de payer.',
 } satisfies CartDict
