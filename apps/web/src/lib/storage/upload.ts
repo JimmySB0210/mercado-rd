@@ -7,6 +7,7 @@
 // ============================================================
 
 import { createClient } from '@/lib/supabase/client'
+import { compressImage, ImageCompressError } from '@/lib/storage/imageCompress'
 
 type UploadResult = { url: string; error: null } | { url: null; error: string }
 
@@ -118,31 +119,45 @@ export async function uploadVendorLogo(
 }
 
 // ─── Avatar de usuario ──────────────────────────────────────────────────────
+// El UPDATE directo a users ya no está permitido: la URL se guarda con el
+// RPC update_own_avatar, que solo acepta
+// https://<proyecto>.supabase.co/storage/v1/object/public/avatars/<uid>/<archivo>[?v=<dígitos>]
+// (≤500 caracteres). El bucket avatars admite hasta 1 MB: se comprime
+// antes (≤512 px). ?v= evita que el navegador muestre el avatar anterior.
 export async function uploadAvatar(
   file: File,
   userId: string
 ): Promise<UploadResult> {
+  let compressed: File
+  try {
+    compressed = await compressImage(file, { maxDimension: 512, maxBytes: 1024 * 1024 })
+  } catch (err) {
+    return { url: null, error: err instanceof ImageCompressError ? err.message : 'No pudimos procesar la imagen.' }
+  }
+
   const supabase = createClient()
-  const ext = file.name.split('.').pop()
+  const ext = compressed.name.split('.').pop()
   const filename = `${userId}/avatar.${ext}`
 
   const { error } = await supabase.storage
     .from('avatars')
-    .upload(filename, file, { upsert: true })
+    .upload(filename, compressed, { upsert: true, contentType: compressed.type })
 
-  if (error) return { url: null, error: error.message }
+  if (error) {
+    console.error('[uploadAvatar]', error)
+    return { url: null, error: 'No se pudo subir la foto. Intenta de nuevo.' }
+  }
 
   const { data } = supabase.storage.from('avatars').getPublicUrl(filename)
+  const avatarUrl = `${data.publicUrl}?v=${Date.now()}`
 
-  // Actualizar avatar_url en el perfil del usuario
-  const { error: updateError } = await supabase
-    .from('users')
-    .update({ avatar_url: data.publicUrl })
-    .eq('id', userId)
+  const { error: rpcError } = await supabase.rpc('update_own_avatar', { p_avatar_url: avatarUrl })
+  if (rpcError) {
+    console.error('[uploadAvatar update_own_avatar]', rpcError)
+    return { url: null, error: 'No se pudo guardar la foto en tu perfil. Intenta de nuevo.' }
+  }
 
-  if (updateError) console.warn('[uploadAvatar] No se pudo actualizar perfil:', updateError)
-
-  return { url: data.publicUrl, error: null }
+  return { url: avatarUrl, error: null }
 }
 
 // ─── Imagen de banner promocional (admin) ──────────────────────────────────

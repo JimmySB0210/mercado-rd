@@ -7,7 +7,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { validateImageFile } from '@/lib/storage/upload'
+import { ALLOWED_IMAGE_TYPES } from '@/lib/storage/upload'
+import { compressImage, ImageCompressError } from '@/lib/storage/imageCompress'
 import { BRAND } from '@/lib/colors'
 import { SectionCard, SaveSectionButton } from './SectionCard'
 
@@ -52,22 +53,33 @@ export function LogoSection({ vendorId, userId, initialLogoUrl, onRegisterSave, 
     router.refresh()
   }
 
-  const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // El bucket vendors admite hasta 2 MB (JPG/PNG/WebP): el logo se
+  // comprime al elegirlo (≤1024 px, ≤2 MB), así la vista previa ya es lo
+  // que se sube y los errores de tamaño salen antes de guardar.
+  const handleLogoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
+    e.target.value = ''
     if (!file) return
 
-    const validationError = validateImageFile(file)
-    if (validationError) {
-      setLogoError(validationError)
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      setLogoError('Solo se permiten imágenes JPG, PNG o WebP.')
       return
     }
     setLogoError(null)
     setSuccess(false)
 
-    setLogoFile(file)
+    let compressed: File
+    try {
+      compressed = await compressImage(file, { maxDimension: 1024, maxBytes: 2 * 1024 * 1024 })
+    } catch (err) {
+      setLogoError(err instanceof ImageCompressError ? err.message : 'No pudimos procesar la imagen. Prueba con otra.')
+      return
+    }
+
+    setLogoFile(compressed)
     const reader = new FileReader()
     reader.onload = (ev) => setLogoPreview(ev.target?.result as string)
-    reader.readAsDataURL(file)
+    reader.readAsDataURL(compressed)
   }
 
   const handleSave = useCallback(async () => {
@@ -77,6 +89,7 @@ export function LogoSection({ vendorId, userId, initialLogoUrl, onRegisterSave, 
     setSaving(true)
 
     try {
+      // Extensión del archivo ya comprimido (puede cambiar, ej. .png → .webp).
       const ext = logoFile.name.split('.').pop()
       const filename = `${userId}/logo-${Date.now()}.${ext}`
 
@@ -99,7 +112,12 @@ export function LogoSection({ vendorId, userId, initialLogoUrl, onRegisterSave, 
       return true
     } catch (err) {
       console.error('[LogoSection]', err)
-      setLogoError('Ocurrió un error al guardar el logo. Intenta de nuevo.')
+      const message = (err as { message?: string })?.message ?? ''
+      setLogoError(
+        /maximum allowed size|too large|413/i.test(message) ? 'El logo supera el límite de 2 MB. Usa una imagen más liviana.'
+          : /mime|type/i.test(message) ? 'Formato no permitido. Usa una imagen JPG, PNG o WebP.'
+            : 'Ocurrió un error al guardar el logo. Intenta de nuevo.',
+      )
       return false
     } finally {
       setSaving(false)
