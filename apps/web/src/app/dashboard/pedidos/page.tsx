@@ -26,6 +26,7 @@ interface OrderRow {
   order_id: string
   status: string
   delivery_address: string
+  is_gift: boolean
   payment_method: string
   notes: string | null
   created_at: string
@@ -114,7 +115,7 @@ export default function VendorOrdersPage() {
 
       const { data: ordersData } = await supabase
         .from('orders')
-        .select('id, status, delivery_address, payment_method, notes, created_at, tracking_number, courier, user_id, buyer_name, buyer_phone, recipient_name, recipient_phone, province:provinces_rd(name)')
+        .select('id, status, delivery_address, gift_list_item_id, gift_delivery:gift_order_delivery(delivery_address), payment_method, notes, created_at, tracking_number, courier, user_id, buyer_name, buyer_phone, recipient_name, recipient_phone, province:provinces_rd(name)')
         .in('id', orderIds)
         .order('created_at', { ascending: false })
 
@@ -140,10 +141,16 @@ export default function VendorOrdersPage() {
             color: i.color,
           }))
 
+        // Pedidos de regalo: la dirección real está en gift_order_delivery
+        // (solo la tienda y el admin la leen); orders.delivery_address
+        // queda enmascarada. PostgREST puede devolver objeto o arreglo.
+        const giftDelivery = Array.isArray(order.gift_delivery) ? order.gift_delivery[0] : order.gift_delivery
+
         return {
           order_id: order.id,
           status: order.status,
-          delivery_address: order.delivery_address,
+          delivery_address: giftDelivery?.delivery_address ?? order.delivery_address,
+          is_gift: !!order.gift_list_item_id,
           payment_method: order.payment_method,
           notes: order.notes,
           created_at: order.created_at,
@@ -199,6 +206,9 @@ export default function VendorOrdersPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 14 }}>
         <div>
           <p style={{ fontSize: 'var(--text-caption)', color: '#818F98', textTransform: 'uppercase', marginBottom: 4 }}>{t('deliveryLabel')}</p>
+          {order.is_gift && (
+            <p style={{ fontSize: 'var(--text-caption)', color: 'var(--color-primary)', fontWeight: 600, marginBottom: 2 }}>🎁 {t('giftOrderLabel')}</p>
+          )}
           <p style={{ fontSize: 'var(--text-small)', color: '#333' }}>{order.delivery_address}</p>
           <p style={{ fontSize: 'var(--text-caption)', color: '#818F98' }}>{order.province_name}</p>
         </div>

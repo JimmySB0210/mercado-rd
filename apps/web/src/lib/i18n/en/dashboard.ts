@@ -333,6 +333,7 @@ export const dashboard = {
   contactLabel: 'Contact',
   notAvailable: 'Not available',
   recipientBanner: 'Bought by: {buyer} · Recipient: {recipient} ({phone})',
+  giftOrderLabel: 'Gift order',
   paymentAzul: '💳 Azul',
   paymentCardnet: '🏦 CardNet',
   paymentTransfer: '🏧 Bank transfer',

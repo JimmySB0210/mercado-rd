@@ -41,7 +41,7 @@ export default async function ListaRegalosPage(
   if (list) {
     const { data: itemRows, error: itemsError } = await supabase
       .from('gift_list_items')
-      .select('id, priority, purchased_by, purchased_at, product:products(id, name, images, price_rdp, compare_rdp)')
+      .select('id, priority, purchased_at, product:products(id, name, images, price_rdp, compare_rdp)')
       .eq('gift_list_id', list.id)
       .order('priority')
 

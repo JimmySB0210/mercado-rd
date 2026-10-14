@@ -32,6 +32,9 @@ interface VendorWithWhatsapp {
 interface Props {
   shortId: string
   deliveryAddress: string
+  // Pedido de una lista de regalos: la dirección real la recibe la tienda
+  // (gift_order_delivery); aquí no se muestra.
+  isGiftOrder: boolean
   provinceName: string
   notes: string | null
   items: OrderItem[]
@@ -57,7 +60,7 @@ export function OrderNotFoundNotice() {
 }
 
 export function ConfirmPageContent({
-  shortId, deliveryAddress, provinceName, notes, items,
+  shortId, deliveryAddress, isGiftOrder, provinceName, notes, items,
   subtotalRdp, deliveryRdp, itbisRdp, totalRdp, vendorsWithWhatsapp, invoiceData,
 }: Props) {
   const { t } = useTranslation('checkout')
@@ -90,7 +93,7 @@ export function ConfirmPageContent({
         <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
           {t('deliveryHeading')}
         </h2>
-        <p className="text-sm text-gray-900">{deliveryAddress}</p>
+        <p className="text-sm text-gray-900">{isGiftOrder ? `🎁 ${t('giftAddressProtected')}` : deliveryAddress}</p>
         <p className="text-sm text-gray-500 mt-0.5">
           {provinceName}
         </p>

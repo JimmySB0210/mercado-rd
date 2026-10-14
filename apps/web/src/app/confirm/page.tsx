@@ -105,6 +105,7 @@ export default async function ConfirmPage(
       <ConfirmPageContent
         shortId={shortId}
         deliveryAddress={order.delivery_address}
+        isGiftOrder={!!order.gift_list_item_id}
         provinceName={(order.province as { name: string } | null)?.name ?? ''}
         notes={order.notes}
         items={order.items as any}

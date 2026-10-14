@@ -26,7 +26,7 @@ type Priority = 1 | 2 | 3
 interface GiftItem {
   id: string
   priority: Priority
-  purchased_by: string | null
+  purchased_at: string | null
   product: { id: string; name: string; images: string[] | null; price_rdp: number; compare_rdp: number | null }
 }
 
@@ -114,7 +114,7 @@ export function RegaloPublicContent({ slug, displayName, provinceName, isUnavail
       ) : (
         <div className="space-y-3">
           {items.map(item => {
-            const isPurchased = !!item.purchased_by
+            const isPurchased = !!item.purchased_at
             const isOpen = openItemId === item.id
             const isSubmitting = submittingItemId === item.id
             const itemError = errorByItem[item.id]

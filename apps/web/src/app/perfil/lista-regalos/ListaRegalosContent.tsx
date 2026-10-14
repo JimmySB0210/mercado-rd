@@ -35,7 +35,6 @@ interface GiftListRow {
 interface GiftListItemRow {
   id: string
   priority: Priority
-  purchased_by: string | null
   purchased_at: string | null
   product: { id: string; name: string; images: string[] | null; price_rdp: number; compare_rdp: number | null }
 }
@@ -87,7 +86,7 @@ export function ListaRegalosContent({ list: initialList, items: initialItems, pr
   const refreshItems = async (listId: string) => {
     const { data, error } = await supabase
       .from('gift_list_items')
-      .select('id, priority, purchased_by, purchased_at, product:products(id, name, images, price_rdp, compare_rdp)')
+      .select('id, priority, purchased_at, product:products(id, name, images, price_rdp, compare_rdp)')
       .eq('gift_list_id', listId)
       .order('priority')
 
@@ -366,7 +365,7 @@ export function ListaRegalosContent({ list: initialList, items: initialItems, pr
             ) : (
               <div className="divide-y divide-gray-50">
                 {items.map(item => {
-                  const isPurchased = !!item.purchased_by
+                  const isPurchased = !!item.purchased_at
                   return (
                     <div key={item.id} className="flex items-center gap-3 py-3">
                       <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-gray-50 flex-shrink-0">

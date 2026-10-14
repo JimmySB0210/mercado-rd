@@ -362,6 +362,7 @@ export const dashboard = {
   contactLabel: 'Contacto',
   notAvailable: 'No disponible',
   recipientBanner: 'Comprado por: {buyer} · Recibe: {recipient} ({phone})',
+  giftOrderLabel: 'Pedido de regalo',
   paymentAzul: '💳 Azul',
   paymentCardnet: '🏦 CardNet',
   paymentTransfer: '🏧 Transferencia',
