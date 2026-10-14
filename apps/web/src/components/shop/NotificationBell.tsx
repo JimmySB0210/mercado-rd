@@ -190,8 +190,9 @@ export function NotificationBell() {
           fetch('/api/push/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            // El destinatario es siempre el usuario de la sesión (lo
+            // resuelve /api/push/send); no se envía userId.
             body: JSON.stringify({
-              userId,
               title: rendered.title,
               body: rendered.body,
               url: newNotification.link,

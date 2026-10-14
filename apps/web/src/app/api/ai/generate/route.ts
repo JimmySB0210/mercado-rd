@@ -87,6 +87,18 @@ function validateBody(body: unknown): { ok: true; value: GenerateRequestBody } |
   if (b.action === 'improve_description' && (typeof b.currentDescription !== 'string' || !b.currentDescription.trim())) {
     return { ok: false, error: 'currentDescription requerido para improve_description' }
   }
+  // Topes de entrada: cada llamada cuesta dinero y el contexto va entero
+  // al modelo.
+  if (b.productName.length > 200) return { ok: false, error: 'productName no puede superar 200 caracteres' }
+  if (b.category.length > 100) return { ok: false, error: 'category no puede superar 100 caracteres' }
+  const attrs = b.attributes as AttributeInput[]
+  if (attrs.length > 40) return { ok: false, error: 'attributes no puede tener más de 40 elementos' }
+  if (attrs.some(a => a.label.length > 100 || a.value.length > 500)) {
+    return { ok: false, error: 'Cada atributo admite label de hasta 100 caracteres y value de hasta 500' }
+  }
+  if (typeof b.currentDescription === 'string' && b.currentDescription.length > 4000) {
+    return { ok: false, error: 'currentDescription no puede superar 4000 caracteres' }
+  }
 
   return {
     ok: true,
@@ -113,6 +125,10 @@ export async function POST(request: Request) {
   const rawBody = await request.json().catch(() => null)
   const validation = validateBody(rawBody)
   if (!validation.ok) return NextResponse.json({ error: validation.error }, { status: 400 })
+
+  // Solo vendedores pueden usar la generación (antes del rate limit).
+  const { data: vendor } = await supabase.from('vendors').select('id').eq('user_id', user.id).maybeSingle()
+  if (!vendor) return NextResponse.json({ error: 'Solo los vendedores pueden usar esta función' }, { status: 403 })
 
   // El rate limit corre DESPUÉS de validar — una solicitud mal formada
   // nunca iba a llegar a Anthropic, así que no debe consumir cupo del

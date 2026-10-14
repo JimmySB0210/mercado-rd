@@ -11,6 +11,7 @@
 
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
+import { createServerClient } from '@/lib/supabase/server'
 
 const WINDOW_MS = 15 * 60 * 1000
 const MAX_ATTEMPTS_PER_IP = 5
@@ -140,21 +141,27 @@ export async function recordFailure(userId: string): Promise<void> {
   recordUserFailureMemory(userId)
 }
 
+// El usuario sale siempre de la sesión: se ignora cualquier user_id del
+// body (antes cualquiera podía bloquear a otro usuario mandando su id).
 export async function handleRateCheckRequest(request: Request): Promise<Response> {
-  const body = await request.json().catch(() => null) as { user_id?: string; action?: string } | null
-  const userId = body?.user_id
-  const action = body?.action ?? 'check'
+  const supabase = await createServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return Response.json({ error: 'No autenticado' }, { status: 401 })
+  }
 
-  if (!userId) {
-    return Response.json({ error: 'user_id requerido' }, { status: 400 })
+  const body = await request.json().catch(() => null) as { action?: unknown } | null
+  const action = body?.action
+  if (action !== 'check' && action !== 'fail') {
+    return Response.json({ error: 'action debe ser check o fail' }, { status: 400 })
   }
 
   if (action === 'fail') {
-    await recordFailure(userId)
+    await recordFailure(user.id)
     return Response.json({ recorded: true })
   }
 
-  const { allowed, message } = await checkRateLimit(getClientIp(request), userId)
+  const { allowed, message } = await checkRateLimit(getClientIp(request), user.id)
   if (!allowed) {
     return Response.json({ error: message }, { status: 429 })
   }
