@@ -88,4 +88,9 @@ export const chat = {
   micPermissionError: "Vous devez autoriser l'accès au microphone pour enregistrer un message vocal.",
   recordingLabel: 'Enregistrement',
   stopRecordingButton: 'Arrêter',
+
+  // Tope de adjuntos, reintento y cotización propia (app/mensajes/[id])
+  tooManyAttachments: "Vous pouvez joindre jusqu'à {max} fichiers par message.",
+  sendMessageError: "Le message n'a pas pu être envoyé. Vérifiez votre connexion et réessayez.",
+  cannotQuoteOwnProduct: 'Vous ne pouvez pas demander un devis pour vos propres produits',
 } satisfies ChatDict

@@ -32,6 +32,7 @@ interface ProvinceOption {
 }
 
 const MAX_RECORDING_SECONDS = 180 // 3 minutos
+const MAX_ATTACHMENTS = 20 // límite de send_chat_message por mensaje
 
 function formatRecordingTime(totalSeconds: number): string {
   const minutes = Math.floor(totalSeconds / 60)
@@ -94,7 +95,13 @@ export default function ChatPage() {
   const [sending, setSending] = useState(false)
   const [otherOnline, setOtherOnline] = useState(false)
   const [signedUrls, setSignedUrls] = useState<Map<string, string>>(new Map())
-  const [pendingFiles, setPendingFiles] = useState<{ file: File; type: ChatAttachmentType }[]>([])
+  // uploaded: el adjunto ya subido a chat-attachments. Si el envío falla
+  // se conserva, y al reintentar no se vuelve a subir (los usuarios no
+  // pueden borrar archivos de ese bucket; cada reintento dejaría huérfanos).
+  const [pendingFiles, setPendingFiles] = useState<{ file: File; type: ChatAttachmentType; uploaded?: ChatAttachment }[]>([])
+  // Para el onstop de la grabación, que captura un estado viejo.
+  const pendingCountRef = useRef(0)
+  pendingCountRef.current = pendingFiles.length
   const [attachError, setAttachError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -293,15 +300,19 @@ export default function ChatPage() {
   const handleFilesSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? [])
     e.target.value = ''
+    const accepted: { file: File; type: ChatAttachmentType }[] = []
     for (const file of files) {
       const result = validateChatFile(file)
       if (result.type === null) {
         setAttachError(result.error)
         continue
       }
-      const type = result.type
-      setPendingFiles(prev => [...prev, { file, type }])
+      accepted.push({ file, type: result.type })
     }
+    // Máximo MAX_ATTACHMENTS por mensaje (límite de send_chat_message).
+    const room = Math.max(0, MAX_ATTACHMENTS - pendingFiles.length)
+    if (accepted.length > room) setAttachError(t('tooManyAttachments', { max: MAX_ATTACHMENTS }))
+    if (room > 0 && accepted.length > 0) setPendingFiles(prev => [...prev, ...accepted.slice(0, room)])
   }
 
   const removePendingFile = (index: number) => {
@@ -364,6 +375,10 @@ export default function ChatPage() {
         setAttachError(result.error)
         return
       }
+      if (pendingCountRef.current >= MAX_ATTACHMENTS) {
+        setAttachError(t('tooManyAttachments', { max: MAX_ATTACHMENTS }))
+        return
+      }
       const type = result.type
       setPendingFiles(prev => [...prev, { file, type }])
     }
@@ -397,11 +412,17 @@ export default function ChatPage() {
     setSending(true)
     setAttachError(null)
 
-    let attachments: ChatAttachment[] | null = null
-    if (pendingFiles.length > 0) {
+    // Solo se suben los adjuntos que aún no se subieron (en un reintento,
+    // los que ya subieron se reutilizan).
+    let current = pendingFiles
+    if (current.some(pf => !pf.uploaded)) {
       const uploads = await Promise.all(
-        pendingFiles.map(pf => uploadChatAttachment(pf.file, conversation.id, pf.type))
+        current.map(pf => pf.uploaded
+          ? Promise.resolve({ attachment: pf.uploaded, error: null })
+          : uploadChatAttachment(pf.file, conversation.id, pf.type))
       )
+      current = current.map((pf, i) => uploads[i].attachment ? { ...pf, uploaded: uploads[i].attachment! } : pf)
+      setPendingFiles(current)
       const failedUpload = uploads.find(u => u.error)
       if (failedUpload) {
         console.error('[ChatPage send] upload', failedUpload.error)
@@ -409,8 +430,10 @@ export default function ChatPage() {
         setSending(false)
         return
       }
-      attachments = uploads.map(u => u.attachment).filter((a): a is ChatAttachment => !!a)
     }
+    const attachments: ChatAttachment[] | null = current.length > 0
+      ? current.map(pf => pf.uploaded).filter((a): a is ChatAttachment => !!a)
+      : null
 
     const { error } = await supabase.rpc('send_chat_message', {
       p_vendor_id: conversation.vendor_id,
@@ -420,7 +443,13 @@ export default function ChatPage() {
       p_attachments: attachments,
     })
 
-    if (error) console.error('[ChatPage send]', error)
+    // Si falla, no se pierde lo escrito ni los adjuntos.
+    if (error) {
+      console.error('[ChatPage send]', error)
+      setAttachError(t('sendMessageError'))
+      setSending(false)
+      return
+    }
 
     setNewMessage('')
     setPendingFiles([])
@@ -449,7 +478,8 @@ export default function ChatPage() {
 
     if (error) {
       console.error('[ChatPage requestQuote]', error)
-      setQuoteRequestError(t('quoteActionError'))
+      // P0101: el propio vendedor intentando cotizar su producto.
+      setQuoteRequestError(error.code === 'P0101' ? t('cannotQuoteOwnProduct') : t('quoteActionError'))
       setRequestingQuote(false)
       return
     }
@@ -847,6 +877,7 @@ export default function ChatPage() {
               </button>
               <input
                 value={newMessage}
+                maxLength={1000}
                 onChange={e => setNewMessage(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleSend() }}
                 placeholder={t('messagePlaceholder')}

@@ -88,4 +88,9 @@ export const chat = {
   micPermissionError: 'You need to grant microphone permission to record a voice message.',
   recordingLabel: 'Recording',
   stopRecordingButton: 'Stop',
+
+  // Tope de adjuntos, reintento y cotización propia (app/mensajes/[id])
+  tooManyAttachments: 'You can attach up to {max} files per message.',
+  sendMessageError: "The message couldn't be sent. Check your connection and try again.",
+  cannotQuoteOwnProduct: "You can't request a quote for your own products",
 } satisfies ChatDict

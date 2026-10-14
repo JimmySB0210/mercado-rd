@@ -108,6 +108,11 @@ export const chat = {
   micPermissionError: 'Necesitas dar permiso de micrófono para grabar un mensaje de voz.',
   recordingLabel: 'Grabando',
   stopRecordingButton: 'Detener',
+
+  // Tope de adjuntos, reintento y cotización propia (app/mensajes/[id])
+  tooManyAttachments: 'Puedes adjuntar hasta {max} archivos por mensaje.',
+  sendMessageError: 'No se pudo enviar el mensaje. Revisa tu conexión e inténtalo de nuevo.',
+  cannotQuoteOwnProduct: 'No puedes cotizar tus propios productos',
 }
 
 export type ChatDict = typeof chat
