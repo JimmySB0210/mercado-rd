@@ -81,9 +81,6 @@ export async function getProductById(id: string): Promise<ProductWithVendor | nu
     return null
   }
 
-  // Incrementar vistas en background (no bloqueante)
-  supabase.rpc('increment_product_views', { product_id: id }).then(() => {})
-
   return data as ProductWithVendor
 }
 

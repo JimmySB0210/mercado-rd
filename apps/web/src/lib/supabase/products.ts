@@ -119,12 +119,10 @@ export async function getProductByIdPublic(id: string): Promise<Product | null> 
   return data as Product;
 }
 
-// ─── Incrementar contador de visitas ─────────────────────────────────────────
+// ─── Registrar vista de producto ─────────────────────────────────────────────
+// increment_product_views ya no es ejecutable desde el front (revocada; no
+// hacía nada). Solo queda record_product_view, que no hace nada sin sesión.
 export async function incrementProductView(id: string) {
   const supabase = await createServerClient();
-  await Promise.all([
-    supabase.rpc('increment_product_views', { product_id: id }),
-    // No-op si no hay sesión — record_product_view revisa auth.uid() IS NULL
-    supabase.rpc('record_product_view', { p_product_id: id }),
-  ]);
+  await supabase.rpc('record_product_view', { p_product_id: id });
 }

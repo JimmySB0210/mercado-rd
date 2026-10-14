@@ -8,12 +8,19 @@
 // ============================================================
 
 import { incrementProductView } from '@/lib/supabase/products'
+import { createServerClient } from '@/lib/supabase/server'
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export async function POST(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  await incrementProductView(id)
+  if (!UUID.test(id)) return new Response(null, { status: 204 })
+  // record_product_view no hace nada sin sesión: no se llama.
+  const supabase = await createServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) await incrementProductView(id)
   return new Response(null, { status: 204 })
 }

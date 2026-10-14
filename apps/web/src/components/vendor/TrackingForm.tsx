@@ -54,11 +54,8 @@ export function TrackingForm({ orderId, initialTracking, initialCourier }: Props
 
     setSaved({ tracking_number: trackingNumber.trim(), courier })
 
-    // Genera y envía el código de entrega al comprador — fire and forget,
-    // no debe bloquear ni fallar el flujo de tracking si esto falla.
-    supabase.rpc('generate_delivery_otp', { p_order_id: orderId }).then(({ error: otpError }) => {
-      if (otpError) console.error('[TrackingForm generate_delivery_otp]', otpError)
-    })
+    // El código de entrega al comprador lo genera update_order_tracking
+    // por dentro; una segunda llamada a generate_delivery_otp sobraba.
   }
 
   if (saved) {
