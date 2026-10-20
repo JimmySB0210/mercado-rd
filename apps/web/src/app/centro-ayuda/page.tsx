@@ -47,7 +47,7 @@ export default async function CentroAyudaPage() {
   if (error) console.error('[CentroAyudaPage]', error)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: 'var(--color-bg-main)' }}>
       <Navbar />
       <HelpCenterContent articles={(data ?? []) as HelpArticle[]} loadFailed={!!error} />
     </div>

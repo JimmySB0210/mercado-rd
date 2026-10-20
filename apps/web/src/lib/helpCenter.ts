@@ -6,7 +6,7 @@
 // (/admin/centro-ayuda) para que ambas hablen exactamente igual de
 // categorías, orden, búsqueda y formato del contenido.
 //
-// help_articles.category es texto libre en la base (sin CHECK): las 9
+// help_articles.category es texto libre en la base (sin CHECK): las 11
 // categorías de abajo son la convención, en el orden en que se
 // muestran. Un artículo con una categoría fuera de esta lista no se
 // pierde — se agrupa al final con su propio nombre (ver
@@ -27,12 +27,14 @@ export interface HelpCategoryConfig {
 export const HELP_CATEGORIES: readonly HelpCategoryConfig[] = [
   { slug: 'comprar', emoji: '🛒', labelKey: 'helpCategoryComprar' },
   { slug: 'vender', emoji: '🏪', labelKey: 'helpCategoryVender' },
+  { slug: 'pedidos', emoji: '📋', labelKey: 'helpCategoryPedidos' },
   { slug: 'pagar', emoji: '💳', labelKey: 'helpCategoryPagar' },
   { slug: 'enviar', emoji: '📦', labelKey: 'helpCategoryEnviar' },
   { slug: 'devoluciones', emoji: '↩️', labelKey: 'helpCategoryDevoluciones' },
   { slug: 'reembolsos', emoji: '💸', labelKey: 'helpCategoryReembolsos' },
   { slug: 'disputas', emoji: '⚖️', labelKey: 'helpCategoryDisputas' },
   { slug: 'seguridad', emoji: '🛡️', labelKey: 'helpCategorySeguridad' },
+  { slug: 'cuenta', emoji: '👤', labelKey: 'helpCategoryCuenta' },
   { slug: 'contacto', emoji: '💬', labelKey: 'helpCategoryContacto' },
 ]
 
@@ -115,3 +117,72 @@ export function slugify(text: string): string {
 }
 
 export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+
+// ─── Agrupación de la página pública (/centro-ayuda) ─────────
+// Solo la usa la página pública; el admin sigue con groupHelpArticles.
+// Es presentación: "Devoluciones y reembolsos" junta dos categorías de
+// la base en un solo grupo visible (primero devoluciones, luego
+// reembolsos) sin migrar slugs.
+
+export interface PublicHelpGroupConfig {
+  // Id del grupo visible: ancla #categoria-<id>
+  id: string
+  // Categorías de la base que forman el grupo, en este orden
+  categories: readonly string[]
+  labelKey: keyof SupportDict
+}
+
+export const PUBLIC_HELP_GROUPS: readonly PublicHelpGroupConfig[] = [
+  { id: 'comprar', categories: ['comprar'], labelKey: 'helpCategoryComprar' },
+  { id: 'vender', categories: ['vender'], labelKey: 'helpCategoryVender' },
+  { id: 'pedidos', categories: ['pedidos'], labelKey: 'helpCategoryPedidos' },
+  { id: 'pagar', categories: ['pagar'], labelKey: 'helpCategoryPagar' },
+  { id: 'enviar', categories: ['enviar'], labelKey: 'helpCategoryEnviar' },
+  { id: 'devoluciones-reembolsos', categories: ['devoluciones', 'reembolsos'], labelKey: 'helpCategoryDevolucionesReembolsos' },
+  { id: 'disputas', categories: ['disputas'], labelKey: 'helpCategoryDisputas' },
+  { id: 'seguridad', categories: ['seguridad'], labelKey: 'helpCategorySeguridad' },
+  { id: 'cuenta', categories: ['cuenta'], labelKey: 'helpCategoryCuenta' },
+  { id: 'contacto', categories: ['contacto'], labelKey: 'helpCategoryContacto' },
+]
+
+export interface PublicHelpGroup {
+  id: string
+  // null = categoría desconocida (ver readableCategoryName)
+  config: PublicHelpGroupConfig | null
+  articles: HelpArticle[]
+}
+
+// "envios-express" → "Envios express": nombre legible para una
+// categoría desconocida (ej. un error de tipeo en el admin).
+export function readableCategoryName(slug: string): string {
+  const text = slug.replace(/[-_]+/g, ' ').trim()
+  return text ? text.charAt(0).toUpperCase() + text.slice(1) : slug
+}
+
+// Agrupa en el orden de PUBLIC_HELP_GROUPS; los grupos sin artículos no
+// aparecen y las categorías desconocidas van al final. excludeCategories
+// saca categorías que la página muestra aparte (las de "Sobre
+// MercadoRD").
+export function groupPublicHelpArticles(articles: HelpArticle[], excludeCategories: readonly string[] = []): PublicHelpGroup[] {
+  const bySlug = new Map<string, HelpArticle[]>()
+  for (const article of articles) {
+    if (excludeCategories.includes(article.category)) continue
+    const list = bySlug.get(article.category)
+    if (list) list.push(article)
+    else bySlug.set(article.category, [article])
+  }
+
+  const groups: PublicHelpGroup[] = []
+  const grouped = new Set<string>()
+  for (const config of PUBLIC_HELP_GROUPS) {
+    const list = config.categories.flatMap(category => {
+      grouped.add(category)
+      return [...(bySlug.get(category) ?? [])].sort(compareHelpArticles)
+    })
+    if (list.length > 0) groups.push({ id: config.id, config, articles: list })
+  }
+  for (const [slug, list] of bySlug) {
+    if (!grouped.has(slug)) groups.push({ id: slug, config: null, articles: [...list].sort(compareHelpArticles) })
+  }
+  return groups
+}
