@@ -62,6 +62,7 @@ export const support = {
   // ── Centro de ayuda (app/centro-ayuda) ──
   helpCenterBreadcrumbCurrent: 'Centro de ayuda',
   helpCenterTitle: 'Centro de ayuda',
+  helpCenterHowCanWeHelpTitle: '¿En qué podemos ayudarte?',
   helpCenterSubtitle: 'Encuentra respuestas sobre compras, ventas, pedidos y seguridad en MercadoRD.',
   helpCenterSearchPlaceholder: '¿Qué necesitas saber? Busca una pregunta o tema...',
   helpCenterSearchAria: 'Buscar artículos de ayuda',

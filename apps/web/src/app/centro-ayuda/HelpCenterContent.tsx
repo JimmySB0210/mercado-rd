@@ -16,6 +16,7 @@
 // ============================================================
 
 import { useEffect, useMemo, useState } from 'react'
+import Image from 'next/image'
 import {
   ArrowRight, ChevronRight, CreditCard, FileText, Info, LifeBuoy, MessageCircle, Package, Scale,
   Search, SearchX, ShieldCheck, ShoppingCart, Store, Truck, Undo2, UserRound, X,
@@ -124,45 +125,65 @@ export function HelpCenterContent({ articles, loadFailed }: Props) {
             <span aria-current="page">{t('helpCenterBreadcrumbCurrent')}</span>
           </nav>
 
-          <span aria-hidden="true" className="block w-10 h-1 mb-3" style={{ background: 'var(--color-yellow-cta)', borderRadius: 'var(--radius-pill)' }} />
-          <h1 className="text-h1 font-bold" style={{ color: 'var(--color-blue-dark)', letterSpacing: 'var(--tracking-heading)' }}>
-            {t('helpCenterTitle')}
-          </h1>
-          <p className="text-body mt-1" style={{ color: 'var(--color-text-secondary)' }}>{t('helpCenterSubtitle')}</p>
+          {/* Desde md-860: texto y buscador a la izquierda, ilustración a la derecha */}
+          <div className="md-860:flex md-860:items-center md-860:gap-5">
+            <div className="min-w-0 md-860:flex-1">
+              <span aria-hidden="true" className="block w-10 h-1 mb-3" style={{ background: 'var(--color-yellow-cta)', borderRadius: 'var(--radius-pill)' }} />
+              <h1 className="text-h1 font-bold" style={{ color: 'var(--color-blue-dark)', letterSpacing: 'var(--tracking-heading)' }}>
+                {t('helpCenterTitle')}
+              </h1>
+              <p className="text-body mt-1" style={{ color: 'var(--color-text-secondary)' }}>{t('helpCenterSubtitle')}</p>
 
-          <div className="relative mt-5">
-            <Search size={20} aria-hidden="true" className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--color-text-tertiary)' }} />
-            <input
-              type="text"
-              inputMode="search"
-              enterKeyHint="search"
-              value={query}
-              onChange={e => handleQueryChange(e.target.value)}
-              placeholder={t('helpCenterSearchPlaceholder')}
-              aria-label={t('helpCenterSearchAria')}
-              className="w-full h-14 pl-12 pr-14 text-ui sm:text-body focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-primary)] focus:border-[color:var(--color-primary)]"
-              style={{ background: 'var(--color-card-bg)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', boxShadow: 'var(--shadow-card)', color: 'var(--color-text-primary)' }}
-            />
-            {query && (
-              <button
-                type="button"
-                onClick={() => handleQueryChange('')}
-                aria-label={t('helpCenterClearSearchAria')}
-                className={`absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center justify-center w-11 h-11 bg-transparent border-none cursor-pointer hover:bg-[color:var(--color-bg-main)] ${FOCUS_RING}`}
-                style={{ color: 'var(--color-text-secondary)', borderRadius: 'var(--radius-control)' }}
-              >
-                <X size={18} aria-hidden="true" />
-              </button>
-            )}
+              <div className="relative mt-5">
+                <Search size={20} aria-hidden="true" className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--color-text-tertiary)' }} />
+                <input
+                  type="text"
+                  inputMode="search"
+                  enterKeyHint="search"
+                  value={query}
+                  onChange={e => handleQueryChange(e.target.value)}
+                  placeholder={t('helpCenterSearchPlaceholder')}
+                  aria-label={t('helpCenterSearchAria')}
+                  className={`w-full h-14 pl-12 ${query ? 'pr-14' : 'pr-4'} text-ui sm:text-body focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-primary)] focus:border-[color:var(--color-primary)]`}
+                  style={{ background: 'var(--color-card-bg)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', boxShadow: 'var(--shadow-card)', color: 'var(--color-text-primary)' }}
+                />
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => handleQueryChange('')}
+                    aria-label={t('helpCenterClearSearchAria')}
+                    className={`absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center justify-center w-11 h-11 bg-transparent border-none cursor-pointer hover:bg-[color:var(--color-bg-main)] ${FOCUS_RING}`}
+                    style={{ color: 'var(--color-text-secondary)', borderRadius: 'var(--radius-control)' }}
+                  >
+                    <X size={18} aria-hidden="true" />
+                  </button>
+                )}
+              </div>
+
+              {/* El contenido de los artículos vive en la base en un solo idioma */}
+              {language !== 'es' && (
+                <p className="flex items-start gap-2 mt-3 text-small" style={{ color: 'var(--color-text-secondary)' }}>
+                  <Info size={16} aria-hidden="true" className="flex-shrink-0 mt-0.5" style={{ color: 'var(--color-primary)' }} />
+                  {t('helpCenterSpanishOnlyNotice')}
+                </p>
+              )}
+            </div>
+
+            {/* Ilustración decorativa (el texto manuscrito es parte del arte y
+                no se traduce). Oculta en móvil: con loading="lazy" no se descarga. */}
+            <div className="hidden md-860:block flex-shrink-0 w-[280px] lg:w-[310px]">
+              <Image
+                src="/images/ayuda-ilustracion.webp"
+                alt=""
+                width={647}
+                height={333}
+                sizes="(min-width: 1024px) 310px, 280px"
+                aria-hidden="true"
+                draggable={false}
+                className="w-full h-auto pointer-events-none select-none"
+              />
+            </div>
           </div>
-
-          {/* El contenido de los artículos vive en la base en un solo idioma */}
-          {language !== 'es' && (
-            <p className="flex items-start gap-2 mt-3 text-small" style={{ color: 'var(--color-text-secondary)' }}>
-              <Info size={16} aria-hidden="true" className="flex-shrink-0 mt-0.5" style={{ color: 'var(--color-primary)' }} />
-              {t('helpCenterSpanishOnlyNotice')}
-            </p>
-          )}
         </div>
       </section>
 
@@ -193,6 +214,12 @@ export function HelpCenterContent({ articles, loadFailed }: Props) {
           </div>
         ) : (
           <>
+            {groups.length > 0 && (
+              <h2 className="text-h2 font-bold mb-4" style={{ color: 'var(--color-blue-dark)', letterSpacing: 'var(--tracking-heading)' }}>
+                {t('helpCenterHowCanWeHelpTitle')}
+              </h2>
+            )}
+
             {searching && (
               <p className="text-ui mb-4" role="status" style={{ color: 'var(--color-text-secondary)' }}>
                 {filtered.length === 1

@@ -50,6 +50,7 @@ export const support = {
   // ── Centre d'aide (app/centro-ayuda) ──
   helpCenterBreadcrumbCurrent: "Centre d'aide",
   helpCenterTitle: "Centre d'aide",
+  helpCenterHowCanWeHelpTitle: 'Comment pouvons-nous vous aider ?',
   helpCenterSubtitle: 'Trouvez des réponses sur les achats, les ventes, les commandes et la sécurité sur MercadoRD.',
   helpCenterSearchPlaceholder: 'Que voulez-vous savoir ? Cherchez une question ou un sujet...',
   helpCenterSearchAria: "Rechercher des articles d'aide",
