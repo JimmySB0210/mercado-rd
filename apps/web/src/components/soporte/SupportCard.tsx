@@ -31,25 +31,26 @@ interface Props {
 }
 
 export function SupportCard({ title, text, icon: Icon, href, onSelect, selected = false }: Props) {
-  const className = `flex items-center gap-3 w-full h-full min-h-[72px] p-4 text-left no-underline cursor-pointer transition-colors hover:!border-[color:var(--color-primary)] ${FOCUS_RING}`
+  const className = `flex items-center gap-3 w-full h-full min-h-[72px] p-4 text-left no-underline cursor-pointer transition-colors [box-shadow:var(--shadow-card)] hover:!border-[color:var(--color-primary)] min-[1360px]:flex-wrap min-[1360px]:items-start min-[1360px]:content-start ${FOCUS_RING}`
   const style: React.CSSProperties = {
     ...CARD_STYLE,
+    boxShadow: undefined, // la sombra va por clase: un box-shadow en línea taparía el anillo de foco
     ...(selected ? { background: 'var(--color-primary-subtle)', border: '1px solid var(--color-primary)' } : null),
   }
   const content = (
     <>
       <span
-        className="flex items-center justify-center flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11"
-        style={{ background: 'var(--color-primary-subtle)', color: 'var(--color-primary)', borderRadius: 'var(--radius-pill)' }}
+        className="flex items-center justify-center flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 min-[1360px]:order-1"
+        style={{ background: selected ? 'var(--color-card-bg)' : 'var(--color-primary-subtle)', color: 'var(--color-primary)', borderRadius: 'var(--radius-pill)' }}
         aria-hidden="true"
       >
         <Icon size={20} />
       </span>
-      <span className="flex-1 min-w-0">
+      <span className="flex-1 min-w-0 min-[1360px]:order-3 min-[1360px]:basis-full">
         <span className="block text-ui font-semibold" style={{ color: 'var(--color-text-primary)' }}>{title}</span>
         <span className="block text-small mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>{text}</span>
       </span>
-      <ChevronRight size={18} aria-hidden="true" className="flex-shrink-0" style={{ color: 'var(--color-text-tertiary)' }} />
+      <ChevronRight size={18} aria-hidden="true" className="flex-shrink-0 min-[1360px]:order-2 min-[1360px]:ml-auto" style={{ color: 'var(--color-text-tertiary)' }} />
     </>
   )
 

@@ -198,8 +198,8 @@ export function SoporteContent({ whatsappNumber, faqs }: Props) {
           {/* Buscador */}
           <form role="search" onSubmit={handleSearchSubmit}>
             <div
-              className="flex items-center gap-2 h-14 pl-4 pr-1.5 focus-within:ring-2 focus-within:ring-[color:var(--color-primary)]"
-              style={{ background: 'var(--color-card-bg)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', boxShadow: 'var(--shadow-card)' }}
+              className="flex items-center gap-2 h-14 pl-4 pr-1.5 [box-shadow:var(--shadow-card)] focus-within:ring-2 focus-within:ring-[color:var(--color-primary)]"
+              style={{ background: 'var(--color-card-bg)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)' }}
             >
               <Search size={20} aria-hidden="true" className="flex-shrink-0" style={{ color: 'var(--color-text-tertiary)' }} />
               <input
