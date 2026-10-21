@@ -144,8 +144,8 @@ export function HelpCenterContent({ articles, loadFailed }: Props) {
                   onChange={e => handleQueryChange(e.target.value)}
                   placeholder={t('helpCenterSearchPlaceholder')}
                   aria-label={t('helpCenterSearchAria')}
-                  className={`w-full h-14 pl-12 ${query ? 'pr-14' : 'pr-4'} text-ellipsis text-ui sm:text-body focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-primary)] focus:border-[color:var(--color-primary)]`}
-                  style={{ background: 'var(--color-card-bg)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', boxShadow: 'var(--shadow-card)', color: 'var(--color-text-primary)' }}
+                  className={`w-full h-14 pl-12 ${query ? 'pr-14' : 'pr-4'} text-ellipsis text-ui sm:text-body [box-shadow:var(--shadow-card)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-primary)] focus:border-[color:var(--color-primary)]`}
+                  style={{ background: 'var(--color-card-bg)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', color: 'var(--color-text-primary)' }}
                 />
                 {query && (
                   <button
