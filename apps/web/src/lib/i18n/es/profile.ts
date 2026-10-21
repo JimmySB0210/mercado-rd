@@ -289,7 +289,7 @@ export const profile = {
 
   // app/perfil/configuracion/page.tsx (el título de la página es common.settings)
   settingsPageSubtitle: 'Seguridad, preferencias, notificaciones y privacidad.',
-  settingsSecurityText: 'Contraseña, correo, teléfono, autenticación de dos factores y eliminación de tu cuenta.',
+  settingsSecurityText: 'Administra aquí tu contraseña, correo, teléfono, autenticación en dos pasos y la eliminación de tu cuenta.',
   settingsPreferencesTitle: 'Preferencias',
   settingsLanguageLabel: 'Idioma',
   settingsLanguageHint: 'Elige el idioma en el que ves MercadoRD.',
@@ -298,6 +298,16 @@ export const profile = {
   settingsNotificationsUnavailable: 'Los avisos del navegador no están disponibles: tu navegador no los admite o los bloqueaste para MercadoRD. Si los bloqueaste, permítelos desde los ajustes del sitio en tu navegador.',
   settingsPrivacyTitle: 'Privacidad',
   settingsDeleteAccountHint: 'Se gestiona desde Seguridad.',
+  settingsSecurityButton: 'Gestionar seguridad',
+  settingsBrowserAlertsTitle: 'Avisos del navegador',
+  settingsInternalNotificationsTitle: 'Notificaciones de MercadoRD',
+  settingsInternalNotificationsText: 'Tus pedidos, mensajes y alertas de seguridad aparecen en la campana de la barra superior (en escritorio). Por ahora no tienen ajustes.',
+  settingsSupportTitle: 'Ayuda y soporte',
+  settingsSupportText: 'Resuelve dudas y recibe atención si tuviste un problema.',
+  settingsSupportButton: 'Ir a Ayuda y soporte',
+  settingsStoreTitle: 'Tienda',
+  settingsStoreText: 'Los ajustes de tu tienda (datos del negocio, verificación y más) están en el panel de vendedor.',
+  settingsStoreButton: 'Configuración de la tienda',
 
   // components/shop/WishlistButton.tsx
   removeFromFavoritesAria: 'Quitar de favoritos',

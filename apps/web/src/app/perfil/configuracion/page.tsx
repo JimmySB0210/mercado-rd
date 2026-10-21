@@ -5,9 +5,11 @@
 // ============================================================
 // Reúne en un solo lugar lo que hoy se puede configurar de verdad:
 // Seguridad (enlace a /perfil/seguridad), Preferencias (idioma),
-// Notificaciones (avisos del navegador) y Privacidad (documentos legales
-// y eliminación de la cuenta). No guarda nada propio y no existen ajustes
-// por tipo de notificación ni de visibilidad, así que no se dibujan
+// Notificaciones (avisos del navegador; las notificaciones internas no
+// tienen ajustes), Privacidad (documentos legales y eliminación de la
+// cuenta), Ayuda y soporte y, solo para vendedores, el acceso a los
+// ajustes de la tienda. No guarda nada propio y no existen ajustes por
+// tipo de notificación ni de visibilidad, así que no se dibujan
 // controles de adorno.
 // OJO: /dashboard/configuracion es otra cosa (ajustes de la tienda del
 // vendedor); esta es la configuración de la cuenta de cualquier usuario.
@@ -15,7 +17,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Bell, Check, ChevronRight, Eye, FileText, Scale, ShieldCheck, SlidersHorizontal, Trash2 } from 'lucide-react'
+import { Bell, Check, ChevronRight, Eye, FileText, LifeBuoy, Scale, ShieldCheck, SlidersHorizontal, Store, Trash2 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { useTranslation } from '@/lib/hooks/useTranslation'
@@ -24,8 +26,11 @@ import { createClient } from '@/lib/supabase/client'
 import { Navbar } from '@/components/shop/Navbar'
 import { PushNotificationButton } from '@/components/shop/PushNotificationButton'
 import { ProfileCard, FOCUS_RING } from '@/components/profile/ProfileCard'
+import { Breadcrumb } from '@/components/profile/Breadcrumb'
 
 const ROW_BORDER = 'border-b border-[color:var(--color-divider)] last:border-b-0'
+const OUTLINE_LINK = `inline-flex items-center justify-center gap-1.5 min-h-[44px] px-4 text-ui font-semibold no-underline transition-colors hover:bg-[color:var(--color-primary-subtle)] ${FOCUS_RING}`
+const OUTLINE_LINK_STYLE: React.CSSProperties = { color: 'var(--color-primary)', border: '1px solid var(--color-primary)', borderRadius: 'var(--radius-control)' }
 
 // Cada idioma se nombra en su propio idioma: estos textos no se traducen.
 const LANGUAGE_OPTIONS: { code: Language; label: string }[] = [
@@ -45,6 +50,19 @@ export default function ConfiguracionPage() {
   useEffect(() => {
     if (!loading && !user) router.push('/login?redirect=/perfil/configuracion')
   }, [user, loading, router])
+
+  // ¿Tiene tienda? (misma consulta que /perfil). null = comprobando: las
+  // tarjetas Ayuda y Tienda se pintan juntas al terminar, sin saltos.
+  const [isVendor, setIsVendor] = useState<boolean | null>(null)
+  const userId = user?.id
+  useEffect(() => {
+    if (!userId) return
+    createClient().from('vendors').select('id').eq('user_id', userId).maybeSingle()
+      .then(({ data, error }) => {
+        if (error) console.error('[ConfiguracionPage] vendors', error)
+        setIsVendor(!!data)
+      })
+  }, [userId])
 
   // Mismo guardado que LanguageSwitcher: el idioma cambia al instante en este
   // navegador y se sincroniza con la cuenta sin bloquear (RPC update_own_language).
@@ -72,6 +90,7 @@ export default function ConfiguracionPage() {
 
       <main className="max-w-[1100px] mx-auto px-4 py-6 md-860:py-8">
         <header className="mb-5">
+          <Breadcrumb ariaLabel={t('breadcrumbAria')} items={[{ label: t('breadcrumbHome'), href: '/' }, { label: tc('settings') }]} />
           <h1 className="text-h1 font-bold" style={{ color: 'var(--color-text-primary)', letterSpacing: 'var(--tracking-heading)' }}>{tc('settings')}</h1>
           <p className="text-body mt-1" style={{ color: 'var(--color-text-secondary)' }}>{t('settingsPageSubtitle')}</p>
         </header>
@@ -79,8 +98,12 @@ export default function ConfiguracionPage() {
         <div className="grid gap-4 md-860:grid-cols-2">
 
           {/* Seguridad: todo lo editable vive en /perfil/seguridad */}
-          <ProfileCard title={t('securitySectionTitle')} icon={ShieldCheck} action={{ label: t('manageLink'), href: '/perfil/seguridad' }}>
+          <ProfileCard title={t('securitySectionTitle')} icon={ShieldCheck}>
             <p className="text-ui" style={{ color: 'var(--color-text-secondary)' }}>{t('settingsSecurityText')}</p>
+            <a href="/perfil/seguridad" className={`mt-4 ${OUTLINE_LINK}`} style={OUTLINE_LINK_STYLE}>
+              {t('settingsSecurityButton')}
+              <ChevronRight size={16} aria-hidden />
+            </a>
           </ProfileCard>
 
           {/* Preferencias: hoy la única preferencia guardada es el idioma */}
@@ -125,6 +148,31 @@ export default function ConfiguracionPage() {
               <SettingsLinkRow href="/perfil/seguridad" icon={Trash2} label={t('deleteAccountTitle')} hint={t('settingsDeleteAccountHint')} />
             </ul>
           </ProfileCard>
+
+          {/* Ayuda y Tienda: se pintan juntas cuando se sabe si es vendedor */}
+          {isVendor !== null && (
+            <>
+              <div className={`grid ${isVendor ? '' : 'md-860:col-span-2'}`}>
+                <ProfileCard title={t('settingsSupportTitle')} icon={LifeBuoy}>
+                  <p className="text-ui" style={{ color: 'var(--color-text-secondary)' }}>{t('settingsSupportText')}</p>
+                  <a href="/soporte" className={`mt-4 ${OUTLINE_LINK}`} style={OUTLINE_LINK_STYLE}>
+                    {t('settingsSupportButton')}
+                    <ChevronRight size={16} aria-hidden />
+                  </a>
+                </ProfileCard>
+              </div>
+              {isVendor && (
+                // Ajustes de la tienda: son otra página (/dashboard/configuracion)
+                <ProfileCard title={t('settingsStoreTitle')} icon={Store}>
+                  <p className="text-ui" style={{ color: 'var(--color-text-secondary)' }}>{t('settingsStoreText')}</p>
+                  <a href="/dashboard/configuracion" className={`mt-4 ${OUTLINE_LINK}`} style={OUTLINE_LINK_STYLE}>
+                    {t('settingsStoreButton')}
+                    <ChevronRight size={16} aria-hidden />
+                  </a>
+                </ProfileCard>
+              )}
+            </>
+          )}
         </div>
       </main>
     </div>
@@ -143,13 +191,22 @@ function NotificationsCard() {
 
   return (
     <ProfileCard title={t('settingsNotificationsTitle')} icon={Bell}>
-      <p className="text-ui" style={{ color: 'var(--color-text-secondary)' }}>{t('settingsNotificationsText')}</p>
-      <div className="peer mt-3 empty:hidden"><PushNotificationButton /></div>
-      {mounted && (
-        <p className="hidden peer-empty:block mt-3 text-small" style={{ color: 'var(--color-text-secondary)' }}>
-          {t('settingsNotificationsUnavailable')}
-        </p>
-      )}
+      {/* Avisos del navegador (este dispositivo) */}
+      <div>
+        <h3 className="text-ui font-semibold" style={{ color: 'var(--color-text-primary)' }}>{t('settingsBrowserAlertsTitle')}</h3>
+        <p className="text-ui mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>{t('settingsNotificationsText')}</p>
+        <div className="peer mt-3 empty:hidden"><PushNotificationButton /></div>
+        {mounted && (
+          <p className="hidden peer-empty:block mt-3 text-small" style={{ color: 'var(--color-text-secondary)' }}>
+            {t('settingsNotificationsUnavailable')}
+          </p>
+        )}
+      </div>
+      {/* Notificaciones internas (campana): sin ajustes */}
+      <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--color-divider)' }}>
+        <h3 className="text-ui font-semibold" style={{ color: 'var(--color-text-primary)' }}>{t('settingsInternalNotificationsTitle')}</h3>
+        <p className="text-ui mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>{t('settingsInternalNotificationsText')}</p>
+      </div>
     </ProfileCard>
   )
 }
