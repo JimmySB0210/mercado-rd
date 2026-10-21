@@ -250,6 +250,17 @@ export const profile = {
   deletingButton: 'Suppression...',
   deleteGenericError: "Impossible de supprimer le compte. Réessayez.",
 
+  settingsPageSubtitle: 'Sécurité, préférences, notifications et confidentialité.',
+  settingsSecurityText: 'Mot de passe, e-mail, téléphone, authentification à deux facteurs et suppression du compte.',
+  settingsPreferencesTitle: 'Préférences',
+  settingsLanguageLabel: 'Langue',
+  settingsLanguageHint: 'Choisissez la langue dans laquelle vous voyez MercadoRD.',
+  settingsNotificationsTitle: 'Notifications',
+  settingsNotificationsText: 'Activez les alertes du navigateur pour recevoir vos notifications MercadoRD lorsque le site est ouvert. Ce réglage ne concerne que cet appareil et ce navigateur.',
+  settingsNotificationsUnavailable: 'Les alertes du navigateur ne sont pas disponibles : votre navigateur ne les prend pas en charge ou vous les avez bloquées pour MercadoRD. Si vous les avez bloquées, autorisez-les depuis les paramètres du site dans votre navigateur.',
+  settingsPrivacyTitle: 'Confidentialité',
+  settingsDeleteAccountHint: 'Se gère depuis Sécurité.',
+
   removeFromFavoritesAria: 'Retirer des favoris',
   addToFavoritesAria: 'Ajouter aux favoris',
 } satisfies ProfileDict

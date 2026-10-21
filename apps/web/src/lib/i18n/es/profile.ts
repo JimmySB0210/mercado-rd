@@ -272,6 +272,18 @@ export const profile = {
   deletingButton: 'Eliminando...',
   deleteGenericError: 'No se pudo eliminar la cuenta. Intenta de nuevo.',
 
+  // app/perfil/configuracion/page.tsx (el título de la página es common.settings)
+  settingsPageSubtitle: 'Seguridad, preferencias, notificaciones y privacidad.',
+  settingsSecurityText: 'Contraseña, correo, teléfono, autenticación de dos factores y eliminación de tu cuenta.',
+  settingsPreferencesTitle: 'Preferencias',
+  settingsLanguageLabel: 'Idioma',
+  settingsLanguageHint: 'Elige el idioma en el que ves MercadoRD.',
+  settingsNotificationsTitle: 'Notificaciones',
+  settingsNotificationsText: 'Activa los avisos del navegador para recibir tus notificaciones de MercadoRD mientras tengas el sitio abierto. Solo afecta a este dispositivo y navegador.',
+  settingsNotificationsUnavailable: 'Los avisos del navegador no están disponibles: tu navegador no los admite o los bloqueaste para MercadoRD. Si los bloqueaste, permítelos desde los ajustes del sitio en tu navegador.',
+  settingsPrivacyTitle: 'Privacidad',
+  settingsDeleteAccountHint: 'Se gestiona desde Seguridad.',
+
   // components/shop/WishlistButton.tsx
   removeFromFavoritesAria: 'Quitar de favoritos',
   addToFavoritesAria: 'Agregar a favoritos',

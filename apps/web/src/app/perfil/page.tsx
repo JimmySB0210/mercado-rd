@@ -22,7 +22,7 @@ import { ProfileStatCard } from '@/components/profile/ProfileStatCard'
 import {
   User, Mail, Phone, MapPin, ShoppingBag, Truck, Heart, MessageCircle, ShieldCheck, KeyRound,
   Gift, History, AlertTriangle, LifeBuoy, LayoutDashboard, Store, LogOut, ChevronRight,
-  CheckCircle2, Info, Pencil, LayoutGrid,
+  CheckCircle2, Info, Pencil, LayoutGrid, Settings,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useTranslation } from '@/lib/hooks/useTranslation'
@@ -155,6 +155,7 @@ export default function PerfilPage() {
     { href: '/perfil/lista-regalos', label: t('giftListsPageTitle'), icon: Gift },
     { href: '/perfil/historial', label: t('historyPageTitle'), icon: History },
     { href: '/perfil/disputas', label: t('disputesPageTitle'), icon: AlertTriangle },
+    { href: '/perfil/configuracion', label: tc('settings'), icon: Settings },
     { href: '/soporte', label: tc('support'), icon: LifeBuoy },
   ]
   if (isVendorKnown) {

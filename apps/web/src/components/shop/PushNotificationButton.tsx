@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from 'react'
 import { BRAND } from '@/lib/colors'
+import { useTranslation } from '@/lib/hooks/useTranslation'
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
 
@@ -62,6 +63,7 @@ const getSWRegistration = (): Promise<ServiceWorkerRegistration> => {
 }
 
 export function PushNotificationButton() {
+  const { t } = useTranslation('common')
   const [permission, setPermission] = useState<NotificationPermission>('default')
   const [subscribed, setSubscribed] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -123,8 +125,8 @@ export function PushNotificationButton() {
       console.error('[push] Push subscription error:', err)
       setError(
         err instanceof Error && (err.message.startsWith('Timeout') || err.message === 'Service Worker no disponible')
-          ? 'No se pudo activar (tardó demasiado). Intenta de nuevo.'
-          : 'No se pudieron activar las notificaciones. Intenta de nuevo.'
+          ? t('pushErrorTimeout')
+          : t('pushErrorSubscribe')
       )
     } finally {
       setLoading(false)
@@ -155,7 +157,7 @@ export function PushNotificationButton() {
       setSubscribed(false)
     } catch (err) {
       console.error('[push] Push unsubscribe error:', err)
-      setError('No se pudieron desactivar las notificaciones. Intenta de nuevo.')
+      setError(t('pushErrorUnsubscribe'))
     } finally {
       setLoading(false)
     }
@@ -176,7 +178,7 @@ export function PushNotificationButton() {
           color: hovering ? BRAND.red : BRAND.green, cursor: loading ? 'default' : 'pointer'
         }}
       >
-        {loading ? 'Desactivando...' : hovering ? '🔕 Desactivar notificaciones' : '🔔 Notificaciones activadas'}
+        {loading ? t('pushDisabling') : hovering ? `🔕 ${t('pushDisable')}` : `🔔 ${t('pushEnabled')}`}
       </button>
       {error && (
         <p style={{ fontSize: 'var(--text-badge)', color: BRAND.red, marginTop: 4 }}>{error}</p>
@@ -194,7 +196,7 @@ export function PushNotificationButton() {
           padding: '6px 12px', fontSize: 'var(--text-caption)', color: BRAND.blue, cursor: loading ? 'default' : 'pointer'
         }}
       >
-        {loading ? 'Activando...' : '🔔 Activar notificaciones'}
+        {loading ? t('pushEnabling') : `🔔 ${t('pushEnable')}`}
       </button>
       {error && (
         <p style={{ fontSize: 'var(--text-badge)', color: BRAND.red, marginTop: 4 }}>{error}</p>

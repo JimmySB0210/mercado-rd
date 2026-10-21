@@ -10,7 +10,8 @@
 //   - Breakpoint unificado: md = 860px en tailwind.config.js
 // ============================================================
 
-import { ChevronDown, ShoppingCart, User, LogOut, LayoutDashboard, ShieldCheck, Heart, MessageCircle, Lock, HelpCircle, History, Gift, X, BadgeCheck, Truck } from 'lucide-react'
+import { ChevronDown, ShoppingCart, User, LogOut, LayoutDashboard, ShieldCheck, Heart, MessageCircle, Settings, HelpCircle, History, Gift, X, BadgeCheck, Truck } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
 import { getCategoryName } from '@/lib/utils'
 import { useCartStore, useCartItemCount } from '@/lib/store/cart'
@@ -26,6 +27,33 @@ import { Logo } from '@/components/shop/Logo'
 import { useIsMobile } from '@/lib/hooks/useIsMobile'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { getCategoryIcon } from '@/lib/categoryIcons'
+
+// Fila de enlace del menú de cuenta: todas comparten estilo y, al navegar, cierran el menú.
+function AccountMenuLink({ href, icon: Icon, label, onNavigate }: { href: string; icon: LucideIcon; label: string; onNavigate: () => void }) {
+  return (
+    <a
+      href={href}
+      className="flex items-center gap-2.5 px-4 py-2.5 text-sm no-underline hover:bg-gray-50 transition-colors"
+      style={{ color: BRAND.dark }}
+      onClick={onNavigate}
+    >
+      <Icon size={15} color={BRAND.gray} aria-hidden />
+      {label}
+    </a>
+  )
+}
+
+// Grupo con encabezado: el texto del diccionario va en minúsculas y el CSS lo muestra en mayúsculas.
+function AccountMenuGroup({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+  return (
+    <div role="group" aria-labelledby={id} className="mt-1 pt-1 border-t border-[color:var(--color-divider)]">
+      <p id={id} className="px-4 pt-2 pb-1 text-caption font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-secondary)' }}>
+        {title}
+      </p>
+      {children}
+    </div>
+  )
+}
 
 export function Navbar() {
   const { t, language } = useTranslation('common')
@@ -46,6 +74,7 @@ export function Navbar() {
   const [showCategoryMenu, setShowCategoryMenu] = useState(false)
   const [hoveredCategoryId, setHoveredCategoryId] = useState<number | null>(null)
   const accountMenuRef = useRef<HTMLDivElement>(null)
+  const accountTriggerRef = useRef<HTMLButtonElement>(null)
   const isMobile = useIsMobile(860)
 
   const topCategories = useMemo(() => categories.filter(c => !c.parent_id), [categories])
@@ -70,6 +99,20 @@ export function Navbar() {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  // Escape cierra el menú de cuenta y devuelve el foco al botón que lo abre.
+  useEffect(() => {
+    if (!menuOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      setMenuOpen(false)
+      accountTriggerRef.current?.focus()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [menuOpen])
+
+  const closeAccountMenu = () => setMenuOpen(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -293,7 +336,10 @@ export function Navbar() {
               onPointerLeave={e => e.pointerType === 'mouse' && setMenuOpen(false)}
             >
               <button
+                ref={accountTriggerRef}
                 onClick={() => setMenuOpen(true)}
+                aria-expanded={menuOpen}
+                aria-controls="account-menu"
                 className="flex items-center gap-2 cursor-pointer border-none bg-transparent"
                 style={{ color: BRAND.dark }}
               >
@@ -322,101 +368,39 @@ export function Navbar() {
 
               {menuOpen && (
                 <div
+                  id="account-menu"
                   className="absolute right-0 top-full bg-white rounded-xl shadow-lg border border-gray-100 pt-3 pb-1 z-50"
-                  style={{ minWidth: 180 }}
+                  style={{ minWidth: 220 }}
                 >
-                  <a
-                    href='/dashboard'
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm no-underline hover:bg-gray-50 transition-colors"
-                    style={{ color: BRAND.dark }}
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    <LayoutDashboard size={15} color={BRAND.gray} />
-                    {t('myDashboard')}
-                  </a>
-                  <a
-                    href='/perfil/favoritos'
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm no-underline hover:bg-gray-50 transition-colors"
-                    style={{ color: BRAND.dark }}
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    <Heart size={15} color={BRAND.gray} />
-                    {t('myFavorites')}
-                  </a>
-                  <a
-                    href='/perfil/lista-regalos'
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm no-underline hover:bg-gray-50 transition-colors"
-                    style={{ color: BRAND.dark }}
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    <Gift size={15} color={BRAND.gray} />
-                    {t('giftLists')}
-                  </a>
-                  <a
-                    href='/perfil/historial'
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm no-underline hover:bg-gray-50 transition-colors"
-                    style={{ color: BRAND.dark }}
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    <History size={15} color={BRAND.gray} />
-                    {t('history')}
-                  </a>
-                  <a
-                    href='/mensajes'
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm no-underline hover:bg-gray-50 transition-colors"
-                    style={{ color: BRAND.dark }}
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    <MessageCircle size={15} color={BRAND.gray} />
-                    {t('messages')}
-                  </a>
-                  <a
-                    href='/perfil'
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm no-underline hover:bg-gray-50 transition-colors"
-                    style={{ color: BRAND.dark }}
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    <User size={15} color={BRAND.gray} />
-                    {t('myProfile')}
-                  </a>
+                  <AccountMenuLink href='/dashboard' icon={LayoutDashboard} label={t('myDashboard')} onNavigate={closeAccountMenu} />
+                  <AccountMenuLink href='/perfil' icon={User} label={t('myProfile')} onNavigate={closeAccountMenu} />
+                  <AccountMenuLink href='/perfil/configuracion' icon={Settings} label={t('settings')} onNavigate={closeAccountMenu} />
                   {profile?.is_admin && (
-                    <a
-                      href='/admin'
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm no-underline hover:bg-gray-50 transition-colors"
-                      style={{ color: BRAND.dark }}
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      <ShieldCheck size={15} color={BRAND.gray} />
-                      {t('adminPanel')}
-                    </a>
+                    <AccountMenuLink href='/admin' icon={ShieldCheck} label={t('adminPanel')} onNavigate={closeAccountMenu} />
                   )}
-                  <a
-                    href='/perfil/seguridad'
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm no-underline hover:bg-gray-50 transition-colors"
-                    style={{ color: BRAND.dark }}
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    <Lock size={15} color={BRAND.gray} />
-                    {t('security')}
-                  </a>
-                  <a
-                    href='/soporte'
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm no-underline hover:bg-gray-50 transition-colors"
-                    style={{ color: BRAND.dark }}
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    <HelpCircle size={15} color={BRAND.gray} />
-                    {t('support')}
-                  </a>
-                  <hr className="my-1 border-gray-100" />
-                  <button
-                    onClick={() => { signOut(); setMenuOpen(false) }}
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm w-full text-left border-none bg-transparent cursor-pointer hover:bg-gray-50 transition-colors"
-                    style={{ color: BRAND.red }}
-                  >
-                    <LogOut size={15} color={BRAND.red} />
-                    {t('logout')}
-                  </button>
+
+                  <AccountMenuGroup id="account-menu-activity" title={t('accountMenuActivity')}>
+                    <AccountMenuLink href='/perfil/favoritos' icon={Heart} label={t('myFavorites')} onNavigate={closeAccountMenu} />
+                    <AccountMenuLink href='/perfil/lista-regalos' icon={Gift} label={t('giftLists')} onNavigate={closeAccountMenu} />
+                    <AccountMenuLink href='/perfil/historial' icon={History} label={t('history')} onNavigate={closeAccountMenu} />
+                    <AccountMenuLink href='/mensajes' icon={MessageCircle} label={t('messages')} onNavigate={closeAccountMenu} />
+                  </AccountMenuGroup>
+
+                  <AccountMenuGroup id="account-menu-assistance" title={t('accountMenuAssistance')}>
+                    <AccountMenuLink href='/soporte' icon={HelpCircle} label={t('helpAndSupport')} onNavigate={closeAccountMenu} />
+                  </AccountMenuGroup>
+
+                  {/* Cerrar sesión: separado del resto con un divisor más marcado */}
+                  <div className="mt-1 pt-1 border-t border-[color:var(--color-border)]">
+                    <button
+                      onClick={() => { signOut(); setMenuOpen(false) }}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm w-full text-left border-none bg-transparent cursor-pointer hover:bg-gray-50 transition-colors"
+                      style={{ color: BRAND.red }}
+                    >
+                      <LogOut size={15} color={BRAND.red} aria-hidden />
+                      {t('logout')}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

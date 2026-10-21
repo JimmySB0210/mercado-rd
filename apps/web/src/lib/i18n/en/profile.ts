@@ -250,6 +250,17 @@ export const profile = {
   deletingButton: 'Deleting...',
   deleteGenericError: 'Could not delete the account. Try again.',
 
+  settingsPageSubtitle: 'Security, preferences, notifications and privacy.',
+  settingsSecurityText: 'Password, email, phone, two-factor authentication and account deletion.',
+  settingsPreferencesTitle: 'Preferences',
+  settingsLanguageLabel: 'Language',
+  settingsLanguageHint: 'Choose the language you see MercadoRD in.',
+  settingsNotificationsTitle: 'Notifications',
+  settingsNotificationsText: 'Turn on browser alerts to receive your MercadoRD notifications while the site is open. This only affects this device and browser.',
+  settingsNotificationsUnavailable: "Browser alerts aren't available: your browser doesn't support them or you blocked them for MercadoRD. If you blocked them, allow them from the site settings in your browser.",
+  settingsPrivacyTitle: 'Privacy',
+  settingsDeleteAccountHint: 'Managed from Security.',
+
   removeFromFavoritesAria: 'Remove from favorites',
   addToFavoritesAria: 'Add to favorites',
 } satisfies ProfileDict
