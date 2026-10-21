@@ -220,7 +220,7 @@ export const profile = {
   passwordTooShort: 'Le mot de passe doit contenir au moins 6 caractères',
   passwordMismatch: 'Les mots de passe ne correspondent pas',
   passwordChangeError: 'Impossible de changer le mot de passe. Réessayez.',
-  passwordChangeSuccess: '✓ Mot de passe mis à jour avec succès',
+  passwordChangeSuccess: 'Mot de passe mis à jour avec succès',
   updatePasswordButton: 'Mettre à jour le mot de passe',
   savingButton: 'Enregistrement...',
   mfaTitle: 'Authentification en deux étapes (MFA)',
@@ -240,11 +240,11 @@ export const profile = {
   changeEmailTitle: "Changer d'email",
   newEmailPlaceholder: 'Nouvel email',
   emailInvalid: 'Entrez un email valide',
-  emailChangeSuccess: '✓ Vérifiez votre boîte mail pour confirmer le changement',
+  emailChangeSuccess: 'Vérifiez votre boîte mail pour confirmer le changement',
   updateEmailButton: "Mettre à jour l'email",
   changePhoneTitle: 'Changer de téléphone',
   newPhonePlaceholder: 'Nouveau téléphone (809-555-1234)',
-  phoneChangeSuccess: '✓ Téléphone mis à jour avec succès',
+  phoneChangeSuccess: 'Téléphone mis à jour avec succès',
   updatePhoneButton: 'Mettre à jour le téléphone',
 
   // Supprimer le compte

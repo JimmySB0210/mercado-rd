@@ -242,7 +242,7 @@ export const profile = {
   passwordTooShort: 'La contraseña debe tener al menos 6 caracteres',
   passwordMismatch: 'Las contraseñas no coinciden',
   passwordChangeError: 'No se pudo cambiar la contraseña. Intenta de nuevo.',
-  passwordChangeSuccess: '✓ Contraseña actualizada correctamente',
+  passwordChangeSuccess: 'Contraseña actualizada correctamente',
   updatePasswordButton: 'Actualizar contraseña',
   savingButton: 'Guardando...',
   mfaTitle: 'Autenticación en dos pasos (MFA)',
@@ -262,11 +262,11 @@ export const profile = {
   changeEmailTitle: 'Cambiar email',
   newEmailPlaceholder: 'Nuevo email',
   emailInvalid: 'Ingresa un email válido',
-  emailChangeSuccess: '✓ Revisa tu correo para confirmar el cambio de email',
+  emailChangeSuccess: 'Revisa tu correo para confirmar el cambio de email',
   updateEmailButton: 'Actualizar email',
   changePhoneTitle: 'Cambiar teléfono',
   newPhonePlaceholder: 'Nuevo teléfono (809-555-1234)',
-  phoneChangeSuccess: '✓ Teléfono actualizado correctamente',
+  phoneChangeSuccess: 'Teléfono actualizado correctamente',
   updatePhoneButton: 'Actualizar teléfono',
 
   // Eliminar cuenta

@@ -53,6 +53,7 @@ export const AccessRow = forwardRef<HTMLButtonElement, Props>(function AccessRow
           onClick={onToggle}
           aria-expanded={open}
           aria-controls={open ? panelId : undefined}
+          aria-describedby={titleId}
           className={`inline-flex items-center justify-center gap-1.5 w-full sm:w-auto flex-shrink-0 min-h-[44px] px-4 text-ui font-semibold cursor-pointer transition-colors hover:bg-[color:var(--color-primary-subtle)] ${FOCUS_RING}`}
           style={{ color: 'var(--color-primary)', border: '1px solid var(--color-primary)', borderRadius: 'var(--radius-control)' }}
         >

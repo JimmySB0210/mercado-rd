@@ -723,16 +723,19 @@ export default function SecurityPage() {
           </div>
 
           {deleteStep === 'idle' && (
-            <div>
-              <button
-                type="button"
-                onClick={handleDeleteClick}
-                disabled={deleteChecking}
-                className={`inline-flex items-center justify-center min-h-[44px] px-5 text-ui font-semibold cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${FOCUS_RING}`}
-                style={{ background: 'var(--color-card-bg)', border: `1px solid ${BRAND.red}`, color: BRAND.red, borderRadius: 'var(--radius-control)' }}
-              >
-                {deleteChecking ? t('checkingButton') : t('deleteAccountButton')}
-              </button>
+            <div className="flex flex-col gap-3">
+              {deleteError && <ErrorMessage>{deleteError}</ErrorMessage>}
+              <div>
+                <button
+                  type="button"
+                  onClick={handleDeleteClick}
+                  disabled={deleteChecking}
+                  className={`inline-flex items-center justify-center min-h-[44px] px-5 text-ui font-semibold cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${FOCUS_RING}`}
+                  style={{ background: 'var(--color-card-bg)', border: `1px solid ${BRAND.red}`, color: BRAND.red, borderRadius: 'var(--radius-control)' }}
+                >
+                  {deleteChecking ? t('checkingButton') : t('deleteAccountButton')}
+                </button>
+              </div>
             </div>
           )}
 
