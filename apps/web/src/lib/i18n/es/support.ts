@@ -2,30 +2,21 @@
 // MercadoRD — i18n: namespace "support" (español, fuente de verdad)
 // Ruta: src/lib/i18n/es/support.ts
 // ============================================================
-// Cubre app/soporte/page.tsx completo, incluyendo el mensaje que se
-// arma dinámicamente para WhatsApp (nunca queda en español fijo si
-// el idioma activo es otro). Los 7 tipos de problema del <select> y
-// las 5 tarjetas de categoría usan su key de este diccionario como
-// valor interno/identificador (no el texto en español) — así el
-// componente nunca compara ni guarda texto traducible como estado.
+// Cubre app/soporte (SoporteContent.tsx) completo, incluyendo el mensaje
+// que se arma dinámicamente para WhatsApp (nunca queda en español fijo
+// si el idioma activo es otro). Los 9 tipos de problema del <select> y
+// las 12 tarjetas usan su key de este diccionario como valor
+// interno/identificador (no el texto en español) — así el componente
+// nunca compara ni guarda texto traducible como estado.
 // ============================================================
 
 export const support = {
   breadcrumbHome: 'Inicio',
   breadcrumbCurrent: 'Soporte',
-  pageTitle: 'Soporte al cliente',
-  pageSubtitle: 'Cuéntanos qué pasó y te ayudamos por WhatsApp.',
-  whatIsYourProblemLabel: '¿Cuál es tu problema?',
 
-  // Tarjetas — las primeras 4 llevan a /perfil/pedidos con el motivo
-  // resuelto (DisputeModal lo trae pre-seleccionado vía query param)
-  categoryDamagedTitle: 'Productos dañados o rotos',
-  categoryWrongItemTitle: 'Pedidos incompletos o erróneos',
+  // Títulos de tarjeta que coinciden con estos textos (se reutilizan)
   categoryNotAsDescribedTitle: 'Diferencias con la descripción',
-  categoryDisputeTitle: 'Presentar una disputa comercial',
   categoryHiddenChargesTitle: 'Cargos ocultos',
-
-  scheduleBanner: 'Respondemos de lunes a sábado, 9am–6pm. Tiempo de respuesta: menos de 2 horas en horario hábil.',
 
   // Formulario
   fullNameLabel: 'Nombre completo',
@@ -48,6 +39,8 @@ export const support = {
   issueCancelOrder: 'Quiero cancelar mi pedido',
   issuePaymentProblem: 'Problema con el pago',
   issueHiddenCharges: 'Cargos ocultos en mi pedido',
+  issueSellerProblem: 'Tengo un problema con un vendedor',
+  issueAccountProblem: 'Problemas con mi cuenta',
   issueProductQuestion: 'Tengo una pregunta sobre un producto',
   issueOther: 'Otro',
 
@@ -59,6 +52,53 @@ export const support = {
   whatsappNoOrderNumber: 'Sin número de orden',
   whatsappIssueLabel: 'Problema',
   whatsappDescriptionLabel: 'Descripción',
+
+  // ── Rediseño de app/soporte (SoporteContent) ──
+  supportSubtitle: 'Estamos aquí para ayudarte. Selecciona el tema de tu consulta o contáctanos directamente.',
+  supportBannerTitle: '¿Necesitas ayuda?',
+  supportBannerText: 'Nuestro equipo de soporte está listo para asistirte.',
+  supportSearchPlaceholder: 'Buscar un tema, pedido o problema...',
+  supportSearchAria: 'Buscar en Soporte',
+  supportSearchButton: 'Buscar',
+  supportQuickAccessTitle: 'Accesos rápidos',
+  supportCardOrdersTitle: 'Mis pedidos',
+  supportCardOrdersText: 'Consulta el estado de tus pedidos, seguimiento y entregas.',
+  supportCardReturnsTitle: 'Devoluciones y disputas',
+  supportCardReturnsText: 'Solicita una devolución o presenta una disputa si lo necesitas.',
+  supportCardPaymentsTitle: 'Pagos y seguridad',
+  supportCardPaymentsText: 'Resuelve dudas sobre pagos, métodos de pago y seguridad.',
+  supportCardAccountTitle: 'Mi cuenta',
+  supportCardAccountText: 'Revisa tus datos y gestiona tu contraseña y la seguridad de tu cuenta.',
+  supportCardNotReceivedText: 'Tu pedido no ha llegado en la fecha estimada o no se ha entregado.',
+  supportCardDamagedTitle: 'Producto dañado o incorrecto',
+  supportCardDamagedText: 'Recibiste un producto en mal estado o diferente al que solicitaste.',
+  supportCardMissingItemTitle: 'Falta un artículo',
+  supportCardMissingItemText: 'Tu pedido llegó incompleto o falta algún producto.',
+  supportCardNotAsDescribedText: 'El producto no es como se mostraba en la publicación.',
+  supportCardSellerText: 'No recibes respuesta, hay un conflicto o necesitas ayuda con un vendedor.',
+  supportCardHiddenChargesText: 'Viste un cobro que no aparecía antes de pagar.',
+  supportCardAccountProblemText: 'Tienes dificultades para acceder, actualizar o gestionar tu cuenta.',
+  supportCardDisputeTitle: 'Quiero presentar una disputa',
+  supportCardDisputeText: 'Necesitas abrir un caso para resolver una situación con una compra.',
+  supportWhatHappenedTitle: 'Cuéntanos qué ocurrió',
+  supportWhatHappenedText: 'Elige el motivo que más se parezca a tu situación.',
+  supportFormTitle: 'Envía tu consulta por WhatsApp',
+  supportFormText: 'Completa los datos y se abrirá WhatsApp con tu mensaje listo para enviar.',
+  supportNoResultsTitle: 'No encontramos resultados para "{query}"',
+  supportNoResultsHint: 'Prueba con otras palabras o escríbenos directamente.',
+  supportPanelTitle: '¿Necesitas ayuda personalizada?',
+  supportPanelText: 'Nuestro equipo de soporte está listo para ayudarte.',
+  supportPanelWhatsappButton: 'Contactar por WhatsApp',
+  supportPanelWhatsappHint: 'Completa el formulario y se abrirá WhatsApp',
+  supportPanelDisputesButton: 'Ver mis disputas',
+  supportScheduleTitle: 'Horario de atención',
+  supportScheduleText: 'Lunes a sábado · 9:00 a. m. – 6:00 p. m.',
+  supportConfidentialNotice: 'Tus datos y reclamaciones se tratan de forma confidencial.',
+  supportFaqTitle: 'Preguntas frecuentes',
+  supportFaqText: 'Aquí encontrarás respuestas a las dudas más comunes.',
+  supportFaqViewAll: 'Ver todas',
+  supportBottomTitle: '¿Necesitas ayuda con algo más?',
+  supportBottomText: 'Si no encontraste la respuesta a tu consulta, puedes contactar directamente con nuestro equipo de soporte.',
   // ── Centro de ayuda (app/centro-ayuda) ──
   helpCenterBreadcrumbCurrent: 'Centro de ayuda',
   helpCenterTitle: 'Centro de ayuda',
