@@ -17,6 +17,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Bell, Check, ChevronRight, Eye, FileText, LifeBuoy, Scale, ShieldCheck, SlidersHorizontal, Store, Trash2 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useAuth } from '@/lib/hooks/useAuth'
@@ -153,7 +154,16 @@ export default function ConfiguracionPage() {
           {isVendor !== null && (
             <>
               <div className={`grid ${isVendor ? '' : 'md-860:col-span-2'}`}>
-                <ProfileCard title={t('settingsSupportTitle')} icon={LifeBuoy}>
+                <ProfileCard
+                  title={t('settingsSupportTitle')}
+                  icon={LifeBuoy}
+                  aside={
+                    // Ilustración decorativa (el texto "AYUDA Y SOPORTE" es parte del arte y no se traduce)
+                    <div aria-hidden="true" className="pointer-events-none select-none absolute -top-[8%] -bottom-[8%] -right-[7%] hidden sm:block w-[44%] overflow-hidden rounded-[50%]">
+                      <Image src="/images/ayuda-soporte-fondo.webp" alt="" fill sizes="(min-width: 860px) 480px, 320px" draggable={false} className="object-cover" style={{ objectPosition: '42% 50%' }} />
+                    </div>
+                  }
+                >
                   <p className="text-ui" style={{ color: 'var(--color-text-secondary)' }}>{t('settingsSupportText')}</p>
                   <a href="/soporte" className={`mt-4 ${OUTLINE_LINK}`} style={OUTLINE_LINK_STYLE}>
                     {t('settingsSupportButton')}
