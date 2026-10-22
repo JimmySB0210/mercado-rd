@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation'
 import { CheckCircle2, KeyRound, Lock, Mail, ShieldCheck, Smartphone, Trash2 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { verifyCurrentPassword } from '@/lib/supabase/verify-current-password'
 import { Navbar } from '@/components/shop/Navbar'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { usePhoneField } from '@/lib/hooks/usePhoneField'
@@ -97,11 +98,16 @@ export default function SecurityPage() {
   const supabase = createClient()
   const { t } = useTranslation('profile')
   const { t: tc } = useTranslation('common')
+  const { t: ta } = useTranslation('auth')
 
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
+  // Para pedir la contraseña actual: correo de la cuenta y si entra con contraseña
+  const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [hasPasswordLogin, setHasPasswordLogin] = useState(true)
 
   // Contraseña
+  const [passwordCurrent, setPasswordCurrent] = useState('')
   const [passwordNew, setPasswordNew] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
   const [passwordSaving, setPasswordSaving] = useState(false)
@@ -171,6 +177,13 @@ export default function SecurityPage() {
         return
       }
       setUserId(user.id)
+      setUserEmail(user.email ?? null)
+      // identities vacío NO significa "sin contraseña" (las cuentas sembradas lo
+      // tienen vacío y sí tienen contraseña): solo se considera sin contraseña
+      // si hay identidades y ninguna es 'email' (p. ej. solo Google).
+      // Nota: no probado contra una cuenta real sin contraseña: hoy no existe ninguna.
+      const ids = user.identities ?? []
+      setHasPasswordLogin(ids.length === 0 || ids.some(identity => identity.provider === 'email'))
       await loadMfaStatus()
       setLoading(false)
     }
@@ -178,11 +191,19 @@ export default function SecurityPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Se pide la contraseña actual solo si la cuenta entra con contraseña
+  const needsCurrentPassword = hasPasswordLogin && !!userEmail
+
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setPasswordError(null)
     setPasswordSuccess(false)
 
+    if (needsCurrentPassword && !passwordCurrent) {
+      setPasswordError(t('currentPasswordRequired'))
+      passwordInputRef.current?.focus()
+      return
+    }
     if (passwordNew.length < 6) {
       setPasswordError(t('passwordTooShort'))
       return
@@ -191,18 +212,44 @@ export default function SecurityPage() {
       setPasswordError(t('passwordMismatch'))
       return
     }
+    if (needsCurrentPassword && passwordNew === passwordCurrent) {
+      setPasswordError(t('passwordSameAsCurrent'))
+      return
+    }
 
     setPasswordSaving(true)
-    const { error } = await supabase.auth.updateUser({ password: passwordNew })
+
+    // Se verifica en pantalla con un cliente aparte (no toca la sesión) y
+    // además se envía current_password: así funciona con el ajuste del
+    // servidor "Require current password when updating" apagado o encendido.
+    if (needsCurrentPassword && userEmail) {
+      const check = await verifyCurrentPassword(userEmail, passwordCurrent)
+      if (check !== 'ok') {
+        setPasswordSaving(false)
+        setPasswordError(check === 'incorrect' ? t('currentPasswordIncorrect') : t('currentPasswordCheckError'))
+        if (check === 'incorrect') passwordInputRef.current?.focus()
+        return
+      }
+    }
+
+    const { error } = await supabase.auth.updateUser(
+      needsCurrentPassword ? { password: passwordNew, current_password: passwordCurrent } : { password: passwordNew },
+    )
     setPasswordSaving(false)
 
     if (error) {
       console.error('[SecurityPage updateUser]', error)
-      setPasswordError(t('passwordChangeError'))
+      if (error.code === 'current_password_invalid') {
+        setPasswordError(t('currentPasswordIncorrect'))
+        passwordInputRef.current?.focus()
+      } else {
+        setPasswordError(t('passwordChangeError'))
+      }
       return
     }
 
     setPasswordSuccess(true)
+    setPasswordCurrent('')
     setPasswordNew('')
     setPasswordConfirm('')
     setTimeout(() => setPasswordSuccess(false), 3000)
@@ -417,6 +464,7 @@ export default function SecurityPage() {
   // ── Presentación ──────────────────────────────────────────
   const resetRow = (row: AccessRowId) => {
     if (row === 'password') {
+      setPasswordCurrent('')
       setPasswordNew('')
       setPasswordConfirm('')
       setPasswordError(null)
@@ -527,10 +575,32 @@ export default function SecurityPage() {
               onToggle={() => toggleRow('password')}
             >
               <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-3">
+                {needsCurrentPassword && (
+                  <div>
+                    <label htmlFor="seguridad-contrasena-actual" className={LABEL_CLASS} style={{ color: 'var(--color-text-primary)' }}>{t('currentPasswordLabel')}</label>
+                    <input
+                      ref={passwordInputRef}
+                      id="seguridad-contrasena-actual"
+                      type="password"
+                      autoComplete="current-password"
+                      value={passwordCurrent}
+                      onChange={e => setPasswordCurrent(e.target.value)}
+                      className={INPUT_CLASS}
+                      style={INPUT_STYLE}
+                    />
+                    <a
+                      href="/recuperar-password"
+                      className={`inline-block mt-1.5 text-small font-semibold no-underline hover:underline ${FOCUS_RING}`}
+                      style={{ color: 'var(--color-primary)', borderRadius: 'var(--radius-control)' }}
+                    >
+                      {ta('forgotPasswordLink')}
+                    </a>
+                  </div>
+                )}
                 <div>
                   <label htmlFor="seguridad-contrasena" className={LABEL_CLASS} style={{ color: 'var(--color-text-primary)' }}>{t('newPasswordPlaceholder')}</label>
                   <input
-                    ref={passwordInputRef}
+                    ref={needsCurrentPassword ? undefined : passwordInputRef}
                     id="seguridad-contrasena"
                     type="password"
                     autoComplete="new-password"
