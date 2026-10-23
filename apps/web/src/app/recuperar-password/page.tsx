@@ -4,14 +4,23 @@
 // Archivo: app/recuperar-password/page.tsx
 // ============================================================
 // Pide el email y llama a resetPasswordForEmail(). Supabase envía un
-// correo con un link a /restablecer-password?code=... — esa página
-// detecta la sesión de recuperación automáticamente (PKCE).
+// correo con un enlace a /restablecer-password; esa página canjea el token
+// del enlace (ver app/restablecer-password/page.tsx y lib/passwordReset.ts).
+//
+// Tras enviar, ofrece «Reenviar correo» con 60 s de espera (la misma que
+// aplica Supabase por usuario), vía lib/hooks/useResendEmail.ts. La hora
+// del último envío se guarda en sessionStorage para que, si la persona sale
+// y vuelve, siga viendo «ya enviamos…» y la espera en vez de pedir otro
+// correo sin querer: solo el último enlace pedido es válido.
 // ============================================================
 
 import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { useResendEmail } from '@/lib/hooks/useResendEmail'
+import { isEmailRateLimitError } from '@/lib/emailResend'
+import ResendEmailButton from '@/components/auth/ResendEmailButton'
 import { BRAND } from '@/lib/colors'
 
 export default function RecuperarPasswordPage() {
@@ -21,28 +30,42 @@ export default function RecuperarPasswordPage() {
   const [email, setEmail] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [sent, setSent] = useState(false)
+
+  const requestLink = (address: string) =>
+    supabase.auth.resetPasswordForEmail(address, {
+      redirectTo: `${window.location.origin}/restablecer-password`,
+    })
+
+  const resend = useResendEmail('recovery', requestLink)
+  // Correo al que se envió el último enlace; si no es null, se muestra la
+  // pantalla «revisa tu correo» (también al volver a la pestaña).
+  const sentTo = resend.pending?.email ?? null
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setLoading(true)
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/restablecer-password`,
-    })
+    const { error } = await requestLink(email)
 
     setLoading(false)
 
     if (error) {
-      setError(t('resetLinkError'))
+      setError(isEmailRateLimitError(error) ? t('emailRateLimited') : t('resetLinkError'))
       return
     }
 
-    setSent(true)
+    resend.markSent(email)
   }
 
-  if (sent) {
+  // Volver al formulario con el correo escrito, por si fue un error al teclearlo
+  const handleUseAnotherEmail = () => {
+    if (sentTo) setEmail(sentTo)
+    setError(null)
+    resend.reset()
+  }
+
+  if (sentTo) {
     return (
       <main
         className="min-h-screen flex items-center justify-center bg-gray-50 px-4"
@@ -53,11 +76,26 @@ export default function RecuperarPasswordPage() {
             <div className="text-5xl mb-4">✅</div>
             <h2 className="text-form-section font-bold text-gray-900 mb-2">{t('resetLinkSentTitle')}</h2>
             <p className="text-gray-500 text-small mb-4">
-              {t('resetLinkSentPrefix')} <strong>{email}</strong> {t('resetLinkSentSuffix')}
+              {t('resetLinkSentPrefix')} <strong>{sentTo}</strong>{t('resetLinkSentSuffix')}
             </p>
+            <p className="text-gray-500 text-small mb-2">{t('emailNotArrivingTip')}</p>
+            <p className="text-gray-500 text-small mb-4">{t('resetLinkLatestNote')}</p>
             <p className="text-gray-400 text-xs mb-6">
               {t('googleUsersNote')}
             </p>
+            <ResendEmailButton
+              secondsLeft={resend.secondsLeft}
+              sending={resend.sending}
+              notice={resend.notice}
+              onResend={() => resend.resend()}
+            />
+            <button
+              type="button"
+              onClick={handleUseAnotherEmail}
+              className="mt-4 mb-6 text-small text-[var(--brand-blue)] font-semibold hover:underline"
+            >
+              {t('useAnotherEmailLink')}
+            </button>
             <Link
               href="/login"
               className="block w-full bg-[var(--brand-red)] text-white text-ui font-semibold py-3 rounded-lg text-center hover:brightness-90 transition-colors"

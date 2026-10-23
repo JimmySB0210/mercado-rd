@@ -97,6 +97,14 @@ export function useAuth() {
     return { data, error }
   }
 
+  // Reenvía el correo de confirmación de una cuenta que aún no se confirmó.
+  // Con el mismo correo ya confirmado o inexistente Supabase responde OK sin
+  // enviar nada (así no revela qué correos tienen cuenta).
+  const resendSignupEmail = async (email: string) => {
+    const { error } = await supabase.auth.resend({ type: 'signup', email })
+    return { error }
+  }
+
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -122,6 +130,7 @@ export function useAuth() {
     signOut,
     signInWithEmail,
     signUpWithEmail,
+    resendSignupEmail,
     signInWithGoogle,
     signInWithFacebook,
   }

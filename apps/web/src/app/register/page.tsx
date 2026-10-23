@@ -11,6 +11,8 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { usePhoneField } from '@/lib/hooks/usePhoneField'
+import { useResendEmail } from '@/lib/hooks/useResendEmail'
+import ResendEmailButton from '@/components/auth/ResendEmailButton'
 import { BRAND } from '@/lib/colors'
 import { isPasswordValid, isWeakPasswordError } from '@/lib/passwordPolicy'
 
@@ -50,8 +52,10 @@ function RegisterForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirect = searchParams.get('redirect')
-  const { signUpWithEmail, signInWithGoogle } = useAuth()
+  const { signUpWithEmail, resendSignupEmail, signInWithGoogle } = useAuth()
   const { t } = useTranslation('auth')
+  // «Reenviar correo» en la pantalla de «revisa tu correo» (con espera de 60 s)
+  const resend = useResendEmail('signup', resendSignupEmail)
   const [oauthLoading, setOauthLoading] = useState(false)
 
   const [form, setForm] = useState({
@@ -191,6 +195,7 @@ function RegisterForm() {
     }
 
     // El trigger en Supabase crea automáticamente public.users
+    resend.markSent(form.email.trim())
     setSuccess(true)
     setLoading(false)
   }
@@ -205,12 +210,19 @@ function RegisterForm() {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
             <div className="text-5xl mb-4">✅</div>
             <h2 className="text-form-section font-bold text-gray-900 mb-2">{t('accountCreatedTitle')}</h2>
-            <p className="text-gray-500 text-small mb-6">
+            <p className="text-gray-500 text-small mb-4">
               {t('checkEmailPrefix')} <strong>{form.email}</strong> {t('checkEmailSuffix')}
             </p>
+            <p className="text-gray-500 text-small mb-6">{t('emailNotArrivingTip')}</p>
+            <ResendEmailButton
+              secondsLeft={resend.secondsLeft}
+              sending={resend.sending}
+              notice={resend.notice}
+              onResend={() => resend.resend(form.email.trim())}
+            />
             <Link
               href={redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : '/login'}
-              className="block w-full bg-[var(--brand-red)] text-white text-ui font-semibold py-3 rounded-lg text-center hover:brightness-90 transition-colors"
+              className="mt-6 block w-full bg-[var(--brand-red)] text-white text-ui font-semibold py-3 rounded-lg text-center hover:brightness-90 transition-colors"
             >
               {t('goToLoginLink')}
             </Link>

@@ -3,20 +3,33 @@
 // MercadoRD — Restablecer contraseña (desde el link del correo)
 // Archivo: app/restablecer-password/page.tsx
 // ============================================================
-// Supabase detecta el token de recuperación en la URL automáticamente
-// (PKCE, vía createBrowserClient) y crea una sesión de recuperación —
-// no hace falta leer el código manualmente. Si el link ya expiró o no
-// hay sesión, updateUser() falla y se lo mostramos igual que cualquier
-// otro error de este flujo, sin una pantalla especial aparte.
+// El correo de recuperación trae
+//   /restablecer-password?token_hash=...&type=recovery
+// (plantilla «Reset Password» de Supabase Auth). Aquí se canjea ese token con
+// verifyOtp(), lo que crea la sesión de recuperación y funciona en cualquier
+// navegador o dispositivo, no solo donde se pidió el correo. Cada enlace
+// sirve una sola vez y solo el último pedido es válido.
+//
+// Compatibilidad: los correos pedidos con la plantilla anterior traen un
+// enlace PKCE (?code=...) que createBrowserClient canjea solo, y solo en el
+// mismo navegador que pidió el correo. getSession() espera a que termine ese
+// canje, así que sirve para ambos casos.
+//
+// Antes de mostrar el formulario se comprueba que haya una sesión de
+// recuperación. Si no la hay —el enlace venció, ya se usó o lo reemplazó uno
+// más nuevo— se muestra una pantalla que lo explica y deja pedir otro, en
+// vez de dejar escribir la contraseña para fallar al final.
 // ============================================================
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
 import { isPasswordValid, isWeakPasswordError } from '@/lib/passwordPolicy'
+import { clearPendingEmail } from '@/lib/emailResend'
+import { isRecoveryAccessToken, isSamePasswordError, parseRecoveryLink } from '@/lib/passwordReset'
 
 export default function RestablecerPasswordPage() {
   const router = useRouter()
@@ -27,6 +40,42 @@ export default function RestablecerPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [linkStatus, setLinkStatus] = useState<'checking' | 'ready' | 'invalid'>('checking')
+  // El token del enlace es de un solo uso: la comprobación corre una sola vez
+  // aunque React monte el efecto dos veces (modo estricto en desarrollo).
+  const checkStarted = useRef(false)
+
+  useEffect(() => {
+    if (checkStarted.current) return
+    checkStarted.current = true
+
+    const hasRecoverySession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      return isRecoveryAccessToken(session?.access_token)
+    }
+
+    const checkLink = async () => {
+      const link = parseRecoveryLink(window.location.search)
+      if (!link) {
+        setLinkStatus((await hasRecoverySession()) ? 'ready' : 'invalid')
+        return
+      }
+
+      const { data, error } = await supabase.auth.verifyOtp({ token_hash: link.tokenHash, type: 'recovery' })
+      // El token ya se usó (o falló): fuera de la barra de direcciones
+      window.history.replaceState(window.history.state, '', window.location.pathname)
+
+      if (!error && data.session) {
+        setLinkStatus('ready')
+        return
+      }
+      // Enlace ya usado, pero quizá esta misma persona ya tiene la sesión de
+      // recuperación (p. ej. abrió el enlace dos veces en este navegador)
+      setLinkStatus((await hasRecoverySession()) ? 'ready' : 'invalid')
+    }
+
+    void checkLink()
+  }, [supabase])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,18 +95,22 @@ export default function RestablecerPasswordPage() {
 
     if (error) {
       console.error('[RestablecerPasswordPage]', error)
-      setError(
-        isWeakPasswordError(error)
-          ? t('passwordRequirementsError')
-          : /session/i.test(error.message)
-            ? t('invalidOrExpiredLinkMessage')
-            : t('passwordResetFailed')
-      )
+      if (isWeakPasswordError(error)) {
+        setError(t('passwordRequirementsError'))
+      } else if (isSamePasswordError(error)) {
+        setError(t('passwordSameAsOld'))
+      } else if (/session/i.test(error.message)) {
+        // La sesión de recuperación se perdió mientras escribía
+        setLinkStatus('invalid')
+      } else {
+        setError(t('passwordResetFailed'))
+      }
       setSaving(false)
       return
     }
 
     await supabase.auth.signOut()
+    clearPendingEmail('recovery')
     setSaving(false)
     router.push('/login?reset=success')
   }
@@ -80,55 +133,81 @@ export default function RestablecerPasswordPage() {
               <span className="text-[var(--color-blue-dark)]">D</span>
             </span>
           </Link>
-          <p className="mt-2 text-gray-500 text-small">{t('resetPasswordSubtitle')}</p>
+          {linkStatus !== 'invalid' && (
+            <p className="mt-2 text-gray-500 text-small">{t('resetPasswordSubtitle')}</p>
+          )}
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-form-label font-semibold text-gray-700 mb-1">
-                {t('passwordLabel')}
-              </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder={t('registerPasswordPlaceholder')}
-                aria-describedby="restablecer-contrasena-ayuda"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)] focus:border-transparent"
-              />
-              <p id="restablecer-contrasena-ayuda" className="mt-1 text-caption text-gray-500">{t('passwordRequirementsHint')}</p>
-            </div>
+          {linkStatus === 'checking' && (
+            <p role="status" className="text-center text-small text-gray-500">{t('resetLinkChecking')}</p>
+          )}
 
-            <div>
-              <label className="block text-form-label font-semibold text-gray-700 mb-1">
-                {t('confirmPasswordLabel')}
-              </label>
-              <input
-                type="password"
-                required
-                value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
-                placeholder={t('confirmPasswordPlaceholder')}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)] focus:border-transparent"
-              />
+          {linkStatus === 'invalid' && (
+            <div className="text-center">
+              <div className="text-5xl mb-4">⚠️</div>
+              <h2 className="text-form-section font-bold text-gray-900 mb-2">{t('resetLinkInvalidTitle')}</h2>
+              <p className="text-gray-500 text-small mb-2">{t('resetLinkInvalidBody')}</p>
+              <p className="text-gray-500 text-small mb-6">{t('resetLinkInvalidHelp')}</p>
+              <Link
+                href="/recuperar-password"
+                className="block w-full bg-[var(--brand-red)] text-white text-ui font-semibold py-3 rounded-lg text-center hover:brightness-90 transition-colors"
+              >
+                {t('requestNewLinkButton')}
+              </Link>
+              <Link href="/login" className="mt-4 inline-block text-small text-[var(--brand-blue)] font-semibold hover:underline">
+                {t('goToLoginLink')}
+              </Link>
             </div>
+          )}
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-small font-medium rounded-lg px-4 py-3">
-                {error}
+          {linkStatus === 'ready' && (
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="block text-form-label font-semibold text-gray-700 mb-1">
+                  {t('passwordLabel')}
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder={t('registerPasswordPlaceholder')}
+                  aria-describedby="restablecer-contrasena-ayuda"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)] focus:border-transparent"
+                />
+                <p id="restablecer-contrasena-ayuda" className="mt-1 text-caption text-gray-500">{t('passwordRequirementsHint')}</p>
               </div>
-            )}
 
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full bg-[var(--brand-red)] hover:brightness-90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-ui font-semibold py-3 rounded-lg transition-colors"
-            >
-              {saving ? t('resettingPassword') : t('resetPasswordButton')}
-            </button>
-          </form>
+              <div>
+                <label className="block text-form-label font-semibold text-gray-700 mb-1">
+                  {t('confirmPasswordLabel')}
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  placeholder={t('confirmPasswordPlaceholder')}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)] focus:border-transparent"
+                />
+              </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 text-small font-medium rounded-lg px-4 py-3">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={saving}
+                className="w-full bg-[var(--brand-red)] hover:brightness-90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-ui font-semibold py-3 rounded-lg transition-colors"
+              >
+                {saving ? t('resettingPassword') : t('resetPasswordButton')}
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </main>

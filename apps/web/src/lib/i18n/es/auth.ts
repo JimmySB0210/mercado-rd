@@ -83,8 +83,10 @@ export const auth = {
   sendResetLinkButton: 'Enviar enlace de recuperación',
   sendingResetLink: 'Enviando...',
   resetLinkSentTitle: '¡Revisa tu correo!',
-  resetLinkSentPrefix: 'Enviamos un enlace a',
-  resetLinkSentSuffix: 'para que puedas restablecer tu contraseña.',
+  resetLinkSentPrefix: 'Si hay una cuenta con',
+  resetLinkSentSuffix: ', te enviamos un enlace para restablecer tu contraseña.',
+  resetLinkLatestNote: 'Si pides varios correos, solo funciona el último.',
+  useAnotherEmailLink: 'Usar otro correo',
   resetLinkError: 'No se pudo enviar el enlace. Intenta de nuevo.',
   googleUsersNote: 'Si te registraste con Google, no necesitas contraseña — usa el botón "Continuar con Google" en su lugar.',
 
@@ -93,7 +95,23 @@ export const auth = {
   resetPasswordButton: 'Restablecer contraseña',
   resettingPassword: 'Restableciendo...',
   passwordResetFailed: 'No se pudo actualizar la contraseña. Intenta de nuevo.',
-  invalidOrExpiredLinkMessage: 'Este enlace de recuperación ya no es válido. Solicita un enlace nuevo desde la página de inicio de sesión.',
+  passwordSameAsOld: 'La nueva contraseña debe ser distinta a la actual.',
+  resetLinkChecking: 'Verificando el enlace...',
+  resetLinkInvalidTitle: 'Este enlace no se puede usar',
+  resetLinkInvalidBody: 'Ya se usó, venció o lo reemplazó un correo más nuevo.',
+  resetLinkInvalidHelp: 'Pide un enlace nuevo y abre el último correo que recibas.',
+  requestNewLinkButton: 'Pedir un nuevo enlace',
+
+  // Reenviar correo — components/auth/ResendEmailButton.tsx, usado en
+  // recuperar-password, register y login (cuenta sin confirmar)
+  emailNotArrivingTip: '¿No llega? Revisa spam o promociones y confirma que escribiste bien tu correo.',
+  resendEmailButton: 'Reenviar correo',
+  resendEmailWait: 'Reenviar en {time}',
+  resendingEmail: 'Reenviando...',
+  resendEmailSent: 'Listo, te enviamos el correo de nuevo.',
+  resendEmailFailed: 'No se pudo reenviar el correo. Intenta de nuevo.',
+  emailRateLimited: 'Pediste varios correos seguidos. Espera un momento e inténtalo de nuevo.',
+  emailNotConfirmedMessage: 'Aún no confirmas tu correo ({email}). Abre el enlace que te enviamos al registrarte o pide uno nuevo aquí.',
 }
 
 export type AuthDict = typeof auth

@@ -9,6 +9,8 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { useResendEmail } from '@/lib/hooks/useResendEmail'
+import ResendEmailButton from '@/components/auth/ResendEmailButton'
 import { BRAND } from '@/lib/colors'
 
 export default function LoginPage() {
@@ -24,28 +26,38 @@ function LoginForm() {
   const redirect = searchParams.get('redirect') ?? '/'
   const reason = searchParams.get('reason')
   const resetSuccess = searchParams.get('reset') === 'success'
-  const { signInWithEmail, signInWithGoogle } = useAuth()
+  const { signInWithEmail, resendSignupEmail, signInWithGoogle } = useAuth()
   const { t } = useTranslation('auth')
+  // Cuenta creada pero con el correo sin confirmar: se ofrece reenviar el
+  // correo de confirmación (con espera de 60 s)
+  const resend = useResendEmail('signup', resendSignupEmail)
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [oauthLoading, setOauthLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setUnconfirmedEmail(null)
+    resend.clearNotice()
     setLoading(true)
 
     const { error } = await signInWithEmail(email, password)
 
     if (error) {
-      setError(
-        error.message === 'Invalid login credentials'
-          ? t('invalidCredentials')
-          : (typeof error.message === 'string' ? error.message : t('genericLoginError'))
-      )
+      if (error.code === 'email_not_confirmed' || /email not confirmed/i.test(error.message)) {
+        setUnconfirmedEmail(email.trim())
+      } else {
+        setError(
+          error.message === 'Invalid login credentials'
+            ? t('invalidCredentials')
+            : (typeof error.message === 'string' ? error.message : t('genericLoginError'))
+        )
+      }
       setLoading(false)
       return
     }
@@ -137,7 +149,7 @@ function LoginForm() {
                 type="email"
                 required
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={e => { setEmail(e.target.value); setUnconfirmedEmail(null) }}
                 placeholder={t('emailPlaceholder')}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)] focus:border-transparent"
               />
@@ -160,6 +172,18 @@ function LoginForm() {
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 text-small font-medium rounded-lg px-4 py-3">
                 {error}
+              </div>
+            )}
+
+            {unconfirmedEmail && (
+              <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-small font-medium rounded-lg px-4 py-3">
+                <p role="alert" className="mb-3">{t('emailNotConfirmedMessage', { email: unconfirmedEmail })}</p>
+                <ResendEmailButton
+                  secondsLeft={resend.secondsLeft}
+                  sending={resend.sending}
+                  notice={resend.notice}
+                  onResend={() => resend.resend(unconfirmedEmail)}
+                />
               </div>
             )}
 
