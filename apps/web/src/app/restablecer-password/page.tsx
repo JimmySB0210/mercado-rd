@@ -16,6 +16,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { BRAND } from '@/lib/colors'
+import { isPasswordValid, isWeakPasswordError } from '@/lib/passwordPolicy'
 
 export default function RestablecerPasswordPage() {
   const router = useRouter()
@@ -31,8 +32,8 @@ export default function RestablecerPasswordPage() {
     e.preventDefault()
     setError(null)
 
-    if (password.length < 6) {
-      setError(t('passwordTooShort'))
+    if (!isPasswordValid(password)) {
+      setError(t('passwordRequirementsError'))
       return
     }
     if (password !== confirmPassword) {
@@ -46,9 +47,11 @@ export default function RestablecerPasswordPage() {
     if (error) {
       console.error('[RestablecerPasswordPage]', error)
       setError(
-        /session/i.test(error.message)
-          ? t('invalidOrExpiredLinkMessage')
-          : t('passwordResetFailed')
+        isWeakPasswordError(error)
+          ? t('passwordRequirementsError')
+          : /session/i.test(error.message)
+            ? t('invalidOrExpiredLinkMessage')
+            : t('passwordResetFailed')
       )
       setSaving(false)
       return
@@ -92,8 +95,10 @@ export default function RestablecerPasswordPage() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder={t('registerPasswordPlaceholder')}
+                aria-describedby="restablecer-contrasena-ayuda"
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)] focus:border-transparent"
               />
+              <p id="restablecer-contrasena-ayuda" className="mt-1 text-caption text-gray-500">{t('passwordRequirementsHint')}</p>
             </div>
 
             <div>

@@ -12,6 +12,7 @@ import { useAuth } from '@/lib/hooks/useAuth'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { usePhoneField } from '@/lib/hooks/usePhoneField'
 import { BRAND } from '@/lib/colors'
+import { isPasswordValid, isWeakPasswordError } from '@/lib/passwordPolicy'
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
@@ -137,8 +138,8 @@ function RegisterForm() {
       return
     }
 
-    if (form.password.length < 6) {
-      setError(t('passwordTooShort'))
+    if (!isPasswordValid(form.password)) {
+      setError(t('passwordRequirementsError'))
       return
     }
 
@@ -179,9 +180,11 @@ function RegisterForm() {
 
     if (error) {
       setError(
-        error.message.includes('already registered')
-          ? t('emailAlreadyRegistered')
-          : error.message
+        isWeakPasswordError(error)
+          ? t('passwordRequirementsError')
+          : error.message.includes('already registered')
+            ? t('emailAlreadyRegistered')
+            : error.message
       )
       setLoading(false)
       return
@@ -319,8 +322,10 @@ function RegisterForm() {
                 value={form.password}
                 onChange={handleChange}
                 placeholder={t('registerPasswordPlaceholder')}
+                aria-describedby="registro-contrasena-ayuda"
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
               />
+              <p id="registro-contrasena-ayuda" className="mt-1 text-caption text-gray-500">{t('passwordRequirementsHint')}</p>
             </div>
 
             <div>

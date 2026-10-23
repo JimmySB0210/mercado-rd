@@ -18,6 +18,7 @@ import { CheckCircle2, KeyRound, Lock, Mail, ShieldCheck, Smartphone, Trash2 } f
 import type { LucideIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { verifyCurrentPassword } from '@/lib/supabase/verify-current-password'
+import { isPasswordValid, isWeakPasswordError } from '@/lib/passwordPolicy'
 import { Navbar } from '@/components/shop/Navbar'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { usePhoneField } from '@/lib/hooks/usePhoneField'
@@ -204,8 +205,8 @@ export default function SecurityPage() {
       passwordInputRef.current?.focus()
       return
     }
-    if (passwordNew.length < 6) {
-      setPasswordError(t('passwordTooShort'))
+    if (!isPasswordValid(passwordNew)) {
+      setPasswordError(t('passwordRequirementsError'))
       return
     }
     if (passwordNew !== passwordConfirm) {
@@ -242,6 +243,8 @@ export default function SecurityPage() {
       if (error.code === 'current_password_invalid') {
         setPasswordError(t('currentPasswordIncorrect'))
         passwordInputRef.current?.focus()
+      } else if (isWeakPasswordError(error)) {
+        setPasswordError(t('passwordRequirementsError'))
       } else {
         setPasswordError(t('passwordChangeError'))
       }
@@ -604,11 +607,13 @@ export default function SecurityPage() {
                     id="seguridad-contrasena"
                     type="password"
                     autoComplete="new-password"
+                    aria-describedby="seguridad-contrasena-ayuda"
                     value={passwordNew}
                     onChange={e => setPasswordNew(e.target.value)}
                     className={INPUT_CLASS}
                     style={INPUT_STYLE}
                   />
+                  <p id="seguridad-contrasena-ayuda" className="mt-1.5 text-caption" style={{ color: 'var(--color-text-secondary)' }}>{t('passwordRequirementsHint')}</p>
                 </div>
                 <div>
                   <label htmlFor="seguridad-contrasena-confirmar" className={LABEL_CLASS} style={{ color: 'var(--color-text-primary)' }}>{t('confirmNewPasswordPlaceholder')}</label>
