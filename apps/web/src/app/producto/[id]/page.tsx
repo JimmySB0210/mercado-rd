@@ -36,7 +36,21 @@ import type { ProductSpecItem, VariantDynamicDimension, VariantDynamicValuesMap,
 // intentar optimizarla como estática. Recuperar el caché más adelante
 // requiere mover la parte que depende de searchParams a client-side
 // (useSearchParams() en ProductPageContent.tsx), no es para hoy.
+//
+// Sin caché de datos (2026-10-24): `force-dynamic` solo hace que Next.js
+// arme la página en cada visita; NO le prohíbe guardar copia de lo que
+// baja de Supabase. En Next 14.2 un fetch sin opciones se guarda "para
+// siempre" -- también el de generateMetadata y el de los componentes de
+// más abajo (reseñas, preguntas, "del mismo vendedor", relacionados).
+// Resultado real: tras corregir un precio mal tecleado (RD$6 en vez de
+// RD$5,495) la base ya tenía el valor bueno, pero esta página seguía
+// mostrando el viejo en cada recarga. `revalidate = 0` + `fetchCache =
+// 'force-no-store'` (el mismo par que /centro-ayuda, /soporte y
+// /acerca-de) obliga a preguntarle a la base en cada visita. No
+// reintroduce el 500 de arriba: 0 no es "cachear la ruta", es "no cachear".
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
+export const fetchCache = 'force-no-store'
 
 // Sin paths pre-construidos (el catálogo es muy grande para el build) —
 // cada producto se renderiza on-demand en cada visita.
