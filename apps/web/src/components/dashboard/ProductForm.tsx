@@ -23,7 +23,9 @@ import { ProductPreviewModal } from '@/components/dashboard/ProductPreviewModal'
 import { ProductPageContent } from '@/app/producto/[id]/ProductPageContent'
 import { Navbar } from '@/components/shop/Navbar'
 import { computePublishQuality, qualityTier, QUALITY_TIER_EMOJI, QUALITY_TIER_COLOR } from '@/lib/productQuality'
-import { SIZE_SCALES, SIZE_SCALE_ORDER, defaultSizeScaleForCategories, inferSizeScale, type SizeScale } from '@/lib/productSizes'
+import { SIZE_SCALES, SIZE_SCALE_ORDER, defaultSizeScaleForCategories, inferSizeScale, sizesInRange, scaleHasHalfSizes, type SizeScale } from '@/lib/productSizes'
+import { PriceInput } from '@/components/dashboard/PriceInput'
+import { priceInputToCents } from '@/lib/priceInput'
 import { BRAND } from '@/lib/colors'
 import { formatPrice, discountPercent } from '@/types/database.types'
 import { PLACEHOLDER_PRODUCT_IMAGE } from '@/lib/utils'
@@ -72,6 +74,24 @@ interface DynamicVariantRow {
   price: string
   imageUrl: string | null
 }
+
+// Existencias de una fila de variante: entero >= 0 (vacío, negativo o
+// ilegible cuenta como 0). Es lo que se guarda y lo que se suma al total.
+const stockOf = (row: { stock: string }): number => {
+  const n = parseInt(row.stock, 10)
+  return Number.isFinite(n) && n > 0 ? n : 0
+}
+
+// Precio propio de una variante, en centavos. null = usa el precio del
+// producto (campo vacío, ilegible o en 0: una variante a RD$0 nunca es lo
+// que se quiso poner).
+const variantPriceCents = (raw: string): number | null => {
+  const cents = priceInputToCents(raw)
+  return cents !== null && cents > 0 ? cents : null
+}
+
+// Mismo tope que el precio del producto (RD$999,999.99), en centavos
+const MAX_PRICE_CENTS = 99999999
 
 // Las tallas de los atajos (chips y <select>) salen de la escala activa
 // (ropa, calzado EE. UU. o calzado Europa — lib/productSizes.ts). "Talla"
@@ -343,8 +363,18 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
   // escritos. El vendor sigue pudiendo agregar/editar/quitar filas
   // sueltas después con los controles de siempre — esto es un atajo
   // para armar la tabla inicial, no un sistema aparte.
+  //
+  // Las tallas se marcan una a una (chips) o por rango ("del 8 al 12"):
+  // el calzado se vende por rango y marcar 10 tallas a mano era lo que
+  // llevaba a publicar solo dos. Al volver a generar, las combinaciones
+  // que ya existían conservan su precio, su foto y su stock (si tenían);
+  // las nuevas reciben el "Stock de cada combinación" que se haya escrito.
   const [autoGenSizes, setAutoGenSizes] = useState<string[]>([])
   const [autoGenColorsText, setAutoGenColorsText] = useState('')
+  const [autoGenStockText, setAutoGenStockText] = useState('')
+  const [rangeFrom, setRangeFrom] = useState('')
+  const [rangeTo, setRangeTo] = useState('')
+  const [includeHalfSizes, setIncludeHalfSizes] = useState(false)
 
   const toggleAutoGenSize = (size: string) => {
     setAutoGenSizes(prev => prev.includes(size) ? prev.filter(s => s !== size) : [...prev, size])
@@ -356,16 +386,83 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
   // cuentan; si vuelve a ropa, siguen marcadas.
   const selectedAutoGenSizes = activeSizes.filter(s => autoGenSizes.includes(s))
 
+  // Rango de tallas: sin "medias tallas" solo se ofrecen (y se agregan) las
+  // enteras — "del 5 al 14" son 10 tallas, no 19. Solo el calzado de EE. UU.
+  // tiene medias tallas; en ropa y en calzado europeo la casilla no aparece.
+  const scaleOffersHalfSizes = scaleHasHalfSizes(activeSizeScale)
+  const wholeSizesOnly = scaleOffersHalfSizes && !includeHalfSizes
+  const rangeOptions: readonly string[] = wholeSizesOnly ? activeSizes.filter(s => !s.includes('.')) : activeSizes
+  // Un extremo que ya no existe (cambió la escala o se quitaron las medias
+  // tallas) cuenta como "sin elegir".
+  const rangeFromValue = rangeOptions.includes(rangeFrom) ? rangeFrom : ''
+  const rangeToValue = rangeOptions.includes(rangeTo) ? rangeTo : ''
+
+  const addSizeRange = () => {
+    if (!rangeFromValue || !rangeToValue) return
+    const inRange = sizesInRange(activeSizeScale, rangeFromValue, rangeToValue, { wholeOnly: wholeSizesOnly })
+    setAutoGenSizes(prev => [...prev, ...inRange.filter(s => !prev.includes(s))])
+  }
+
+  const handleHalfSizesToggle = (checked: boolean) => {
+    setIncludeHalfSizes(checked)
+    if (!checked) {
+      // Sin medias tallas los extremos del rango son enteros ("7.5" → "7")
+      const whole = (s: string) => s.split('.')[0]
+      setRangeFrom(whole)
+      setRangeTo(whole)
+    }
+  }
+
+  // Colores escritos separados por coma, sin vacíos ni repetidos ("Blanco,
+  // blanco" sería la misma combinación dos veces y la BD la rechaza)
+  const generateColors = (() => {
+    const seen = new Set<string>()
+    const list: string[] = []
+    for (const raw of autoGenColorsText.split(',')) {
+      const color = raw.trim()
+      if (color && !seen.has(color.toLowerCase())) {
+        seen.add(color.toLowerCase())
+        list.push(color)
+      }
+    }
+    return list
+  })()
+
+  const generateCombinationCount =
+    selectedAutoGenSizes.length === 0 && generateColors.length === 0
+      ? 0
+      : Math.max(selectedAutoGenSizes.length, 1) * Math.max(generateColors.length, 1)
+
   const generateVariantCombinations = () => {
-    const colors = autoGenColorsText.split(',').map(c => c.trim()).filter(Boolean)
+    const colors = generateColors
     if (selectedAutoGenSizes.length === 0 && colors.length === 0) return
 
     const sizeList = selectedAutoGenSizes.length > 0 ? selectedAutoGenSizes : ['']
     const colorList = colors.length > 0 ? colors : ['']
+    const bulkStock = autoGenStockText.trim() === '' ? '' : String(stockOf({ stock: autoGenStockText }))
+
+    // Filas que ya estaban en la tabla, por talla + color (el color sin
+    // distinguir mayúsculas, como la foto por color al guardar)
+    const rowKey = (size: string, color: string) => `${size.trim()}|${color.trim().toLowerCase()}`
+    const previousByKey = new Map<string, VariantRow>()
+    for (const row of variantRows) {
+      const key = rowKey(row.size, row.color)
+      if (!previousByKey.has(key)) previousByKey.set(key, row)
+    }
+
     const rows: VariantRow[] = []
     for (const size of sizeList) {
       for (const color of colorList) {
-        rows.push({ size, color, stock: '', price: '', imageUrl: null })
+        const previous = previousByKey.get(rowKey(size, color))
+        rows.push({
+          size,
+          color,
+          // Una fila con existencias las conserva; una en 0 o vacía (como las
+          // que dejó un guardado sin stock) recibe el stock escrito arriba
+          stock: previous && stockOf(previous) > 0 ? previous.stock : (bulkStock !== '' ? bulkStock : (previous?.stock ?? '')),
+          price: previous?.price ?? '',
+          imageUrl: previous?.imageUrl ?? null,
+        })
       }
     }
 
@@ -713,6 +810,26 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     return rows
   }
 
+  // ─── Existencias: con variantes, el stock del producto ES la suma de
+  // las variantes. create_order_from_cart descuenta el stock del producto
+  // Y el de la variante al comprar; si el vendor escribe 50 arriba y deja
+  // las variantes en 0 la ficha decía "En stock (50 disponibles)" y al
+  // elegir talla "Agotado". Por eso, mientras haya variantes, el stock
+  // general no se escribe: se calcula (y el campo del paso Precio e
+  // inventario queda de solo lectura).
+  const usesDynamicVariants = variantCategoryAttributes.length > 0
+  const activeVariantRows: { stock: string; price: string }[] = usesDynamicVariants
+    ? dynamicVariantRows.filter(row => Object.values(row.values).some(v => v && v.trim()))
+    : variantRows.filter(row => row.size.trim() || row.color.trim())
+  const hasVariantRows = activeVariantRows.length > 0
+  const variantStockTotal = activeVariantRows.reduce((sum, row) => sum + stockOf(row), 0)
+  const productStockForDisplay = hasVariantRows ? variantStockTotal : (form.stock ? parseInt(form.stock) : 0)
+
+  // Precio escrito → centavos (null = vacío o ilegible). Ver lib/priceInput.ts.
+  const priceCentsInForm = priceInputToCents(form.price)
+  const priceIsSet = priceCentsInForm !== null && priceCentsInForm > 0
+  const stockIsSet = hasVariantRows ? variantStockTotal > 0 : form.stock.trim() !== ''
+
   // Calidad de publicación en vivo — misma fórmula que la lista
   // (lib/productQuality.ts), aplicada al estado actual del formulario en
   // vez de a filas ya guardadas en la BD.
@@ -733,8 +850,8 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     hasDescription: form.description.trim() !== '',
     hasName: form.name.trim() !== '',
     hasCategory: form.categoryId !== '',
-    hasPrice: form.price.trim() !== '' && parseFloat(form.price) > 0,
-    hasStock: form.stock.trim() !== '',
+    hasPrice: priceIsSet,
+    hasStock: stockIsSet,
   })
 
   // ─── Vista previa (sin guardar) ───────────────────────────────────────
@@ -770,8 +887,8 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     const selectedCategory = categories.find(c => String(c.id) === form.categoryId)
     const selectedProvince = provinces.find(p => String(p.id) === form.provinceId)
     const previewImages = [...existingImageUrls, ...imagePreviews]
-    const priceRdp = form.price ? Math.round(parseFloat(form.price) * 100) : 0
-    const compareRdp = form.comparePrice ? Math.round(parseFloat(form.comparePrice) * 100) : null
+    const priceRdp = priceCentsInForm ?? 0
+    const compareRdp = priceInputToCents(form.comparePrice)
     const previewProductId = initialData?.product.id ?? 'preview'
 
     const previewProduct = {
@@ -779,12 +896,12 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
       vendor_id: vendorId,
       category_id: form.categoryId ? parseInt(form.categoryId) : null,
       province_id: form.provinceId ? parseInt(form.provinceId) : null,
-      name: form.name || t('previewUntitledProduct'),
+      name: form.name.trim() || t('previewUntitledProduct'),
       description: form.description || null,
       price_rdp: priceRdp,
       compare_rdp: compareRdp,
       images: previewImages,
-      stock: form.stock ? parseInt(form.stock) : 0,
+      stock: productStockForDisplay,
       sizes: [],
       colors: [],
       video_url: videoPreviewUrl ?? existingVideoUrl,
@@ -809,8 +926,8 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
             product_id: previewProductId,
             size: null,
             color: null,
-            stock: row.stock ? parseInt(row.stock) : 0,
-            price_rdp: row.price ? Math.round(parseFloat(row.price) * 100) : null,
+            stock: stockOf(row),
+            price_rdp: variantPriceCents(row.price),
             sku: null,
             image_url: row.imageUrl,
             is_active: true,
@@ -823,8 +940,8 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
             product_id: previewProductId,
             size: row.size.trim() || null,
             color: row.color.trim() || null,
-            stock: row.stock ? parseInt(row.stock) : 0,
-            price_rdp: row.price ? Math.round(parseFloat(row.price) * 100) : null,
+            stock: stockOf(row),
+            price_rdp: variantPriceCents(row.price),
             sku: null,
             image_url: row.imageUrl,
             is_active: true,
@@ -1134,24 +1251,48 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
       }
     }
 
-    const priceNum = parseFloat(form.price)
-    if (isNaN(priceNum) || priceNum <= 0) {
+    // Lo escrito se lee como lo escribiría una persona: "5.495" y "5,495"
+    // son cinco mil cuatrocientos noventa y cinco pesos (lib/priceInput.ts).
+    // Antes el campo era numérico y "5.495" se guardaba como RD$5.50.
+    const priceCents = priceInputToCents(form.price) // pesos → centavos
+    if (priceCents === null || priceCents <= 0) {
       setError(t('invalidPriceError'))
       return
     }
-
-    const priceCents = Math.round(priceNum * 100) // pesos → centavos
     // validatePrice() solo se usa aquí — replicamos su único chequeo
     // alcanzable en este punto (los demás ya quedaron cubiertos arriba)
     // con el mensaje traducido, en vez de tocar la función compartida.
-    if (priceCents > 99999999) {
+    if (priceCents > MAX_PRICE_CENTS) {
       setPriceError(t('priceTooLargeError'))
       return
     }
 
-    const stockNum = form.stock ? parseInt(form.stock) : 0
+    // Precio anterior: opcional (vacío, ilegible o 0 = sin precio anterior)
+    let compareCents = priceInputToCents(form.comparePrice)
+    if (compareCents !== null && compareCents <= 0) compareCents = null
+    if (compareCents !== null && compareCents > MAX_PRICE_CENTS) {
+      setPriceError(t('priceTooLargeError'))
+      return
+    }
+
+    // El precio propio de una variante tiene el mismo tope; el error va en
+    // el aviso de abajo porque este chequeo corre desde cualquier paso.
+    if (activeVariantRows.some(row => (variantPriceCents(row.price) ?? 0) > MAX_PRICE_CENTS)) {
+      setError(t('priceTooLargeError'))
+      return
+    }
+
+    // Con variantes el stock del producto es la suma de las variantes (ver
+    // hasVariantRows arriba); sin variantes sigue siendo el campo de siempre.
+    const stockNum = hasVariantRows ? variantStockTotal : (form.stock ? parseInt(form.stock) : 0)
     if (isNaN(stockNum) || stockNum < 0 || stockNum > 9999) {
-      setStockError(t('stockRangeError'))
+      if (hasVariantRows) {
+        // El campo de stock del paso Precio es de solo lectura con variantes
+        // y esto puede dispararse desde cualquier paso: va en el aviso de abajo.
+        setError(t('variantsStockTotalRangeError'))
+      } else {
+        setStockError(t('stockRangeError'))
+      }
       return
     }
 
@@ -1177,10 +1318,12 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
         vendor_id: vendorId,
         category_id: parseInt(form.categoryId),
         province_id: form.provinceId ? parseInt(form.provinceId) : null,
-        name: form.name,
+        // nameTrimmed: sin espacios al inicio ni al final (un nombre guardado
+        // con espacios delante se veía mal en tarjetas y buscador)
+        name: nameTrimmed,
         description: form.description || null,
         price_rdp: priceCents,
-        compare_rdp: form.comparePrice ? Math.round(parseFloat(form.comparePrice) * 100) : null,
+        compare_rdp: compareCents,
         stock: stockNum,
         low_stock_threshold: lowStockThresholdNum,
         images: finalImages,
@@ -1314,8 +1457,8 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               product_id: productId,
               size: null,
               color: null,
-              stock: row.stock ? parseInt(row.stock) : 0,
-              price_rdp: row.price ? Math.round(parseFloat(row.price) * 100) : null,
+              stock: stockOf(row),
+              price_rdp: variantPriceCents(row.price),
               image_url: imageUrl,
               is_active: true,
             })
@@ -1360,8 +1503,8 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               product_id: productId,
               size: row.size.trim() || null,
               color: row.color.trim() || null,
-              stock: row.stock ? parseInt(row.stock) : 0,
-              price_rdp: row.price ? Math.round(parseFloat(row.price) * 100) : null,
+              stock: stockOf(row),
+              price_rdp: variantPriceCents(row.price),
               image_url: imageUrl,
               is_active: true,
             }
@@ -1708,29 +1851,26 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">{t('priceLabel')}</label>
-                <input
+                {/* Texto libre (no type="number"): se puede escribir 5,495 o
+                    5.495 y debajo se ve cómo lo verá el comprador */}
+                <PriceInput
                   name="price"
-                  type="number"
-                  step="0.01"
-                  min="0"
                   value={form.price}
-                  onChange={handleChange}
-                  placeholder="0.00"
+                  onChange={price => setForm(f => ({ ...f, price }))}
                   className={inputCls(!!priceError)}
+                  invalid={!!priceError}
+                  showPreview
                 />
                 {priceError && <p className="text-small font-medium text-red-600 mt-1">{priceError}</p>}
               </div>
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">{t('comparePriceLabel')}</label>
-                <input
+                <PriceInput
                   name="comparePrice"
-                  type="number"
-                  step="0.01"
-                  min="0"
                   value={form.comparePrice}
-                  onChange={handleChange}
-                  placeholder="0.00"
+                  onChange={comparePrice => setForm(f => ({ ...f, comparePrice }))}
                   className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
+                  showPreview
                 />
               </div>
             </div>
@@ -1741,16 +1881,45 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
 
             <div>
               <label className="text-xs text-gray-500 mb-1 block">{t('stockAvailableLabel')}</label>
-              <input
-                name="stock"
-                type="number"
-                min="0"
-                value={form.stock}
-                onChange={handleChange}
-                placeholder="0"
-                className={inputCls(!!stockError)}
-              />
-              {stockError && <p className="text-small font-medium text-red-600 mt-1">{stockError}</p>}
+              {hasVariantRows ? (
+                <>
+                  {/* Con variantes el stock es la suma de las tallas/colores:
+                      se muestra, no se escribe (ver hasVariantRows arriba) */}
+                  <input
+                    name="stock"
+                    type="text"
+                    inputMode="numeric"
+                    readOnly
+                    tabIndex={-1}
+                    value={String(variantStockTotal)}
+                    className={`${inputCls()} bg-gray-50 text-gray-500 cursor-default`}
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    {t('inventoryDerivedHint')}{' '}
+                    <button
+                      type="button"
+                      onClick={() => goToStep(STEPS.findIndex(s => s.id === 'variants'))}
+                      className="text-xs font-semibold bg-transparent border-none cursor-pointer p-0"
+                      style={{ color: BRAND.blue }}
+                    >
+                      {t('inventoryGoToVariants')}
+                    </button>
+                  </p>
+                </>
+              ) : (
+                <>
+                  <input
+                    name="stock"
+                    type="number"
+                    min="0"
+                    value={form.stock}
+                    onChange={handleChange}
+                    placeholder="0"
+                    className={inputCls(!!stockError)}
+                  />
+                  {stockError && <p className="text-small font-medium text-red-600 mt-1">{stockError}</p>}
+                </>
+              )}
             </div>
 
             <div>
@@ -1845,6 +2014,54 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                   })}
                 </div>
               </div>
+              {/* Rango: el calzado se vende "del 8 al 12" — marca todas las
+                  tallas de ese tramo de una vez (se suman a las ya marcadas) */}
+              <div>
+                <label className="text-xs text-gray-500 mb-1.5 block">{t('variantsRangeLabel')}</label>
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    aria-label={t('variantsRangeFrom')}
+                    value={rangeFromValue}
+                    onChange={e => setRangeFrom(e.target.value)}
+                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none bg-white"
+                  >
+                    <option value="" disabled>{t('variantsRangeFrom')}</option>
+                    {rangeOptions.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                  <select
+                    aria-label={t('variantsRangeTo')}
+                    value={rangeToValue}
+                    onChange={e => setRangeTo(e.target.value)}
+                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none bg-white"
+                  >
+                    <option value="" disabled>{t('variantsRangeTo')}</option>
+                    {rangeOptions.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={addSizeRange}
+                    disabled={!rangeFromValue || !rangeToValue}
+                    className="text-xs font-semibold rounded-lg px-3 py-2 border cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    style={{ background: '#fff', color: BRAND.blue, borderColor: BRAND.blue }}
+                  >
+                    {t('variantsRangeAddButton')}
+                  </button>
+                </div>
+                {scaleOffersHalfSizes && (
+                  <label className="inline-flex items-center gap-2 mt-2 text-xs text-gray-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={includeHalfSizes}
+                      onChange={e => handleHalfSizesToggle(e.target.checked)}
+                    />
+                    {t('variantsRangeHalfSizes')}
+                  </label>
+                )}
+              </div>
               <div>
                 <label className="text-xs text-gray-500 mb-1.5 block">{t('variantsGenerateSizesLabel')}</label>
                 <div className="flex flex-wrap gap-2">
@@ -1867,6 +2084,19 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                     )
                   })}
                 </div>
+                {selectedAutoGenSizes.length > 0 && (
+                  <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
+                    <span>{t('variantsGenerateSelectedCount', { count: selectedAutoGenSizes.length })}</span>
+                    <button
+                      type="button"
+                      onClick={() => setAutoGenSizes([])}
+                      className="text-xs font-semibold bg-transparent border-none cursor-pointer p-0"
+                      style={{ color: BRAND.blue }}
+                    >
+                      {t('variantsGenerateClearSizes')}
+                    </button>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">{t('variantsGenerateColorsLabel')}</label>
@@ -1877,10 +2107,24 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                   className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
                 />
               </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">{t('variantsGenerateStockLabel')}</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={autoGenStockText}
+                  onChange={e => setAutoGenStockText(e.target.value)}
+                  placeholder={t('variantsGenerateStockPlaceholder')}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none sm:w-1/2"
+                />
+              </div>
+              {generateCombinationCount > 0 && (
+                <p className="text-xs text-gray-500">{t('variantsGenerateCount', { count: generateCombinationCount })}</p>
+              )}
               <button
                 type="button"
                 onClick={generateVariantCombinations}
-                disabled={selectedAutoGenSizes.length === 0 && !autoGenColorsText.trim()}
+                disabled={generateCombinationCount === 0}
                 className="text-xs font-bold text-white rounded-lg px-4 py-2 disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{ background: BRAND.blue, border: 'none', cursor: 'pointer' }}
               >
@@ -2002,12 +2246,9 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                     </div>
                     <div className="col-span-3">
                       {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('variantPriceLabel')}</label>}
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
+                      <PriceInput
                         value={row.price}
-                        onChange={e => updateDynamicVariantField(i, 'price', e.target.value)}
+                        onChange={price => updateDynamicVariantField(i, 'price', price)}
                         placeholder={t('variantPricePlaceholder')}
                         className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
                       />
@@ -2110,12 +2351,9 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                   </div>
                   <div className="col-span-3">
                     {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('variantPriceLabel')}</label>}
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
+                    <PriceInput
                       value={row.price}
-                      onChange={e => updateVariantRow(i, 'price', e.target.value)}
+                      onChange={price => updateVariantRow(i, 'price', price)}
                       placeholder={t('variantPricePlaceholder')}
                       className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
                     />
@@ -2131,6 +2369,14 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                   </div>
                 </div>
               ))
+            )}
+            {hasVariantRows && (
+              <div className="pt-1">
+                <p className="text-xs font-semibold text-gray-600">{t('variantsStockTotalLabel', { count: variantStockTotal })}</p>
+                {variantStockTotal === 0 && (
+                  <p className="text-xs text-amber-600 mt-1">{t('variantsNoStockWarning')}</p>
+                )}
+              </div>
             )}
             {variantImageError && <p className="text-small font-medium text-red-600">{variantImageError}</p>}
           </div>
@@ -2401,8 +2647,8 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                   { label: t('qualityCheckPhotos'), done: totalImageCount > 0 },
                   { label: t('qualityCheckCategory'), done: form.categoryId !== '' },
                   { label: t('qualityCheckAttributes'), done: requiredAttrs.length === 0 || requiredAttrs.every(isAttrFilled) },
-                  { label: t('qualityCheckPrice'), done: form.price.trim() !== '' && parseFloat(form.price) > 0 },
-                  { label: t('qualityCheckStock'), done: form.stock.trim() !== '' },
+                  { label: t('qualityCheckPrice'), done: priceIsSet },
+                  { label: t('qualityCheckStock'), done: stockIsSet },
                   { label: t('qualityCheckDescription'), done: form.description.trim() !== '' },
                 ]}
                 t={t}
