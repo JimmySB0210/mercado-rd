@@ -31,6 +31,7 @@ export const products = {
   stockAvailable: 'Stock: {count} disponibles',
   selectSize: 'Selecciona talla',
   selectSizePlaceholder: 'Selecciona una talla',
+  sizeSoldOutAria: 'Talla {size}, agotada',
   selectColor: 'Selecciona color',
   selectOption: 'Selecciona una opción',
   addedToCart: '✓ Agregado al carrito',

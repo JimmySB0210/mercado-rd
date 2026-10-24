@@ -62,6 +62,29 @@ export function sizesInRange(
   return opts.wholeOnly ? slice.filter(s => !s.includes('.')) : [...slice]
 }
 
+// Orden en el que se muestran las tallas al comprador. product_variants se
+// lee sin ORDER BY, así que el orden de las filas no es fiable (cambia al
+// editar el producto): las tallas numéricas van de menor a mayor (4, 5,
+// 5.5 ... 14: "10" después de "9", no antes), las de ropa en el orden de la
+// escala (XS ... XXL, las que no están en ella al final, sin moverse entre
+// sí) y cualquier otra mezcla ("128GB", "Grande") queda como venía.
+export function sortSizes(sizes: readonly string[]): string[] {
+  const list = [...sizes]
+  if (list.length < 2) return list
+  if (list.every(s => /^\d+(\.\d+)?$/.test(s.trim()))) {
+    return list.sort((a, b) => parseFloat(a) - parseFloat(b))
+  }
+  const apparel = SIZE_SCALES.apparel
+  if (list.filter(s => apparel.includes(s)).length >= 2) {
+    const rank = (s: string) => {
+      const i = apparel.indexOf(s)
+      return i === -1 ? apparel.length : i
+    }
+    return list.sort((a, b) => rank(a) - rank(b))
+  }
+  return list
+}
+
 // Categorías (por slug) en las que lo normal es vender calzado: el
 // wizard arranca con la escala de calzado de EE. UU. cuando alguna de
 // la ruta elegida (Calzado → Tenis, Calzado → Botas ...) está aquí.

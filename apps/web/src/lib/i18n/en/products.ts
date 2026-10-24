@@ -26,6 +26,7 @@ export const products = {
   stockAvailable: 'Stock: {count} available',
   selectSize: 'Select a size',
   selectSizePlaceholder: 'Select a size',
+  sizeSoldOutAria: 'Size {size}, sold out',
   selectColor: 'Select a color',
   selectOption: 'Select an option',
   addedToCart: '✓ Added to cart',

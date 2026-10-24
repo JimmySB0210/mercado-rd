@@ -376,6 +376,16 @@ export function ProductPageContent({
   // dejar que lo intente y falle recién en el checkout.
   const isOwnProduct = !!(user && vendor?.user_id && user.id === vendor.user_id)
 
+  // Stock que se muestra arriba, junto al precio. Con variantes es la suma
+  // del stock de las variantes — lo mismo que al comprar: elegir talla/color
+  // y agregar al carrito solo mira el stock de la variante, no el general
+  // del producto. Antes decía "En stock (50 disponibles)" mientras todas las
+  // tallas estaban en 0 y al elegir una salía "Agotado". Sin variantes sigue
+  // siendo el stock del producto.
+  const displayStock = (variants?.length ?? 0) > 0
+    ? variants.reduce((sum, v) => sum + Math.max(v.stock ?? 0, 0), 0)
+    : product.stock
+
   // Una sola vez acá arriba -- VendorInfoBar y VendorRatingOverview
   // ("Conoce a {vendedor}", más abajo) muestran la MISMA fila de
   // rating/respuesta a propósito; si cada uno llamara al hook por su
@@ -641,14 +651,14 @@ export function ProductPageContent({
 
             {/* Stock */}
             <div className="mt-3">
-              {product.stock === 0 ? (
+              {displayStock === 0 ? (
                 <span className="text-sm font-medium text-red-500">{t('noStock')}</span>
-              ) : product.stock <= 5 ? (
+              ) : displayStock <= 5 ? (
                 <span className="text-sm font-medium text-orange-500">
-                  {t('lowStockWarning', { count: product.stock })}
+                  {t('lowStockWarning', { count: displayStock })}
                 </span>
               ) : (
-                <span className="text-sm text-gray-400">{t('inStockAvailable', { count: product.stock })}</span>
+                <span className="text-sm text-gray-400">{t('inStockAvailable', { count: displayStock })}</span>
               )}
             </div>
           </div>

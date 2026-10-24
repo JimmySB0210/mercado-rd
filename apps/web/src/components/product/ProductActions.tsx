@@ -34,6 +34,7 @@ import { useCartStore } from '@/lib/store/cart'
 import { useExpressCheckoutStore } from '@/lib/store/expressCheckout'
 import { formatPrice } from '@/types/database.types'
 import { useTranslation } from '@/lib/hooks/useTranslation'
+import { inferSizeScale, sortSizes } from '@/lib/productSizes'
 import type { ProductVariant } from '@/types/database.types'
 import type { Product } from '@/types'
 import type { VariantDynamicDimension, VariantDynamicValuesMap } from '@/app/producto/[id]/ProductPageContent'
@@ -65,8 +66,10 @@ function useProductActionsState({
   const legacySizes = product.sizes ?? []
   const legacyColors = product.colors ?? []
 
-  // Con variantes: valores únicos derivados de las filas de product_variants
-  const variantSizes = [...new Set(variants.map(v => v.size).filter((s): s is string => !!s))]
+  // Con variantes: valores únicos derivados de las filas de product_variants.
+  // Las tallas van ordenadas (la BD no garantiza el orden de las filas):
+  // 5, 5.5, 6 ... 14 en calzado, XS ... XXL en ropa.
+  const variantSizes = sortSizes([...new Set(variants.map(v => v.size).filter((s): s is string => !!s))])
   const variantColors = [...new Set(variants.map(v => v.color).filter((c): c is string => !!c))]
 
   const sizes = hasVariants ? variantSizes : legacySizes
@@ -86,6 +89,27 @@ function useProductActionsState({
   const [selectedColor, setSelectedColor] = useState<string | null>(
     colors.length === 1 ? colors[0] : null
   )
+
+  // ─── Calzado: tallas en cuadrícula de botones (como Nike) ─────────────
+  // Solo con el sistema Talla/Color y cuando las tallas son de calzado
+  // (EE. UU. o Europa, ver inferSizeScale): ahí se ven todas a la vez y las
+  // que ya no tienen stock salen tachadas y no se pueden elegir. Ropa y las
+  // demás siguen con chips (móvil) / desplegable (escritorio) como siempre.
+  const sizeScale = inferSizeScale(sizes)
+  const useSizeGrid = hasVariants && !hasDynamicDims && (sizeScale === 'footwear_us' || sizeScale === 'footwear_eu')
+
+  // ¿Queda stock de esa talla? En el color elegido si ya hay uno; si no, en
+  // cualquiera de sus colores.
+  const sizeInStock = (size: string, color: string | null = selectedColor): boolean =>
+    variants.some(v => (v.size ?? null) === size && (color === null || (v.color ?? null) === color) && v.stock > 0)
+
+  // Con la cuadrícula, elegir otro color puede dejar sin stock la talla que
+  // ya estaba marcada (queda tachada y deshabilitada): se desmarca en vez de
+  // dejar una talla elegida que no se puede comprar.
+  const handleSelectColor = (color: string | null) => {
+    setSelectedColor(color)
+    if (useSizeGrid && selectedSize && !sizeInStock(selectedSize, color)) setSelectedSize(null)
+  }
 
   // ─── Selección de dimensiones dinámicas (ej. Capacidad, Color) ───────
   const [selectedDynamicValues, setSelectedDynamicValues] = useState<Record<string, string | null>>(() => {
@@ -139,7 +163,15 @@ function useProductActionsState({
   const activeMatchedVariant = hasDynamicDims ? dynamicMatchedVariant : matchedVariant
 
   const effectiveStock = hasVariants ? (activeMatchedVariant?.stock ?? 0) : product.stock
-  const isOutOfStock = hasVariants ? (activeMatchedVariant !== null && activeMatchedVariant.stock === 0) : product.stock === 0
+  // Con variantes está agotado cuando la combinación elegida no tiene stock,
+  // pero también cuando NINGUNA variante tiene (o, en la cuadrícula, ninguna
+  // talla del color elegido): antes el botón decía "Selecciona talla" aunque
+  // todas estuvieran en 0 y solo al elegir una salía "Agotado".
+  const allVariantsOut = hasVariants && variants.every(v => v.stock <= 0)
+  const selectedColorSoldOut = useSizeGrid && selectedColor !== null && !sizes.some(s => sizeInStock(s, selectedColor))
+  const isOutOfStock = hasVariants
+    ? (allVariantsOut || selectedColorSoldOut || (activeMatchedVariant !== null && activeMatchedVariant.stock === 0))
+    : product.stock === 0
   // Aplica el techo de stock y el piso de 1 — solo se llama al perder
   // el foco, nunca en cada tecla (no interrumpe mientras escribe).
   // MOQ por producto queda pendiente: hoy min_order_quantity vive en
@@ -216,7 +248,8 @@ function useProductActionsState({
   return {
     t, hasVariants, hasDynamicDims,
     sizes, colors, colorImageMap,
-    selectedSize, setSelectedSize, selectedColor, setSelectedColor,
+    selectedSize, setSelectedSize, selectedColor, setSelectedColor, handleSelectColor,
+    useSizeGrid, sizeInStock,
     dynamicDimensions, selectedDynamicValues, setSelectedDynamicValues,
     dynamicColorDim, sizeLikeKeys, dynamicColorImageMap, dynamicMatchedVariant,
     quantity, quantityInput, setQuantityInput, setQuantity, handleQuantityBlur,
@@ -256,7 +289,8 @@ export function ProductActionsProvider({ children, ...props }: ProductActionsPro
 export function ProductSelectors() {
   const {
     t, hasDynamicDims, sizes, colors, colorImageMap,
-    selectedSize, setSelectedSize, selectedColor, setSelectedColor,
+    selectedSize, setSelectedSize, selectedColor, handleSelectColor,
+    useSizeGrid, sizeInStock,
     dynamicDimensions, selectedDynamicValues, setSelectedDynamicValues,
     dynamicColorDim, sizeLikeKeys, dynamicColorImageMap, dynamicMatchedVariant,
     quantity, quantityInput, setQuantityInput, setQuantity, handleQuantityBlur,
@@ -266,10 +300,53 @@ export function ProductSelectors() {
   return (
     <div className="flex flex-col gap-4">
 
+      {/* Calzado: cuadrícula de tallas como la de Nike — todas visibles a la
+          vez, la elegida con borde azul, las que no tienen stock tachadas y
+          deshabilitadas. En móvil y en escritorio por igual. */}
+      {needsSize && useSizeGrid && (
+        <div>
+          <p className="text-sm font-medium text-gray-700 mb-2">
+            {t('sizeLabel')}
+            {selectedSize && <span className="ml-2 text-gray-400 font-normal">{selectedSize}</span>}
+          </p>
+          <div role="group" aria-label={t('sizeLabel')} className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+            {sizes.map(size => {
+              const inStock = sizeInStock(size)
+              const isSelected = selectedSize === size && inStock
+              return (
+                <button
+                  key={size}
+                  type="button"
+                  disabled={!inStock}
+                  aria-pressed={isSelected}
+                  aria-label={inStock ? undefined : t('sizeSoldOutAria', { size })}
+                  title={inStock ? undefined : t('outOfStock')}
+                  onClick={() => setSelectedSize(size)}
+                  className="min-h-[44px] px-2 text-sm font-semibold"
+                  style={{
+                    borderRadius: 'var(--radius-control)',
+                    border: `1px solid ${isSelected ? 'var(--color-primary)' : inStock ? 'var(--color-border)' : 'var(--color-divider)'}`,
+                    // 2.º "borde" del botón elegido sin mover el resto de la cuadrícula
+                    boxShadow: isSelected ? '0 0 0 1px var(--color-primary)' : 'none',
+                    background: isSelected ? 'var(--color-primary-subtle)' : 'transparent',
+                    color: !inStock ? 'var(--color-text-tertiary)' : isSelected ? 'var(--color-primary)' : 'var(--color-text-primary)',
+                    textDecoration: inStock ? 'none' : 'line-through',
+                    cursor: inStock ? 'pointer' : 'not-allowed',
+                    transition: 'all var(--transition-fast)',
+                  }}
+                >
+                  {size}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Selector de talla — chips en mobile, dropdown en desktop (mismo
           campo, presentación condicional por viewport, confirmado contra
           la referencia mobile real). */}
-      {needsSize && (
+      {needsSize && !useSizeGrid && (
         <div>
           <p className="text-sm font-medium text-gray-700 mb-2">{t('sizeLabel')}</p>
 
@@ -326,7 +403,7 @@ export function ProductSelectors() {
               return thumbUrl ? (
                 <button
                   key={color}
-                  onClick={() => setSelectedColor(color)}
+                  onClick={() => handleSelectColor(color)}
                   title={color}
                   aria-label={color}
                   className="w-10 h-10 rounded-full overflow-hidden border-2 transition-all"
@@ -338,7 +415,7 @@ export function ProductSelectors() {
               ) : (
                 <button
                   key={color}
-                  onClick={() => setSelectedColor(color)}
+                  onClick={() => handleSelectColor(color)}
                   className={`px-4 py-1.5 text-sm font-medium ${
                     selectedColor === color ? 'text-white' : 'text-gray-600 hover:border-gray-300'
                   }`}
