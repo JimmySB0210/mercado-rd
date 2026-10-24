@@ -23,6 +23,7 @@ import { ProductPreviewModal } from '@/components/dashboard/ProductPreviewModal'
 import { ProductPageContent } from '@/app/producto/[id]/ProductPageContent'
 import { Navbar } from '@/components/shop/Navbar'
 import { computePublishQuality, qualityTier, QUALITY_TIER_EMOJI, QUALITY_TIER_COLOR } from '@/lib/productQuality'
+import { SIZE_SCALES, SIZE_SCALE_ORDER, defaultSizeScaleForCategories, inferSizeScale, type SizeScale } from '@/lib/productSizes'
 import { BRAND } from '@/lib/colors'
 import { formatPrice, discountPercent } from '@/types/database.types'
 import { PLACEHOLDER_PRODUCT_IMAGE } from '@/lib/utils'
@@ -72,10 +73,18 @@ interface DynamicVariantRow {
   imageUrl: string | null
 }
 
-// "Talla" también se usa para variantes que no son ropa (ej. "128GB"
-// en electrónicos) — de ahí la opción "Otra" con texto libre.
-const PRESET_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+// Las tallas de los atajos (chips y <select>) salen de la escala activa
+// (ropa, calzado EE. UU. o calzado Europa — lib/productSizes.ts). "Talla"
+// también se usa para variantes que no caben en ninguna (ej. "128GB" en
+// electrónicos, "40.5") — de ahí la opción "Otra" con texto libre.
 const OTHER_SIZE = '__otra__'
+
+// Texto de cada botón del selector de tipo de talla (claves de i18n)
+const SIZE_SCALE_LABEL_KEY: Record<SizeScale, keyof DashboardDict> = {
+  apparel: 'sizeScaleApparel',
+  footwear_us: 'sizeScaleFootwearUs',
+  footwear_eu: 'sizeScaleFootwearEu',
+}
 
 // Garantía: texto libre en la BD (migración 017), sin verificación del
 // sistema — estos presets son solo el atajo del <select>; "Otra" cae al
@@ -297,15 +306,32 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
   const [uploadingVariantIndex, setUploadingVariantIndex] = useState<number | null>(null)
   const [variantImageError, setVariantImageError] = useState<string | null>(null)
 
-  // Filas cuya "Talla" es libre (seleccionaron "Otra" o traían un valor
-  // existente que no coincide con ningún preset, ej. "128GB")
-  const [customSizeIndexes, setCustomSizeIndexes] = useState<Set<number>>(() => {
-    const initial = new Set<number>()
-    variantRows.forEach((row, i) => {
-      if (row.size && !PRESET_SIZES.includes(row.size)) initial.add(i)
-    })
-    return initial
-  })
+  // ─── Escala de tallas (ropa / calzado EE. UU. / calzado Europa) ──────
+  // Sigue a la categoría elegida (Calzado → tallas de tenis, lo demás →
+  // ropa) hasta que el vendor toca el selector de "Tipo de talla". Al
+  // editar parte de las tallas ya guardadas (inferSizeScale), para que
+  // unos tenis publicados con tallas 8, 9 y 10 no aparezcan como "Otra".
+  const [sizeScaleChoice, setSizeScaleChoice] = useState<SizeScale | null>(() =>
+    inferSizeScale((initialData?.variants ?? []).map(v => v.size))
+  )
+
+  // Escala por defecto de una ruta de categorías (ids, de la raíz a la hoja)
+  const sizeScaleForPath = (path: string[]): SizeScale =>
+    defaultSizeScaleForCategories(
+      path.map(id => categories.find(c => String(c.id) === id)).filter((c): c is Category => !!c)
+    )
+  const autoSizeScale = sizeScaleForPath(selectedCategoryPath)
+  const activeSizeScale = sizeScaleChoice ?? autoSizeScale
+  const activeSizes = SIZE_SCALES[activeSizeScale]
+
+  // Filas cuya "Talla" es libre porque el vendor eligió "Otra" (queda en
+  // modo texto aunque lo escrito coincida con un atajo). Además, toda fila
+  // con un valor que no está en la escala activa (ej. "128GB", o "M" tras
+  // cambiar a calzado) se muestra como "Otra" con su valor: ver
+  // isCustomSize. Así el <select> nunca aparece vacío con un dato guardado.
+  const [customSizeIndexes, setCustomSizeIndexes] = useState<Set<number>>(() => new Set())
+  const isCustomSize = (index: number, size: string) =>
+    customSizeIndexes.has(index) || (size !== '' && !activeSizes.includes(size))
 
   const addVariantRow = () => {
     setVariantRows(prev => [...prev, { size: '', color: '', stock: '', price: '', imageUrl: null }])
@@ -324,11 +350,17 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     setAutoGenSizes(prev => prev.includes(size) ? prev.filter(s => s !== size) : [...prev, size])
   }
 
+  // Tallas marcadas que pertenecen a la escala activa, en el orden de la
+  // escala (no en el de los clics, que es el que verá el comprador). Si el
+  // vendor marcó tallas de ropa y luego pasó a calzado, las de ropa no
+  // cuentan; si vuelve a ropa, siguen marcadas.
+  const selectedAutoGenSizes = activeSizes.filter(s => autoGenSizes.includes(s))
+
   const generateVariantCombinations = () => {
     const colors = autoGenColorsText.split(',').map(c => c.trim()).filter(Boolean)
-    if (autoGenSizes.length === 0 && colors.length === 0) return
+    if (selectedAutoGenSizes.length === 0 && colors.length === 0) return
 
-    const sizeList = autoGenSizes.length > 0 ? autoGenSizes : ['']
+    const sizeList = selectedAutoGenSizes.length > 0 ? selectedAutoGenSizes : ['']
     const colorList = colors.length > 0 ? colors : ['']
     const rows: VariantRow[] = []
     for (const size of sizeList) {
@@ -338,13 +370,21 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     }
 
     setVariantRows(rows)
-    setCustomSizeIndexes(new Set(
-      rows.map((r, i) => (r.size && !PRESET_SIZES.includes(r.size) ? i : -1)).filter(i => i >= 0)
-    ))
+    // Todas las tallas generadas salen de la escala activa: ninguna fila
+    // queda en modo "Otra".
+    setCustomSizeIndexes(new Set())
   }
 
   const updateVariantRow = (index: number, field: keyof Omit<VariantRow, 'imageUrl'>, value: string) => {
     setVariantRows(prev => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)))
+  }
+
+  // Escribir en el campo de "Otra" deja la fila en modo texto aunque lo
+  // escrito coincida con un atajo; si no, el campo desaparecería a media
+  // escritura (ej. al teclear "10" con la escala de calzado activa).
+  const handleCustomSizeInput = (index: number, value: string) => {
+    setCustomSizeIndexes(prev => (prev.has(index) ? prev : new Set(prev).add(index)))
+    updateVariantRow(index, 'size', value)
   }
 
   const handleSizeSelectChange = (index: number, value: string) => {
@@ -880,6 +920,13 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     setSelectedCategoryPath(prev => [...prev.slice(0, levelIndex), value])
     const children = value ? categoriesByParent.get(Number(value)) ?? [] : []
     setForm(f => ({ ...f, categoryId: (value && children.length === 0) ? value : '' }))
+    // Si la categoría nueva cambia la escala de tallas por defecto (ej. de
+    // Ropa & Moda a Calzado), el "Tipo de talla" vuelve a seguir a la
+    // categoría; si no la cambia (Tenis → Botas), se respeta lo que el
+    // vendor ya eligiera.
+    if (sizeScaleForPath([...selectedCategoryPath.slice(0, levelIndex), value]) !== autoSizeScale) {
+      setSizeScaleChoice(null)
+    }
   }
 
   const handleWarrantySelectChange = (value: string) => {
@@ -1768,10 +1815,40 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           {variantCategoryAttributes.length === 0 && (
             <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
               <h2 className="text-sm font-semibold" style={{ color: 'var(--color-blue-dark)' }}>{t('variantsGenerateHeading')}</h2>
+              {/* Tipo de talla — arranca según la categoría (Calzado → tenis,
+                  lo demás → ropa) y el vendor puede cambiarlo: unos tenis
+                  publicados en Ropa & Moda también necesitan tallas de calzado. */}
+              <div>
+                <label className="text-xs text-gray-500 mb-1.5 block">{t('sizeScaleLabel')}</label>
+                <div
+                  role="group"
+                  aria-label={t('sizeScaleLabel')}
+                  className="inline-flex flex-wrap gap-1 p-1 rounded-xl border border-gray-200"
+                >
+                  {SIZE_SCALE_ORDER.map(scale => {
+                    const isActive = activeSizeScale === scale
+                    return (
+                      <button
+                        key={scale}
+                        type="button"
+                        aria-pressed={isActive}
+                        onClick={() => setSizeScaleChoice(scale)}
+                        className="text-xs font-semibold rounded-lg px-3 py-1.5 cursor-pointer transition-colors"
+                        style={{
+                          background: isActive ? 'var(--color-primary-subtle)' : 'transparent',
+                          color: isActive ? BRAND.blue : BRAND.gray,
+                        }}
+                      >
+                        {t(SIZE_SCALE_LABEL_KEY[scale])}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
               <div>
                 <label className="text-xs text-gray-500 mb-1.5 block">{t('variantsGenerateSizesLabel')}</label>
                 <div className="flex flex-wrap gap-2">
-                  {PRESET_SIZES.map(size => {
+                  {activeSizes.map(size => {
                     const isSelected = autoGenSizes.includes(size)
                     return (
                       <button
@@ -1803,7 +1880,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               <button
                 type="button"
                 onClick={generateVariantCombinations}
-                disabled={autoGenSizes.length === 0 && !autoGenColorsText.trim()}
+                disabled={selectedAutoGenSizes.length === 0 && !autoGenColorsText.trim()}
                 className="text-xs font-bold text-white rounded-lg px-4 py-2 disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{ background: BRAND.blue, border: 'none', cursor: 'pointer' }}
               >
@@ -1953,23 +2030,25 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
                   <div className="col-span-3">
                     {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('sizeLabel')}</label>}
                     <select
-                      value={customSizeIndexes.has(i) ? OTHER_SIZE : (PRESET_SIZES.includes(row.size) ? row.size : '')}
+                      value={isCustomSize(i, row.size) ? OTHER_SIZE : (activeSizes.includes(row.size) ? row.size : '')}
                       onChange={e => handleSizeSelectChange(i, e.target.value)}
                       className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none bg-white"
                     >
                       <option value="" disabled>{t('sizeLabel')}</option>
-                      {PRESET_SIZES.map(s => (
+                      {activeSizes.map(s => (
                         <option key={s} value={s}>{s}</option>
                       ))}
                       <option value={OTHER_SIZE}>{t('sizeOtherOption')}</option>
                     </select>
-                    {customSizeIndexes.has(i) && (
+                    {isCustomSize(i, row.size) && (
                       <input
                         value={row.size}
-                        onChange={e => updateVariantRow(i, 'size', e.target.value)}
+                        onChange={e => handleCustomSizeInput(i, e.target.value)}
                         placeholder={t('sizeOtherPlaceholder')}
                         className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none mt-1.5"
-                        autoFocus
+                        // Solo si el vendor eligió "Otra" en esta fila: las filas que pasan a
+                        // modo texto por cambiar el tipo de talla no deben robar el foco.
+                        autoFocus={customSizeIndexes.has(i)}
                       />
                     )}
                   </div>

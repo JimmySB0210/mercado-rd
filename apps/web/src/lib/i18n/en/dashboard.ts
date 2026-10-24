@@ -268,6 +268,10 @@ export const dashboard = {
 
   variantsGenerateHeading: 'Generate combinations',
   variantsGenerateSizesLabel: 'Sizes',
+  sizeScaleLabel: 'Size type',
+  sizeScaleApparel: 'Clothing',
+  sizeScaleFootwearUs: 'Footwear (US)',
+  sizeScaleFootwearEu: 'Footwear (Europe)',
   variantsGenerateColorsLabel: 'Colors (comma-separated)',
   variantsGenerateColorsPlaceholder: 'E.g. Blue, Red, Black',
   variantsGenerateButton: 'Generate combinations',

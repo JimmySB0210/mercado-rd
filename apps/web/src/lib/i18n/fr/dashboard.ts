@@ -268,6 +268,10 @@ export const dashboard = {
 
   variantsGenerateHeading: 'Générer des combinaisons',
   variantsGenerateSizesLabel: 'Tailles',
+  sizeScaleLabel: 'Type de taille',
+  sizeScaleApparel: 'Vêtements',
+  sizeScaleFootwearUs: 'Chaussures (US)',
+  sizeScaleFootwearEu: 'Chaussures (Europe)',
   variantsGenerateColorsLabel: 'Couleurs (séparées par des virgules)',
   variantsGenerateColorsPlaceholder: 'Ex. Bleu, Rouge, Noir',
   variantsGenerateButton: 'Générer des combinaisons',

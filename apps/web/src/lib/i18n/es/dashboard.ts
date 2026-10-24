@@ -292,6 +292,10 @@ export const dashboard = {
   // ─── ProductForm — Variantes (generar combinaciones) ─────────
   variantsGenerateHeading: 'Generar combinaciones',
   variantsGenerateSizesLabel: 'Tallas',
+  sizeScaleLabel: 'Tipo de talla',
+  sizeScaleApparel: 'Ropa',
+  sizeScaleFootwearUs: 'Calzado (EE. UU.)',
+  sizeScaleFootwearEu: 'Calzado (Europa)',
   variantsGenerateColorsLabel: 'Colores (separados por coma)',
   variantsGenerateColorsPlaceholder: 'Ej. Azul, Rojo, Negro',
   variantsGenerateButton: 'Generar combinaciones',
