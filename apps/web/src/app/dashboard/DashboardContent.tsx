@@ -17,6 +17,7 @@
 import { OrderStatusSelect } from '@/components/vendor/OrderStatusSelect'
 import { RevenueChartLoader } from '@/components/vendor/RevenueChartLoader'
 import { StoreSummaryCard } from '@/components/vendor/StoreSummaryCard'
+import { ProductDraftNotice } from '@/components/dashboard/ProductDraftNotice'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { formatPrice } from '@/types/database.types'
 import type { CompletenessCheck } from '@/lib/vendorCompleteness'
@@ -195,6 +196,9 @@ export function DashboardContent({
           {t('newProductCta')}
         </a>
       </div>
+
+      {/* Producto nuevo que quedó a medias en este dispositivo */}
+      <ProductDraftNotice vendorId={vendor.id} />
 
       {/* KPIs + Tu tienda */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-3 mb-3">

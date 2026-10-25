@@ -652,4 +652,19 @@ export const dashboard = {
 
   pauseProductButton: 'Mettre en pause',
   productStatusUpdateFailed: 'Impossible de modifier le statut du produit. Réessayez.',
+
+  draftResumeTitle: 'Vous avez un produit non terminé',
+  draftResumeNoName: 'Produit sans nom',
+  draftResumePhotos: 'Photos : {count}',
+  draftResumeSaved: 'Enregistré {when}',
+  draftResumeStep: 'Vous vous êtes arrêté à : {step}',
+  draftResumeHint: 'Il a été enregistré sur cet appareil pendant que vous écriviez. Il n\'est pas encore publié.',
+  draftResumeContinue: 'Reprendre là où j\'en étais',
+  draftResumeDiscard: 'Recommencer à zéro',
+  draftResumeDiscardConfirm: 'Abandonner cette progression ? Ce que vous avez saisi et les photos enregistrées seront supprimés. Cette action est irréversible.',
+  draftResumeDiscardYes: 'Oui, abandonner',
+  draftResumeDiscardNo: 'Annuler',
+  draftNoticeDiscard: 'Abandonner',
+  draftVideoNote: 'Ce produit avait une vidéo. Elle est trop volumineuse pour le brouillon : choisissez-la à nouveau.',
+  draftSavedIndicator: 'Progression enregistrée sur cet appareil',
 } satisfies DashboardDict

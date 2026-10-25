@@ -19,6 +19,7 @@ import { FeatureToggleButton } from '@/components/vendor/FeatureToggleButton'
 import { ProductActiveToggle } from '@/components/vendor/ProductActiveToggle'
 import { DailyDealAction } from '@/components/vendor/DailyDealAction'
 import { StoreSummaryCard } from '@/components/vendor/StoreSummaryCard'
+import { ProductDraftNotice } from '@/components/dashboard/ProductDraftNotice'
 import { useTranslation } from '@/lib/hooks/useTranslation'
 import { formatPrice } from '@/types/database.types'
 import type { ProductStatus } from '@/types/database.types'
@@ -146,6 +147,9 @@ export function ProductosContent({ products, isPro, categories, store }: Props) 
               {t('newProductCta')}
             </a>
           </div>
+
+          {/* Producto nuevo que quedó a medias en este dispositivo */}
+          <ProductDraftNotice vendorId={store.vendor.id} />
 
           {products.length === 0 ? (
             <div style={{ background: '#fff', borderRadius: 12, padding: 48, textAlign: 'center', border: '1px solid #EEF2F6' }}>

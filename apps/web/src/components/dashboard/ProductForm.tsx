@@ -28,6 +28,10 @@ import { stockOf, type VariantRow } from '@/lib/variantRows'
 import { VariantOptionsBuilder } from '@/components/dashboard/VariantOptionsBuilder'
 import { PriceInput } from '@/components/dashboard/PriceInput'
 import { priceInputToCents } from '@/lib/priceInput'
+import {
+  ProductDraftStore, loadDraft, draftHasContent, photosSignature, formatDraftAge, resolveDraftCategory,
+  restoreAttributeValues, restoreDynamicRows, DRAFT_VERSION, type ProductDraft, type LoadedDraft,
+} from '@/lib/productDraft'
 import { BRAND } from '@/lib/colors'
 import { formatPrice, discountPercent } from '@/types/database.types'
 import { PLACEHOLDER_PRODUCT_IMAGE } from '@/lib/utils'
@@ -85,6 +89,16 @@ const MAX_PRICE_CENTS = 99999999
 // mismo patrón de texto libre que "Otra" en Talla arriba.
 const WARRANTY_PRESETS = ['Sin garantía', '7 días', '30 días', '90 días', '6 meses', '1 año']
 const WARRANTY_OTHER = '__otra_garantia__'
+
+// Foto → data URL para la miniatura (las que se eligen a mano en
+// handleImageSelect y las que se recuperan del borrador local)
+const readFileAsDataUrl = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(file)
+  })
 
 // Mismo tipo que devuelve useTranslation('dashboard') — nunca un
 // `string` genérico, para que TS siga marcando keys de traducción
@@ -341,6 +355,18 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
   // estado y pegando directo contra Supabase -- esto no se usa ahí.
   const [pendingPricingTiers, setPendingPricingTiers] = useState<TierRow[]>([])
 
+  // «Continuar donde me quedé» (más abajo, junto a handlePublish): al recuperar un
+  // borrador local, el efecto de la categoría deja los atributos y las filas
+  // dinámicas en blanco, así que lo recuperado se vuelve a poner AHÍ, cuando ya
+  // llegaron los atributos de la categoría. `until`: si algo se atora, deja de
+  // pausar el guardado automático pasado ese momento.
+  const draftRestoreRef = useRef<{
+    categoryId: string
+    attributes: Record<number, AttributeValue>
+    dynamicRows: DynamicVariantRow[]
+    until: number
+  } | null>(null)
+
   const addDynamicVariantRow = () => {
     setDynamicVariantRows(prev => [...prev, { values: {}, stock: '', price: '', imageUrl: null }])
   }
@@ -417,6 +443,10 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
   const [loadingAttributes, setLoadingAttributes] = useState(false)
 
   useEffect(() => {
+    // Un borrador recuperado de otra categoría ya no aplica (cambió de categoría
+    // antes de que terminara de cargar)
+    if (draftRestoreRef.current && draftRestoreRef.current.categoryId !== form.categoryId) draftRestoreRef.current = null
+
     if (!form.categoryId) {
       setFixedCategoryAttributes([])
       setVariantCategoryAttributes([])
@@ -451,6 +481,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
 
         if (attrsError) {
           console.error('[ProductForm categoryAttributes]', attrsError)
+          draftRestoreRef.current = null
           setFixedCategoryAttributes([])
           setVariantCategoryAttributes([])
           setAttributeOptionsMap(new Map())
@@ -543,8 +574,17 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
             )
           }
         } else {
-          setAttributeValues({})
-          setDynamicVariantRows([{ values: {}, stock: '', price: '', imageUrl: null }])
+          // «Continuar donde me quedé»: lo recuperado se pone aquí, después de
+          // que llegaron los atributos de la categoría (ver draftRestoreRef)
+          const restore = draftRestoreRef.current
+          draftRestoreRef.current = null
+          if (restore && restore.categoryId === form.categoryId) {
+            setAttributeValues(restoreAttributeValues(restore.attributes, allAttrs.filter(a => !a.applies_to_variant)))
+            setDynamicVariantRows(restoreDynamicRows(restore.dynamicRows, allAttrs.filter(a => a.applies_to_variant).map(a => a.id)))
+          } else {
+            setAttributeValues({})
+            setDynamicVariantRows([{ values: {}, stock: '', price: '', imageUrl: null }])
+          }
         }
 
         setLoadingAttributes(false)
@@ -931,15 +971,23 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
 
     if (validFiles.length === 0) return
 
-    setImageFiles(prev => [...prev, ...validFiles])
-
-    validFiles.forEach(file => {
-      const reader = new FileReader()
-      reader.onload = (ev) => {
-        setImagePreviews(prev => [...prev, ev.target?.result as string])
+    // Las miniaturas en el MISMO orden que los archivos: FileReader termina cuando
+    // quiere (una foto chica se lee antes que una grande) y las miniaturas
+    // quedaban cruzadas con los archivos (la portada y el botón × no coincidían).
+    // Una foto que no se pueda leer se omite entera, para no desalinear las listas.
+    const settled = await Promise.allSettled(validFiles.map(readFileAsDataUrl))
+    const readableFiles: File[] = []
+    const previews: string[] = []
+    settled.forEach((result, i) => {
+      if (result.status === 'fulfilled') {
+        readableFiles.push(validFiles[i])
+        previews.push(result.value)
       }
-      reader.readAsDataURL(file)
     })
+    if (readableFiles.length === 0) return
+
+    setImageFiles(prev => [...prev, ...readableFiles])
+    setImagePreviews(prev => [...prev, ...previews])
   }
 
   const removeImage = (index: number) => {
@@ -1368,6 +1416,9 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
         }
       }
 
+      // El producto ya quedó guardado: el borrador local (si había) ya no hace falta
+      if (mode === 'crear') await finishLocalDraft()
+
       router.push(tiersSaveFailed ? '/dashboard/productos?tiersWarning=1' : '/dashboard/productos')
       router.refresh()
     } catch (err: any) {
@@ -1446,12 +1497,313 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     router.refresh()
   }
 
-  if (loading) {
+  // ─── Borrador local: «Continuar donde me quedé» ──────────────────────────
+  // En 'crear' el avance se guarda solo en ESTE dispositivo mientras el vendedor
+  // escribe (lib/productDraft.ts: IndexedDB, una copia por vendedor), y al volver
+  // a «Nuevo producto» una tarjeta ofrece continuar o empezar de cero. No toca la
+  // base de datos ni Storage: «Guardar borrador» sigue siendo el borrador del
+  // servidor (exige nombre, precio y categoría); al guardarse el producto, el
+  // borrador local se borra. Si el navegador no deja usar IndexedDB, todo esto
+  // simplemente no hace nada.
+  type DraftGate = 'checking' | 'pending' | 'done'
+  const [draftGate, setDraftGate] = useState<DraftGate>(mode === 'crear' ? 'checking' : 'done')
+  const [pendingDraft, setPendingDraft] = useState<Extract<LoadedDraft, { status: 'found' }> | null>(null)
+  const [restoringDraft, setRestoringDraft] = useState(false)
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false)
+  const [draftSaved, setDraftSaved] = useState(false)
+  // El video no se guarda (pesa hasta 50 MB): si había uno, se avisa que hay que elegirlo otra vez
+  const [draftVideoNote, setDraftVideoNote] = useState(false)
+
+  const draftStoreRef = useRef<ProductDraftStore | null>(null)
+  const draftLatestRef = useRef<ProductDraft | null>(null) // lo último que hay que guardar
+  const draftFilesRef = useRef<File[]>([]) // fotos actuales
+  const draftActiveRef = useRef(false) // ¿el avance se está guardando solo?
+  const draftDisabledRef = useRef(false) // ya no se guarda más (producto guardado o sin IndexedDB)
+  const draftDirtyRef = useRef(false) // hay cambios sin escribir
+  const draftStoredRef = useRef(false) // hay algo guardado (para borrarlo si se vacía el formulario)
+  const draftPhotosKeyRef = useRef('') // firma de las fotos ya guardadas
+  const draftAutoResumeRef = useRef(false) // ?continuar=1: recuperar sin pasar por la tarjeta
+
+  // Buscar un borrador al abrir «Nuevo producto»
+  useEffect(() => {
+    if (mode !== 'crear') return
+    let alive = true
+    draftStoreRef.current = new ProductDraftStore(vendorId)
+    draftAutoResumeRef.current = new URLSearchParams(window.location.search).get('continuar') === '1'
+    loadDraft(vendorId).then(result => {
+      if (!alive) return
+      if (result.status === 'unavailable') {
+        draftDisabledRef.current = true
+        setDraftGate('done')
+      } else if (result.status === 'none') {
+        setDraftGate('done')
+      } else {
+        draftStoredRef.current = true
+        setPendingDraft(result)
+        if (!draftAutoResumeRef.current) setDraftGate('pending')
+      }
+    })
+    return () => { alive = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Desde el aviso del panel (?continuar=1) se recupera directo, sin la tarjeta
+  useEffect(() => {
+    if (draftGate !== 'checking' || !pendingDraft || !draftAutoResumeRef.current || loading) return
+    draftAutoResumeRef.current = false
+    void restoreDraft()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftGate, pendingDraft, loading])
+
+  const saveDraftPhotosNow = () => {
+    const store = draftStoreRef.current
+    if (!store || !draftActiveRef.current) return
+    const files = draftFilesRef.current
+    const signature = photosSignature(files)
+    if (signature === draftPhotosKeyRef.current) return
+    draftPhotosKeyRef.current = signature
+    void store.savePhotos(files).then(ok => {
+      if (!ok && draftPhotosKeyRef.current === signature) draftPhotosKeyRef.current = ''
+    })
+  }
+
+  // Solo lee refs: por eso también sirve desde los listeners de abajo
+  const saveDraftNow = () => {
+    const store = draftStoreRef.current
+    const draft = draftLatestRef.current
+    if (!store || !draft || !draftActiveRef.current || !draftDirtyRef.current) return
+    draftDirtyRef.current = false
+    saveDraftPhotosNow()
+    if (!draftHasContent(draft, draftFilesRef.current.length)) {
+      // Formulario vacío (o vaciado): no se guarda nada y se quita lo que hubiera
+      if (draftStoredRef.current) {
+        draftStoredRef.current = false
+        draftPhotosKeyRef.current = ''
+        setDraftSaved(false)
+        void store.clear()
+      }
+      return
+    }
+    draftStoredRef.current = true
+    void store.saveState(draft).then(ok => { if (ok) setDraftSaved(true) })
+  }
+
+  // Guardado automático del texto y las opciones (con una pausa de 0,7 s tras
+  // el último cambio). Está en pausa mientras la tarjeta de «continuar» está
+  // abierta y mientras se termina de recuperar la categoría, para no pisar lo
+  // guardado con un formulario todavía en blanco.
+  const draftActive = mode === 'crear' && draftGate === 'done' && !loading
+  useEffect(() => {
+    draftActiveRef.current = draftActive && !draftDisabledRef.current
+    if (!draftActiveRef.current) return
+    if (draftRestoreRef.current && Date.now() < draftRestoreRef.current.until) return
+    draftLatestRef.current = {
+      v: DRAFT_VERSION,
+      savedAt: Date.now(),
+      step: activeStep,
+      form,
+      categoryPath: selectedCategoryPath,
+      customWarranty,
+      hasOptions,
+      variantRows,
+      sizeScale: sizeScaleChoice,
+      dynamicRows: dynamicVariantRows,
+      tiers: pendingPricingTiers,
+      advancedOpen,
+      attributes: attributeValues,
+      photoCount: imageFiles.length,
+      hadVideo: !!videoFile || draftVideoNote,
+    }
+    draftDirtyRef.current = true
+    const timer = setTimeout(saveDraftNow, 700)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftActive, activeStep, form, selectedCategoryPath, customWarranty, hasOptions, variantRows, sizeScaleChoice,
+      dynamicVariantRows, pendingPricingTiers, advancedOpen, attributeValues, imageFiles, videoFile, draftVideoNote])
+
+  // Las fotos se escriben aparte y solo cuando cambia el juego de fotos
+  useEffect(() => {
+    draftFilesRef.current = imageFiles
+    if (!draftActiveRef.current) return
+    const timer = setTimeout(saveDraftPhotosNow, 300)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftActive, imageFiles])
+
+  // Si se cambia de pestaña, se cierra la página o se navega dentro de la app,
+  // lo pendiente se escribe de inmediato (sin esperar la pausa)
+  useEffect(() => {
+    if (mode !== 'crear') return
+    const onVisibility = () => { if (document.visibilityState === 'hidden') saveDraftNow() }
+    const onPageHide = () => saveDraftNow()
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('pagehide', onPageHide)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('pagehide', onPageHide)
+      saveDraftNow()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Elegir un video nuevo cierra el aviso de «tenías un video»
+  useEffect(() => {
+    if (videoFile) setDraftVideoNote(false)
+  }, [videoFile])
+
+  // «Continuar donde me quedé»: vuelve a poner todo lo guardado en el formulario
+  const restoreDraft = async () => {
+    const found = pendingDraft
+    if (!found || restoringDraft) return
+    setRestoringDraft(true)
+    try {
+      const { draft, photos } = found
+      // Miniaturas en el MISMO orden que los archivos; una foto que no se pueda leer se omite
+      const settled = await Promise.allSettled(photos.map(readFileAsDataUrl))
+      const files: File[] = []
+      const previews: string[] = []
+      settled.forEach((result, i) => {
+        if (result.status === 'fulfilled') {
+          files.push(photos[i])
+          previews.push(result.value)
+        }
+      })
+
+      // La categoría y la provincia se validan contra las que existen hoy
+      const { categoryId, path } = resolveDraftCategory(categories, draft.form.categoryId, draft.categoryPath)
+      const provinceId = provinces.some(p => String(p.id) === draft.form.provinceId) ? draft.form.provinceId : ''
+      draftRestoreRef.current = categoryId
+        ? { categoryId, attributes: draft.attributes, dynamicRows: draft.dynamicRows, until: Date.now() + 10000 }
+        : null
+
+      setForm({ ...draft.form, categoryId, provinceId })
+      setSelectedCategoryPath(path)
+      setCustomWarranty(draft.customWarranty || (!!draft.form.warranty && !WARRANTY_PRESETS.includes(draft.form.warranty)))
+      setHasOptions(draft.hasOptions)
+      setVariantRows(draft.variantRows)
+      setSizeScaleChoice(draft.sizeScale)
+      setPendingPricingTiers(draft.tiers)
+      setAdvancedOpen(draft.advancedOpen)
+      setImageFiles(files)
+      setImagePreviews(previews)
+      setDraftVideoNote(draft.hadVideo)
+      setActiveStep(draft.step)
+
+      draftPhotosKeyRef.current = photosSignature(files)
+      draftStoredRef.current = true
+      setPendingDraft(null)
+      setDraftGate('done')
+    } catch (err) {
+      console.error('[restoreDraft]', err)
+      setDraftGate('pending')
+    } finally {
+      setRestoringDraft(false)
+    }
+  }
+
+  // «Empezar de cero»: se borra el borrador y se sigue con el formulario en blanco
+  const discardPendingDraft = () => {
+    void draftStoreRef.current?.clear()
+    draftStoredRef.current = false
+    draftPhotosKeyRef.current = ''
+    setPendingDraft(null)
+    setConfirmingDiscard(false)
+    setDraftSaved(false)
+    setDraftGate('done')
+  }
+
+  // El producto ya se guardó: el borrador local ya no hace falta y no debe revivir
+  // por un guardado atrasado. Se espera a que se borre (con tope) para que el
+  // aviso de la lista de productos no lo muestre.
+  const finishLocalDraft = async () => {
+    draftDisabledRef.current = true
+    draftActiveRef.current = false
+    draftStoredRef.current = false
+    const store = draftStoreRef.current
+    if (!store) return
+    await Promise.race([store.finish(), new Promise<void>(resolve => setTimeout(resolve, 1500))])
+  }
+
+  if (loading || draftGate === 'checking') {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
         <div className="flex items-center justify-center py-24">
           <div className="text-gray-400 text-sm">{t('loadingForm')}</div>
+        </div>
+      </div>
+    )
+  }
+
+  // Hay un borrador guardado en este dispositivo: se ofrece continuar o empezar de cero
+  if (draftGate === 'pending' && pendingDraft) {
+    const { draft, photos } = pendingDraft
+    const stepLabel = STEPS.find(s => s.id === draft.step)?.label ?? ''
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="max-w-xl mx-auto px-4 py-6 lg:py-8">
+          <div className="mb-6">
+            <a href="/dashboard" className="text-sm no-underline" style={{ color: BRAND.gray }}>
+              {t('backToDashboardLink')}
+            </a>
+            <h1 className="text-dash-title font-bold text-gray-900 mt-1">{t('newProductTitle')}</h1>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6" role="region" aria-label={t('draftResumeTitle')}>
+            <h2 className="text-form-label font-semibold" style={{ color: 'var(--color-blue-dark)' }}>📝 {t('draftResumeTitle')}</h2>
+            <p className="text-base font-semibold text-gray-900 mt-3 break-words">
+              {draft.form.name.trim() || t('draftResumeNoName')}
+            </p>
+            <p className="text-small text-gray-500 mt-1">
+              {t('draftResumePhotos', { count: photos.length })} · {t('draftResumeSaved', { when: formatDraftAge(draft.savedAt, Date.now(), language) })}
+            </p>
+            <p className="text-small text-gray-500">{t('draftResumeStep', { step: stepLabel })}</p>
+            <p className="text-xs text-gray-400 mt-3">{t('draftResumeHint')}</p>
+
+            <button
+              type="button"
+              onClick={restoreDraft}
+              disabled={restoringDraft}
+              style={{ background: restoringDraft ? '#ccc' : BRAND.blue }}
+              className="w-full mt-5 text-white font-medium py-3.5 rounded-xl transition-colors"
+            >
+              {t('draftResumeContinue')}
+            </button>
+
+            {confirmingDiscard ? (
+              <div className="mt-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+                <p className="text-small font-medium text-red-700">{t('draftResumeDiscardConfirm')}</p>
+                <div className="flex gap-4 mt-2">
+                  <button
+                    type="button"
+                    onClick={discardPendingDraft}
+                    className="text-small font-semibold text-red-700 bg-transparent border-none cursor-pointer p-0"
+                  >
+                    {t('draftResumeDiscardYes')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingDiscard(false)}
+                    className="text-small font-semibold bg-transparent border-none cursor-pointer p-0"
+                    style={{ color: BRAND.gray }}
+                  >
+                    {t('draftResumeDiscardNo')}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmingDiscard(true)}
+                disabled={restoringDraft}
+                className="w-full mt-2 py-2.5 text-sm font-semibold bg-transparent border-none cursor-pointer"
+                style={{ color: BRAND.gray }}
+              >
+                {t('draftResumeDiscard')}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     )
@@ -1480,6 +1832,11 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           <h1 className="text-dash-title font-bold text-gray-900 mt-1">
             {mode === 'editar' ? t('editProductTitle') : t('newProductTitle')}
           </h1>
+          {mode === 'crear' && (
+            <p className="text-xs text-gray-400 mt-1 min-h-[1rem]" aria-live="polite">
+              {draftSaved ? `✓ ${t('draftSavedIndicator')}` : ''}
+            </p>
+          )}
         </div>
 
         {showPreview && (() => {
@@ -1604,6 +1961,9 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           {/* Video (opcional) — complementa la galería de fotos, no la reemplaza */}
           <div className="bg-white rounded-2xl border border-gray-100 p-5">
             <h2 className="text-form-label font-semibold mb-3" style={{ color: 'var(--color-blue-dark)' }}>{t('videoHeading')}</h2>
+            {draftVideoNote && !videoFile && (
+              <p className="text-xs text-amber-600 mb-3">{t('draftVideoNote')}</p>
+            )}
             <div className="mb-3">
               {(videoPreviewUrl || existingVideoUrl) ? (
                 <div className="relative w-48 aspect-video rounded-lg overflow-hidden border border-gray-200 bg-black">

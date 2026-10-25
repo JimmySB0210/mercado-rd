@@ -687,6 +687,24 @@ export const dashboard = {
 
   pauseProductButton: 'Pausar',
   productStatusUpdateFailed: 'No se pudo cambiar el estado del producto. Intenta de nuevo.',
+
+  // ─── Borrador local del producto nuevo («Continuar donde me quedé») ───
+  // Se guarda en este dispositivo mientras el vendedor escribe (lib/productDraft.ts).
+  // {when} es un tiempo relativo ya traducido por el navegador («hace 5 minutos»).
+  draftResumeTitle: 'Tienes un producto sin terminar',
+  draftResumeNoName: 'Producto sin nombre',
+  draftResumePhotos: 'Fotos: {count}',
+  draftResumeSaved: 'Guardado {when}',
+  draftResumeStep: 'Te quedaste en: {step}',
+  draftResumeHint: 'Se guardó en este dispositivo mientras lo escribías. Todavía no está publicado.',
+  draftResumeContinue: 'Continuar donde me quedé',
+  draftResumeDiscard: 'Empezar de cero',
+  draftResumeDiscardConfirm: '¿Descartar este avance? Se borrará lo escrito y las fotos guardadas. No se puede deshacer.',
+  draftResumeDiscardYes: 'Sí, descartar',
+  draftResumeDiscardNo: 'Cancelar',
+  draftNoticeDiscard: 'Descartar',
+  draftVideoNote: 'Este producto tenía un video. Por su tamaño no se guarda en el borrador: vuelve a elegirlo.',
+  draftSavedIndicator: 'Avance guardado en este dispositivo',
 }
 
 export type DashboardDict = typeof dashboard

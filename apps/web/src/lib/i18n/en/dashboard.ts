@@ -652,4 +652,19 @@ export const dashboard = {
 
   pauseProductButton: 'Pause',
   productStatusUpdateFailed: 'Could not change the product status. Try again.',
+
+  draftResumeTitle: 'You have an unfinished product',
+  draftResumeNoName: 'Unnamed product',
+  draftResumePhotos: 'Photos: {count}',
+  draftResumeSaved: 'Saved {when}',
+  draftResumeStep: 'You stopped at: {step}',
+  draftResumeHint: 'It was saved on this device while you typed. It has not been published yet.',
+  draftResumeContinue: 'Pick up where I left off',
+  draftResumeDiscard: 'Start over',
+  draftResumeDiscardConfirm: 'Discard this progress? What you typed and the saved photos will be deleted. This cannot be undone.',
+  draftResumeDiscardYes: 'Yes, discard',
+  draftResumeDiscardNo: 'Cancel',
+  draftNoticeDiscard: 'Discard',
+  draftVideoNote: 'This product had a video. It is too large to keep in the draft: choose it again.',
+  draftSavedIndicator: 'Progress saved on this device',
 } satisfies DashboardDict
