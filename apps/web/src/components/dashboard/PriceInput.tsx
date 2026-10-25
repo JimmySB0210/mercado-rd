@@ -22,12 +22,14 @@ interface PriceInputProps {
   placeholder?: string
   className?: string
   invalid?: boolean
+  // Nombre accesible del campo cuando no tiene una <label> propia (filas de la tabla de opciones)
+  ariaLabel?: string
   // Muestra "Se mostrará como RD$…" debajo (solo en los campos grandes;
   // en las filas de variantes no cabe)
   showPreview?: boolean
 }
 
-export function PriceInput({ value, onChange, name, placeholder = '0.00', className, invalid, showPreview = false }: PriceInputProps) {
+export function PriceInput({ value, onChange, name, placeholder = '0.00', className, invalid, ariaLabel, showPreview = false }: PriceInputProps) {
   const { t } = useTranslation('dashboard')
   const cents = priceInputToCents(value)
 
@@ -41,6 +43,7 @@ export function PriceInput({ value, onChange, name, placeholder = '0.00', classN
         value={value}
         placeholder={placeholder}
         aria-invalid={invalid || undefined}
+        aria-label={ariaLabel}
         onChange={e => onChange(sanitizePriceInput(e.target.value))}
         onBlur={() => {
           const normalized = normalizePriceInput(value)

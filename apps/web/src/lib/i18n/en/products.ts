@@ -146,7 +146,7 @@ export const products = {
   reviewNotDeliveredError: "You can only review a product you've actually bought and received.",
   reviewOwnProductError: "You can't review your own product.",
   reviewGenericError: "Your review couldn't be sent. Try again.",
-  ownProductNotice: "This is your own product — you can't buy it or message yourself.",
+  ownProductNotice: "This is your own product: here your customers see \"Add to cart\" and \"Buy now\". You can't buy it or message yourself.",
   showMoreReviewsButton: 'Show more reviews',
   faqPublicHeading: 'Frequently asked questions',
   businessTypeQuestion: 'What type of business is {vendorName}?',

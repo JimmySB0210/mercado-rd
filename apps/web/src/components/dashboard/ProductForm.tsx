@@ -23,7 +23,9 @@ import { ProductPreviewModal } from '@/components/dashboard/ProductPreviewModal'
 import { ProductPageContent } from '@/app/producto/[id]/ProductPageContent'
 import { Navbar } from '@/components/shop/Navbar'
 import { computePublishQuality, qualityTier, QUALITY_TIER_EMOJI, QUALITY_TIER_COLOR } from '@/lib/productQuality'
-import { SIZE_SCALES, SIZE_SCALE_ORDER, defaultSizeScaleForCategories, inferSizeScale, sizesInRange, scaleHasHalfSizes, type SizeScale } from '@/lib/productSizes'
+import { defaultSizeScaleForCategories, inferSizeScale, type SizeScale } from '@/lib/productSizes'
+import { stockOf, type VariantRow } from '@/lib/variantRows'
+import { VariantOptionsBuilder } from '@/components/dashboard/VariantOptionsBuilder'
 import { PriceInput } from '@/components/dashboard/PriceInput'
 import { priceInputToCents } from '@/lib/priceInput'
 import { BRAND } from '@/lib/colors'
@@ -57,14 +59,6 @@ interface ProductFormProps {
   }
 }
 
-interface VariantRow {
-  size: string
-  color: string
-  stock: string
-  price: string
-  imageUrl: string | null
-}
-
 // Fila de variante cuando la categoría define atributos con
 // applies_to_variant = true (ej. Color + Capacidad en Smartphones) — en
 // vez de Talla/Color fijos, cada dimensión es un category_attribute_id.
@@ -73,13 +67,6 @@ interface DynamicVariantRow {
   stock: string
   price: string
   imageUrl: string | null
-}
-
-// Existencias de una fila de variante: entero >= 0 (vacío, negativo o
-// ilegible cuenta como 0). Es lo que se guarda y lo que se suma al total.
-const stockOf = (row: { stock: string }): number => {
-  const n = parseInt(row.stock, 10)
-  return Number.isFinite(n) && n > 0 ? n : 0
 }
 
 // Precio propio de una variante, en centavos. null = usa el precio del
@@ -92,19 +79,6 @@ const variantPriceCents = (raw: string): number | null => {
 
 // Mismo tope que el precio del producto (RD$999,999.99), en centavos
 const MAX_PRICE_CENTS = 99999999
-
-// Las tallas de los atajos (chips y <select>) salen de la escala activa
-// (ropa, calzado EE. UU. o calzado Europa — lib/productSizes.ts). "Talla"
-// también se usa para variantes que no caben en ninguna (ej. "128GB" en
-// electrónicos, "40.5") — de ahí la opción "Otra" con texto libre.
-const OTHER_SIZE = '__otra__'
-
-// Texto de cada botón del selector de tipo de talla (claves de i18n)
-const SIZE_SCALE_LABEL_KEY: Record<SizeScale, keyof DashboardDict> = {
-  apparel: 'sizeScaleApparel',
-  footwear_us: 'sizeScaleFootwearUs',
-  footwear_eu: 'sizeScaleFootwearEu',
-}
 
 // Garantía: texto libre en la BD (migración 017), sin verificación del
 // sistema — estos presets son solo el atajo del <select>; "Otra" cae al
@@ -266,6 +240,10 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
   const [priceError, setPriceError] = useState<string | null>(null)
   const [stockError, setStockError] = useState<string | null>(null)
   const [lowStockThresholdError, setLowStockThresholdError] = useState<string | null>(null)
+  // "Opciones avanzadas" del paso Precio y stock: cerradas salvo que ya haya algo escrito
+  const [advancedOpen, setAdvancedOpen] = useState(() =>
+    !!(initialData?.product.sku || initialData?.product.barcode || initialData?.product.low_stock_threshold != null)
+  )
 
   const [form, setForm] = useState(() => {
     if (initialData) {
@@ -311,19 +289,26 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     return !!w && !WARRANTY_PRESETS.includes(w)
   })
 
-  const [variantRows, setVariantRows] = useState<VariantRow[]>(() => {
-    if (!initialData?.variants?.length) {
-      return [{ size: '', color: '', stock: '', price: '', imageUrl: null }]
-    }
-    return initialData.variants.map(v => ({
-      size: v.size ?? '',
-      color: v.color ?? '',
-      stock: String(v.stock),
-      price: v.price_rdp !== null ? (v.price_rdp / 100).toString() : '',
-      imageUrl: v.image_url,
-    }))
-  })
-  const [uploadingVariantIndex, setUploadingVariantIndex] = useState<number | null>(null)
+  // ¿El producto tiene tallas, colores u otras opciones? Es la ÚNICA pregunta
+  // que decide dónde se escribe el stock (paso "Precio y stock"): No → el
+  // campo "Stock disponible"; Sí → el stock de cada opción y el del producto
+  // es la suma. Al editar sale de lo ya guardado.
+  const [hasOptions, setHasOptions] = useState<boolean>(() => (initialData?.variants?.length ?? 0) > 0)
+
+  // Opciones Talla × Color (sistema fijo). Arrancan vacías: una fila en blanco
+  // no significa nada y solo confundía. Las variantes dinámicas (sin talla ni
+  // color propios) viven en dynamicVariantRows.
+  const [variantRows, setVariantRows] = useState<VariantRow[]>(() =>
+    (initialData?.variants ?? [])
+      .filter(v => v.size || v.color)
+      .map(v => ({
+        size: v.size ?? '',
+        color: v.color ?? '',
+        stock: String(v.stock),
+        price: v.price_rdp !== null ? (v.price_rdp / 100).toString() : '',
+        imageUrl: v.image_url,
+      }))
+  )
   const [variantImageError, setVariantImageError] = useState<string | null>(null)
 
   // ─── Escala de tallas (ropa / calzado EE. UU. / calzado Europa) ──────
@@ -342,205 +327,6 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     )
   const autoSizeScale = sizeScaleForPath(selectedCategoryPath)
   const activeSizeScale = sizeScaleChoice ?? autoSizeScale
-  const activeSizes = SIZE_SCALES[activeSizeScale]
-
-  // Filas cuya "Talla" es libre porque el vendor eligió "Otra" (queda en
-  // modo texto aunque lo escrito coincida con un atajo). Además, toda fila
-  // con un valor que no está en la escala activa (ej. "128GB", o "M" tras
-  // cambiar a calzado) se muestra como "Otra" con su valor: ver
-  // isCustomSize. Así el <select> nunca aparece vacío con un dato guardado.
-  const [customSizeIndexes, setCustomSizeIndexes] = useState<Set<number>>(() => new Set())
-  const isCustomSize = (index: number, size: string) =>
-    customSizeIndexes.has(index) || (size !== '' && !activeSizes.includes(size))
-
-  const addVariantRow = () => {
-    setVariantRows(prev => [...prev, { size: '', color: '', stock: '', price: '', imageUrl: null }])
-  }
-
-  // ─── Generar combinaciones (Talla × Color) — solo para el sistema
-  // fijo (sin variantCategoryAttributes); reemplaza las filas actuales
-  // por el producto cartesiano de las tallas marcadas y los colores
-  // escritos. El vendor sigue pudiendo agregar/editar/quitar filas
-  // sueltas después con los controles de siempre — esto es un atajo
-  // para armar la tabla inicial, no un sistema aparte.
-  //
-  // Las tallas se marcan una a una (chips) o por rango ("del 8 al 12"):
-  // el calzado se vende por rango y marcar 10 tallas a mano era lo que
-  // llevaba a publicar solo dos. Al volver a generar, las combinaciones
-  // que ya existían conservan su precio, su foto y su stock (si tenían);
-  // las nuevas reciben el "Stock de cada combinación" que se haya escrito.
-  const [autoGenSizes, setAutoGenSizes] = useState<string[]>([])
-  const [autoGenColorsText, setAutoGenColorsText] = useState('')
-  const [autoGenStockText, setAutoGenStockText] = useState('')
-  const [rangeFrom, setRangeFrom] = useState('')
-  const [rangeTo, setRangeTo] = useState('')
-  const [includeHalfSizes, setIncludeHalfSizes] = useState(false)
-
-  const toggleAutoGenSize = (size: string) => {
-    setAutoGenSizes(prev => prev.includes(size) ? prev.filter(s => s !== size) : [...prev, size])
-  }
-
-  // Tallas marcadas que pertenecen a la escala activa, en el orden de la
-  // escala (no en el de los clics, que es el que verá el comprador). Si el
-  // vendor marcó tallas de ropa y luego pasó a calzado, las de ropa no
-  // cuentan; si vuelve a ropa, siguen marcadas.
-  const selectedAutoGenSizes = activeSizes.filter(s => autoGenSizes.includes(s))
-
-  // Rango de tallas: sin "medias tallas" solo se ofrecen (y se agregan) las
-  // enteras — "del 5 al 14" son 10 tallas, no 19. Solo el calzado de EE. UU.
-  // tiene medias tallas; en ropa y en calzado europeo la casilla no aparece.
-  const scaleOffersHalfSizes = scaleHasHalfSizes(activeSizeScale)
-  const wholeSizesOnly = scaleOffersHalfSizes && !includeHalfSizes
-  const rangeOptions: readonly string[] = wholeSizesOnly ? activeSizes.filter(s => !s.includes('.')) : activeSizes
-  // Un extremo que ya no existe (cambió la escala o se quitaron las medias
-  // tallas) cuenta como "sin elegir".
-  const rangeFromValue = rangeOptions.includes(rangeFrom) ? rangeFrom : ''
-  const rangeToValue = rangeOptions.includes(rangeTo) ? rangeTo : ''
-
-  const addSizeRange = () => {
-    if (!rangeFromValue || !rangeToValue) return
-    const inRange = sizesInRange(activeSizeScale, rangeFromValue, rangeToValue, { wholeOnly: wholeSizesOnly })
-    setAutoGenSizes(prev => [...prev, ...inRange.filter(s => !prev.includes(s))])
-  }
-
-  const handleHalfSizesToggle = (checked: boolean) => {
-    setIncludeHalfSizes(checked)
-    if (!checked) {
-      // Sin medias tallas los extremos del rango son enteros ("7.5" → "7")
-      const whole = (s: string) => s.split('.')[0]
-      setRangeFrom(whole)
-      setRangeTo(whole)
-    }
-  }
-
-  // Colores escritos separados por coma, sin vacíos ni repetidos ("Blanco,
-  // blanco" sería la misma combinación dos veces y la BD la rechaza)
-  const generateColors = (() => {
-    const seen = new Set<string>()
-    const list: string[] = []
-    for (const raw of autoGenColorsText.split(',')) {
-      const color = raw.trim()
-      if (color && !seen.has(color.toLowerCase())) {
-        seen.add(color.toLowerCase())
-        list.push(color)
-      }
-    }
-    return list
-  })()
-
-  const generateCombinationCount =
-    selectedAutoGenSizes.length === 0 && generateColors.length === 0
-      ? 0
-      : Math.max(selectedAutoGenSizes.length, 1) * Math.max(generateColors.length, 1)
-
-  const generateVariantCombinations = () => {
-    const colors = generateColors
-    if (selectedAutoGenSizes.length === 0 && colors.length === 0) return
-
-    const sizeList = selectedAutoGenSizes.length > 0 ? selectedAutoGenSizes : ['']
-    const colorList = colors.length > 0 ? colors : ['']
-    const bulkStock = autoGenStockText.trim() === '' ? '' : String(stockOf({ stock: autoGenStockText }))
-
-    // Filas que ya estaban en la tabla, por talla + color (el color sin
-    // distinguir mayúsculas, como la foto por color al guardar)
-    const rowKey = (size: string, color: string) => `${size.trim()}|${color.trim().toLowerCase()}`
-    const previousByKey = new Map<string, VariantRow>()
-    for (const row of variantRows) {
-      const key = rowKey(row.size, row.color)
-      if (!previousByKey.has(key)) previousByKey.set(key, row)
-    }
-
-    const rows: VariantRow[] = []
-    for (const size of sizeList) {
-      for (const color of colorList) {
-        const previous = previousByKey.get(rowKey(size, color))
-        rows.push({
-          size,
-          color,
-          // Una fila con existencias las conserva; una en 0 o vacía (como las
-          // que dejó un guardado sin stock) recibe el stock escrito arriba
-          stock: previous && stockOf(previous) > 0 ? previous.stock : (bulkStock !== '' ? bulkStock : (previous?.stock ?? '')),
-          price: previous?.price ?? '',
-          imageUrl: previous?.imageUrl ?? null,
-        })
-      }
-    }
-
-    setVariantRows(rows)
-    // Todas las tallas generadas salen de la escala activa: ninguna fila
-    // queda en modo "Otra".
-    setCustomSizeIndexes(new Set())
-  }
-
-  const updateVariantRow = (index: number, field: keyof Omit<VariantRow, 'imageUrl'>, value: string) => {
-    setVariantRows(prev => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)))
-  }
-
-  // Escribir en el campo de "Otra" deja la fila en modo texto aunque lo
-  // escrito coincida con un atajo; si no, el campo desaparecería a media
-  // escritura (ej. al teclear "10" con la escala de calzado activa).
-  const handleCustomSizeInput = (index: number, value: string) => {
-    setCustomSizeIndexes(prev => (prev.has(index) ? prev : new Set(prev).add(index)))
-    updateVariantRow(index, 'size', value)
-  }
-
-  const handleSizeSelectChange = (index: number, value: string) => {
-    if (value === OTHER_SIZE) {
-      setCustomSizeIndexes(prev => new Set(prev).add(index))
-      updateVariantRow(index, 'size', '')
-    } else {
-      setCustomSizeIndexes(prev => {
-        const next = new Set(prev)
-        next.delete(index)
-        return next
-      })
-      updateVariantRow(index, 'size', value)
-    }
-  }
-
-  const removeVariantRow = (index: number) => {
-    setVariantRows(prev => prev.filter((_, i) => i !== index))
-    setCustomSizeIndexes(prev => {
-      const next = new Set<number>()
-      prev.forEach(i => {
-        if (i < index) next.add(i)
-        else if (i > index) next.add(i - 1)
-      })
-      return next
-    })
-  }
-
-  // El vendor solo necesita subir la foto en UNA fila por color — al enviar
-  // el formulario se propaga a las demás filas del mismo color (ver handleSubmit)
-  const handleVariantImageSelect = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (!file) return
-
-    const validationError = validateImageFile(file)
-    if (validationError) {
-      setVariantImageError(validationError)
-      return
-    }
-    setVariantImageError(null)
-    setUploadingVariantIndex(index)
-
-    const { url, error: uploadError } = await uploadProductImage(file, vendorId)
-
-    if (uploadError || !url) {
-      console.error('[handleVariantImageSelect]', uploadError)
-      setVariantImageError(t('imageUploadError'))
-      setUploadingVariantIndex(null)
-      return
-    }
-
-    setVariantRows(prev => prev.map((row, i) => (i === index ? { ...row, imageUrl: url } : row)))
-    setUploadingVariantIndex(null)
-  }
-
-  const removeVariantImage = (index: number) => {
-    setVariantRows(prev => prev.map((row, i) => (i === index ? { ...row, imageUrl: null } : row)))
-  }
 
   // ─── Variantes dinámicas (categoría con applies_to_variant) ──────────
   const [dynamicVariantRows, setDynamicVariantRows] = useState<DynamicVariantRow[]>([
@@ -810,25 +596,40 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     return rows
   }
 
-  // ─── Existencias: con variantes, el stock del producto ES la suma de
-  // las variantes. create_order_from_cart descuenta el stock del producto
-  // Y el de la variante al comprar; si el vendor escribe 50 arriba y deja
-  // las variantes en 0 la ficha decía "En stock (50 disponibles)" y al
-  // elegir talla "Agotado". Por eso, mientras haya variantes, el stock
-  // general no se escribe: se calcula (y el campo del paso Precio e
-  // inventario queda de solo lectura).
+  // ─── Existencias: UN solo lugar donde escribirlas ────────────────────────
+  // «¿Tu producto tiene tallas, colores u otras opciones?» (paso Precio y stock):
+  //  · No → el campo "Stock disponible" (form.stock).
+  //  · Sí → el stock se escribe en cada opción y el del producto ES la suma.
+  //    create_order_from_cart descuenta el stock del producto Y el de la
+  //    variante al comprar: si no coincidieran, la ficha diría "En stock (50
+  //    disponibles)" y al elegir talla "Agotado".
   const usesDynamicVariants = variantCategoryAttributes.length > 0
   const activeVariantRows: { stock: string; price: string }[] = usesDynamicVariants
     ? dynamicVariantRows.filter(row => Object.values(row.values).some(v => v && v.trim()))
     : variantRows.filter(row => row.size.trim() || row.color.trim())
   const hasVariantRows = activeVariantRows.length > 0
   const variantStockTotal = activeVariantRows.reduce((sum, row) => sum + stockOf(row), 0)
-  const productStockForDisplay = hasVariantRows ? variantStockTotal : (form.stock ? parseInt(form.stock) : 0)
+  const productStockForDisplay = hasOptions ? variantStockTotal : (form.stock ? parseInt(form.stock) : 0)
+
+  // Pasar a "No, es un solo producto" borra las opciones armadas (con aviso) y
+  // deja su stock total en el campo único, para no perder el número escrito.
+  const chooseOptions = (yes: boolean) => {
+    if (yes === hasOptions) return
+    if (yes) {
+      setHasOptions(true)
+      return
+    }
+    if (hasVariantRows && !window.confirm(t('optionsDiscardConfirm', { count: activeVariantRows.length, stock: variantStockTotal }))) return
+    if (variantStockTotal > 0) setForm(f => ({ ...f, stock: String(variantStockTotal) }))
+    setVariantRows([])
+    setDynamicVariantRows([{ values: {}, stock: '', price: '', imageUrl: null }])
+    setHasOptions(false)
+  }
 
   // Precio escrito → centavos (null = vacío o ilegible). Ver lib/priceInput.ts.
   const priceCentsInForm = priceInputToCents(form.price)
   const priceIsSet = priceCentsInForm !== null && priceCentsInForm > 0
-  const stockIsSet = hasVariantRows ? variantStockTotal > 0 : form.stock.trim() !== ''
+  const stockIsSet = hasOptions ? variantStockTotal > 0 : form.stock.trim() !== ''
 
   // Calidad de publicación en vivo — misma fórmula que la lista
   // (lib/productQuality.ts), aplicada al estado actual del formulario en
@@ -918,7 +719,9 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
       province: selectedProvince ? { name: selectedProvince.name } : null,
     }
 
-    const previewVariants = variantCategoryAttributes.length > 0
+    const previewVariants = !hasOptions
+      ? []
+      : variantCategoryAttributes.length > 0
       ? dynamicVariantRows
           .filter(row => Object.values(row.values).some(v => v && v.trim()))
           .map((row, i) => ({
@@ -1222,6 +1025,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     })
     if (missingRequiredAttribute) {
       setError(t('requiredAttributesMissing'))
+      goToStepId('basic')
       return
     }
 
@@ -1232,10 +1036,12 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     const nameTrimmed = form.name.trim()
     if (nameTrimmed.length < 3 || nameTrimmed.length > 100) {
       setNameError(t('nameLengthError', { min: 3, max: 100 }))
+      goToStepId('basic')
       return
     }
     if (DANGEROUS_PATTERN.test(nameTrimmed)) {
       setNameError(t('nameInvalidChars'))
+      goToStepId('basic')
       return
     }
 
@@ -1243,10 +1049,12 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
       const descriptionTrimmed = form.description.trim()
       if (descriptionTrimmed.length < 10 || descriptionTrimmed.length > 1000) {
         setDescriptionError(t('descriptionLengthError', { min: 10, max: 1000 }))
+        goToStepId('basic')
         return
       }
       if (DANGEROUS_PATTERN.test(descriptionTrimmed)) {
         setDescriptionError(t('descriptionInvalidChars'))
+        goToStepId('basic')
         return
       }
     }
@@ -1264,6 +1072,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     // con el mensaje traducido, en vez de tocar la función compartida.
     if (priceCents > MAX_PRICE_CENTS) {
       setPriceError(t('priceTooLargeError'))
+      goToStepId('price')
       return
     }
 
@@ -1272,6 +1081,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
     if (compareCents !== null && compareCents <= 0) compareCents = null
     if (compareCents !== null && compareCents > MAX_PRICE_CENTS) {
       setPriceError(t('priceTooLargeError'))
+      goToStepId('price')
       return
     }
 
@@ -1282,17 +1092,27 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
       return
     }
 
-    // Con variantes el stock del producto es la suma de las variantes (ver
-    // hasVariantRows arriba); sin variantes sigue siendo el campo de siempre.
-    const stockNum = hasVariantRows ? variantStockTotal : (form.stock ? parseInt(form.stock) : 0)
+    // Dijo que tiene opciones pero no armó ninguna: un producto que se va a
+    // ver en la tienda no sale así, sin stock, por accidente. Un borrador sí
+    // se puede guardar a medias.
+    const publishesNow = mode === 'editar' ? initialData?.product.status !== 'draft' : targetStatus === 'published'
+    if (hasOptions && !hasVariantRows && publishesNow) {
+      setError(t('optionsNeedRowsError'))
+      goToStepId('price')
+      return
+    }
+
+    // Con opciones el stock del producto es la suma de las de cada opción (ver
+    // hasOptions arriba); sin opciones es el campo "Stock disponible".
+    const stockNum = hasOptions ? variantStockTotal : (form.stock ? parseInt(form.stock) : 0)
     if (isNaN(stockNum) || stockNum < 0 || stockNum > 9999) {
-      if (hasVariantRows) {
-        // El campo de stock del paso Precio es de solo lectura con variantes
-        // y esto puede dispararse desde cualquier paso: va en el aviso de abajo.
+      if (hasOptions) {
+        // Esto puede dispararse desde cualquier paso: va en el aviso de abajo.
         setError(t('variantsStockTotalRangeError'))
       } else {
         setStockError(t('stockRangeError'))
       }
+      goToStepId('price')
       return
     }
 
@@ -1303,6 +1123,8 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
       lowStockThresholdNum = parseInt(form.lowStockThreshold)
       if (isNaN(lowStockThresholdNum) || lowStockThresholdNum < 0 || lowStockThresholdNum > 9999) {
         setLowStockThresholdError(t('lowStockThresholdError'))
+        setAdvancedOpen(true)
+        goToStepId('price')
         return
       }
     }
@@ -1430,9 +1252,9 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
       if (variantCategoryAttributes.length > 0) {
         // Variantes dinámicas — se insertan una por una para poder asociar
         // el id real de cada fila con sus valores en variant_attribute_values.
-        const rowsToSave = dynamicVariantRows.filter(row =>
-          Object.values(row.values).some(v => v && v.trim())
-        )
+        const rowsToSave = hasOptions
+          ? dynamicVariantRows.filter(row => Object.values(row.values).some(v => v && v.trim()))
+          : []
 
         const colorAttr = variantCategoryAttributes.find(a => a.attribute_key.toLowerCase() === 'color')
         const colorImageMap = new Map<string, string>()
@@ -1494,7 +1316,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
         }
 
         // Variantes (opcional) — filas sin talla ni color se descartan
-        const variantsPayload = variantRows
+        const variantsPayload = (hasOptions ? variantRows : [])
           .filter(row => row.size.trim() || row.color.trim())
           .map(row => {
             const colorKey = row.color.trim().toLowerCase()
@@ -1541,15 +1363,12 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
   // ─── Navegador de pasos — puramente de presentación, agrupa el mismo
   // form/handlers de siempre en secciones; ningún paso tiene su propio
   // estado ni validación aparte de la que ya existía. ────────────────
-  type StepId = 'photos' | 'basic' | 'price' | 'tiers' | 'variants' | 'shipping' | 'additional' | 'preview'
+  type StepId = 'photos' | 'basic' | 'price' | 'shipping' | 'preview'
   const STEPS: { id: StepId; label: string; subtitle: string }[] = [
     { id: 'photos', label: t('stepPhotosLabel'), subtitle: t('stepPhotosSubtitle') },
     { id: 'basic', label: t('stepBasicLabel'), subtitle: t('stepBasicSubtitle') },
     { id: 'price', label: t('stepPriceLabel'), subtitle: t('stepPriceSubtitle') },
-    { id: 'tiers', label: t('stepTiersLabel'), subtitle: t('stepTiersSubtitle') },
-    { id: 'variants', label: t('stepVariantsLabel'), subtitle: t('stepVariantsSubtitle') },
     { id: 'shipping', label: t('stepShippingLabel'), subtitle: t('stepShippingSubtitle') },
-    { id: 'additional', label: t('stepAdditionalLabel'), subtitle: t('stepAdditionalSubtitle') },
     { id: 'preview', label: t('stepPreviewLabel'), subtitle: t('stepPreviewSubtitle') },
   ]
   const [activeStep, setActiveStep] = useState<StepId>('photos')
@@ -1557,6 +1376,12 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
   const goToStep = (index: number) => {
     if (index < 0 || index >= STEPS.length) return
     setActiveStep(STEPS[index].id)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+  // Un error de un campo lleva al paso donde está ese campo (el guardado se
+  // puede pedir desde cualquier paso y, si no, el mensaje queda escondido)
+  const goToStepId = (id: StepId) => {
+    setActiveStep(id)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -1639,7 +1464,16 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           )
         })()}
 
-        <form onSubmit={handleSubmit}>
+        {/* Enter dentro de un campo de texto no debe guardar y sacar al vendor del
+            asistente (en "crear" eso creaba un borrador a medias): se guarda con
+            los botones de abajo. En los botones y en las áreas de texto Enter
+            sigue funcionando igual. */}
+        <form
+          onSubmit={handleSubmit}
+          onKeyDown={e => {
+            if (e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') e.preventDefault()
+          }}
+        >
           <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_320px] gap-6 items-start">
 
             {/* ─── Navegador de pasos — compacto, no debe pesar más
@@ -1839,12 +1673,28 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               />
             </div>
           )}
+
+          {/* Descripción — junto al nombre y la categoría */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
+            <h2 className="text-form-label font-semibold mb-1" style={{ color: 'var(--color-blue-dark)' }}>{t('descriptionHeading')}</h2>
+            <div>
+              <textarea
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                placeholder={t('descriptionPlaceholder')}
+                rows={4}
+                className={`w-full border rounded-lg px-4 py-2.5 text-sm outline-none resize-none ${descriptionError ? 'border-red-400' : 'border-gray-200'}`}
+              />
+              {descriptionError && <p className="text-small font-medium text-red-600 mt-1">{descriptionError}</p>}
+            </div>
+          </div>
           </>
           )}
 
           {activeStep === 'price' && (
           <>
-          {/* Precio y stock */}
+          {/* Precio de venta */}
           <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
             <h2 className="text-form-label font-semibold mb-1" style={{ color: 'var(--color-blue-dark)' }}>{t('priceSaleHeading')}</h2>
 
@@ -1876,52 +1726,224 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
-            <h2 className="text-form-label font-semibold mb-1" style={{ color: 'var(--color-blue-dark)' }}>{t('inventoryHeading')}</h2>
+          {/* Existencias — UN solo lugar donde escribirlas. Esta pregunta decide si
+              es el campo "Stock disponible" (producto único) o el stock de cada
+              talla/color (producto con opciones); nunca los dos a la vez. */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
+            <h2 className="text-form-label font-semibold" style={{ color: 'var(--color-blue-dark)' }}>{t('inventoryHeading')}</h2>
 
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">{t('stockAvailableLabel')}</label>
-              {hasVariantRows ? (
-                <>
-                  {/* Con variantes el stock es la suma de las tallas/colores:
-                      se muestra, no se escribe (ver hasVariantRows arriba) */}
-                  <input
-                    name="stock"
-                    type="text"
-                    inputMode="numeric"
-                    readOnly
-                    tabIndex={-1}
-                    value={String(variantStockTotal)}
-                    className={`${inputCls()} bg-gray-50 text-gray-500 cursor-default`}
-                  />
-                  <p className="text-xs text-gray-400 mt-1">
-                    {t('inventoryDerivedHint')}{' '}
-                    <button
-                      type="button"
-                      onClick={() => goToStep(STEPS.findIndex(s => s.id === 'variants'))}
-                      className="text-xs font-semibold bg-transparent border-none cursor-pointer p-0"
-                      style={{ color: BRAND.blue }}
+            <fieldset>
+              <legend className="text-xs font-semibold text-gray-700 mb-2">{t('optionsQuestion')}</legend>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {([false, true] as const).map(yes => {
+                  const selected = hasOptions === yes
+                  return (
+                    <label
+                      key={String(yes)}
+                      className="flex items-start gap-2.5 rounded-xl border p-3 cursor-pointer transition-colors"
+                      style={{
+                        borderColor: selected ? BRAND.blue : '#E5E7EB',
+                        background: selected ? 'var(--color-primary-subtle)' : '#fff',
+                      }}
                     >
-                      {t('inventoryGoToVariants')}
-                    </button>
-                  </p>
-                </>
-              ) : (
-                <>
-                  <input
-                    name="stock"
-                    type="number"
-                    min="0"
-                    value={form.stock}
-                    onChange={handleChange}
-                    placeholder="0"
-                    className={inputCls(!!stockError)}
-                  />
-                  {stockError && <p className="text-small font-medium text-red-600 mt-1">{stockError}</p>}
-                </>
-              )}
-            </div>
+                      <input
+                        type="radio"
+                        name="hasOptions"
+                        checked={selected}
+                        onChange={() => chooseOptions(yes)}
+                        className="mt-1"
+                      />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold text-gray-800">{yes ? t('optionsYesLabel') : t('optionsNoLabel')}</span>
+                        <span className="block text-xs text-gray-500 mt-0.5">{yes ? t('optionsYesHint') : t('optionsNoHint')}</span>
+                      </span>
+                    </label>
+                  )
+                })}
+              </div>
+            </fieldset>
 
+            {!hasOptions ? (
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">{t('stockAvailableLabel')}</label>
+                <input
+                  name="stock"
+                  type="number"
+                  min="0"
+                  value={form.stock}
+                  onChange={handleChange}
+                  placeholder="0"
+                  className={`${inputCls(!!stockError)} sm:w-1/2`}
+                />
+                {stockError && <p className="text-small font-medium text-red-600 mt-1">{stockError}</p>}
+              </div>
+            ) : usesDynamicVariants ? (
+              // La categoría define atributos de variante (ej. Color +
+              // Capacidad): cada uno es una columna de la tabla en vez de
+              // Talla/Color fijos.
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-semibold text-gray-700">{t('optionsCombinationsHeading')}</h3>
+                  <button
+                    type="button"
+                    onClick={addDynamicVariantRow}
+                    style={{ color: BRAND.blue }}
+                    className="text-xs font-semibold bg-transparent border-none cursor-pointer"
+                  >
+                    {t('addVariantBtn')}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400">{t('dynamicOptionsHint')}</p>
+                {(() => {
+                  const dynamicColSpan = Math.max(2, Math.floor(6 / variantCategoryAttributes.length))
+                  const colorVariantAttr = variantCategoryAttributes.find(
+                    a => a.attribute_key.toLowerCase() === 'color'
+                  )
+                  return dynamicVariantRows.map((row, i) => (
+                    <div key={i} className="grid grid-cols-12 gap-2 items-end">
+                      {variantCategoryAttributes.map(attr => {
+                        const value = row.values[attr.id] ?? ''
+                        const options = attributeOptionsMap.get(attr.id) ?? []
+                        const isColorAttr = colorVariantAttr?.id === attr.id
+
+                        const fieldInput = attr.attribute_type === 'select' ? (
+                          <select
+                            value={value}
+                            onChange={e => updateDynamicVariantValue(i, attr.id, e.target.value)}
+                            className="w-full min-w-0 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none bg-white"
+                          >
+                            <option value="" disabled>{attr.attribute_label}</option>
+                            {options.map(opt => (
+                              <option key={opt.id} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type={attr.attribute_type === 'number' ? 'number' : 'text'}
+                            value={value}
+                            onChange={e => updateDynamicVariantValue(i, attr.id, e.target.value)}
+                            placeholder={attr.attribute_label}
+                            className="w-full min-w-0 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
+                          />
+                        )
+
+                        return (
+                          <div key={attr.id} style={{ gridColumn: `span ${dynamicColSpan}` }}>
+                            {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{attr.attribute_label}</label>}
+                            {isColorAttr ? (
+                              <div className="flex items-center gap-1.5">
+                                <div className="flex-1 min-w-0">{fieldInput}</div>
+                                {row.imageUrl ? (
+                                  <div className="relative flex-shrink-0" style={{ width: 36, height: 36 }}>
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                      src={row.imageUrl}
+                                      alt={value || attr.attribute_label}
+                                      className="w-full h-full rounded-lg object-cover border border-gray-200"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => removeDynamicVariantImage(i)}
+                                      className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-black/60 text-white flex items-center justify-center leading-none"
+                                      style={{ fontSize: 'var(--text-badge)' }}
+                                      aria-label={t('removeImageAria')}
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <label
+                                    className="flex-shrink-0 rounded-lg border border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors"
+                                    style={{ width: 36, height: 36, fontSize: 'var(--text-ui)' }}
+                                    title={t('uploadColorPhotoTitle')}
+                                  >
+                                    {uploadingDynamicVariantIndex === i ? '…' : '📷'}
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={e => handleDynamicVariantImageSelect(i, e)}
+                                      className="hidden"
+                                      disabled={uploadingDynamicVariantIndex === i}
+                                    />
+                                  </label>
+                                )}
+                              </div>
+                            ) : fieldInput}
+                          </div>
+                        )
+                      })}
+                      <div className="col-span-2">
+                        {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('variantStockLabel')}</label>}
+                        <input
+                          type="number"
+                          min="0"
+                          value={row.stock}
+                          onChange={e => updateDynamicVariantField(i, 'stock', e.target.value)}
+                          placeholder="0"
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
+                        />
+                      </div>
+                      <div className="col-span-3">
+                        {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('variantPriceLabel')}</label>}
+                        <PriceInput
+                          value={row.price}
+                          onChange={price => updateDynamicVariantField(i, 'price', price)}
+                          placeholder={t('variantPricePlaceholder')}
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
+                        />
+                      </div>
+                      <div className="col-span-1">
+                        <button
+                          type="button"
+                          onClick={() => removeDynamicVariantRow(i)}
+                          className="w-full h-9 rounded-lg border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-300 transition-colors"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                })()}
+              </div>
+            ) : (
+              <VariantOptionsBuilder
+                rows={variantRows}
+                onRowsChange={setVariantRows}
+                vendorId={vendorId}
+                sizeScale={activeSizeScale}
+                onSizeScaleChange={setSizeScaleChoice}
+              />
+            )}
+
+            {hasOptions && hasVariantRows && (
+              <div className="pt-1">
+                <p className="text-sm font-semibold text-gray-700">{t('variantsStockTotalLabel', { count: variantStockTotal })}</p>
+                {variantStockTotal === 0 && (
+                  <p className="text-xs text-amber-600 mt-1">{t('variantsNoStockWarning')}</p>
+                )}
+              </div>
+            )}
+            {variantImageError && <p className="text-small font-medium text-red-600">{variantImageError}</p>}
+          </div>
+
+          {/* Opciones avanzadas — lo que casi nadie necesita para publicar:
+              alerta de stock bajo, SKU, código de barras y precios por cantidad */}
+          <button
+            type="button"
+            onClick={() => setAdvancedOpen(open => !open)}
+            aria-expanded={advancedOpen}
+            className="w-full flex items-center justify-between gap-3 text-left bg-white rounded-2xl border border-gray-100 p-5 cursor-pointer"
+          >
+            <span className="min-w-0">
+              <span className="block text-form-label font-semibold" style={{ color: 'var(--color-blue-dark)' }}>{t('advancedOptionsHeading')}</span>
+              <span className="block text-xs text-gray-400 mt-0.5">{t('advancedOptionsHint')}</span>
+            </span>
+            <span aria-hidden="true" className="flex-shrink-0 text-gray-400">{advancedOpen ? '▴' : '▾'}</span>
+          </button>
+
+          {advancedOpen && (
+          <>
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
             <div>
               <label className="text-xs text-gray-500 mb-1 block">{t('lowStockThresholdLabel')}</label>
               <input
@@ -1961,425 +1983,17 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               </div>
             </div>
           </div>
-          </>
-          )}
 
-          {activeStep === 'tiers' && (
-          /* Precios por cantidad — en editar pega directo contra
-             Supabase con el product_id real; en crear vive en memoria
-             (pendingPricingTiers) y se inserta en handleSubmit una vez
-             que el producto existe. */
-          mode === 'editar' ? (
+          {/* Precios por cantidad — en editar pega directo contra Supabase con
+              el product_id real; en crear vive en memoria (pendingPricingTiers)
+              y se inserta en handleSubmit una vez que el producto existe. */}
+          {mode === 'editar' ? (
             initialData && <PricingTiersSection mode="editar" productId={initialData.product.id} />
           ) : (
             <PricingTiersSection mode="crear" pendingTiers={pendingPricingTiers} onPendingTiersChange={setPendingPricingTiers} />
-          )
           )}
-
-          {activeStep === 'variants' && (
-          <>
-          {/* Generar combinaciones — solo tiene sentido en el sistema fijo
-              (Talla/Color); con atributos dinámicos de variante, cada
-              dimensión ya tiene su propio <select> por fila más abajo. */}
-          {variantCategoryAttributes.length === 0 && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
-              <h2 className="text-sm font-semibold" style={{ color: 'var(--color-blue-dark)' }}>{t('variantsGenerateHeading')}</h2>
-              {/* Tipo de talla — arranca según la categoría (Calzado → tenis,
-                  lo demás → ropa) y el vendor puede cambiarlo: unos tenis
-                  publicados en Ropa & Moda también necesitan tallas de calzado. */}
-              <div>
-                <label className="text-xs text-gray-500 mb-1.5 block">{t('sizeScaleLabel')}</label>
-                <div
-                  role="group"
-                  aria-label={t('sizeScaleLabel')}
-                  className="inline-flex flex-wrap gap-1 p-1 rounded-xl border border-gray-200"
-                >
-                  {SIZE_SCALE_ORDER.map(scale => {
-                    const isActive = activeSizeScale === scale
-                    return (
-                      <button
-                        key={scale}
-                        type="button"
-                        aria-pressed={isActive}
-                        onClick={() => setSizeScaleChoice(scale)}
-                        className="text-xs font-semibold rounded-lg px-3 py-1.5 cursor-pointer transition-colors"
-                        style={{
-                          background: isActive ? 'var(--color-primary-subtle)' : 'transparent',
-                          color: isActive ? BRAND.blue : BRAND.gray,
-                        }}
-                      >
-                        {t(SIZE_SCALE_LABEL_KEY[scale])}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-              {/* Rango: el calzado se vende "del 8 al 12" — marca todas las
-                  tallas de ese tramo de una vez (se suman a las ya marcadas) */}
-              <div>
-                <label className="text-xs text-gray-500 mb-1.5 block">{t('variantsRangeLabel')}</label>
-                <div className="flex flex-wrap items-center gap-2">
-                  <select
-                    aria-label={t('variantsRangeFrom')}
-                    value={rangeFromValue}
-                    onChange={e => setRangeFrom(e.target.value)}
-                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none bg-white"
-                  >
-                    <option value="" disabled>{t('variantsRangeFrom')}</option>
-                    {rangeOptions.map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                  <select
-                    aria-label={t('variantsRangeTo')}
-                    value={rangeToValue}
-                    onChange={e => setRangeTo(e.target.value)}
-                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none bg-white"
-                  >
-                    <option value="" disabled>{t('variantsRangeTo')}</option>
-                    {rangeOptions.map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={addSizeRange}
-                    disabled={!rangeFromValue || !rangeToValue}
-                    className="text-xs font-semibold rounded-lg px-3 py-2 border cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                    style={{ background: '#fff', color: BRAND.blue, borderColor: BRAND.blue }}
-                  >
-                    {t('variantsRangeAddButton')}
-                  </button>
-                </div>
-                {scaleOffersHalfSizes && (
-                  <label className="inline-flex items-center gap-2 mt-2 text-xs text-gray-600 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={includeHalfSizes}
-                      onChange={e => handleHalfSizesToggle(e.target.checked)}
-                    />
-                    {t('variantsRangeHalfSizes')}
-                  </label>
-                )}
-              </div>
-              <div>
-                <label className="text-xs text-gray-500 mb-1.5 block">{t('variantsGenerateSizesLabel')}</label>
-                <div className="flex flex-wrap gap-2">
-                  {activeSizes.map(size => {
-                    const isSelected = autoGenSizes.includes(size)
-                    return (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() => toggleAutoGenSize(size)}
-                        className="text-xs font-semibold rounded-lg px-3 py-1.5 border cursor-pointer transition-colors"
-                        style={{
-                          background: isSelected ? BRAND.blue : '#fff',
-                          color: isSelected ? '#fff' : BRAND.dark,
-                          borderColor: isSelected ? BRAND.blue : '#E5E7EB',
-                        }}
-                      >
-                        {size}
-                      </button>
-                    )
-                  })}
-                </div>
-                {selectedAutoGenSizes.length > 0 && (
-                  <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
-                    <span>{t('variantsGenerateSelectedCount', { count: selectedAutoGenSizes.length })}</span>
-                    <button
-                      type="button"
-                      onClick={() => setAutoGenSizes([])}
-                      className="text-xs font-semibold bg-transparent border-none cursor-pointer p-0"
-                      style={{ color: BRAND.blue }}
-                    >
-                      {t('variantsGenerateClearSizes')}
-                    </button>
-                  </div>
-                )}
-              </div>
-              <div>
-                <label className="text-xs text-gray-500 mb-1 block">{t('variantsGenerateColorsLabel')}</label>
-                <input
-                  value={autoGenColorsText}
-                  onChange={e => setAutoGenColorsText(e.target.value)}
-                  placeholder={t('variantsGenerateColorsPlaceholder')}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-500 mb-1 block">{t('variantsGenerateStockLabel')}</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={autoGenStockText}
-                  onChange={e => setAutoGenStockText(e.target.value)}
-                  placeholder={t('variantsGenerateStockPlaceholder')}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none sm:w-1/2"
-                />
-              </div>
-              {generateCombinationCount > 0 && (
-                <p className="text-xs text-gray-500">{t('variantsGenerateCount', { count: generateCombinationCount })}</p>
-              )}
-              <button
-                type="button"
-                onClick={generateVariantCombinations}
-                disabled={generateCombinationCount === 0}
-                className="text-xs font-bold text-white rounded-lg px-4 py-2 disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ background: BRAND.blue, border: 'none', cursor: 'pointer' }}
-              >
-                {t('variantsGenerateButton')}
-              </button>
-            </div>
+          </>
           )}
-
-          {/* Variantes */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
-            <div className="flex items-center justify-between mb-1">
-              <h2 className="text-sm font-semibold" style={{ color: 'var(--color-blue-dark)' }}>
-                {variantCategoryAttributes.length === 0 ? t('variantsManualHeading') : t('variantsHeading')}
-              </h2>
-              <button
-                type="button"
-                onClick={variantCategoryAttributes.length > 0 ? addDynamicVariantRow : addVariantRow}
-                style={{ color: BRAND.blue }}
-                className="text-xs font-semibold bg-transparent border-none cursor-pointer"
-              >
-                {t('addVariantBtn')}
-              </button>
-            </div>
-            <p className="text-xs text-gray-400">
-              {t('variantsHint')}
-            </p>
-
-            {variantCategoryAttributes.length > 0 ? (
-              // La categoría define atributos de variante (ej. Color +
-              // Capacidad) — cada uno es una columna en vez de Talla/Color fijos.
-              (() => {
-                const dynamicColSpan = Math.max(2, Math.floor(6 / variantCategoryAttributes.length))
-                const colorVariantAttr = variantCategoryAttributes.find(
-                  a => a.attribute_key.toLowerCase() === 'color'
-                )
-                return dynamicVariantRows.map((row, i) => (
-                  <div key={i} className="grid grid-cols-12 gap-2 items-end">
-                    {variantCategoryAttributes.map(attr => {
-                      const value = row.values[attr.id] ?? ''
-                      const options = attributeOptionsMap.get(attr.id) ?? []
-                      const isColorAttr = colorVariantAttr?.id === attr.id
-
-                      const fieldInput = attr.attribute_type === 'select' ? (
-                        <select
-                          value={value}
-                          onChange={e => updateDynamicVariantValue(i, attr.id, e.target.value)}
-                          className="w-full min-w-0 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none bg-white"
-                        >
-                          <option value="" disabled>{attr.attribute_label}</option>
-                          {options.map(opt => (
-                            <option key={opt.id} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input
-                          type={attr.attribute_type === 'number' ? 'number' : 'text'}
-                          value={value}
-                          onChange={e => updateDynamicVariantValue(i, attr.id, e.target.value)}
-                          placeholder={attr.attribute_label}
-                          className="w-full min-w-0 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
-                        />
-                      )
-
-                      return (
-                        <div key={attr.id} style={{ gridColumn: `span ${dynamicColSpan}` }}>
-                          {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{attr.attribute_label}</label>}
-                          {isColorAttr ? (
-                            <div className="flex items-center gap-1.5">
-                              <div className="flex-1 min-w-0">{fieldInput}</div>
-                              {row.imageUrl ? (
-                                <div className="relative flex-shrink-0" style={{ width: 36, height: 36 }}>
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img
-                                    src={row.imageUrl}
-                                    alt={value || attr.attribute_label}
-                                    className="w-full h-full rounded-lg object-cover border border-gray-200"
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => removeDynamicVariantImage(i)}
-                                    className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-black/60 text-white flex items-center justify-center leading-none"
-                                    style={{ fontSize: 'var(--text-badge)' }}
-                                    aria-label={t('removeImageAria')}
-                                  >
-                                    ×
-                                  </button>
-                                </div>
-                              ) : (
-                                <label
-                                  className="flex-shrink-0 rounded-lg border border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors"
-                                  style={{ width: 36, height: 36, fontSize: 'var(--text-ui)' }}
-                                  title={t('uploadColorPhotoTitle')}
-                                >
-                                  {uploadingDynamicVariantIndex === i ? '…' : '📷'}
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={e => handleDynamicVariantImageSelect(i, e)}
-                                    className="hidden"
-                                    disabled={uploadingDynamicVariantIndex === i}
-                                  />
-                                </label>
-                              )}
-                            </div>
-                          ) : fieldInput}
-                        </div>
-                      )
-                    })}
-                    <div className="col-span-2">
-                      {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('variantStockLabel')}</label>}
-                      <input
-                        type="number"
-                        min="0"
-                        value={row.stock}
-                        onChange={e => updateDynamicVariantField(i, 'stock', e.target.value)}
-                        placeholder="0"
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
-                      />
-                    </div>
-                    <div className="col-span-3">
-                      {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('variantPriceLabel')}</label>}
-                      <PriceInput
-                        value={row.price}
-                        onChange={price => updateDynamicVariantField(i, 'price', price)}
-                        placeholder={t('variantPricePlaceholder')}
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
-                      />
-                    </div>
-                    <div className="col-span-1">
-                      <button
-                        type="button"
-                        onClick={() => removeDynamicVariantRow(i)}
-                        className="w-full h-9 rounded-lg border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-300 transition-colors"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  </div>
-                ))
-              })()
-            ) : (
-              variantRows.map((row, i) => (
-                <div key={i} className="grid grid-cols-12 gap-2 items-end">
-                  <div className="col-span-3">
-                    {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('sizeLabel')}</label>}
-                    <select
-                      value={isCustomSize(i, row.size) ? OTHER_SIZE : (activeSizes.includes(row.size) ? row.size : '')}
-                      onChange={e => handleSizeSelectChange(i, e.target.value)}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none bg-white"
-                    >
-                      <option value="" disabled>{t('sizeLabel')}</option>
-                      {activeSizes.map(s => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                      <option value={OTHER_SIZE}>{t('sizeOtherOption')}</option>
-                    </select>
-                    {isCustomSize(i, row.size) && (
-                      <input
-                        value={row.size}
-                        onChange={e => handleCustomSizeInput(i, e.target.value)}
-                        placeholder={t('sizeOtherPlaceholder')}
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none mt-1.5"
-                        // Solo si el vendor eligió "Otra" en esta fila: las filas que pasan a
-                        // modo texto por cambiar el tipo de talla no deben robar el foco.
-                        autoFocus={customSizeIndexes.has(i)}
-                      />
-                    )}
-                  </div>
-                  <div className="col-span-3">
-                    {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('colorLabel')}</label>}
-                    <div className="flex items-center gap-1.5">
-                      <input
-                        value={row.color}
-                        onChange={e => updateVariantRow(i, 'color', e.target.value)}
-                        placeholder={t('colorPlaceholder')}
-                        className="flex-1 min-w-0 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
-                      />
-                      {row.imageUrl ? (
-                        <div className="relative flex-shrink-0" style={{ width: 36, height: 36 }}>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={row.imageUrl}
-                            alt={row.color || t('colorLabel')}
-                            className="w-full h-full rounded-lg object-cover border border-gray-200"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeVariantImage(i)}
-                            className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-black/60 text-white flex items-center justify-center leading-none"
-                            style={{ fontSize: 'var(--text-badge)' }}
-                            aria-label={t('removeImageAria')}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ) : (
-                        <label
-                          className="flex-shrink-0 rounded-lg border border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors"
-                          style={{ width: 36, height: 36, fontSize: 'var(--text-ui)' }}
-                          title={t('uploadColorPhotoTitle')}
-                        >
-                          {uploadingVariantIndex === i ? '…' : '📷'}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={e => handleVariantImageSelect(i, e)}
-                            className="hidden"
-                            disabled={uploadingVariantIndex === i}
-                          />
-                        </label>
-                      )}
-                    </div>
-                  </div>
-                  <div className="col-span-2">
-                    {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('variantStockLabel')}</label>}
-                    <input
-                      type="number"
-                      min="0"
-                      value={row.stock}
-                      onChange={e => updateVariantRow(i, 'stock', e.target.value)}
-                      placeholder="0"
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
-                    />
-                  </div>
-                  <div className="col-span-3">
-                    {i === 0 && <label className="text-xs text-gray-500 mb-1 block">{t('variantPriceLabel')}</label>}
-                    <PriceInput
-                      value={row.price}
-                      onChange={price => updateVariantRow(i, 'price', price)}
-                      placeholder={t('variantPricePlaceholder')}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none"
-                    />
-                  </div>
-                  <div className="col-span-1">
-                    <button
-                      type="button"
-                      onClick={() => removeVariantRow(i)}
-                      className="w-full h-9 rounded-lg border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-300 transition-colors"
-                    >
-                      ×
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-            {hasVariantRows && (
-              <div className="pt-1">
-                <p className="text-xs font-semibold text-gray-600">{t('variantsStockTotalLabel', { count: variantStockTotal })}</p>
-                {variantStockTotal === 0 && (
-                  <p className="text-xs text-amber-600 mt-1">{t('variantsNoStockWarning')}</p>
-                )}
-              </div>
-            )}
-            {variantImageError && <p className="text-small font-medium text-red-600">{variantImageError}</p>}
-          </div>
           </>
           )}
 
@@ -2475,27 +2089,6 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
               <p className="text-xs text-gray-400">{t('shippingNoVendorServicesHint')}</p>
             )}
           </div>
-          </>
-          )}
-
-          {activeStep === 'additional' && (
-          <>
-          {/* Información adicional — descripción vive acá (no en
-              Información básica), junto con garantía y devoluciones. */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
-            <h2 className="text-form-label font-semibold mb-1" style={{ color: 'var(--color-blue-dark)' }}>{t('stepAdditionalLabel')}</h2>
-            <div>
-              <textarea
-                name="description"
-                value={form.description}
-                onChange={handleChange}
-                placeholder={t('descriptionPlaceholder')}
-                rows={4}
-                className={`w-full border rounded-lg px-4 py-2.5 text-sm outline-none resize-none ${descriptionError ? 'border-red-400' : 'border-gray-200'}`}
-              />
-              {descriptionError && <p className="text-small font-medium text-red-600 mt-1">{descriptionError}</p>}
-            </div>
-          </div>
 
           {/* Garantía — texto libre del vendor, sin verificación del
               sistema (migración 017), mismo patrón "Otra" que Talla. */}
@@ -2558,7 +2151,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           {/* Navegación entre pasos — el guardado real (Guardar
               borrador / Publicar) vive abajo, siempre visible, no solo
               en el último paso, para que el vendor pueda guardar en
-              cualquier momento sin tener que recorrer los 8 pasos. */}
+              cualquier momento sin tener que recorrer todos los pasos. */}
           <div className="flex items-center justify-between">
             <button
               type="button"

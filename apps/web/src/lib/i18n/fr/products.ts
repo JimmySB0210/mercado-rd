@@ -146,7 +146,7 @@ export const products = {
   reviewNotDeliveredError: "Vous ne pouvez laisser un avis que sur un produit que vous avez vraiment acheté et reçu.",
   reviewOwnProductError: "Vous ne pouvez pas évaluer votre propre produit.",
   reviewGenericError: "Votre avis n'a pas pu être envoyé. Réessayez.",
-  ownProductNotice: "C'est votre propre produit — vous ne pouvez pas l'acheter ni vous contacter vous-même.",
+  ownProductNotice: "C'est votre propre produit : vos clients voient ici « Ajouter au panier » et « Acheter maintenant ». Vous ne pouvez ni l'acheter ni vous écrire à vous-même.",
   showMoreReviewsButton: "Voir plus d'avis",
   faqPublicHeading: 'Questions fréquentes',
   businessTypeQuestion: "Quel type d'entreprise est {vendorName} ?",

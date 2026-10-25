@@ -165,7 +165,7 @@ export const products = {
   reviewNotDeliveredError: 'Solo puedes dejar una reseña de un producto que hayas comprado y recibido realmente.',
   reviewOwnProductError: 'No puedes reseñar tu propio producto.',
   reviewGenericError: 'No se pudo enviar tu reseña. Intenta de nuevo.',
-  ownProductNotice: 'Este es tu propio producto — no puedes comprarlo ni contactarte a ti mismo.',
+  ownProductNotice: 'Este es tu propio producto: aquí tus clientes ven «Agregar al carrito» y «Comprar ahora». Tú no puedes comprarlo ni escribirte a ti mismo.',
   showMoreReviewsButton: 'Ver más reseñas',
   faqPublicHeading: 'Preguntas frecuentes',
   businessTypeQuestion: '¿Qué tipo de negocio es {vendorName}?',
