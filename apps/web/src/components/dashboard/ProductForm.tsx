@@ -1751,7 +1751,7 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           </div>
 
           <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6" role="region" aria-label={t('draftResumeTitle')}>
-            <h2 className="text-form-label font-semibold" style={{ color: 'var(--color-blue-dark)' }}>📝 {t('draftResumeTitle')}</h2>
+            <h2 className="text-form-label font-semibold" style={{ color: BRAND.red }}>📝 {t('draftResumeTitle')}</h2>
             <p className="text-base font-semibold text-gray-900 mt-3 break-words">
               {draft.form.name.trim() || t('draftResumeNoName')}
             </p>

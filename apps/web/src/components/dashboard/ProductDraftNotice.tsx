@@ -8,6 +8,8 @@
 // aparece si no hay nada guardado, si ya caducó o si el navegador no deja
 // usar IndexedDB. «Continuar» entra directo al asistente con el avance
 // recuperado; «Descartar» borra el borrador de este dispositivo.
+// Es una alerta: el título y la franja lateral van en el rojo de la marca
+// (--brand-red, 5,1:1 de contraste sobre blanco) para que se note.
 // ============================================================
 
 import { useEffect, useState } from 'react'
@@ -42,12 +44,12 @@ export function ProductDraftNotice({ vendorId }: { vendorId: string }) {
       style={{
         display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '12px 16px', marginBottom: 14,
         background: '#fff', borderRadius: 14, boxShadow: '0 1px 8px rgba(10,30,60,0.06)', border: '1px solid #EEF2F6',
-        borderLeft: '4px solid var(--dashboard-blue)',
+        borderLeft: '4px solid var(--brand-red)',
       }}
     >
       <span aria-hidden="true" style={{ fontSize: 22 }}>📝</span>
       <div style={{ flex: '1 1 220px', minWidth: 0 }}>
-        <div style={{ fontWeight: 600, fontSize: 'var(--text-ui)', color: '#131A18' }}>
+        <div style={{ fontWeight: 600, fontSize: 'var(--text-ui)', color: 'var(--brand-red)' }}>
           {confirming ? t('draftResumeDiscardConfirm') : t('draftResumeTitle')}
         </div>
         {!confirming && (
