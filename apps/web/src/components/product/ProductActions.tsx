@@ -28,13 +28,12 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronDown, ShoppingCart, Zap } from 'lucide-react'
-import { BRAND } from '@/lib/colors'
+import { ShoppingCart, Zap } from 'lucide-react'
 import { useCartStore } from '@/lib/store/cart'
 import { useExpressCheckoutStore } from '@/lib/store/expressCheckout'
 import { formatPrice } from '@/types/database.types'
 import { useTranslation } from '@/lib/hooks/useTranslation'
-import { inferSizeScale, sortSizes } from '@/lib/productSizes'
+import { sortSizes } from '@/lib/productSizes'
 import type { ProductVariant } from '@/types/database.types'
 import type { Product } from '@/types'
 import type { VariantDynamicDimension, VariantDynamicValuesMap } from '@/app/producto/[id]/ProductPageContent'
@@ -68,11 +67,13 @@ function useProductActionsState({
 
   // Con variantes: valores únicos derivados de las filas de product_variants.
   // Las tallas van ordenadas (la BD no garantiza el orden de las filas):
-  // 5, 5.5, 6 ... 14 en calzado, XS ... XXL en ropa.
+  // 5, 5.5, 6 ... 14 en calzado, XS ... XXL en ropa. Las tallas sueltas de
+  // un producto sin variantes también (nunca se ordenaron: salían como las
+  // escribió quien lo publicó).
   const variantSizes = sortSizes([...new Set(variants.map(v => v.size).filter((s): s is string => !!s))])
   const variantColors = [...new Set(variants.map(v => v.color).filter((c): c is string => !!c))]
 
-  const sizes = hasVariants ? variantSizes : legacySizes
+  const sizes = hasVariants ? variantSizes : sortSizes(legacySizes)
   const colors = hasVariants ? variantColors : legacyColors
 
   // Primera variante con image_url de cada color — usada para la miniatura
@@ -90,38 +91,88 @@ function useProductActionsState({
     colors.length === 1 ? colors[0] : null
   )
 
-  // ─── Calzado: tallas en cuadrícula de botones (como Nike) ─────────────
-  // Solo con el sistema Talla/Color y cuando las tallas son de calzado
-  // (EE. UU. o Europa, ver inferSizeScale): ahí se ven todas a la vez y las
-  // que ya no tienen stock salen tachadas y no se pueden elegir. Ropa y las
-  // demás siguen con chips (móvil) / desplegable (escritorio) como siempre.
-  const sizeScale = inferSizeScale(sizes)
-  const useSizeGrid = hasVariants && !hasDynamicDims && (sizeScale === 'footwear_us' || sizeScale === 'footwear_eu')
+  // ─── Tallas en cuadrícula de botones (como Nike) ──────────────────────
+  // Toda talla se muestra así — calzado, ropa y cualquier otra medida
+  // ("128GB", "Grande"), con variantes, con las tallas sueltas de un
+  // producto sin variantes o con la talla dinámica de Camisetas/Gorras —:
+  // se ven todas a la vez y las que ya no tienen stock salen tachadas y no
+  // se pueden elegir. Las demás dimensiones dinámicas (Capacidad, Color…)
+  // usan sus propios selectores, más abajo.
 
-  // ¿Queda stock de esa talla? En el color elegido si ya hay uno; si no, en
-  // cualquiera de sus colores.
+  // ¿Queda stock de esa talla? Con variantes: en el color elegido si ya hay
+  // uno, si no en cualquiera de sus colores. Sin variantes no hay stock por
+  // talla: vale el del producto.
   const sizeInStock = (size: string, color: string | null = selectedColor): boolean =>
-    variants.some(v => (v.size ?? null) === size && (color === null || (v.color ?? null) === color) && v.stock > 0)
+    hasVariants
+      ? variants.some(v => (v.size ?? null) === size && (color === null || (v.color ?? null) === color) && v.stock > 0)
+      : product.stock > 0
 
-  // Con la cuadrícula, elegir otro color puede dejar sin stock la talla que
-  // ya estaba marcada (queda tachada y deshabilitada): se desmarca en vez de
-  // dejar una talla elegida que no se puede comprar.
+  // Elegir otro color puede dejar sin stock la talla que ya estaba marcada
+  // (queda tachada y deshabilitada): se desmarca en vez de dejar una talla
+  // elegida que no se puede comprar.
   const handleSelectColor = (color: string | null) => {
     setSelectedColor(color)
-    if (useSizeGrid && selectedSize && !sizeInStock(selectedSize, color)) setSelectedSize(null)
+    if (selectedSize && !sizeInStock(selectedSize, color)) setSelectedSize(null)
   }
 
-  // ─── Selección de dimensiones dinámicas (ej. Capacidad, Color) ───────
+  // ─── Selección de dimensiones dinámicas (ej. Capacidad, Color, Talla) ──
+  const sizeLikeKeys = ['talla', 'size']
+  const isSizeLikeDim = (dim: VariantDynamicDimension) => sizeLikeKeys.includes(dim.key.toLowerCase())
+
+  // dim.options trae TODAS las opciones del atributo (XS … XXL), no solo las
+  // que este producto vende: en la cuadrícula de tallas salen únicamente las
+  // que alguna variante tiene (si ninguna la tuviera, todas, para no dejarla
+  // vacía).
+  const usedOptionsOf = (dim: VariantDynamicDimension) => {
+    const used = dim.options.filter(o => variants.some(v => variantDynamicValues[v.id]?.[dim.attributeId] === o.value))
+    return used.length > 0 ? used : dim.options
+  }
+
   const [selectedDynamicValues, setSelectedDynamicValues] = useState<Record<string, string | null>>(() => {
     const init: Record<string, string | null> = {}
     for (const dim of dynamicDimensions) {
-      init[dim.attributeId] = dim.options.length === 1 ? dim.options[0].value : null
+      const choices = isSizeLikeDim(dim) ? usedOptionsOf(dim) : dim.options
+      init[dim.attributeId] = choices.length === 1 ? choices[0].value : null
     }
     return init
   })
 
+  // ¿Queda stock de esa opción? Combinada con lo ya elegido en las otras
+  // dimensiones (el color, por ejemplo); si todavía no se eligió nada más,
+  // con cualquier combinación.
+  const dynamicOptionInStock = (
+    dim: VariantDynamicDimension,
+    value: string,
+    selection: Record<string, string | null> = selectedDynamicValues,
+  ): boolean =>
+    variants.some(v =>
+      v.stock > 0 &&
+      variantDynamicValues[v.id]?.[dim.attributeId] === value &&
+      dynamicDimensions.every(d =>
+        d.attributeId === dim.attributeId ||
+        !selection[d.attributeId] ||
+        variantDynamicValues[v.id]?.[d.attributeId] === selection[d.attributeId]
+      )
+    )
+
+  // Elegir una opción puede dejar sin stock la talla que ya estaba marcada
+  // (p. ej. al cambiar de color): se desmarca, igual que en el sistema de
+  // Talla/Color de arriba, en vez de dejar elegida una talla que no se puede
+  // comprar.
+  const selectDynamicValue = (attributeId: string, value: string | null) => {
+    setSelectedDynamicValues(prev => {
+      const next = { ...prev, [attributeId]: value }
+      for (const dim of dynamicDimensions) {
+        const current = next[dim.attributeId]
+        if (dim.attributeId !== attributeId && isSizeLikeDim(dim) && current && !dynamicOptionInStock(dim, current, next)) {
+          next[dim.attributeId] = null
+        }
+      }
+      return next
+    })
+  }
+
   const dynamicColorDim = dynamicDimensions.find(d => d.key.toLowerCase() === 'color') ?? null
-  const sizeLikeKeys = ['talla', 'size']
   const dynamicColorImageMap = new Map<string, string>()
   if (dynamicColorDim) {
     for (const v of variants) {
@@ -168,9 +219,14 @@ function useProductActionsState({
   // talla del color elegido): antes el botón decía "Selecciona talla" aunque
   // todas estuvieran en 0 y solo al elegir una salía "Agotado".
   const allVariantsOut = hasVariants && variants.every(v => v.stock <= 0)
-  const selectedColorSoldOut = useSizeGrid && selectedColor !== null && !sizes.some(s => sizeInStock(s, selectedColor))
+  const selectedColorSoldOut = needsSize && selectedColor !== null && !sizes.some(s => sizeInStock(s, selectedColor))
+  // Lo mismo con la talla dinámica (Camisetas, Gorras): con lo ya elegido
+  // (el color, por ejemplo) no queda ninguna talla con stock.
+  const dynamicSelectionSoldOut = dynamicDimensions.some(
+    dim => isSizeLikeDim(dim) && !usedOptionsOf(dim).some(o => dynamicOptionInStock(dim, o.value))
+  )
   const isOutOfStock = hasVariants
-    ? (allVariantsOut || selectedColorSoldOut || (activeMatchedVariant !== null && activeMatchedVariant.stock === 0))
+    ? (allVariantsOut || selectedColorSoldOut || dynamicSelectionSoldOut || (activeMatchedVariant !== null && activeMatchedVariant.stock === 0))
     : product.stock === 0
   // Aplica el techo de stock y el piso de 1 — solo se llama al perder
   // el foco, nunca en cada tecla (no interrumpe mientras escribe).
@@ -249,9 +305,10 @@ function useProductActionsState({
     t, hasVariants, hasDynamicDims,
     sizes, colors, colorImageMap,
     selectedSize, setSelectedSize, selectedColor, setSelectedColor, handleSelectColor,
-    useSizeGrid, sizeInStock,
-    dynamicDimensions, selectedDynamicValues, setSelectedDynamicValues,
-    dynamicColorDim, sizeLikeKeys, dynamicColorImageMap, dynamicMatchedVariant,
+    sizeInStock,
+    dynamicDimensions, selectedDynamicValues, selectDynamicValue,
+    isSizeLikeDim, usedOptionsOf, dynamicOptionInStock,
+    dynamicColorDim, dynamicColorImageMap, dynamicMatchedVariant,
     quantity, quantityInput, setQuantityInput, setQuantity, handleQuantityBlur,
     needsSize, needsColor, matchedVariant, effectiveStock, isOutOfStock,
     canAdd, added, handleAdd, handleBuyNow,
@@ -285,14 +342,74 @@ export function ProductActionsProvider({ children, ...props }: ProductActionsPro
   return <ProductActionsContext.Provider value={state}>{children}</ProductActionsContext.Provider>
 }
 
+// Cuadrícula de tallas (como Nike): todas visibles a la vez, la elegida con
+// borde azul, las que no tienen stock tachadas y deshabilitadas. En móvil y en
+// escritorio por igual. La usan las tallas de siempre (calzado, ropa, sueltas
+// de un producto sin variantes) y la talla dinámica de Camisetas/Gorras.
+interface SizeGridOption { value: string; label: string; inStock: boolean }
+
+function SizeGrid({ title, options, selected, onSelect }: {
+  title: string
+  options: SizeGridOption[]
+  selected: string | null
+  onSelect: (value: string) => void
+}) {
+  const { t } = useTranslation('products')
+  // Una talla marcada que ya no tiene stock no cuenta como elegida
+  const selectedLabel = options.find(o => o.value === selected && o.inStock)?.label ?? null
+
+  return (
+    <div>
+      <p className="text-sm font-medium text-gray-700 mb-2">
+        {title}
+        {selectedLabel && <span className="ml-2 text-gray-400 font-normal">{selectedLabel}</span>}
+      </p>
+      {/* Las columnas se acomodan al ANCHO DEL BLOQUE (no al de la pantalla): 3 en
+          el móvil, 4 en la ficha de escritorio y las que quepan donde la columna
+          es angosta (la vista previa del asistente), sin partir «Única» en dos. */}
+      <div role="group" aria-label={title} className="grid grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] gap-2">
+        {options.map(opt => {
+          const isSelected = selected === opt.value && opt.inStock
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              disabled={!opt.inStock}
+              aria-pressed={isSelected}
+              aria-label={opt.inStock ? undefined : t('sizeSoldOutAria', { size: opt.label })}
+              title={opt.inStock ? undefined : t('outOfStock')}
+              onClick={() => onSelect(opt.value)}
+              className="min-h-[44px] min-w-0 px-2 text-sm font-semibold break-words"
+              style={{
+                borderRadius: 'var(--radius-control)',
+                border: `1px solid ${isSelected ? 'var(--color-primary)' : opt.inStock ? 'var(--color-border)' : 'var(--color-divider)'}`,
+                // 2.º "borde" del botón elegido sin mover el resto de la cuadrícula
+                boxShadow: isSelected ? '0 0 0 1px var(--color-primary)' : 'none',
+                background: isSelected ? 'var(--color-primary-subtle)' : 'transparent',
+                color: !opt.inStock ? 'var(--color-text-tertiary)' : isSelected ? 'var(--color-primary)' : 'var(--color-text-primary)',
+                textDecoration: opt.inStock ? 'none' : 'line-through',
+                cursor: opt.inStock ? 'pointer' : 'not-allowed',
+                transition: 'all var(--transition-fast)',
+              }}
+            >
+              {opt.label}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // Talla / Color / dimensiones dinámicas / Cantidad — sin el botón
 export function ProductSelectors() {
   const {
     t, hasDynamicDims, sizes, colors, colorImageMap,
     selectedSize, setSelectedSize, selectedColor, handleSelectColor,
-    useSizeGrid, sizeInStock,
-    dynamicDimensions, selectedDynamicValues, setSelectedDynamicValues,
-    dynamicColorDim, sizeLikeKeys, dynamicColorImageMap, dynamicMatchedVariant,
+    sizeInStock,
+    dynamicDimensions, selectedDynamicValues, selectDynamicValue,
+    isSizeLikeDim, usedOptionsOf, dynamicOptionInStock,
+    dynamicColorDim, dynamicColorImageMap, dynamicMatchedVariant,
     quantity, quantityInput, setQuantityInput, setQuantity, handleQuantityBlur,
     needsSize, needsColor, matchedVariant, effectiveStock, hasVariants,
   } = useProductActionsContext()
@@ -300,94 +417,15 @@ export function ProductSelectors() {
   return (
     <div className="flex flex-col gap-4">
 
-      {/* Calzado: cuadrícula de tallas como la de Nike — todas visibles a la
-          vez, la elegida con borde azul, las que no tienen stock tachadas y
-          deshabilitadas. En móvil y en escritorio por igual. */}
-      {needsSize && useSizeGrid && (
-        <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">
-            {t('sizeLabel')}
-            {selectedSize && <span className="ml-2 text-gray-400 font-normal">{selectedSize}</span>}
-          </p>
-          <div role="group" aria-label={t('sizeLabel')} className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-            {sizes.map(size => {
-              const inStock = sizeInStock(size)
-              const isSelected = selectedSize === size && inStock
-              return (
-                <button
-                  key={size}
-                  type="button"
-                  disabled={!inStock}
-                  aria-pressed={isSelected}
-                  aria-label={inStock ? undefined : t('sizeSoldOutAria', { size })}
-                  title={inStock ? undefined : t('outOfStock')}
-                  onClick={() => setSelectedSize(size)}
-                  className="min-h-[44px] px-2 text-sm font-semibold"
-                  style={{
-                    borderRadius: 'var(--radius-control)',
-                    border: `1px solid ${isSelected ? 'var(--color-primary)' : inStock ? 'var(--color-border)' : 'var(--color-divider)'}`,
-                    // 2.º "borde" del botón elegido sin mover el resto de la cuadrícula
-                    boxShadow: isSelected ? '0 0 0 1px var(--color-primary)' : 'none',
-                    background: isSelected ? 'var(--color-primary-subtle)' : 'transparent',
-                    color: !inStock ? 'var(--color-text-tertiary)' : isSelected ? 'var(--color-primary)' : 'var(--color-text-primary)',
-                    textDecoration: inStock ? 'none' : 'line-through',
-                    cursor: inStock ? 'pointer' : 'not-allowed',
-                    transition: 'all var(--transition-fast)',
-                  }}
-                >
-                  {size}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Selector de talla — chips en mobile, dropdown en desktop (mismo
-          campo, presentación condicional por viewport, confirmado contra
-          la referencia mobile real). */}
-      {needsSize && !useSizeGrid && (
-        <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">{t('sizeLabel')}</p>
-
-          <div className="flex flex-wrap gap-2 sm:hidden">
-            {sizes.map(size => (
-              <button
-                key={size}
-                type="button"
-                onClick={() => setSelectedSize(size)}
-                className={`px-4 py-1.5 text-sm font-medium ${selectedSize === size ? 'text-white' : 'text-gray-600 hover:border-gray-300'}`}
-                style={{
-                  borderRadius: 'var(--radius-pill)',
-                  border: `1px solid ${selectedSize === size ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                  background: selectedSize === size ? 'var(--color-primary)' : 'transparent',
-                  transition: 'all var(--transition-fast)',
-                }}
-              >
-                {size}
-              </button>
-            ))}
-          </div>
-
-          <div className="relative hidden sm:block">
-            <select
-              value={selectedSize ?? ''}
-              onChange={e => setSelectedSize(e.target.value || null)}
-              className="w-full appearance-none"
-              style={{
-                border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)',
-                padding: '11px 40px 11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box',
-                background: '#fff', color: selectedSize ? BRAND.dark : BRAND.gray, cursor: 'pointer',
-              }}
-            >
-              <option value="">{t('selectSizePlaceholder')}</option>
-              {sizes.map(size => (
-                <option key={size} value={size}>{size}</option>
-              ))}
-            </select>
-            <ChevronDown size={16} color={BRAND.gray} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-          </div>
-        </div>
+      {/* Tallas de siempre (Talla/Color fijos o tallas sueltas de un producto
+          sin variantes) */}
+      {needsSize && (
+        <SizeGrid
+          title={t('sizeLabel')}
+          options={sizes.map(size => ({ value: size, label: size, inStock: sizeInStock(size) }))}
+          selected={selectedSize}
+          onSelect={setSelectedSize}
+        />
       )}
 
       {/* Selector de color */}
@@ -447,58 +485,24 @@ export function ProductSelectors() {
         </div>
       )}
 
-      {/* Selectores de dimensiones dinámicas (ej. Capacidad, Color) */}
+      {/* Selectores de dimensiones dinámicas (ej. Capacidad, Color, Talla) */}
       {hasDynamicDims && dynamicDimensions.map(dim => {
         const selectedValue = selectedDynamicValues[dim.attributeId] ?? null
         const selectedLabel = dim.options.find(o => o.value === selectedValue)?.label ?? null
         const isColorDim = dim.attributeId === dynamicColorDim?.attributeId
-        const isSizeLikeDim = sizeLikeKeys.includes(dim.key.toLowerCase())
 
-        // Talla / Size dinámica — chips en mobile, dropdown en desktop,
-        // mismo criterio que el sistema viejo de arriba.
-        if (isSizeLikeDim) {
+        // Talla dinámica (Camisetas, Gorras…): la misma cuadrícula de arriba,
+        // con las tallas que el producto tiene y las agotadas (con el color
+        // ya elegido) tachadas.
+        if (isSizeLikeDim(dim)) {
           return (
-            <div key={dim.attributeId}>
-              <p className="text-sm font-medium text-gray-700 mb-2">{dim.label}</p>
-
-              <div className="flex flex-wrap gap-2 sm:hidden">
-                {dim.options.map(opt => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setSelectedDynamicValues(prev => ({ ...prev, [dim.attributeId]: opt.value }))}
-                    className={`px-4 py-1.5 text-sm font-medium ${selectedValue === opt.value ? 'text-white' : 'text-gray-600 hover:border-gray-300'}`}
-                    style={{
-                      borderRadius: 'var(--radius-pill)',
-                      border: `1px solid ${selectedValue === opt.value ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                      background: selectedValue === opt.value ? 'var(--color-primary)' : 'transparent',
-                      transition: 'all var(--transition-fast)',
-                    }}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="relative hidden sm:block">
-                <select
-                  value={selectedValue ?? ''}
-                  onChange={e => setSelectedDynamicValues(prev => ({ ...prev, [dim.attributeId]: e.target.value || null }))}
-                  className="w-full appearance-none"
-                  style={{
-                    border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)',
-                    padding: '11px 40px 11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box',
-                    background: '#fff', color: selectedValue ? BRAND.dark : BRAND.gray, cursor: 'pointer',
-                  }}
-                >
-                  <option value="">{t('selectSizePlaceholder')}</option>
-                  {dim.options.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-                <ChevronDown size={16} color={BRAND.gray} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-              </div>
-            </div>
+            <SizeGrid
+              key={dim.attributeId}
+              title={dim.label}
+              options={usedOptionsOf(dim).map(o => ({ value: o.value, label: o.label, inStock: dynamicOptionInStock(dim, o.value) }))}
+              selected={selectedValue}
+              onSelect={value => selectDynamicValue(dim.attributeId, value)}
+            />
           )
         }
 
@@ -511,7 +515,7 @@ export function ProductSelectors() {
             <div className="flex flex-wrap gap-2">
               {dim.options.map(opt => {
                 const isSelected = selectedValue === opt.value
-                const select = () => setSelectedDynamicValues(prev => ({ ...prev, [dim.attributeId]: opt.value }))
+                const select = () => selectDynamicValue(dim.attributeId, opt.value)
                 const thumbUrl = isColorDim ? dynamicColorImageMap.get(opt.value) : undefined
 
                 return thumbUrl ? (

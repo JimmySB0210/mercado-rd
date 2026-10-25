@@ -20,7 +20,7 @@ import { getCategoryName } from '@/lib/utils'
 import { ProductAttributesSection, type AttributeValue, type AttributeValuesState } from '@/components/dashboard/ProductAttributesSection'
 import { PricingTiersSection, type TierRow } from '@/components/vendor/PricingTiersSection'
 import { ProductPreviewModal } from '@/components/dashboard/ProductPreviewModal'
-import { ProductPageContent } from '@/app/producto/[id]/ProductPageContent'
+import { ProductPageContent, type VariantDynamicDimension, type VariantDynamicValuesMap } from '@/app/producto/[id]/ProductPageContent'
 import { Navbar } from '@/components/shop/Navbar'
 import { computePublishQuality, qualityTier, QUALITY_TIER_EMOJI, QUALITY_TIER_COLOR } from '@/lib/productQuality'
 import { defaultSizeScaleForCategories, inferSizeScale, type SizeScale } from '@/lib/productSizes'
@@ -719,11 +719,16 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
       province: selectedProvince ? { name: selectedProvince.name } : null,
     }
 
+    // Categorías con variantes dinámicas (Camisetas, Gorras, Smartphones…):
+    // las filas con algún valor son las variantes de la vista previa.
+    const dynamicRowsInUse = hasOptions && variantCategoryAttributes.length > 0
+      ? dynamicVariantRows.filter(row => Object.values(row.values).some(v => v && v.trim()))
+      : []
+
     const previewVariants = !hasOptions
       ? []
       : variantCategoryAttributes.length > 0
-      ? dynamicVariantRows
-          .filter(row => Object.values(row.values).some(v => v && v.trim()))
+      ? dynamicRowsInUse
           .map((row, i) => ({
             id: `preview-dynamic-${i}`,
             product_id: previewProductId,
@@ -751,7 +756,32 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
             created_at: new Date().toISOString(),
           }))
 
-    return { previewProduct, previewVariants }
+    // Los selectores de esas variantes (Color, Talla, Capacidad…) se arman
+    // igual que en la ficha pública (app/producto/[id]/page.tsx): solo las
+    // dimensiones con algún valor, en el orden de la categoría, y cada una con
+    // TODAS las opciones del atributo. Sin esto la vista previa no mostraba ni
+    // tallas ni colores en estas categorías.
+    const previewDynamicDimensions: VariantDynamicDimension[] = variantCategoryAttributes
+      .filter(attr => dynamicRowsInUse.some(row => (row.values[attr.id] ?? '').trim()))
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map(attr => ({
+        attributeId: String(attr.id),
+        key: attr.attribute_key,
+        label: attr.attribute_label,
+        options: (attributeOptionsMap.get(attr.id) ?? []).map(o => ({ value: o.value, label: o.label })),
+      }))
+
+    const previewVariantDynamicValues: VariantDynamicValuesMap = {}
+    dynamicRowsInUse.forEach((row, i) => {
+      const values: Record<string, string> = {}
+      for (const attr of variantCategoryAttributes) {
+        const val = (row.values[attr.id] ?? '').trim()
+        if (val) values[String(attr.id)] = val
+      }
+      previewVariantDynamicValues[`preview-dynamic-${i}`] = values
+    })
+
+    return { previewProduct, previewVariants, previewDynamicDimensions, previewVariantDynamicValues }
   }
 
   // Cargar categorías, provincias y datos del vendor (para la vista
@@ -2131,14 +2161,26 @@ export function ProductForm({ mode, vendorId, initialData }: ProductFormProps) {
           )}
 
           {activeStep === 'preview' && (() => {
-            const { previewProduct, previewVariants } = buildPreviewData()
+            const { previewProduct, previewVariants, previewDynamicDimensions, previewVariantDynamicValues } = buildPreviewData()
             return (
-              <div className="bg-gray-50 rounded-2xl p-4 sm:p-6">
+              <div
+                className="bg-gray-50 rounded-2xl p-4 sm:p-6"
+                // La vista previa vive DENTRO del <form> del asistente y los botones de la ficha
+                // (color, cantidad, «Agregar al carrito»…) no declaran type, así que valen como
+                // "enviar": sin esto, tocar uno guardaba un borrador y sacaba al vendor del
+                // asistente. Se cancela el envío; el clic sigue llegando al botón.
+                onClickCapture={e => {
+                  const button = (e.target as Element).closest('button')
+                  if (button && button.type === 'submit') e.preventDefault()
+                }}
+              >
                 <p className="text-xs text-gray-400 mb-4">👁️ {t('previewFullStepHint')}</p>
                 <ProductPageContent
                   product={previewProduct as any}
                   vendor={previewVendor ?? undefined}
                   variants={previewVariants as any}
+                  dynamicDimensions={previewDynamicDimensions}
+                  variantDynamicValues={previewVariantDynamicValues}
                   hasDiscount={!!(previewProduct.compare_rdp && previewProduct.compare_rdp > previewProduct.price_rdp)}
                   discount={previewProduct.compare_rdp && previewProduct.compare_rdp > previewProduct.price_rdp ? discountPercent(previewProduct.price_rdp, previewProduct.compare_rdp) : null}
                   itbis={Math.round(previewProduct.price_rdp * 0.18)}
