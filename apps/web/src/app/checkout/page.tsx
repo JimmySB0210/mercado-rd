@@ -3,10 +3,17 @@
 // MercadoRD — Checkout
 // Ruta: src/app/checkout/page.tsx
 // ============================================================
+// Entrega y pago en una sola página (el flujo real: Carrito → Entrega y pago
+// → Confirmación en /confirm). Los precios, el envío, el ITBIS y el total los
+// calcula el servidor (quote_cart); aquí solo se muestran. La lógica de
+// pedido (cotización fresca, cupón, cobro simulado, create_order_from_cart)
+// es la de siempre; lo que cambió es la presentación, los errores junto a
+// cada campo y la protección contra doble envío.
+// ============================================================
 
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ShieldCheck, ChevronDown } from 'lucide-react'
+import { AlertTriangle, Check, ChevronDown, CreditCard, Info, MapPin, ShieldCheck, Tag, Truck } from 'lucide-react'
 import { BRAND } from '@/lib/colors'
 import { useCartStore } from '@/lib/store/cart'
 import { useExpressCheckoutStore, useExpressCheckoutHydrated } from '@/lib/store/expressCheckout'
@@ -20,18 +27,16 @@ import { notifyOrderConfirmed } from '@/lib/whatsapp/notifications'
 import { processPayment, type PaymentResult } from '@/lib/payments/azul'
 import { DANGEROUS_PATTERN } from '@/lib/validation'
 import { formatPhone, normalizePhone, PHONE_INPUT_PROPS } from '@/lib/phone'
-import { useCartQuote, fetchCartQuote, lineProblem, quoteBlocksPurchase, type CartQuote } from '@/lib/cart/quote'
+import { useCartQuote, fetchCartQuote, quoteBlocksPurchase, type CartQuote } from '@/lib/cart/quote'
 import { resolveKnownError, KNOWN_ORDER_ERRORS, type SupabaseErrorLike } from '@/lib/orderErrors'
 import { useTranslation } from '@/lib/hooks/useTranslation'
-import type { CheckoutDict } from '@/lib/i18n/es/checkout'
-import Image from 'next/image'
-
-const PAYMENT_METHOD_KEYS: { id: string; labelKey: keyof CheckoutDict; emoji: string }[] = [
-  { id: 'azul',     labelKey: 'paymentAzulLabel',     emoji: '💳' },
-  { id: 'cardnet',  labelKey: 'paymentCardnetLabel',  emoji: '🏦' },
-  { id: 'transfer', labelKey: 'paymentTransferLabel', emoji: '🏧' },
-  { id: 'cash',     labelKey: 'paymentCashLabel',      emoji: '💵' },
-]
+import { formatRdp } from '@/lib/formatRdp'
+import { DEFAULT_PAYMENT_METHOD, isPaymentMethodSelectable, paymentMethodStatus } from '@/lib/checkout/paymentMethods'
+import { CheckoutSteps } from '@/components/checkout/CheckoutSteps'
+import { CheckoutField } from '@/components/checkout/CheckoutField'
+import { CheckoutOrderItems } from '@/components/checkout/CheckoutOrderItems'
+import { PaymentMethodPicker } from '@/components/checkout/PaymentMethodPicker'
+import { CheckoutStyles } from '@/components/checkout/CheckoutStyles'
 
 interface AppliedCoupon {
   valid: true
@@ -42,6 +47,19 @@ interface AppliedCoupon {
   discount_rdp: number
   vendor_id: string | null
 }
+
+// Campos que pueden mostrar un error junto a ellos, en el orden en que
+// aparecen en la página (el primero con error recibe el foco).
+type FieldName =
+  | 'fullName' | 'phone' | 'province' | 'address'
+  | 'recipientName' | 'recipientPhone' | 'notes'
+  | 'cardNumber' | 'cardExpiration' | 'cardCvc'
+type FieldErrors = Partial<Record<FieldName, string>>
+const FIELD_ORDER: FieldName[] = [
+  'fullName', 'phone', 'province', 'address',
+  'recipientName', 'recipientPhone', 'notes',
+  'cardNumber', 'cardExpiration', 'cardCvc',
+]
 
 // FIX URGENTE (2026-10-01): useSearchParams() sin <Suspense> alrededor
 // falla el build de producción real (next build), aunque funcione sin
@@ -70,6 +88,17 @@ function CheckoutPageContent() {
 
   const items: CartItem[] = isExpressMode ? (expressItem ? [expressItem] : []) : cartItems
 
+  // El carrito se lee de localStorage cuando la página ya está en el navegador:
+  // en el primer pintado todavía aparece vacío. Hasta que esté leído no se
+  // muestra «Tu carrito está vacío» (la persona tiene productos; sería un aviso falso).
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+
+  // El pedido ya se creó y se está yendo a /confirm: al vaciar el carrito (o
+  // el ítem express) esta página no debe mostrar «carrito vacío» ni volver
+  // a la ficha del producto mientras dura la navegación.
+  const [placed, setPlaced] = useState(false)
+
   // Si el flag express está pero sessionStorage no tiene ningún ítem
   // (ej. se limpió entre el click y esta carga, o alguien pegó la URL a
   // mano) — nunca caer al carrito completo por error: volver a la
@@ -77,10 +106,10 @@ function CheckoutPageContent() {
   // está, a inicio. Espera a que la hidratación de sessionStorage
   // termine antes de decidir "no hay ítem" (si no, redirige en cada F5).
   useEffect(() => {
-    if (!isExpressMode || !expressHydrated || expressItem) return
+    if (!isExpressMode || !expressHydrated || expressItem || placed) return
     const productId = searchParams.get('producto')
     router.replace(productId ? `/producto/${productId}` : '/')
-  }, [isExpressMode, expressHydrated, expressItem, searchParams, router])
+  }, [isExpressMode, expressHydrated, expressItem, placed, searchParams, router])
 
   const [form, setForm] = useState({
     fullName:   profile?.full_name || '',
@@ -91,7 +120,7 @@ function CheckoutPageContent() {
     isForSomeoneElse: false,
     recipientName:  '',
     recipientPhone: '',
-    payMethod:  'azul',
+    payMethod:  DEFAULT_PAYMENT_METHOD as string,
     cardNumber:     '',
     cardExpiration: '',
     cardCvc:        '',
@@ -111,13 +140,18 @@ function CheckoutPageContent() {
   }, [profile])
 
   const [loading, setLoading] = useState(false)
+  // Segundo seguro contra el doble envío: el estado `loading` se actualiza
+  // al terminar el evento, esta marca es inmediata.
+  const inFlightRef = useRef(false)
   const [error, setError]   = useState<string | null>(null)
   const [rateLimited, setRateLimited] = useState(false)
-  const [addressError, setAddressError] = useState<string | null>(null)
-  // Errores en línea de los teléfonos (comprador y quien recibe).
-  const [phoneErrors, setPhoneErrors] = useState<{ phone: string | null; recipientPhone: string | null }>({ phone: null, recipientPhone: null })
-  const [notesError, setNotesError] = useState<string | null>(null)
+  // Errores junto a cada campo (obligatorio, teléfono, dirección, notas, tarjeta).
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [provinces, setProvinces] = useState<Province[]>([])
+  const [provincesStatus, setProvincesStatus] = useState<'loading' | 'ready' | 'error'>('loading')
+  // Productos del pedido: plegados en pantallas chicas (en escritorio siempre
+  // se ven). Se abren solos si algún producto tiene un problema.
+  const [itemsOpen, setItemsOpen] = useState(false)
 
   const [couponCode, setCouponCode] = useState('')
   const [couponApplying, setCouponApplying] = useState(false)
@@ -153,7 +187,6 @@ function CheckoutPageContent() {
   const totalToPay = q ? Math.max(0, q.total_rdp - discountRdp) : 0
   const quoteHasLineIssues = q ? quoteBlocksPurchase(q) : false
   const quoteReady = !!q && q.delivery_rdp !== null
-  const fmt = (cents: number) => `RD$${(cents / 100).toLocaleString('es-DO')}`
   const submitBlocked = loading || rateLimited || quoteStatus === 'loading' || quoteStatus === 'error'
     || quoteHasLineIssues || (!!form.province && !quoteReady)
   const backHref = isExpressMode ? (expressItem ? `/producto/${expressItem.product.id}` : '/') : '/cart'
@@ -164,7 +197,10 @@ function CheckoutPageContent() {
       .from('provinces_rd')
       .select('id, name, code')
       .order('name')
-      .then(({ data }) => setProvinces(data ?? []))
+      .then(({ data, error }) => {
+        setProvinces(data ?? [])
+        setProvincesStatus(error ? 'error' : 'ready')
+      }, () => setProvincesStatus('error'))
   }, [])
 
   // Usa la provincia ya elegida en el Navbar como valor inicial del checkout
@@ -174,6 +210,11 @@ function CheckoutPageContent() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProvince])
+
+  // Si algún producto tiene un problema, la lista se muestra abierta.
+  useEffect(() => {
+    if (quoteHasLineIssues) setItemsOpen(true)
+  }, [quoteHasLineIssues])
 
   // Calcula el envío real según la provincia elegida — misma tabla
   // shipping_rates que usa internamente create_order_from_cart, así que
@@ -206,12 +247,43 @@ function CheckoutPageContent() {
       })
   }, [form.province, provinces])
 
+  // Pone o quita el error de un campo.
+  const setFieldError = (name: FieldName, message: string | null) => {
+    setFieldErrors(prev => {
+      if (!message && !prev[name]) return prev
+      const next = { ...prev }
+      if (message) next[name] = message
+      else delete next[name]
+      return next
+    })
+  }
+
+  // Lleva el foco al campo con error (después de que React pinte el error,
+  // para que el lector de pantalla lo lea junto al campo).
+  const focusField = (name: FieldName) => {
+    setTimeout(() => {
+      const el = document.getElementById(`ck-${name}`)
+      if (!el) return
+      el.scrollIntoView({ block: 'center' })
+      el.focus({ preventScroll: true })
+    }, 0)
+  }
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
     editedFieldsRef.current.add(e.target.name)
-    if (e.target.name === 'phone' || e.target.name === 'recipientPhone') {
-      const name = e.target.name
-      setPhoneErrors(prev => (prev[name] ? { ...prev, [name]: null } : prev))
+    // Al escribir en un campo con error, el error se quita.
+    setFieldError(e.target.name as FieldName, null)
+    // Al cambiar de método de pago, los errores de la tarjeta ya no aplican:
+    // si vuelve a elegir tarjeta no debe encontrarse errores viejos.
+    if (e.target.name === 'payMethod') {
+      setFieldErrors(prev => {
+        const next = { ...prev }
+        delete next.cardNumber
+        delete next.cardExpiration
+        delete next.cardCvc
+        return next
+      })
     }
   }
 
@@ -221,15 +293,20 @@ function CheckoutPageContent() {
     const value = form[name]
     if (!value.trim()) return
     if (!normalizePhone(value)) {
-      setPhoneErrors(prev => ({ ...prev, [name]: tc('phoneInvalid') }))
+      setFieldError(name, tc('phoneInvalid'))
       return
     }
-    setPhoneErrors(prev => ({ ...prev, [name]: null }))
+    setFieldError(name, null)
     setForm(f => ({ ...f, [name]: formatPhone(value) }))
   }
 
   const handleForSomeoneElseToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm(f => ({ ...f, isForSomeoneElse: e.target.checked }))
+    const checked = e.target.checked
+    setForm(f => ({ ...f, isForSomeoneElse: checked }))
+    if (!checked) {
+      setFieldError('recipientName', null)
+      setFieldError('recipientPhone', null)
+    }
   }
 
   // Mensaje traducido por error_code; nunca el texto crudo del servidor.
@@ -258,7 +335,7 @@ function CheckoutPageContent() {
   }
 
   const handleApplyCoupon = async () => {
-    if (!couponCode.trim() || !q || !user) return
+    if (!couponCode.trim() || !q || !user || couponApplying) return
     setCouponApplying(true)
     setCouponError(null)
     const result = await validateCoupon(couponCode.trim().toUpperCase(), q.subtotal_rdp)
@@ -295,37 +372,64 @@ function CheckoutPageContent() {
     setCouponError(null)
   }
 
+  // Termina un intento de envío que no llegó a crear el pedido.
+  const endSubmit = () => {
+    inFlightRef.current = false
+    setLoading(false)
+  }
+
   const handleSubmit = async () => {
+    if (inFlightRef.current) return
     if (!user) {
       const redirectTo = isExpressMode ? `/checkout?${searchParams.toString()}` : '/checkout'
       router.push(`/login?redirect=${encodeURIComponent(redirectTo)}`)
       return
     }
-    if (!form.fullName || !form.phone || !form.address || !form.province) {
-      setError(t('requiredFieldsError'))
-      return
-    }
+    setError(null)
+
+    // Validación de los campos: todos los errores a la vez, cada uno junto a
+    // su campo, y el foco va al primero. Misma regla de longitud y caracteres
+    // que lib/validation.ts validateText(), con el mensaje traducido —
+    // validateText arma el string completo en español y lo comparten 4
+    // componentes más fuera del alcance de este namespace, así que no se toca.
+    const errors: FieldErrors = {}
+    if (!form.fullName.trim()) errors.fullName = t('requiredFieldError')
+
+    if (!form.phone.trim()) errors.phone = t('requiredFieldError')
+    else if (!normalizePhone(form.phone)) errors.phone = tc('phoneInvalid')
+
+    if (!form.province) errors.province = t('provinceRequiredError')
+
+    const addressTrimmed = form.address.trim()
+    if (!addressTrimmed) errors.address = t('requiredFieldError')
+    else if (addressTrimmed.length < 10 || addressTrimmed.length > 200) errors.address = t('addressLengthError', { min: 10, max: 200 })
+    else if (DANGEROUS_PATTERN.test(addressTrimmed)) errors.address = t('addressInvalidChars')
+
     if (form.isForSomeoneElse) {
-      if (form.recipientName.trim().length < 3) {
-        setError(t('recipientNameRequiredError'))
-        return
-      }
-      if (!form.recipientPhone.trim()) {
-        setError(t('recipientPhoneRequiredError'))
-        return
-      }
+      if (form.recipientName.trim().length < 3) errors.recipientName = t('recipientNameRequiredError')
+      if (!form.recipientPhone.trim()) errors.recipientPhone = t('recipientPhoneRequiredError')
+      else if (!normalizePhone(form.recipientPhone)) errors.recipientPhone = tc('phoneInvalid')
     }
-    const buyerPhoneInvalid = !normalizePhone(form.phone)
-    const recipientPhoneInvalid = form.isForSomeoneElse && !normalizePhone(form.recipientPhone)
-    if (buyerPhoneInvalid || recipientPhoneInvalid) {
-      setPhoneErrors({
-        phone: buyerPhoneInvalid ? tc('phoneInvalid') : null,
-        recipientPhone: recipientPhoneInvalid ? tc('phoneInvalid') : null,
-      })
+
+    const notesTrimmed = form.notes.trim()
+    if (notesTrimmed.length > 500) errors.notes = t('notesTooLong', { max: 500 })
+    else if (DANGEROUS_PATTERN.test(notesTrimmed)) errors.notes = t('notesInvalidChars')
+
+    if (form.payMethod === 'azul') {
+      if (!form.cardNumber.trim()) errors.cardNumber = t('requiredFieldError')
+      if (!form.cardExpiration.trim()) errors.cardExpiration = t('requiredFieldError')
+      if (!form.cardCvc.trim()) errors.cardCvc = t('requiredFieldError')
+    }
+
+    setFieldErrors(errors)
+    const firstInvalid = FIELD_ORDER.find(name => errors[name])
+    if (firstInvalid) {
+      focusField(firstInvalid)
       return
     }
-    if (form.payMethod === 'azul' && (!form.cardNumber || !form.cardExpiration || !form.cardCvc)) {
-      setError(t('cardDetailsRequired'))
+
+    if (!isPaymentMethodSelectable(form.payMethod)) {
+      setError(t('paymentMethodUnavailableError'))
       return
     }
     if (items.length === 0) { router.push('/'); return }
@@ -334,35 +438,8 @@ function CheckoutPageContent() {
       return
     }
 
-    setAddressError(null)
-    setNotesError(null)
-
-    // Misma lógica que lib/validation.ts validateText() (longitud +
-    // DANGEROUS_PATTERN), pero con el mensaje traducido — validateText
-    // arma el string completo en español y lo comparten 4 componentes
-    // más fuera del alcance de este namespace, así que no se toca.
-    const addressTrimmed = form.address.trim()
-    if (addressTrimmed.length < 10 || addressTrimmed.length > 200) {
-      setAddressError(t('addressLengthError', { min: 10, max: 200 }))
-      return
-    }
-    if (DANGEROUS_PATTERN.test(addressTrimmed)) {
-      setAddressError(t('addressInvalidChars'))
-      return
-    }
-
-    const notesTrimmed = form.notes.trim()
-    if (notesTrimmed.length > 500) {
-      setNotesError(t('notesTooLong', { max: 500 }))
-      return
-    }
-    if (DANGEROUS_PATTERN.test(notesTrimmed)) {
-      setNotesError(t('notesInvalidChars'))
-      return
-    }
-
+    inFlightRef.current = true
     setLoading(true)
-    setError(null)
 
     try {
       const supabase = createClient()
@@ -379,7 +456,7 @@ function CheckoutPageContent() {
         const { error: rateError } = await rateCheckRes.json().catch(() => ({ error: null }))
         setError(rateError ?? t('rateLimitFallback'))
         setRateLimited(true)
-        setLoading(false)
+        endSubmit()
         return
       }
 
@@ -403,19 +480,19 @@ function CheckoutPageContent() {
       } catch (quoteErr) {
         console.error('[checkout] quote_cart', quoteErr)
         setError(t('quoteFailedSubmit'))
-        setLoading(false)
+        endSubmit()
         return
       }
       if (quoteBlocksPurchase(fresh)) {
         setQuote(fresh)
         setError(t('stockChangedNotice'))
-        setLoading(false)
+        endSubmit()
         return
       }
       if (!q || fresh.total_rdp !== q.total_rdp) {
         setQuote(fresh)
         setError(t('pricesChangedNotice'))
-        setLoading(false)
+        endSubmit()
         return
       }
 
@@ -427,13 +504,13 @@ function CheckoutPageContent() {
           setAppliedCoupon(null)
           setCouponError(result.error)
           setError(t('couponRemovedNotice'))
-          setLoading(false)
+          endSubmit()
           return
         }
         if (result.coupon.discount_rdp !== appliedCoupon.discount_rdp) {
           setAppliedCoupon(result.coupon)
           setError(t('pricesChangedNotice'))
-          setLoading(false)
+          endSubmit()
           return
         }
         discountForCharge = result.coupon.discount_rdp
@@ -459,7 +536,7 @@ function CheckoutPageContent() {
           // real) en español fijo — no se traduce (mensaje de un sistema
           // externo). Mapeamos por código a un mensaje traducido en su lugar.
           setError(paymentResult.responseCode === '05' ? t('paymentDeclined') : t('paymentErrorGeneric'))
-          setLoading(false)
+          endSubmit()
           fetch('/api/checkout/rate-check', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -553,6 +630,7 @@ function CheckoutPageContent() {
 
       // En modo express solo se limpia el ítem efímero — el carrito real
       // de la persona (si tenía algo adentro) queda intacto, nunca se tocó.
+      setPlaced(true)
       if (isExpressMode) {
         clearExpressItem()
       } else {
@@ -574,16 +652,32 @@ function CheckoutPageContent() {
         knownKey === 'COUPON_INVALID' ? t('couponInvalidError') :
         t('genericOrderError'),
       )
-      setLoading(false)
+      endSubmit()
     }
   }
 
-  // Mientras sessionStorage todavía no terminó de hidratar en modo
-  // express, no se sabe todavía si el ítem existe — no mostrar "carrito
-  // vacío" por un instante en el caso normal (ítem sí existe). El
+  // Mientras el carrito (localStorage) o, en modo express, sessionStorage
+  // todavía no terminaron de leerse, no se sabe si hay productos — no mostrar
+  // "carrito vacío" por un instante en el caso normal (ítem sí existe). El
   // useEffect de arriba ya se encarga de redirigir si en verdad no está.
-  if (isExpressMode && !expressHydrated) {
+  if (!mounted || (isExpressMode && !expressHydrated)) {
     return <div style={{ minHeight: '100vh', background: BRAND.bg }}><Navbar /></div>
+  }
+
+  // Pedido creado: se está yendo a la confirmación.
+  if (placed) {
+    return (
+      <div style={{ minHeight: '100vh', background: BRAND.bg }}>
+        <Navbar />
+        <main className="ck-shell">
+          <p role="status" className="ck-redirecting">
+            <span className="ck-spinner" aria-hidden="true" />
+            {t('processingPayment')}
+          </p>
+        </main>
+        <CheckoutStyles />
+      </div>
+    )
   }
 
   if (items.length === 0) {
@@ -602,314 +696,379 @@ function CheckoutPageContent() {
     )
   }
 
+  // ── Textos derivados de la cotización y del método de pago ──
+  const deliveryDaysText = shippingRate
+    ? (shippingRate.estimated_days_min === shippingRate.estimated_days_max
+        ? t(shippingRate.estimated_days_min === 1 ? 'shippingDaysOne' : 'shippingDaysOther', { count: shippingRate.estimated_days_min })
+        : t('shippingDaysRange', { min: shippingRate.estimated_days_min, max: shippingRate.estimated_days_max }))
+    : null
+  // Tiempo de entrega de la provincia (shipping_rates), junto al selector.
+  const estimateText = !form.province
+    ? t('deliveryEstimateHint')
+    : deliveryDaysText
+      ? t('deliveryEstimateLine', { days: deliveryDaysText })
+      : shippingLoading ? t('calculatingShipping') : null
+  const provinceError = fieldErrors.province ?? (provincesStatus === 'error' ? t('provincesLoadError') : null)
+  const totalText = quoteReady ? formatRdp(totalToPay) : null
+  const methodStatus = paymentMethodStatus(form.payMethod)
+  const ctaLabel =
+    loading ? t('processingPayment')
+    : quoteStatus === 'loading' ? t('quoteLoadingButton')
+    : rateLimited ? t('rateLimitedButton')
+    : quoteStatus !== 'error' && !!form.province && !quoteReady ? t('calculatingShippingButton')
+    : methodStatus === 'manual'
+      ? (totalText ? t('confirmOrderButton', { total: totalText }) : t('confirmOrderButtonNoTotal'))
+      : (totalText ? t('payButton', { total: totalText }) : t('payButtonNoTotal'))
+  const loginHref = `/login?redirect=${encodeURIComponent(isExpressMode ? `/checkout?${searchParams.toString()}` : '/checkout')}`
+
   return (
     <div style={{ minHeight: '100vh', background: BRAND.bg }}>
       <Navbar />
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 24px', display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24, alignItems: 'start' }} className="checkout-grid">
+      <main className="ck-shell">
+        <h1 className="ck-h1">{t('pageTitle')}</h1>
+        <CheckoutSteps backHref={backHref} isExpress={isExpressMode} />
 
-        {/* Formulario */}
-        <div>
+        <div className="ck-grid">
 
-          {/* Dirección */}
-          <div style={{ background: 'var(--color-card-bg)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)', padding: 24, marginBottom: 16 }}>
-            <h2 style={{ fontSize: 'var(--text-h4)', fontWeight: 700, marginBottom: 18, color: BRAND.dark }}>{t('deliveryAddressHeading')}</h2>
-            <div style={{ display: 'grid', gap: 12 }}>
-              <input
-                name="fullName"
-                value={form.fullName}
-                onChange={handleChange}
-                placeholder={t('fullNamePlaceholder')}
-                style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
-              />
-              <div>
-                <input
-                  name="phone"
-                  {...PHONE_INPUT_PROPS}
-                  value={form.phone}
-                  onChange={handleChange}
-                  onBlur={() => handlePhoneBlur('phone')}
-                  aria-invalid={!!phoneErrors.phone}
-                  placeholder={t('phonePlaceholder')}
-                  style={{ width: '100%', border: `1px solid ${phoneErrors.phone ? BRAND.red : 'var(--color-border)'}`, borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
-                />
-                {phoneErrors.phone && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, margin: '4px 0 0' }}>{phoneErrors.phone}</p>}
-              </div>
-              <div>
-                <input
-                  name="address"
-                  value={form.address}
-                  onChange={handleChange}
-                  placeholder={t('addressPlaceholder')}
-                  style={{ width: '100%', border: `1px solid ${addressError ? BRAND.red : 'var(--color-border)'}`, borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
-                />
-                {addressError && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, margin: '4px 0 0' }}>{addressError}</p>}
-              </div>
-              <div style={{ position: 'relative' }}>
-                <select
-                  name="province"
-                  value={form.province}
-                  onChange={handleChange}
-                  style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box', appearance: 'none', background: '#fff', color: form.province ? BRAND.dark : BRAND.gray }}
-                >
-                  <option value="">{t('selectProvincePlaceholder')}</option>
-                  {provinces.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
-                </select>
-                <ChevronDown size={16} color={BRAND.gray} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+          <div className="ck-main">
+
+            {/* Dirección */}
+            <section className="ck-card" aria-labelledby="ck-delivery-title">
+              <div className="ck-card-head">
+                <span className="ck-card-icon" aria-hidden="true"><MapPin size={20} /></span>
+                <div>
+                  <h2 id="ck-delivery-title" className="ck-card-title">{t('deliveryAddressHeading')}</h2>
+                  <p className="ck-card-sub">{t('deliveryAddressSub')} {t('requiredLegend')}</p>
+                </div>
               </div>
 
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--text-ui)', color: BRAND.dark, cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={form.isForSomeoneElse}
-                  onChange={handleForSomeoneElseToggle}
-                  style={{ width: 16, height: 16, cursor: 'pointer' }}
-                />
-                {t('isForSomeoneElseLabel')}
-              </label>
-
-              {form.isForSomeoneElse && (
-                <>
-                  <input
-                    name="recipientName"
-                    value={form.recipientName}
-                    onChange={handleChange}
-                    placeholder={t('recipientNamePlaceholder')}
-                    style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
-                  />
-                  <div>
+              <div className="ck-fields">
+                <CheckoutField id="ck-fullName" label={t('fullNameLabel')} required error={fieldErrors.fullName}>
+                  {aria => (
                     <input
-                      name="recipientPhone"
-                      {...PHONE_INPUT_PROPS}
-                      value={form.recipientPhone}
+                      {...aria}
+                      name="fullName"
+                      type="text"
+                      autoComplete="name"
+                      value={form.fullName}
                       onChange={handleChange}
-                      onBlur={() => handlePhoneBlur('recipientPhone')}
-                      aria-invalid={!!phoneErrors.recipientPhone}
-                      placeholder={t('recipientPhonePlaceholder')}
-                      style={{ width: '100%', border: `1px solid ${phoneErrors.recipientPhone ? BRAND.red : 'var(--color-border)'}`, borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
+                      placeholder={t('fullNamePlaceholder')}
+                      className="ck-input"
                     />
-                    {phoneErrors.recipientPhone && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, margin: '4px 0 0' }}>{phoneErrors.recipientPhone}</p>}
+                  )}
+                </CheckoutField>
+
+                <CheckoutField id="ck-phone" label={t('phoneLabel')} required error={fieldErrors.phone}>
+                  {aria => (
+                    <input
+                      {...aria}
+                      name="phone"
+                      {...PHONE_INPUT_PROPS}
+                      value={form.phone}
+                      onChange={handleChange}
+                      onBlur={() => handlePhoneBlur('phone')}
+                      placeholder={t('phonePlaceholder')}
+                      className="ck-input"
+                    />
+                  )}
+                </CheckoutField>
+
+                <CheckoutField id="ck-province" label={t('provinceLabel')} required error={provinceError}>
+                  {aria => (
+                    <div className="ck-select-wrap">
+                      <select
+                        {...aria}
+                        name="province"
+                        value={form.province}
+                        onChange={handleChange}
+                        className="ck-input"
+                        data-empty={!form.province}
+                      >
+                        <option value="">{provincesStatus === 'loading' ? t('provincesLoading') : t('selectProvincePlaceholder')}</option>
+                        {provinces.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                      </select>
+                      <ChevronDown size={16} className="ck-select-chevron" aria-hidden="true" />
+                    </div>
+                  )}
+                </CheckoutField>
+
+                {estimateText && (
+                  <div className="ck-estimate-cell">
+                    <span className="ck-label-row ck-label-spacer" aria-hidden="true"><span className="ck-label">&nbsp;</span></span>
+                    <div className="ck-estimate" role="status">
+                      <Truck size={18} aria-hidden="true" />
+                      <span>{estimateText}</span>
+                    </div>
                   </div>
-                </>
+                )}
+
+                <CheckoutField id="ck-address" label={t('addressLabel')} required hint={t('addressHint')} error={fieldErrors.address} className="ck-span-all">
+                  {aria => (
+                    <input
+                      {...aria}
+                      name="address"
+                      type="text"
+                      autoComplete="street-address"
+                      value={form.address}
+                      onChange={handleChange}
+                      placeholder={t('addressPlaceholder')}
+                      className="ck-input"
+                    />
+                  )}
+                </CheckoutField>
+
+                <div className="ck-span-all">
+                  <label className="ck-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={form.isForSomeoneElse}
+                      onChange={handleForSomeoneElseToggle}
+                    />
+                    {t('isForSomeoneElseLabel')}
+                  </label>
+                </div>
+
+                {form.isForSomeoneElse && (
+                  <>
+                    <CheckoutField id="ck-recipientName" label={t('recipientNameLabel')} required error={fieldErrors.recipientName}>
+                      {aria => (
+                        <input
+                          {...aria}
+                          name="recipientName"
+                          type="text"
+                          autoComplete="off"
+                          value={form.recipientName}
+                          onChange={handleChange}
+                          placeholder={t('recipientNamePlaceholder')}
+                          className="ck-input"
+                        />
+                      )}
+                    </CheckoutField>
+                    <CheckoutField id="ck-recipientPhone" label={t('recipientPhoneLabel')} required error={fieldErrors.recipientPhone}>
+                      {aria => (
+                        <input
+                          {...aria}
+                          name="recipientPhone"
+                          {...PHONE_INPUT_PROPS}
+                          autoComplete="off"
+                          value={form.recipientPhone}
+                          onChange={handleChange}
+                          onBlur={() => handlePhoneBlur('recipientPhone')}
+                          placeholder={t('recipientPhonePlaceholder')}
+                          className="ck-input"
+                        />
+                      )}
+                    </CheckoutField>
+                  </>
+                )}
+
+                <CheckoutField
+                  id="ck-notes"
+                  label={t('notesLabel')}
+                  aside={t('notesCounter', { count: form.notes.length, max: 500 })}
+                  error={fieldErrors.notes}
+                  className="ck-span-all"
+                >
+                  {aria => (
+                    <textarea
+                      {...aria}
+                      name="notes"
+                      value={form.notes}
+                      onChange={handleChange}
+                      placeholder={t('notesPlaceholder')}
+                      rows={3}
+                      className="ck-input"
+                    />
+                  )}
+                </CheckoutField>
+              </div>
+            </section>
+
+            {/* Método de pago */}
+            <section className="ck-card" aria-labelledby="ck-payment-title">
+              <div className="ck-card-head">
+                <span className="ck-card-icon" aria-hidden="true"><CreditCard size={20} /></span>
+                <div>
+                  <h2 id="ck-payment-title" className="ck-card-title">{t('paymentMethodHeading')}</h2>
+                  <p className="ck-card-sub">{t('paymentMethodSub')}</p>
+                </div>
+              </div>
+
+              <PaymentMethodPicker value={form.payMethod} onChange={handleChange} />
+
+              {form.payMethod === 'azul' && (
+                <div className="ck-card-form">
+                  <h3 className="ck-card-form-title">{t('cardDetailsHeading')}</h3>
+                  <div className="ck-card-fields">
+                    <CheckoutField id="ck-cardNumber" label={t('cardNumberLabel')} required error={fieldErrors.cardNumber} className="ck-span-all">
+                      {aria => (
+                        <input
+                          {...aria}
+                          name="cardNumber"
+                          inputMode="numeric"
+                          autoComplete="cc-number"
+                          value={form.cardNumber}
+                          onChange={handleChange}
+                          placeholder={t('cardNumberPlaceholder')}
+                          className="ck-input"
+                        />
+                      )}
+                    </CheckoutField>
+                    <CheckoutField id="ck-cardExpiration" label={t('cardExpirationLabel')} required error={fieldErrors.cardExpiration}>
+                      {aria => (
+                        <input
+                          {...aria}
+                          name="cardExpiration"
+                          inputMode="numeric"
+                          autoComplete="cc-exp"
+                          maxLength={4}
+                          value={form.cardExpiration}
+                          onChange={handleChange}
+                          placeholder={t('cardExpirationPlaceholder')}
+                          className="ck-input"
+                        />
+                      )}
+                    </CheckoutField>
+                    <CheckoutField id="ck-cardCvc" label={t('cardCvcLabel')} required error={fieldErrors.cardCvc}>
+                      {aria => (
+                        <input
+                          {...aria}
+                          name="cardCvc"
+                          inputMode="numeric"
+                          autoComplete="cc-csc"
+                          maxLength={4}
+                          value={form.cardCvc}
+                          onChange={handleChange}
+                          placeholder={t('cardCvcPlaceholder')}
+                          className="ck-input"
+                        />
+                      )}
+                    </CheckoutField>
+                  </div>
+                  <div className="ck-notice" data-tone="warning">
+                    <Info size={16} aria-hidden="true" />
+                    <span>{t('mockModeNotice')}</span>
+                  </div>
+                </div>
               )}
 
-              <div>
-                <textarea
-                  name="notes"
-                  value={form.notes}
-                  onChange={handleChange}
-                  placeholder={t('notesPlaceholder')}
-                  rows={2}
-                  style={{ width: '100%', border: `1px solid ${notesError ? BRAND.red : 'var(--color-border)'}`, borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }}
-                />
-                {notesError && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, margin: '4px 0 0' }}>{notesError}</p>}
-              </div>
-            </div>
+              {methodStatus === 'manual' && (
+                <div className="ck-notice" data-tone="info">
+                  <Info size={16} aria-hidden="true" />
+                  <span>{t('manualPaymentNotice')}</span>
+                </div>
+              )}
+            </section>
           </div>
 
-          {/* Método de pago */}
-          <div style={{ background: 'var(--color-card-bg)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)', padding: 24 }}>
-            <h2 style={{ fontSize: 'var(--text-h4)', fontWeight: 700, marginBottom: 18, color: BRAND.dark }}>{t('paymentMethodHeading')}</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              {PAYMENT_METHOD_KEYS.map(m => (
-                <label
-                  key={m.id}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px',
-                    border: `1px solid ${form.payMethod === m.id ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                    borderRadius: 'var(--radius-pill)', cursor: 'pointer',
-                    background: form.payMethod === m.id ? 'var(--color-primary)' : 'transparent',
-                    transition: 'all var(--transition-fast)',
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="payMethod"
-                    value={m.id}
-                    checked={form.payMethod === m.id}
-                    onChange={handleChange}
-                    style={{ display: 'none' }}
-                  />
-                  <span style={{ fontSize: 18 }}>{m.emoji}</span>
-                  <span style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: form.payMethod === m.id ? '#fff' : BRAND.dark }}>{t(m.labelKey)}</span>
-                </label>
-              ))}
-            </div>
+          {/* Productos del pedido. Va después del formulario en el código (así el teclado recorre
+              formulario → productos → total, como se ve en escritorio); en pantallas chicas la
+              rejilla lo muestra primero. */}
+          <CheckoutOrderItems
+            items={items}
+            lines={q?.lines}
+            totalText={totalText}
+            backHref={backHref}
+            isExpress={isExpressMode}
+            open={itemsOpen}
+            onToggle={() => setItemsOpen(o => !o)}
+          />
 
-            {form.payMethod === 'azul' && (
-              <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
-                <input
-                  name="cardNumber"
-                  value={form.cardNumber}
-                  onChange={handleChange}
-                  placeholder={t('cardNumberPlaceholder')}
-                  inputMode="numeric"
-                  style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
-                />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  <input
-                    name="cardExpiration"
-                    value={form.cardExpiration}
-                    onChange={handleChange}
-                    placeholder={t('cardExpirationPlaceholder')}
-                    maxLength={4}
-                    inputMode="numeric"
-                    style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
-                  />
-                  <input
-                    name="cardCvc"
-                    value={form.cardCvc}
-                    onChange={handleChange}
-                    placeholder={t('cardCvcPlaceholder')}
-                    maxLength={4}
-                    inputMode="numeric"
-                    style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-control)', padding: '11px 14px', fontSize: 'var(--text-ui)', outline: 'none', boxSizing: 'border-box' }}
-                  />
-                </div>
-                <p style={{ fontSize: 'var(--text-badge)', color: BRAND.gray, margin: 0 }}>
-                  {t('mockModeNotice')}
-                </p>
-              </div>
-            )}
-
-            {form.payMethod === 'cardnet' && (
-              <div style={{ marginTop: 14, padding: 12, background: '#FFF8E1', borderRadius: 8, border: '1px solid #FFE082', fontSize: 'var(--text-small)', color: '#5D4037' }}>
-                {t('cardnetRedirectNotice')}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Resumen lateral */}
-        <div style={{ position: 'sticky', top: 20 }}>
-          <div style={{ background: 'var(--color-card-bg)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)', padding: 20, marginBottom: 12 }}>
-            <h2 style={{ fontSize: 'var(--text-h4)', fontWeight: 700, marginBottom: 14, color: BRAND.dark }}>
-              {items.length === 1
-                ? t('orderItemsCountOne', { count: items.length })
-                : t('orderItemsCountOther', { count: items.length })}
-            </h2>
-
-            {/* Items */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 14 }}>
-              {items.map((item, index) => {
-                const line = q?.lines.find(l => l.index === index)
-                const problem = lineProblem(line)
-                return (
-                <div key={`${item.product.id}-${item.variant_id ?? `${item.selected_size}-${item.selected_color}`}`} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 6, background: BRAND.bg, flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
-                    {item.product.images?.[0] ? (
-                      <Image src={item.product.images[0]} alt={item.product.name} fill className="object-cover" sizes="44px" />
-                    ) : (
-                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>📦</div>
-                    )}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 'var(--text-caption)', fontWeight: 600, color: BRAND.dark, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {item.product.name}
-                    </p>
-                    <p style={{ fontSize: 'var(--text-badge)', color: BRAND.gray, margin: '2px 0 0' }}>
-                      x{item.quantity}
-                      {item.variant_label
-                        ? ` · ${item.variant_label}`
-                        : <>
-                            {item.selected_size && ` · ${item.selected_size}`}
-                            {item.selected_color && ` · ${item.selected_color}`}
-                          </>}
-                    </p>
-                    {problem && (
-                      <p style={{ fontSize: 'var(--text-badge)', fontWeight: 600, color: BRAND.red, margin: '2px 0 0' }}>
-                        {problem === 'unavailable' ? t('lineUnavailable') : t('onlyNLeft', { count: line?.available_quantity ?? 0 })}
-                      </p>
-                    )}
-                  </div>
-                  <span style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color: BRAND.dark, flexShrink: 0 }}>
-                    {line?.line_total_rdp != null ? fmt(line.line_total_rdp) : '—'}
-                  </span>
-                </div>
-                )
-              })}
-            </div>
+          {/* Cupón, desglose y confirmación */}
+          <div className="ck-card ck-totals">
             {quoteHasLineIssues && (
-              <div style={{ fontSize: 'var(--text-small)', color: BRAND.red, marginBottom: 12 }}>
-                {t('itemsBlockedNotice')}{' '}
-                <a href={backHref} style={{ color: BRAND.blue, fontWeight: 600 }}>{t('backToCart')}</a>
+              <div className="ck-banner ck-banner-top" role="alert">
+                <AlertTriangle size={16} aria-hidden="true" />
+                <div className="ck-banner-body">
+                  {t('itemsBlockedNotice')}{' '}
+                  <a href={backHref} className="ck-link">{t('backToCart')}</a>
+                </div>
               </div>
             )}
 
             {/* Cupón */}
-            <div style={{ borderTop: '1px solid #EEE', paddingTop: 12, marginBottom: 12 }}>
-              <label style={{ fontSize: 'var(--text-caption)', color: BRAND.gray, display: 'block', marginBottom: 6 }}>
-                {t('couponQuestion')}
-              </label>
-              {!user ? (
-                <a
-                  href={`/login?redirect=${encodeURIComponent(isExpressMode ? `/checkout?${searchParams.toString()}` : '/checkout')}`}
-                  style={{ fontSize: 'var(--text-small)', color: BRAND.blue, fontWeight: 600 }}
-                >
-                  {t('couponLoginRequired')}
-                </a>
+            <div className="ck-coupon">
+              {user ? (
+                <label htmlFor="ck-coupon" className="ck-coupon-label">
+                  <Tag size={16} aria-hidden="true" />
+                  {t('couponQuestion')}
+                </label>
               ) : (
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input
-                  value={couponCode}
-                  onChange={e => setCouponCode(e.target.value)}
-                  placeholder={t('couponPlaceholder')}
-                  disabled={!!appliedCoupon}
-                  style={{
-                    flex: 1, border: '1px solid #E0E0E0', borderRadius: 8, padding: '9px 12px',
-                    fontSize: 'var(--text-small)', outline: 'none', boxSizing: 'border-box', textTransform: 'uppercase',
-                    background: appliedCoupon ? '#F5F5F5' : '#fff',
-                  }}
-                />
-                {appliedCoupon ? (
-                  <button
-                    type="button"
-                    onClick={handleRemoveCoupon}
-                    style={{ border: '1px solid #E0E0E0', background: '#fff', color: BRAND.gray, borderRadius: 8, padding: '9px 14px', fontSize: 'var(--text-small)', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
-                  >
-                    {t('removeCoupon')}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleApplyCoupon}
-                    disabled={couponApplying || !couponCode.trim() || !q}
-                    style={{
-                      border: 'none', borderRadius: 8, padding: '9px 14px', fontSize: 'var(--text-small)', fontWeight: 600,
-                      color: '#fff', whiteSpace: 'nowrap',
-                      background: couponApplying || !couponCode.trim() || !q ? '#ccc' : BRAND.dark,
-                      cursor: couponApplying || !couponCode.trim() || !q ? 'not-allowed' : 'pointer',
-                    }}
-                  >
-                    {couponApplying ? '...' : t('applyCoupon')}
-                  </button>
-                )}
-              </div>
+                <p className="ck-coupon-label">
+                  <Tag size={16} aria-hidden="true" />
+                  {t('couponQuestion')}
+                </p>
               )}
-              {couponError && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, margin: '6px 0 0' }}>{couponError}</p>}
+              {!user ? (
+                <a href={loginHref} className="ck-link">{t('couponLoginRequired')}</a>
+              ) : (
+                <div className="ck-coupon-row">
+                  <input
+                    id="ck-coupon"
+                    className="ck-input ck-coupon-input"
+                    value={couponCode}
+                    onChange={e => setCouponCode(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && !appliedCoupon) {
+                        e.preventDefault()
+                        handleApplyCoupon()
+                      }
+                    }}
+                    placeholder={t('couponPlaceholder')}
+                    disabled={!!appliedCoupon}
+                    autoComplete="off"
+                    autoCapitalize="characters"
+                    spellCheck={false}
+                    aria-invalid={couponError ? true : undefined}
+                    aria-describedby={couponError ? 'ck-coupon-error' : undefined}
+                  />
+                  {appliedCoupon ? (
+                    <button type="button" className="ck-btn-sm" data-kind="secondary" onClick={handleRemoveCoupon}>
+                      {t('removeCoupon')}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="ck-btn-sm"
+                      data-kind="primary"
+                      onClick={handleApplyCoupon}
+                      disabled={couponApplying || !couponCode.trim() || !q}
+                    >
+                      {couponApplying ? t('couponApplying') : t('applyCoupon')}
+                    </button>
+                  )}
+                </div>
+              )}
+              {couponError && <p id="ck-coupon-error" className="ck-error" role="alert"><AlertTriangle size={14} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} /><span>{couponError}</span></p>}
               {appliedCoupon && (
-                <p style={{ fontSize: 'var(--text-small)', color: '#2E7D32', margin: '6px 0 0', fontWeight: 600 }}>
-                  {t('couponAppliedMsg', { code: appliedCoupon.code })}
+                <p className="ck-coupon-ok" role="status">
+                  <Check size={14} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />
+                  <span>{t('couponAppliedMsg', { code: appliedCoupon.code })}</span>
                 </p>
               )}
             </div>
 
-            <div style={{ borderTop: '1px solid #EEE', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-small)', color: BRAND.dark }}>
-                <span>{t('subtotalLabel')}</span><span>{q ? fmt(subtotal) : '—'}</span>
+            {/* Desglose: todo viene de la cotización del servidor */}
+            <dl className="ck-rows">
+              <div className="ck-row">
+                <dt>{t('subtotalLabel')}</dt>
+                <dd>{q ? formatRdp(subtotal) : '—'}</dd>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-small)', color: BRAND.dark }}>
-                <span>
+              {appliedCoupon && (
+                <div className="ck-row" data-tone="discount">
+                  <dt>{t('discountLabel', { code: appliedCoupon.code })}</dt>
+                  <dd>-{formatRdp(discountRdp)}</dd>
+                </div>
+              )}
+              <div className="ck-row">
+                <dt>
                   {t('shippingLabel')}
-                  {shippingRate && (
-                    <span style={{ display: 'block', fontSize: 'var(--text-badge)', color: BRAND.gray }}>
-                      {shippingRate.estimated_days_min === shippingRate.estimated_days_max
-                        ? t(shippingRate.estimated_days_min === 1 ? 'shippingDaysOne' : 'shippingDaysOther', { count: shippingRate.estimated_days_min })
-                        : t('shippingDaysRange', { min: shippingRate.estimated_days_min, max: shippingRate.estimated_days_max })}
-                    </span>
+                  {q && form.province && quoteReady && !qualifiesFreeShipping && (
+                    <span className="ck-row-sub">{t('freeShippingThresholdNote', { amount: formatRdp(q.free_shipping_threshold_rdp) })}</span>
                   )}
-                </span>
-                <span>
+                </dt>
+                <dd>
                   {!form.province
                     ? t('selectProvinceHint')
                     : !quoteReady
@@ -917,94 +1076,77 @@ function CheckoutPageContent() {
                       : qualifiesFreeShipping
                         ? (
                           <>
-                            {shippingRate && (
-                              <span style={{ textDecoration: 'line-through', color: BRAND.gray, marginRight: 6 }}>
-                                {fmt(shippingRate.price_rdp)}
-                              </span>
-                            )}
-                            <span style={{ color: 'var(--color-green)', fontWeight: 700 }}>{t('freeBadge')}</span>
+                            {shippingRate && <span className="ck-strike">{formatRdp(shippingRate.price_rdp)}</span>}
+                            <span className="ck-free">{t('freeBadge')}</span>
                           </>
                         )
-                        : fmt(ENVIO)}
-                </span>
+                        : formatRdp(ENVIO)}
+                </dd>
               </div>
-              {form.province && quoteReady && !qualifiesFreeShipping && (
-                <p style={{ fontSize: 'var(--text-badge)', color: BRAND.gray, margin: '-2px 0 0', textAlign: 'right' }}>
-                  {t('freeShippingThresholdNote')}
-                </p>
-              )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-small)', color: BRAND.dark }}>
-                <span>{t('itbisLabel')}</span><span>{q ? fmt(itbis) : '—'}</span>
+              <div className="ck-row">
+                <dt>{t('itbisLabel')}</dt>
+                <dd>{q ? formatRdp(itbis) : '—'}</dd>
               </div>
-              {appliedCoupon && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-small)', color: 'var(--color-green)', fontWeight: 600 }}>
-                  <span>{t('discountLabel', { code: appliedCoupon.code })}</span>
-                  <span>-{fmt(discountRdp)}</span>
-                </div>
-              )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontWeight: 700, fontSize: 'var(--text-ui)', borderTop: '1px solid #EEE', paddingTop: 10, marginTop: 4, color: BRAND.dark }}>
-                <span>{t('totalLabel')}</span>
-                <span style={{ fontSize: 'var(--text-price-card)', fontWeight: 700, lineHeight: 'var(--leading-price)', color: 'var(--color-primary)', fontFamily: 'var(--font-heading)', letterSpacing: 'var(--tracking-heading)' }}>
-                  {quoteReady ? fmt(totalToPay) : '—'}
-                </span>
+            </dl>
+
+            <div className="ck-total">
+              <span className="ck-total-label">{t('totalLabel')}</span>
+              <span className="ck-total-amount" aria-live="polite" aria-atomic="true">{totalText ?? '—'}</span>
+            </div>
+
+            {quoteStatus === 'error' && (
+              <div className="ck-banner" role="alert">
+                <AlertTriangle size={16} aria-hidden="true" />
+                <div className="ck-banner-body">{t('quoteErrorNotice')}</div>
+                <button type="button" className="ck-banner-retry" onClick={reloadQuote}>{t('retryButton')}</button>
               </div>
-            </div>
-          </div>
+            )}
 
-          {quoteStatus === 'error' && (
-            <div style={{ background: '#FFF0F0', border: '1px solid #FFCDD2', borderRadius: 8, padding: '10px 14px', fontSize: 'var(--text-small)', color: '#C62828', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-              <span>{t('quoteErrorNotice')}</span>
-              <button type="button" onClick={reloadQuote} style={{ border: '1px solid #FFCDD2', background: '#fff', color: '#C62828', borderRadius: 8, padding: '6px 12px', fontSize: 'var(--text-small)', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                {t('retryButton')}
-              </button>
-            </div>
-          )}
+            {error && (
+              <div className="ck-banner" role="alert">
+                <AlertTriangle size={16} aria-hidden="true" />
+                <div className="ck-banner-body">{error}</div>
+              </div>
+            )}
 
-          {error && (
-            <div style={{ background: '#FFF0F0', border: '1px solid #FFCDD2', borderRadius: 8, padding: '10px 14px', fontSize: 'var(--text-small)', color: '#C62828', marginBottom: 12 }}>
-              {error}
-            </div>
-          )}
+            <p className="ck-terms">
+              {t('acceptTermsPrefix')}{' '}
+              <a href="/terminos" target="_blank" rel="noopener noreferrer">
+                {t('termsOfServiceLink')}<span className="sr-only"> {t('opensInNewTab')}</span>
+              </a>
+              {' '}{t('andWord')}{' '}
+              <a href="/privacidad" target="_blank" rel="noopener noreferrer">
+                {t('privacyPolicyLink')}<span className="sr-only"> {t('opensInNewTab')}</span>
+              </a>
+            </p>
 
-          <p style={{ fontSize: 'var(--text-badge)', color: BRAND.gray, textAlign: 'center', marginBottom: 10 }}>
-            {t('acceptTermsPrefix')}{' '}
-            <a href="/terminos" target="_blank" style={{ color: BRAND.blue, textDecoration: 'underline' }}>
-              {t('termsOfServiceLink')}
-            </a>
-            {' '}{t('andWord')}{' '}
-            <a href="/privacidad" target="_blank" style={{ color: BRAND.blue, textDecoration: 'underline' }}>
-              {t('privacyPolicyLink')}
-            </a>
-          </p>
+            <button
+              type="button"
+              className="ck-cta"
+              onClick={handleSubmit}
+              disabled={submitBlocked}
+              data-loading={loading}
+              aria-busy={loading}
+            >
+              {loading && <span className="ck-spinner" aria-hidden="true" />}
+              <span>{ctaLabel}</span>
+            </button>
 
-          <button
-            onClick={handleSubmit}
-            disabled={submitBlocked}
-            style={{
-              display: 'block', width: '100%', background: submitBlocked ? '#ccc' : 'var(--color-primary)',
-              color: '#fff', border: 'none', padding: 14, borderRadius: 'var(--radius-control)',
-              fontWeight: 600, fontSize: 'var(--text-body)', cursor: submitBlocked ? 'not-allowed' : 'pointer',
-              marginBottom: 10,
-              boxShadow: submitBlocked ? 'none' : 'var(--shadow-button)',
-            }}
-          >
-            {loading ? t('processingPayment') : quoteStatus === 'loading' ? t('quoteLoadingButton') : rateLimited ? t('rateLimitedButton') : t('confirmAndPay')}
-          </button>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 12, background: 'var(--color-green-subtle)', borderRadius: 'var(--radius-control)', color: 'var(--color-green)' }}>
-            <ShieldCheck size={15} color="currentColor" style={{ flexShrink: 0 }} />
-            <span style={{ fontSize: 'var(--text-badge)' }}>{t('securePaymentNotice')}</span>
+            {methodStatus === 'simulated' && (
+              <p className="ck-footnote">
+                <Info size={14} aria-hidden="true" />
+                <span>{t('simulatedPaymentNotice')}</span>
+              </p>
+            )}
+            <p className="ck-footnote">
+              <ShieldCheck size={14} aria-hidden="true" />
+              <span>{t('verifiedTotalsNotice')}</span>
+            </p>
           </div>
         </div>
-      </div>
+      </main>
 
-      <style jsx global>{`
-        @media (max-width: 768px) {
-          .checkout-grid {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
+      <CheckoutStyles />
     </div>
   )
 }
