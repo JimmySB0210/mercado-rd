@@ -3,15 +3,23 @@
 // Ruta: src/lib/payments/azul.ts
 // ============================================================
 // MODO ACTUAL: simulado (AZUL_MODE no configurado o = 'mock')
-// El lunes, cuando tengas las credenciales reales de Azul:
-//   1. Agrega en .env.local / Vercel:
+//
+// ADVERTENCIA — configurar AZUL_MODE=live NO activa el cobro real hoy:
+// processPayment() lo llaman checkout/page.tsx y dashboard/plan/page.tsx, que
+// son componentes de navegador, y ahí las variables de entorno que no empiezan
+// con NEXT_PUBLIC_ no existen: getMode() siempre devuelve 'mock'. Además las
+// claves de Azul (AZUL_STORE_ID, AZUL_AUTH1, AZUL_AUTH2) y el certificado son
+// del servidor y no pueden estar en el navegador. El cobro real hay que
+// construirlo del lado del servidor (una ruta de API que llame a Azul y que sea
+// la ÚNICA que escribe el pago y confirma el pedido). El código de abajo
+// (processLivePayment) está sin probar y no sirve tal cual para eso.
+//
+// Variables que usará esa integración en el servidor:
 //      AZUL_MODE=live
 //      AZUL_STORE_ID=...        (tu Store/Merchant ID)
 //      AZUL_AUTH1=...           (usuario de autenticación)
 //      AZUL_AUTH2=...           (clave de autenticación)
 //      AZUL_CERT_PATH=...       (certificado .pem que Azul te entrega)
-//   2. No hay que tocar código — processPayment() detecta el modo
-//      automáticamente y cambia de simulación a la API real.
 //
 // Referencia: Azul Webservices API usa autenticación por
 // certificado SSL + Auth1/Auth2, y devuelve un ResponseCode

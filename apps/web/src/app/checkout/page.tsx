@@ -595,19 +595,11 @@ function CheckoutPageContent() {
       })
       if (contactError) console.error('[checkout] set_order_buyer_contact', contactError)
 
-      // Registrar el pago ya aprobado, vinculado a la orden real recién creada
-      if (paymentResult) {
-        const { error: paymentError } = await supabase.from('payments').insert({
-          order_id: orderId,
-          method: form.payMethod,
-          amount_rdp: totalCents,
-          status: 'approved',
-          azul_order_id: paymentResult.azulOrderId,
-          auth_code: paymentResult.authCode,
-          raw_response: paymentResult.rawResponse,
-        })
-        if (paymentError) console.error('[checkout] Error guardando registro de pago:', paymentError)
-      }
+      // El navegador NO escribe en `payments`: esa tabla solo la escribe el
+      // servidor (la base rechaza cualquier INSERT de un comprador). Hoy el
+      // cobro con tarjeta es simulado en el propio navegador y no cobra nada,
+      // así que no hay un pago real que registrar; con el cobro real de Azul
+      // lo registra el servidor al confirmar el pago, nunca esta pantalla.
 
       // Notificar al comprador por WhatsApp — fire and forget: no bloquea la UI
       // ni muestra error si falla (ej. credenciales de Meta sin configurar todavía)

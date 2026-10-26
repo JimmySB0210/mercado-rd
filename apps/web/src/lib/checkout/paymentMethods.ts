@@ -15,11 +15,13 @@
 //   unavailable · Tarjeta (CardNet). No hay ninguna integración: se muestra
 //                 pero no se puede elegir.
 //
-// ANTES DE LANZAR: o se integra el cobro real de Azul en el servidor (ruta
-// con las claves, record_payment con service_role y confirmación del pago por
-// el proveedor) o se quitan de esta lista los métodos de tarjeta para que los
-// clientes reales solo vean transferencia y efectivo. El método por defecto
-// se toma de aquí: el primero que se pueda elegir.
+// ANTES DE LANZAR: o se integra el cobro real de Azul en el servidor (ruta con
+// las claves; el pago y la confirmación del pedido los escribe el servidor con
+// una función nueva solo para service_role — record_payment no sirve tal como
+// está: exige auth.uid() — y el comprador nunca escribe en `payments`) o se
+// quitan de esta lista los métodos de tarjeta para que los clientes reales solo
+// vean transferencia y efectivo. El método por defecto se toma de aquí: el
+// primero que se pueda elegir.
 // ============================================================
 
 import type { CheckoutDict } from '@/lib/i18n/es/checkout'
