@@ -24,7 +24,7 @@ export function AdminAuditoriaContent({ logs, eventTypes }: Props) {
   const { t, language } = useTranslation('admin')
 
   return (
-    <div style={{ padding: 28, background: '#f5f5f5' }}>
+    <div className="adm-legacy-page">
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontSize: 'var(--text-dash-title)', fontWeight: 700, lineHeight: 'var(--leading-h1)', marginBottom: 4 }}>{t('auditPageTitle')}</h1>
         <p style={{ color: '#666', fontSize: 'var(--text-ui)' }}>{t('auditPageSubtitle')}</p>
@@ -39,7 +39,7 @@ export function AdminAuditoriaContent({ logs, eventTypes }: Props) {
         </div>
 
         {logs.length === 0 ? (
-          <div style={{ padding: 24, textAlign: 'center', fontSize: 'var(--text-small)', color: '#999' }}>
+          <div style={{ padding: 24, textAlign: 'center', fontSize: 'var(--text-small)', color: '#566573' }}>
             {t('noAuditLogsMatchFilters')}
           </div>
         ) : (
@@ -48,7 +48,7 @@ export function AdminAuditoriaContent({ logs, eventTypes }: Props) {
               <div key={log.id} style={{ padding: '12px 18px', borderBottom: '1px solid #f8f8f8', display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 'var(--text-caption)', color: '#999' }}>
+                    <span style={{ fontSize: 'var(--text-caption)', color: '#566573' }}>
                       {formatDate(log.created_at, language, { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
                     </span>
                     <span style={{

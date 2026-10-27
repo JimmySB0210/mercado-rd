@@ -7,7 +7,7 @@ import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
 import { isCurrentUserAdmin } from '@/lib/queries/admin'
 import { PromoBannerManager } from '@/components/admin/PromoBannerManager'
-import { AdminSidebar } from '@/components/admin/AdminSidebar'
+import { AdminShell } from '@/components/admin/AdminShell'
 import { RestrictedAccess } from '@/components/admin/RestrictedAccess'
 import { PromoBannerPageHeader } from '@/components/admin/PromoBannerPageHeader'
 import { BrandBannerToggle } from '@/components/admin/BrandBannerToggle'
@@ -48,12 +48,8 @@ export default async function AdminPromocionesPage() {
   const bannerList = (banners ?? []) as PromoBanner[]
 
   return (
-    <div className="dashboard-grid" style={{ minHeight: '100vh', fontFamily: 'inherit' }}>
-
-      <AdminSidebar />
-
-      {/* Contenido */}
-      <div style={{ padding: 28, background: '#f5f5f5' }}>
+    <AdminShell>
+      <div className="adm-legacy-page">
         <PromoBannerPageHeader />
         <BrandBannerToggle
           initialValue={showBrandBanner}
@@ -67,6 +63,6 @@ export default async function AdminPromocionesPage() {
         />
         <PromoBannerManager initialBanners={bannerList} />
       </div>
-    </div>
+    </AdminShell>
   )
 }

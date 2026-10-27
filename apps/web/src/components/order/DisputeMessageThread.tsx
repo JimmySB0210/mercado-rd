@@ -152,9 +152,9 @@ export function DisputeMessageThread({ disputeId, senderRole, status }: Props) {
 
       <div className="px-5 py-4 flex flex-col gap-3" style={{ maxHeight: 380, overflowY: 'auto' }}>
         {loading ? (
-          <p className="text-sm text-gray-400 text-center py-6">{t('loadingEvidence')}</p>
+          <p className="text-sm text-gray-500 text-center py-6">{t('loadingEvidence')}</p>
         ) : messages.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-6">{t('noMessagesYet')}</p>
+          <p className="text-sm text-gray-500 text-center py-6">{t('noMessagesYet')}</p>
         ) : (
           messages.map(m => {
             const isMine = m.sender_id === userId

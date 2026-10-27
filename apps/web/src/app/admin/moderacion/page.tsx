@@ -13,7 +13,7 @@
 import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
 import { isCurrentUserAdmin, getContentFlagTerms, getUnreviewedFlaggedContent } from '@/lib/queries/admin'
-import { AdminSidebar } from '@/components/admin/AdminSidebar'
+import { AdminShell } from '@/components/admin/AdminShell'
 import { RestrictedAccess } from '@/components/admin/RestrictedAccess'
 import { AdminModeracionContent } from './AdminModeracionContent'
 
@@ -32,9 +32,8 @@ export default async function AdminModeracionPage() {
   ])
 
   return (
-    <div className="dashboard-grid" style={{ minHeight: '100vh', fontFamily: 'inherit' }}>
-      <AdminSidebar />
+    <AdminShell>
       <AdminModeracionContent initialTerms={terms} initialFlags={flags} />
-    </div>
+    </AdminShell>
   )
 }

@@ -95,7 +95,7 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
 
   if (banners.length === 0) {
     return (
-      <div style={{ padding: 32, textAlign: 'center', fontSize: 'var(--text-small)', color: '#999' }}>
+      <div style={{ padding: 32, textAlign: 'center', fontSize: 'var(--text-small)', color: '#566573' }}>
         {t('noBannersYet')}
       </div>
     )
@@ -122,9 +122,9 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
 
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 'var(--text-small)', fontWeight: 700, color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {banner.title || <span style={{ color: '#bbb', fontWeight: 400 }}>{t('noTitleFallback')}</span>}
+              {banner.title || <span style={{ color: '#566573', fontWeight: 400 }}>{t('noTitleFallback')}</span>}
             </div>
-            <div style={{ fontSize: 'var(--text-caption)', color: '#999', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ fontSize: 'var(--text-caption)', color: '#566573', display: 'flex', alignItems: 'center', gap: 4 }}>
               <span style={{ flexShrink: 0 }}>{t('orderLabel', { order: banner.sort_order })}</span>
               {banner.link_url && (
                 <>
@@ -134,7 +134,7 @@ export function PromoBannerList({ banners, setBanners, onEdit }: Props) {
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
-                      color: '#999', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis',
+                      color: '#566573', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap', display: 'inline-block',
                     }}
                   >

@@ -13,7 +13,7 @@
 import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
 import { isCurrentUserAdmin, getAllHelpArticles } from '@/lib/queries/admin'
-import { AdminSidebar } from '@/components/admin/AdminSidebar'
+import { AdminShell } from '@/components/admin/AdminShell'
 import { RestrictedAccess } from '@/components/admin/RestrictedAccess'
 import { HelpCenterPageHeader } from '@/components/admin/HelpCenterPageHeader'
 import { HelpArticleManager } from '@/components/admin/HelpArticleManager'
@@ -30,15 +30,11 @@ export default async function AdminCentroAyudaPage() {
   const articles = await getAllHelpArticles()
 
   return (
-    <div className="dashboard-grid" style={{ minHeight: '100vh', fontFamily: 'inherit' }}>
-
-      <AdminSidebar />
-
-      {/* Contenido */}
-      <div style={{ padding: 28, background: '#f5f5f5' }}>
+    <AdminShell>
+      <div className="adm-legacy-page">
         <HelpCenterPageHeader />
         <HelpArticleManager initialArticles={articles} />
       </div>
-    </div>
+    </AdminShell>
   )
 }

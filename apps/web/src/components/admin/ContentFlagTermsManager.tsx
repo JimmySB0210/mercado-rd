@@ -77,7 +77,7 @@ export function ContentFlagTermsManager({ initialTerms }: Props) {
   return (
     <div>
       {terms.length === 0 ? (
-        <div style={{ padding: 32, textAlign: 'center', fontSize: 'var(--text-small)', color: '#999' }}>
+        <div style={{ padding: 32, textAlign: 'center', fontSize: 'var(--text-small)', color: '#566573' }}>
           {t('noFlagTermsYet')}
         </div>
       ) : (
@@ -93,7 +93,7 @@ export function ContentFlagTermsManager({ initialTerms }: Props) {
               }}
             >
               {term.term}
-              {term.category && <span style={{ color: '#999', fontWeight: 400 }}>· {term.category}</span>}
+              {term.category && <span style={{ color: '#566573', fontWeight: 400 }}>· {term.category}</span>}
               <button
                 type="button"
                 onClick={() => handleDelete(term)}

@@ -11,7 +11,7 @@
 // sin duplicar la lógica de subida/borrado.
 // ============================================================
 
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE_BYTES, uploadBanner } from '@/lib/storage/upload'
@@ -31,6 +31,7 @@ interface SiteSettingImageFieldProps {
 export function SiteSettingImageField({ settingKey, label, hint, previewWidth, previewHeight, url, onUpdated }: SiteSettingImageFieldProps) {
   const { t } = useTranslation('admin')
   const { user } = useAuth()
+  const fileId = useId()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -93,7 +94,7 @@ export function SiteSettingImageField({ settingKey, label, hint, previewWidth, p
 
   return (
     <div>
-      <label style={{ fontSize: 'var(--text-form-label)', fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
+      <label htmlFor={fileId} style={{ fontSize: 'var(--text-form-label)', fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
         {label}
       </label>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -101,7 +102,7 @@ export function SiteSettingImageField({ settingKey, label, hint, previewWidth, p
           // eslint-disable-next-line @next/next/no-img-element
           <img src={url} alt={t('previewAlt')} style={{ width: previewWidth, height: previewHeight, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />
         )}
-        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileChange} disabled={saving} style={{ fontSize: 'var(--text-caption)' }} />
+        <input id={fileId} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileChange} disabled={saving} style={{ fontSize: 'var(--text-caption)' }} />
         {url && (
           <button
             type="button"
@@ -116,7 +117,7 @@ export function SiteSettingImageField({ settingKey, label, hint, previewWidth, p
           </button>
         )}
       </div>
-      <p style={{ fontSize: 'var(--text-caption)', color: '#999', margin: '6px 0 0' }}>{hint}</p>
+      <p style={{ fontSize: 'var(--text-caption)', color: '#566573', margin: '6px 0 0' }}>{hint}</p>
       {error && <p style={{ fontSize: 'var(--text-small)', fontWeight: 500, color: BRAND.red, margin: '4px 0 0' }}>{error}</p>}
     </div>
   )

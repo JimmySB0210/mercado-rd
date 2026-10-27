@@ -90,7 +90,7 @@ export function DisputeEvidenceCard({ orderId, vendorId }: Props) {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-100 p-4 text-sm text-gray-400">
+      <div className="bg-white rounded-2xl border border-gray-100 p-4 text-sm text-gray-500">
         {t('loadingEvidence')}
       </div>
     )
@@ -113,7 +113,7 @@ export function DisputeEvidenceCard({ orderId, vendorId }: Props) {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900">{snapshot.name}</p>
               <p className="text-sm font-bold text-gray-900 mt-0.5">{formatPrice(snapshot.price_rdp)}</p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 {t('snapshotDateLabel', { date: formatDate(snapshot.snapshot_at, language, { day: 'numeric', month: 'long', year: 'numeric' }) })}
               </p>
             </div>
@@ -123,7 +123,7 @@ export function DisputeEvidenceCard({ orderId, vendorId }: Props) {
             <dl className="text-sm mt-3 pt-3 border-t border-gray-50">
               {snapshot.attributes.map((attr, i) => (
                 <div key={i} className="flex items-center justify-between gap-4 py-1">
-                  <dt className="text-gray-400">{attr.label}</dt>
+                  <dt className="text-gray-500">{attr.label}</dt>
                   <dd className="text-gray-700 font-medium text-right">{attr.value}</dd>
                 </div>
               ))}

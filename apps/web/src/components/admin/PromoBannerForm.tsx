@@ -7,7 +7,7 @@
 // patrón que components/dashboard/ProductForm.tsx.
 // ============================================================
 
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE_BYTES, uploadBanner } from '@/lib/storage/upload'
@@ -38,6 +38,8 @@ function toDatetimeLocalValue(iso: string | null): string {
 export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onCancel }: Props) {
   const router = useRouter()
   const supabase = createClient()
+  const uid = useId()
+  const fid = (name: string) => `${uid}-${name}`
   const { t } = useTranslation('admin')
 
   // Replica localmente la validación de validateImageFile() de
@@ -199,7 +201,7 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
   return (
     <form onSubmit={handleSubmit} style={{ padding: 18, display: 'grid', gap: 12 }}>
       <div>
-        <label style={{ fontSize: 'var(--text-form-label)', fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
+        <label htmlFor={fid('desktop')} style={{ fontSize: 'var(--text-form-label)', fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
           {t('desktopImageLabel')}
         </label>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -207,17 +209,17 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
             // eslint-disable-next-line @next/next/no-img-element
             <img src={preview} alt={t('previewAlt')} style={{ width: 96, height: 56, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />
           )}
-          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileChange} style={{ fontSize: 'var(--text-caption)' }} />
+          <input id={fid('desktop')} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileChange} style={{ fontSize: 'var(--text-caption)' }} />
         </div>
         {mode === 'editar' && (
-          <p style={{ fontSize: 'var(--text-caption)', color: '#999', margin: '6px 0 0' }}>
+          <p style={{ fontSize: 'var(--text-caption)', color: '#566573', margin: '6px 0 0' }}>
             {t('keepCurrentImageHint')}
           </p>
         )}
       </div>
 
       <div>
-        <label style={{ fontSize: 'var(--text-form-label)', fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
+        <label htmlFor={fid('mobile')} style={{ fontSize: 'var(--text-form-label)', fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
           {t('mobileImageLabel')}
         </label>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -225,34 +227,35 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
             // eslint-disable-next-line @next/next/no-img-element
             <img src={mobilePreview} alt={t('previewMobileAlt')} style={{ width: 56, height: 80, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />
           )}
-          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleMobileFileChange} style={{ fontSize: 'var(--text-caption)' }} />
+          <input id={fid('mobile')} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleMobileFileChange} style={{ fontSize: 'var(--text-caption)' }} />
         </div>
-        <p style={{ fontSize: 'var(--text-caption)', color: '#999', margin: '6px 0 0' }}>
+        <p style={{ fontSize: 'var(--text-caption)', color: '#566573', margin: '6px 0 0' }}>
           {mode === 'editar' ? t('keepCurrentMobileImageHintEdit') : t('keepCurrentMobileImageHintCreate')}
         </p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <div>
-          <label style={{ fontSize: 'var(--text-form-label)', fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
+          <label htmlFor={fid('title')} style={{ fontSize: 'var(--text-form-label)', fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
             {t('titleFieldLabel')}
           </label>
-          <input value={title} onChange={e => setTitle(e.target.value)} placeholder={t('titlePlaceholder')} style={inputStyle} />
+          <input id={fid('title')} value={title} onChange={e => setTitle(e.target.value)} placeholder={t('titlePlaceholder')} style={inputStyle} />
         </div>
         <div>
-          <label style={{ fontSize: 'var(--text-form-label)', fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
+          <label htmlFor={fid('subtitle')} style={{ fontSize: 'var(--text-form-label)', fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
             {t('subtitleFieldLabel')}
           </label>
-          <input value={subtitle} onChange={e => setSubtitle(e.target.value)} placeholder={t('subtitlePlaceholder')} style={inputStyle} />
+          <input id={fid('subtitle')} value={subtitle} onChange={e => setSubtitle(e.target.value)} placeholder={t('subtitlePlaceholder')} style={inputStyle} />
         </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px', gap: 12 }}>
         <div>
-          <label style={{ fontSize: 'var(--text-form-label)', fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
+          <label htmlFor={fid('link')} style={{ fontSize: 'var(--text-form-label)', fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
             {t('linkFieldLabel')}
           </label>
           <input
+            id={fid('link')}
             value={linkUrl}
             onChange={e => setLinkUrl(e.target.value)}
             placeholder={t('linkPlaceholder')}
@@ -260,10 +263,11 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
           />
         </div>
         <div>
-          <label style={{ fontSize: 'var(--text-form-label)', fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
+          <label htmlFor={fid('order')} style={{ fontSize: 'var(--text-form-label)', fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
             {t('orderFieldLabel')}
           </label>
           <input
+            id={fid('order')}
             type="number"
             value={sortOrder}
             onChange={e => setSortOrder(e.target.value)}
@@ -273,11 +277,12 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
       </div>
 
       <div>
-        <label style={{ fontSize: 'var(--text-form-label)', fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
+        <label htmlFor={fid('expires')} style={{ fontSize: 'var(--text-form-label)', fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }}>
           {mode === 'editar' ? t('expiresOnLabelEdit') : t('expiresInLabelCreate')}
         </label>
         {mode === 'editar' ? (
           <input
+            id={fid('expires')}
             type="datetime-local"
             value={expiresAt}
             onChange={e => setExpiresAt(e.target.value)}
@@ -285,6 +290,7 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
           />
         ) : (
           <input
+            id={fid('expires')}
             type="number"
             min="1"
             value={expiresInDays}
@@ -293,7 +299,7 @@ export function PromoBannerForm({ mode, nextSortOrder, initialData, onSaved, onC
             style={{ ...inputStyle, maxWidth: 260 }}
           />
         )}
-        <p style={{ fontSize: 'var(--text-caption)', color: '#999', margin: '6px 0 0' }}>
+        <p style={{ fontSize: 'var(--text-caption)', color: '#566573', margin: '6px 0 0' }}>
           {mode === 'editar' ? t('clearExpirationHint') : t('autoHideHint')}
         </p>
       </div>

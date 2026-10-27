@@ -3,22 +3,35 @@
 // Ruta: src/lib/queries/admin.ts
 // ============================================================
 
+import { cache } from 'react'
 import { createServerClient } from '@/lib/supabase/server'
 import { getVendorRealStatsBatch } from '@/lib/queries/vendorRealStatsBatch'
 import type { Vendor, BusinessType, VendorService, CustomerType, ContentFlagTerm, FlaggedContent, HelpArticle } from '@/types/database.types'
 
-export async function isCurrentUserAdmin(): Promise<boolean> {
+export interface AdminSession {
+  userId: string | null
+  isAdmin: boolean
+  fullName: string | null
+}
+
+// Una sola lectura de sesión por petición: la página, AdminShell y las secciones
+// comparten el resultado en vez de repetir auth.getUser() y la consulta a users.
+export const getCurrentAdminSession = cache(async (): Promise<AdminSession> => {
   const supabase = await createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return false
+  if (!user) return { userId: null, isAdmin: false, fullName: null }
 
   const { data } = await supabase
     .from('users')
-    .select('is_admin')
+    .select('is_admin, full_name')
     .eq('id', user.id)
     .single()
 
-  return data?.is_admin ?? false
+  return { userId: user.id, isAdmin: data?.is_admin ?? false, fullName: data?.full_name ?? null }
+})
+
+export async function isCurrentUserAdmin(): Promise<boolean> {
+  return (await getCurrentAdminSession()).isAdmin
 }
 
 export interface MarketplaceKPIs {

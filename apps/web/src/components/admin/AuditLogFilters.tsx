@@ -33,12 +33,13 @@ export function AuditLogFilters({ eventTypes }: Props) {
     const params = new URLSearchParams(searchParams.toString())
     if (value) params.set(key, value)
     else params.delete(key)
-    router.push(`${pathname}?${params.toString()}`)
+    const query = params.toString()
+    router.push(query ? `${pathname}?${query}` : pathname)
   }
 
   return (
     <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-      <select value={eventType} onChange={e => updateParam('eventType', e.target.value)} style={{ ...inputStyle, minWidth: 220 }}>
+      <select value={eventType} onChange={e => updateParam('eventType', e.target.value)} style={{ ...inputStyle, minWidth: 220 }} aria-label={t('ops.filterEventAria')}>
         <option value="">{t('allEventTypesOption')}</option>
         {eventTypes.map(value => (
           <option key={value} value={value}>{value}</option>

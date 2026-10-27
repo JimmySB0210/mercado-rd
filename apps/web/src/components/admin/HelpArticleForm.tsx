@@ -35,7 +35,7 @@ const inputStyle: React.CSSProperties = {
   width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '9px 12px', fontSize: 'var(--text-ui)', outline: 'none', background: '#fff',
 }
 const labelStyle: React.CSSProperties = { fontSize: 'var(--text-form-label)', fontWeight: 600, color: '#333', display: 'block', marginBottom: 6 }
-const hintStyle: React.CSSProperties = { fontSize: 'var(--text-caption)', color: '#999', margin: '6px 0 0' }
+const hintStyle: React.CSSProperties = { fontSize: 'var(--text-caption)', color: '#566573', margin: '6px 0 0' }
 
 export function HelpArticleForm({ mode, articles, initialData, onSaved, onCancel }: Props) {
   const supabase = createClient()

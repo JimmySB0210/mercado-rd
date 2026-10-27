@@ -83,7 +83,7 @@ export function VerificationLevelControl({ vendorId, currentLevel }: Props) {
                 opacity: saving ? 0.6 : 1,
               }}
             >
-              <div style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color: active ? BRAND.blue : '#999' }}>
+              <div style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color: active ? BRAND.blue : '#566573' }}>
                 {ta('levelButtonPrefix', { level: l })}
               </div>
               <div style={{ fontSize: 'var(--text-caption)', color: active ? BRAND.dark : '#666', marginTop: 2 }}>
@@ -93,7 +93,7 @@ export function VerificationLevelControl({ vendorId, currentLevel }: Props) {
           )
         })}
       </div>
-      {saving && <p style={{ fontSize: 'var(--text-caption)', color: '#999', marginTop: 8 }}>{ta('savingButton')}</p>}
+      {saving && <p style={{ fontSize: 'var(--text-caption)', color: '#566573', marginTop: 8 }}>{ta('savingButton')}</p>}
     </div>
   )
 }

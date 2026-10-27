@@ -23,7 +23,7 @@ export function AdminModeracionContent({ initialTerms, initialFlags }: Props) {
   const { t } = useTranslation('admin')
 
   return (
-    <div style={{ padding: 28, background: '#f5f5f5' }}>
+    <div className="adm-legacy-page">
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 'var(--text-dash-title)', fontWeight: 700, lineHeight: 'var(--leading-h1)', marginBottom: 4 }}>{t('moderationPageTitle')}</h1>
         <p style={{ color: '#666', fontSize: 'var(--text-ui)' }}>{t('moderationPageSubtitle')}</p>

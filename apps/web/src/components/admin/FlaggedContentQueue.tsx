@@ -51,7 +51,7 @@ export function FlaggedContentQueue({ initialFlags }: Props) {
 
   if (flags.length === 0) {
     return (
-      <div style={{ padding: 32, textAlign: 'center', fontSize: 'var(--text-small)', color: '#999' }}>
+      <div style={{ padding: 32, textAlign: 'center', fontSize: 'var(--text-small)', color: '#566573' }}>
         {t('noFlaggedContent')}
       </div>
     )
@@ -83,7 +83,7 @@ export function FlaggedContentQueue({ initialFlags }: Props) {
             <div style={{ fontSize: 'var(--text-small)', fontWeight: 600, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {flag.preview_text ?? t('deletedContentFallback')}
             </div>
-            <div style={{ fontSize: 'var(--text-caption)', color: '#999' }}>
+            <div style={{ fontSize: 'var(--text-caption)', color: '#566573' }}>
               {t('matchedTermsLabel', { terms: flag.matched_terms.join(', ') })} · {formatDate(flag.created_at, language, { day: 'numeric', month: 'short' })}
             </div>
           </div>

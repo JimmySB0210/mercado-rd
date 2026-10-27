@@ -24,21 +24,24 @@ interface Props {
   selectedVendorId?: string
   levelFilter?: string
   businessTypeFilter?: string
+  /** Filtro por estado del Centro de operaciones (?estado=). */
+  estadoFilter?: string
 }
 
-export function AdminProveedoresContent({ vendors, selectedVendor, selectedVendorId, levelFilter, businessTypeFilter }: Props) {
+export function AdminProveedoresContent({ vendors, selectedVendor, selectedVendorId, levelFilter, businessTypeFilter, estadoFilter }: Props) {
   const { t, language } = useTranslation('admin')
 
   const buildFilterQuery = (extra: Record<string, string>) => {
     const params = new URLSearchParams()
     if (levelFilter) params.set('level', levelFilter)
     if (businessTypeFilter) params.set('businessType', businessTypeFilter)
+    if (estadoFilter) params.set('estado', estadoFilter)
     Object.entries(extra).forEach(([k, v]) => params.set(k, v))
     return `?${params.toString()}`
   }
 
   return (
-    <div style={{ padding: 28, background: '#f5f5f5' }}>
+    <div className="adm-legacy-page">
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontSize: 'var(--text-dash-title)', fontWeight: 700, lineHeight: 'var(--leading-h1)', marginBottom: 4 }}>{t('verificationPageTitle')}</h1>
         <p style={{ color: '#666', fontSize: 'var(--text-ui)' }}>{t('verificationPageSubtitle')}</p>
@@ -57,7 +60,7 @@ export function AdminProveedoresContent({ vendors, selectedVendor, selectedVendo
 
           <div style={{ maxHeight: 720, overflowY: 'auto' }}>
             {vendors.length === 0 ? (
-              <div style={{ padding: 24, textAlign: 'center', fontSize: 'var(--text-small)', color: '#999' }}>
+              <div style={{ padding: 24, textAlign: 'center', fontSize: 'var(--text-small)', color: '#566573' }}>
                 {t('noVendorsMatchFilters')}
               </div>
             ) : (
@@ -90,7 +93,7 @@ export function AdminProveedoresContent({ vendors, selectedVendor, selectedVendo
                       )}
                     </div>
                     {v.province_name && (
-                      <div style={{ fontSize: 'var(--text-caption)', color: '#999', marginTop: 4 }}>📍 {v.province_name}</div>
+                      <div style={{ fontSize: 'var(--text-caption)', color: '#566573', marginTop: 4 }}>📍 {v.province_name}</div>
                     )}
                   </a>
                 )
@@ -106,7 +109,7 @@ export function AdminProveedoresContent({ vendors, selectedVendor, selectedVendo
               <div>
                 <div style={{ fontWeight: 700, fontSize: 'var(--text-h4)', color: '#111' }}>{selectedVendor.business_name}</div>
                 {selectedVendor.legal_name && (
-                  <div style={{ fontSize: 'var(--text-caption)', color: '#999' }}>{selectedVendor.legal_name}{selectedVendor.rnc && ` · RNC ${selectedVendor.rnc}`}</div>
+                  <div style={{ fontSize: 'var(--text-caption)', color: '#566573' }}>{selectedVendor.legal_name}{selectedVendor.rnc && ` · RNC ${selectedVendor.rnc}`}</div>
                 )}
               </div>
               <a href={`/tienda/${selectedVendor.id}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 'var(--text-caption)', color: BRAND.blue, textDecoration: 'none', fontWeight: 600 }}>
@@ -139,7 +142,7 @@ export function AdminProveedoresContent({ vendors, selectedVendor, selectedVendo
                   {selectedVendor.instagram && <p>📷 Instagram: {selectedVendor.instagram}</p>}
                   {selectedVendor.address && <p>📍 {selectedVendor.address}{selectedVendor.municipio && `, ${selectedVendor.municipio}`}{selectedVendor.sector && ` (${selectedVendor.sector})`}</p>}
                   {!selectedVendor.contact_full_name && !selectedVendor.whatsapp && !selectedVendor.instagram && !selectedVendor.address && (
-                    <p style={{ color: '#bbb' }}>{t('noContactData')}</p>
+                    <p style={{ color: '#566573' }}>{t('noContactData')}</p>
                   )}
                 </div>
               </div>
@@ -234,13 +237,13 @@ export function AdminProveedoresContent({ vendors, selectedVendor, selectedVendo
 }
 
 const sectionLabelStyle: React.CSSProperties = {
-  fontSize: 'var(--text-caption)', fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8,
+  fontSize: 'var(--text-caption)', fontWeight: 700, color: '#566573', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8,
 }
 
 function InfoStat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p style={{ fontSize: 'var(--text-caption)', color: '#999', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</p>
+      <p style={{ fontSize: 'var(--text-caption)', color: '#566573', textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</p>
       <p style={{ fontSize: 'var(--text-small)', fontWeight: 700, color: '#111', textTransform: 'capitalize' }}>{value}</p>
     </div>
   )
@@ -265,5 +268,5 @@ function ChipList({ items, variant = 'plain' }: { items: { key: string; content:
 }
 
 function EmptyNote({ text }: { text: string }) {
-  return <p style={{ fontSize: 'var(--text-caption)', color: '#bbb' }}>{text}</p>
+  return <p style={{ fontSize: 'var(--text-caption)', color: '#566573' }}>{text}</p>
 }

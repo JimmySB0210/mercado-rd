@@ -3,7 +3,7 @@
 // MercadoRD — Filtros de /admin/proveedores
 // Ruta: src/components/admin/VendorVerificationFilters.tsx
 // ============================================================
-// Selects nativos que escriben en la URL (?level=&businessType=)
+// Selects nativos que escriben en la URL (?level=&businessType=&estado=)
 // para que la vista filtrada sea compartible/recargable.
 // ============================================================
 
@@ -24,25 +24,33 @@ export function VendorVerificationFilters() {
 
   const level = searchParams.get('level') ?? ''
   const businessType = searchParams.get('businessType') ?? ''
+  const estado = searchParams.get('estado') ?? ''
 
   const updateParam = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString())
     if (value) params.set(key, value)
     else params.delete(key)
     params.delete('vendor') // cambiar filtros cierra el detalle abierto
-    router.push(`${pathname}?${params.toString()}`)
+    const query = params.toString()
+    router.push(query ? `${pathname}?${query}` : pathname)
   }
 
   return (
     <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-      <select value={level} onChange={e => updateParam('level', e.target.value)} style={selectStyle}>
+      <select value={estado} onChange={e => updateParam('estado', e.target.value)} style={selectStyle} aria-label={ta('ops.filterStateAria')}>
+        <option value="">{ta('ops.vendorStateAll')}</option>
+        <option value="por_revisar">{ta('ops.vendorStateToReview')}</option>
+        <option value="registro_incompleto">{ta('ops.vendorStateIncomplete')}</option>
+      </select>
+
+      <select value={level} onChange={e => updateParam('level', e.target.value)} style={selectStyle} aria-label={ta('ops.filterLevelAria')}>
         <option value="">{ta('allLevelsOption')}</option>
         {[1, 2, 3, 4].map(l => (
           <option key={l} value={l}>{ta('levelOptionLabel', { level: l, label: t(`verificationLevel.${l}` as Parameters<typeof t>[0]) })}</option>
         ))}
       </select>
 
-      <select value={businessType} onChange={e => updateParam('businessType', e.target.value)} style={selectStyle}>
+      <select value={businessType} onChange={e => updateParam('businessType', e.target.value)} style={selectStyle} aria-label={ta('ops.filterBusinessTypeAria')}>
         <option value="">{ta('allBusinessTypesOption')}</option>
         {BUSINESS_TYPE_OPTIONS.map(value => (
           <option key={value} value={value}>{t(`businessType.${value}`)}</option>

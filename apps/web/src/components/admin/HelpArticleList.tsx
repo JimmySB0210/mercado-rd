@@ -101,7 +101,7 @@ export function HelpArticleList({ articles, setArticles, filter, onEdit, onReloa
 
   if (articles.length === 0) {
     return (
-      <div style={{ padding: 32, textAlign: 'center', fontSize: 'var(--text-small)', color: '#999' }}>
+      <div style={{ padding: 32, textAlign: 'center', fontSize: 'var(--text-small)', color: '#566573' }}>
         {t('helpNoArticlesYet')}
       </div>
     )
@@ -109,7 +109,7 @@ export function HelpArticleList({ articles, setArticles, filter, onEdit, onReloa
 
   if (groups.length === 0) {
     return (
-      <div style={{ padding: 32, textAlign: 'center', fontSize: 'var(--text-small)', color: '#999' }}>
+      <div style={{ padding: 32, textAlign: 'center', fontSize: 'var(--text-small)', color: '#566573' }}>
         {t('helpNoArticlesInCategory')}
       </div>
     )
@@ -131,7 +131,7 @@ export function HelpArticleList({ articles, setArticles, filter, onEdit, onReloa
           >
             <span aria-hidden="true">{group.config?.emoji ?? '📄'}</span>
             <span>{group.config ? ts(group.config.labelKey) : group.slug}</span>
-            <span style={{ fontWeight: 500, color: '#999' }}>({group.articles.length})</span>
+            <span style={{ fontWeight: 500, color: '#566573' }}>({group.articles.length})</span>
           </div>
 
           {group.articles.map((article, i) => (
@@ -150,13 +150,13 @@ export function HelpArticleList({ articles, setArticles, filter, onEdit, onReloa
                 <div
                   title={article.title}
                   style={{
-                    fontSize: 'var(--text-small)', fontWeight: 700, color: article.is_published ? '#111' : '#888',
+                    fontSize: 'var(--text-small)', fontWeight: 700, color: article.is_published ? '#111' : '#566573',
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                   }}
                 >
                   {article.title}
                 </div>
-                <div style={{ fontSize: 'var(--text-caption)', color: '#999', display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                <div style={{ fontSize: 'var(--text-caption)', color: '#566573', display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
                   <span style={{ flexShrink: 0 }}>{t('orderLabel', { order: article.sort_order })}</span>
                   <span style={{ flexShrink: 0 }}>·</span>
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260 }}>

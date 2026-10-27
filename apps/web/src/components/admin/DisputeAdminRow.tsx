@@ -68,7 +68,7 @@ export function DisputeAdminRow({ disputeId, orderId, vendorId, reason, descript
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
         <div>
           <div style={{ fontSize: 'var(--text-caption)', fontWeight: 700, color: BRAND.blue }}>#RD-{shortId}</div>
-          <div style={{ fontSize: 'var(--text-caption)', color: '#999' }}>{buyerName} → {vendorName} · {date}</div>
+          <div style={{ fontSize: 'var(--text-caption)', color: '#566573' }}>{buyerName} → {vendorName} · {date}</div>
         </div>
         <span style={{ background: '#FEF9C3', color: '#713f12', fontSize: 'var(--text-badge)', fontWeight: 700, padding: '2px 8px', borderRadius: 10 }}>
           {t(`disputeReason.${reason}` as 'disputeReason.other')}
@@ -89,6 +89,7 @@ export function DisputeAdminRow({ disputeId, orderId, vendorId, reason, descript
         <select
           value={currentStatus}
           onChange={e => setCurrentStatus(e.target.value)}
+          aria-label={t('ops.disputeStatusAria')}
           style={{ border: '1px solid #ddd', borderRadius: 6, padding: '6px 10px', fontSize: 'var(--text-caption)', background: '#fff' }}
         >
           {STATUS_VALUES.map(value => (

@@ -1,137 +1,95 @@
 'use client'
 // ============================================================
-// MercadoRD — Sidebar del panel de administración (compartido)
+// MercadoRD — Menú lateral del panel de administración (compartido)
 // Ruta: src/components/admin/AdminSidebar.tsx
 // ============================================================
-// Mismo tratamiento responsive que components/vendor/DashboardSidebar.tsx:
-// columna fija en desktop (≥860px), barra compacta + drawer en mobile.
+// Agrupado por tema. Solo enlaza páginas que existen hoy: no hay entradas
+// «próximamente» ni páginas vacías. Para añadir una sección nueva, basta una
+// línea en ADMIN_NAV_GROUPS cuando exista su ruta.
+//
+// Este componente solo pinta el contenido del menú; AdminFrame lo coloca como
+// columna fija (≥ 860 px) o dentro del cajón (móvil).
 // ============================================================
 
-import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X } from 'lucide-react'
-import { BRAND } from '@/lib/colors'
-import { useIsMobile } from '@/lib/hooks/useIsMobile'
+import { ArrowLeft, LayoutDashboard, LifeBuoy, Megaphone, Scale, ScrollText, ShieldAlert, Store, type LucideIcon } from 'lucide-react'
 import { useTranslation } from '@/lib/hooks/useTranslation'
-import { LanguageSwitcher } from '@/components/shop/LanguageSwitcher'
-const NAV_ITEM_KEYS: { icon: string; labelKey: 'navOverview' | 'navProviders' | 'navPromotions' | 'navHelpCenter' | 'navModeration' | 'navAudit'; href: string }[] = [
-  { icon: '📊', labelKey: 'navOverview', href: '/admin' },
-  { icon: '🏪', labelKey: 'navProviders', href: '/admin/proveedores' },
-  { icon: '🖼️', labelKey: 'navPromotions', href: '/admin/promociones' },
-  { icon: '📚', labelKey: 'navHelpCenter', href: '/admin/centro-ayuda' },
-  { icon: '🚩', labelKey: 'navModeration', href: '/admin/moderacion' },
-  { icon: '📋', labelKey: 'navAudit', href: '/admin/auditoria' },
+
+type NavLabelKey = 'navOverview' | 'navPromotions' | 'navProviders' | 'navModeration' | 'navDisputes' | 'navHelpCenter' | 'navAudit'
+type NavGroupKey = 'opsNav.groupGeneral' | 'opsNav.groupCommerce' | 'opsNav.groupPeople' | 'opsNav.groupTrust' | 'opsNav.groupSystem'
+
+interface NavItem {
+  href: string
+  icon: LucideIcon
+  labelKey: NavLabelKey
+  /** Solo es la página actual si la ruta coincide exactamente (el Resumen es /admin, prefijo de todas las demás). */
+  exact?: boolean
+}
+
+interface NavGroup {
+  titleKey: NavGroupKey
+  items: NavItem[]
+}
+
+export const ADMIN_NAV_GROUPS: NavGroup[] = [
+  { titleKey: 'opsNav.groupGeneral', items: [{ href: '/admin', icon: LayoutDashboard, labelKey: 'navOverview', exact: true }] },
+  { titleKey: 'opsNav.groupCommerce', items: [{ href: '/admin/promociones', icon: Megaphone, labelKey: 'navPromotions' }] },
+  { titleKey: 'opsNav.groupPeople', items: [{ href: '/admin/proveedores', icon: Store, labelKey: 'navProviders' }] },
+  {
+    titleKey: 'opsNav.groupTrust',
+    items: [
+      { href: '/admin/moderacion', icon: ShieldAlert, labelKey: 'navModeration' },
+      { href: '/admin/disputas', icon: Scale, labelKey: 'navDisputes' },
+      { href: '/admin/centro-ayuda', icon: LifeBuoy, labelKey: 'navHelpCenter' },
+    ],
+  },
+  { titleKey: 'opsNav.groupSystem', items: [{ href: '/admin/auditoria', icon: ScrollText, labelKey: 'navAudit' }] },
 ]
 
-export function AdminSidebar() {
-  const pathname = usePathname()
-  const isMobile = useIsMobile(860)
+export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
+  const pathname = usePathname() ?? ''
   const { t } = useTranslation('admin')
-  const [open, setOpen] = useState(false)
-  const drawerRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => { setOpen(false) }, [pathname])
+  const isActive = (item: NavItem) => (item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`))
 
-  useEffect(() => {
-    if (!open) return
-    const handleClickOutside = (e: MouseEvent) => {
-      if (drawerRef.current && !drawerRef.current.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [open])
-
-  const navLink = (item: typeof NAV_ITEM_KEYS[number], i: number, onClick?: () => void) => {
-    const active = pathname === item.href
-    return (
-      <a key={i} href={item.href} onClick={onClick} style={{
-        display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px', cursor: 'pointer',
-        background: active ? 'rgba(255,255,255,0.08)' : 'transparent',
-        borderLeft: active ? '2px solid #fff' : '2px solid transparent',
-        color: active ? '#fff' : '#666', fontSize: 'var(--text-ui)', fontWeight: active ? 600 : 400,
-        textDecoration: 'none',
-      }}>
-        <span>{item.icon}</span>{t(item.labelKey)}
-      </a>
-    )
-  }
-
-  const backLink = (onClick?: () => void) => (
-    <a href="/dashboard" onClick={onClick} style={{ padding: '10px 20px', color: '#666', fontSize: 'var(--text-ui)', textDecoration: 'none' }}>
-      {t('backToVendorPanelLink')}
-    </a>
-  )
-
-  if (!isMobile) {
-    return (
-      <div style={{ background: '#0a0a0a', padding: '24px 0', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '0 20px 24px', borderBottom: '1px solid #222', marginBottom: 16 }}>
-          <a href="/" style={{ textDecoration: 'none' }}>
-            <div style={{ fontWeight: 700, fontSize: 'var(--text-h4)', color: '#fff', marginBottom: 4 }}>
-              Mercado<span style={{ color: BRAND.red }}>RD</span>
-            </div>
-          </a>
-          <div style={{ fontSize: 'var(--text-caption)', color: '#888' }}>{t('adminPanelLabel')}</div>
-        </div>
-        {NAV_ITEM_KEYS.map((item, i) => navLink(item, i))}
-        {backLink()}
-        <div style={{ marginTop: 'auto', padding: '16px 20px', borderTop: '1px solid #222' }}>
-          <LanguageSwitcher />
-        </div>
-      </div>
-    )
-  }
-
-  // Mobile — barra compacta + drawer con overlay
   return (
-    <>
-      <div style={{ background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
-        <a href="/" style={{ textDecoration: 'none' }}>
-          <div style={{ fontWeight: 700, fontSize: 'var(--text-h4)', color: '#fff' }}>
-            Mercado<span style={{ color: BRAND.red }}>RD</span>
-          </div>
-        </a>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          aria-label={t('openMenuAria')}
-          style={{ background: 'transparent', border: 'none', color: '#fff', display: 'flex', padding: 4, cursor: 'pointer' }}
-        >
-          <Menu size={22} />
-        </button>
-      </div>
+    <nav className="adm-nav" aria-label={t('opsNav.aria')}>
+      <Link href="/" className="adm-brand" onClick={onNavigate}>
+        <span>
+          <span className="adm-brand-name">Mercado<b>RD</b></span>
+          <span className="adm-brand-sub">{t('opsNav.panelLabel')}</span>
+        </span>
+      </Link>
 
-      {open && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200 }}>
-          <div
-            ref={drawerRef}
-            style={{
-              position: 'fixed', top: 0, left: 0, bottom: 0, width: 260, maxWidth: '80vw',
-              background: '#0a0a0a', padding: '20px 0', display: 'flex', flexDirection: 'column',
-              overflowY: 'auto',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px 20px', borderBottom: '1px solid #222', marginBottom: 16 }}>
-              <div style={{ fontWeight: 700, fontSize: 'var(--text-h4)', color: '#fff' }}>
-                Mercado<span style={{ color: BRAND.red }}>RD</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                aria-label={t('closeMenuAria')}
-                style={{ background: 'transparent', border: 'none', color: '#888', display: 'flex', cursor: 'pointer' }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-            {NAV_ITEM_KEYS.map((item, i) => navLink(item, i, () => setOpen(false)))}
-            {backLink(() => setOpen(false))}
-            <div style={{ marginTop: 'auto', padding: '16px 20px', borderTop: '1px solid #222' }}>
-              <LanguageSwitcher compact />
-            </div>
-          </div>
+      {ADMIN_NAV_GROUPS.map(group => (
+        <div className="adm-nav-group" key={group.titleKey}>
+          <p className="adm-nav-title" id={`adm-nav-${group.titleKey}`}>{t(group.titleKey)}</p>
+          <ul className="adm-nav-list" aria-labelledby={`adm-nav-${group.titleKey}`}>
+            {group.items.map(item => {
+              const Icon = item.icon
+              const active = isActive(item)
+              return (
+                <li key={item.href}>
+                  <Link href={item.href} className="adm-nav-link" aria-current={active ? 'page' : undefined} onClick={onNavigate}>
+                    <Icon size={18} aria-hidden="true" />
+                    <span>{t(item.labelKey)}</span>
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
         </div>
-      )}
-    </>
+      ))}
+
+      <div className="adm-nav-foot">
+        <div className="adm-nav-foot-sep">
+          <Link href="/dashboard" className="adm-back" onClick={onNavigate}>
+            <ArrowLeft size={16} aria-hidden="true" />
+            <span>{t('opsNav.backToVendor')}</span>
+          </Link>
+        </div>
+      </div>
+    </nav>
   )
 }
